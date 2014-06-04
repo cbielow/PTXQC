@@ -96,6 +96,7 @@ enabled_parameters = getYAML(yaml_obj, "File$Parameters$enabled", TRUE)
 if (enabled_parameters)
 {
   d_parAll = readMQ(txt_files$param, type="par")
+  
   line_break = "\n  "; ## use space to make it work with table
   ## remove AIF stuff
   d_parAll = d_parAll[!grepl("^AIF ", d_parAll$parameter),]
@@ -221,7 +222,7 @@ if (enabled_proteingroups)
         theme(axis.text.x = element_text(angle=90)) +
         xlab("")  +
         ggtitle("PG: Contaminant per condition") +
-        ylab("Contaminant (% intensity)") +
+        ylab("contaminant (% intensity)") +
         geom_hline(aes_string(yintercept = "5"), linetype = 'dashed') +
         facet_wrap(~ section, ncol = 1, scales="free_x")
     )
@@ -478,7 +479,8 @@ if (enabled_evidence)
       ## global histogram of delta times
       hist(d_evd$retention.time.calibration, 100, 
            main=paste0("EV: Summary of time difference between\nmatched features across files\n", MBR_warning), 
-           xlab="time [min]")
+           xlab="time [min]",
+           ylab="count")
       
       #require(splines) ## for ns()
       splitRTAlignByRawFile = function(RTdata) {
@@ -520,7 +522,7 @@ if (enabled_evidence)
     p_amt = ggplot(data=mtr.df, aes_string(x = "abs", y = "pc", col = "lab")) + 
       geom_point(size=2) + 
       #geom_text(size=2, vjust=1, aes_string(alpha=0.5)) + 
-      ggtitle(paste0("Peptides inferred by AMT-matching\n", round(100*sum(!is.na(d_evd$match.time.difference))/nrow(d_evd)) ,"% average" )) +
+      ggtitle(paste0("EVD: Peptides inferred by AMT-matching\n", round(100*sum(!is.na(d_evd$match.time.difference))/nrow(d_evd)) ,"% average" )) +
       xlab("inferred by MS1 [count]") +
       ylab("inferred by MS1 [%]") +
       xlim(0, max(mtr.df$abs, na.rm=T)*1.1) +

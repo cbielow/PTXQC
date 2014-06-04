@@ -16,6 +16,8 @@
 #' So, it unifies access to columns (e.g. by using lower case for ALL columns) and ensures columns are
 #' identically named across MQ versions. We only of one case: "protease" == "enzyme".
 #'
+#' If the file is empty, this function stops with an error.
+#'
 #' @param file   (relative) path to a MQ txt file ()
 #' @param filter Searched for "C" and "R". If present, [c]ontaminants and [r]everse hits are removed
 #' @param type   Allowed values are:
@@ -43,11 +45,15 @@
 readMQ <- function(file, filter="C+R", type="pg", col_subset=NA, add_fs_col=T, LFQ_action=FALSE, ...)
 {
   cat(paste("Reading file", file,"...\n"))
+  msg_parse_error = paste0("\n\nParsing the file '", file, "' failed. See message above why. If the file is not usable but other files are ok, disable the corresponding section in the YAML config.")
+  
   ## resolve set of columns which we want to keep
   #col_subset = c("Multi.*", "^Peaks$")
   if (sum(sapply(col_subset, function(x) !is.na(x))) > 0)
   { ## just read a tiny bit to get column names
-    data_header = read.delim(file, na.strings=c("NA", "n. def."), stringsAsFactors=F, comment.char="#", nrows=2)
+    data_header = try(read.delim(file, na.strings=c("NA", "n. def."), stringsAsFactors=F, comment.char="#", nrows=2))
+    if (inherits(data_header, 'try-error')) stop(msg_parse_error, call.=F);
+    
     colnames(data_header) = tolower(colnames(data_header))
     idx_keep = rep(FALSE, ncol(data_header))    
     for (valid in col_subset)
@@ -64,7 +70,9 @@ readMQ <- function(file, filter="C+R", type="pg", col_subset=NA, add_fs_col=T, L
     #print (colnames(data_header))
   }
   
-  data = read.delim(file, na.strings=c("NA", "n. def."), stringsAsFactors=F, comment.char="#", colClasses = col_subset, ...)
+  data = try(read.delim(file, na.strings=c("NA", "n. def."), stringsAsFactors=F, comment.char="#", colClasses = col_subset, ...))
+  if (inherits(data, 'try-error')) stop(msg_parse_error, call.=F);
+  
   #colnames(data)
   
   cat(paste0("Read ", nrow(data), " entries from ", file,".\n"))
