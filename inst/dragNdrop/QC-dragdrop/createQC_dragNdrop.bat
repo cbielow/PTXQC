@@ -1,4 +1,5 @@
 @echo OFF
+ECHO.
 ECHO This batch file is used to invoke the QC script by drag'n'dropping of
 ECHO a MaxQuant txt folder (or any file within) onto this .bat file.
 ECHO Within the same txt folder, a QC report in PDF format will be created.
@@ -16,6 +17,33 @@ REM configure this directory according to above instructions
 REM 
 REM  --- config done --- 
 REM
+
+REM A usage message with multiline (i.e. keep the empty line!)
+setlocal EnableDelayedExpansion
+set USAGE= ^
+
+Usage: ^
+
+%0 ^<txt-folder^> [config.yaml] ^
+
+Please try again.
+REM end of USAGE
+
+REM check number of arguments (must be 1 [txt folder] or 2 [yaml])
+set argC=0
+for %%x in (%*) do Set /A argC+=1
+if %argC%==0 (
+  ECHO Not enough arguments^^! (No arguments provided^)
+  ECHO !USAGE!
+  goto end
+)
+if !argC! gtr 2 (
+  ECHO Too many arguments! (At most two are allowed^)
+  ECHO !USAGE!
+  goto end
+)
+
+
 
 set I=%~dp0\_internal
 REM use drive+path of this .bat file 
@@ -41,14 +69,20 @@ if %is_dir%==1 (
   set txt=%~dp1
 ) 
 
-ECHO Txt folder is at %txt%
+ECHO Txt folder is at '%txt%'
+
+if exist %2 (
+  ECHO.
+  ECHO Using YAML configuration file %2
+  ECHO.
+) 
 
 REM use R_LIBS, not R_LIBS_USER, since the latter will APPEND to the search path, i.e. if the package is installed locally, it will take precedence and mess
 REM up versioning
 set R_LIBS=%I%\R-3.1.0\library
 REM echo R_LIBS=%I%\R-3.1.0\library
 
-%I%\R-3.1.0\bin\x64\rscript --vanilla %I%\compute_QC_report.R %txt%
+%I%\R-3.1.0\bin\x64\rscript --vanilla %I%\compute_QC_report.R %txt% %2
 REM report error, if any
 if ERRORLEVEL 1 (
   ECHO Failed folder %txt%
@@ -58,7 +92,7 @@ if ERRORLEVEL 1 (
 goto end
 
 :not_found
-echo Could not find the promised (network) folder '%1'! Please contact your admin/bioinformatician!
+echo Could not find the given (network) folder '%1'^^! Please contact your admin/bioinformatician^^!
 
 :end
 pause;
