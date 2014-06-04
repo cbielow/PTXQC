@@ -1,0 +1,9 @@
+citHeader("To cite package 'PTXQC' in publications use:")
+
+bibentry(bibtype = "Manual",
+         title = "{ptxqc}: A convenient quality control package for MaxQuant",
+         author = c(person("Chris", "Bielow"),
+                    person("...", "...")),
+         year = "2014",
+         note = "",
+         url = "https://github.com/cbielow/PTXQC")
