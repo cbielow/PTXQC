@@ -31,4 +31,4 @@ Direct installation from GitHub requires the 'devtools' package. This should ins
   - MacOSX
 
   
-  [1]: https://github.com/cbielow/PTXQC/inst/dragNdrop/
+  [1]: https://github.com/cbielow/PTXQC/tree/master/inst/dragNdrop
