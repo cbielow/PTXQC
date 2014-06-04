@@ -96,9 +96,10 @@ enabled_parameters = getYAML(yaml_obj, "File$Parameters$enabled", TRUE)
 if (enabled_parameters)
 {
   d_parAll = readMQ(txt_files$param, type="par")
-  # remove AIF stuff
+  line_break = "\n  "; ## use space to make it work with table
+  ## remove AIF stuff
   d_parAll = d_parAll[!grepl("^AIF ", d_parAll$parameter),]
-  d_parAll$value = gsub(";","\n  ", d_parAll$value)
+  d_parAll$value = gsub(";", line_break, d_parAll$value)
   ## seperate FASTA files (usually they destroy the layout)
   idx_fastafile = grepl("fasta file", d_parAll$parameter, ignore.case = T)
   d_par_file = d_parAll[idx_fastafile, ]
@@ -106,7 +107,26 @@ if (enabled_parameters)
   ## remove duplicates
   d_par = d_par[!duplicated(d_par$parameter),]
   rownames(d_par) = d_par$parameter
-  # two column layout
+  ## trim long param names (the user should know what they mean)
+  d_par$parameter = sapply(d_par$parameter, function (s) {
+    allowed_len = nchar("Keep low-scoring versions of ..."); 
+    if (nchar(s) > allowed_len) {
+      s = paste(substring(s, 1, allowed_len), "...", collapse = "", sep=" ")
+    }
+    return (s)
+  })
+  
+  ## break long values into multiple lines (to preserve table width)
+  d_par$value = sapply(d_par$value, function (s) {
+    allowed_len = nchar("  Acetyl (Protein N-term)"); ## this is a typical entry -- everything which is longer gets split
+    if (nchar(s) > allowed_len) {
+      s_beg = seq(1, nchar(s) - 1, allowed_len)
+      s = paste(unlist(substring(s, s_beg, s_beg + allowed_len)), collapse = line_break)
+    }
+    return (s)
+  })
+  
+  ## two column layout
   d_par$parameter_ = NA
   d_par$value_ = NA
   mid = nrow(d_par)/2
