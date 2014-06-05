@@ -1,4 +1,10 @@
-set yaml_file=config_v0.49.yaml
+REM Here we hardcode the YAML file to forward to 'createQC_dragNdrop.bat'
+REM The '%~dp0' just prefixes the name with the path to this .bat file
+REM i.e. the config should be right next to it.
+REM You can also put the .yaml file somewhere else and hardcode the path
+REM e.g. set yaml_file=c:\temp\my.yaml
+REM Just make sure the file ending remains '.yaml'
+set yaml_file=%~dp0\config_v0.49.yaml
 
 
 @echo OFF

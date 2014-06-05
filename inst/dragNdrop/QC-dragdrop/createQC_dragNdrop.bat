@@ -29,7 +29,7 @@ Usage: ^
 Please try again.
 REM end of USAGE
 
-REM check number of arguments (must be 1 [txt folder] or 2 [yaml])
+REM check number of arguments (must be 1 [txt folder] or 2 [txt folder + yaml])
 set argC=0
 for %%x in (%*) do Set /A argC+=1
 if %argC%==0 (
@@ -71,18 +71,32 @@ if %is_dir%==1 (
 
 ECHO Txt folder is at '%txt%'
 
-if exist %2 (
+if %argC%==2 (
+  set yaml_file=%2
   ECHO.
-  ECHO Using YAML configuration file %2
-  ECHO.
-) 
+  REM check file extension. We could also use %~x2 to get the file extension
+  if !yaml_file:~-5! NEQ .yaml (
+    ECHO Error: Second argument '!yaml_file!' does not seem to be a '.yaml' file.
+    ECHO Please rename or use proper file.
+    goto end
+  )
+  if exist !yaml_file! (
+    ECHO Using YAML configuration file !yaml_file!
+    ECHO.
+  ) else (
+    ECHO Error: Yaml file '!yaml_file!' given as second argument does not exist.
+    ECHO Every QC script run will create a default .yaml file in the respective txt folder, which you can COPY
+    ECHO and use as input to any subsequent run.
+    ECHO.
+    goto end
+  ))
 
 REM use R_LIBS, not R_LIBS_USER, since the latter will APPEND to the search path, i.e. if the package is installed locally, it will take precedence and mess
 REM up versioning
 set R_LIBS=%I%\R-3.1.0\library
 REM echo R_LIBS=%I%\R-3.1.0\library
 
-%I%\R-3.1.0\bin\x64\rscript --vanilla %I%\compute_QC_report.R %txt% %2
+%I%\R-3.1.0\bin\x64\rscript --vanilla %I%\compute_QC_report.R !txt! !yaml_file!
 REM report error, if any
 if ERRORLEVEL 1 (
   ECHO Failed folder %txt%
