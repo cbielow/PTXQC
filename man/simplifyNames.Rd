@@ -30,8 +30,8 @@ concise as possible. E.g. you do not want names like
 If multiple such substrings exist, the algorithm will
 remove the longest first and iterate a number of times (two
 by default) to find the second/third etc longest common
-substring. Each substring must filfull a minimum length
-requirement -- if its shorter, its not considered worth
+substring. Each substring must fulfill a minimum length
+requirement - if its shorter, its not considered worth
 removing and the iteration is aborted.
 }
 \examples{

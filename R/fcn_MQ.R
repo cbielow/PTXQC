@@ -90,7 +90,6 @@ readMQ <- function(file, filter="C+R", type="pg", col_subset=NA, add_fs_col=T, L
     ## remove infix (2 iterations)
     rf_name_s = simplifyNames(rf_name_s, 2, min_LCS_length=7)
     
-
     ## check if shorter filenames are still unique (they should be.. if not we have a problem!!)
     if (length(rf_name) != length(unique(rf_name_s)))
     {
@@ -101,11 +100,7 @@ readMQ <- function(file, filter="C+R", type="pg", col_subset=NA, add_fs_col=T, L
       stop("While loading MQ data: shortened raw filenames are not unique! This should not happen. Please contact chris.bielow@mdc-berlin.de and provide the above names!")
     }
     
-    data$fc.raw.file = as.factor(data$raw.file)
-    for (rf in 1:length(rf_name))
-    {
-      levels(data$fc.raw.file)[levels(data$fc.raw.file)==rf_name[rf]] <- rf_name_s[rf]
-    }
+    data$fc.raw.file = as.factor(rf_name_s[match(data$raw.file, rf_name)])
   }
   
   ## proteingroups.txt special treatment

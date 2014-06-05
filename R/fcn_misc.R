@@ -188,7 +188,7 @@ LCSn = function(strings, min_LCS_length=7)
 #'            
 #' If multiple such substrings exist, the algorithm will remove the longest first and iterate
 #' a number of times (two by default) to find the second/third etc longest common substring.
-#' Each substring must filfull a minimum length requirement -- if its shorter, its not considered worth removing
+#' Each substring must fulfill a minimum length requirement - if its shorter, its not considered worth removing
 #' and the iteration is aborted.
 #' 
 #' @param strings          A vector of strings which are to be shortened
@@ -220,6 +220,34 @@ simplifyNames = function(strings, infix_iterations=2, min_LCS_length=7)
   return (strings)
 }
 
+#' Shorten a string to a maximum length and indicate shorting by appending '..'
+#' 
+#' Some axis labels are sometimes just too long and printing them will either
+#' squeeze the acutal plot (ggplot) or make the labels disappear beyond the margins (graphics::plot)
+#' One ad-hoc way of avoiding this is to shorten the names, hoping they are still meaningful to the viewer.
+#' 
+#' @param x             Vector of input strings
+#' @param max_len       Maximum length allowed
+#' @param print_warning Issue a warning which strings were shortened
+#' @return  A vector of shortened strings
+#' 
+#' @examples
+#' r = shortenStrings(c("gamg_101", "gamg_101230100451", "jurkat_06_100731121305", "jurkat_06_1"))
+#' all(r == c("gamg_101", "gamg_101230100..", "jurkat_06_1007..", "jurkat_06_1"))
+#' 
+#' @export
+#' 
+shortenStrings = function(x, max_len = 12, print_warning = TRUE)
+{
+  idx = nchar(x) > max_len
+  if (print_warning)
+  {
+    cat("The following labels will be shortened to ease plotting:\n")
+    cat(paste0("  ", paste(x[idx], collapse="\n  ")))
+  }
+  x[idx] = paste0(substr(x[idx], 1, max_len-2), "..")
+  return (x)
+}
 
 #' Compute shortest prefix length which makes all strings in a vector uniquely identifyable.
 #'

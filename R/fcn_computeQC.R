@@ -212,7 +212,8 @@ if (enabled_proteingroups)
   idx_int
   con_stats = t(sapply(idx_int, function(x) sum(as.numeric(d_pg[d_pg$contaminant=="+", x]))/sum(as.numeric(d_pg[, x]))*100 ))
   con_stats[is.na(con_stats)] = 0
-  colnames(con_stats) = delLCP(idx_int)
+  colnames(con_stats) = shortenStrings(simplifyNames(delLCP(idx_int)), max_len = 12)
+  
   #barplot(con_stats, ylim=c(0,max(20, max(con_stats)*1.1)), main="PG: Contaminant per condition", xlab="", ylab="% intensity of contaminants", las=3,)
   #abline(a=5, b=0, col="red", lwd=4)
   plotContsPG = function(datav) {
@@ -235,7 +236,9 @@ if (enabled_proteingroups)
   ## these need to be in FASTA headers (description is not enough)!
   ## syntax:  list( contaminant1 = c(name, threshold), contaminant2 = c(...), ...)
   contaminant_alarm = list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
+  #contaminant_alarm = list("cont_MYCO" = c(name="UniRef100", threshold=1)) # name (FASTA), threshold for % of unique peptides
   #contaminant_alarm = list("cont_MYCO" = c("MYCOPLASMA", 1), "cont_corrbt" = c("corrbt7", 1)) 
+  # yaml_contaminants = contaminant_alarm
   yaml_contaminants = getYAML(yaml_obj, "File$ProteinGroups$SpecialContaminants", contaminant_alarm)
   for (ca_entry in yaml_contaminants)
   {
@@ -269,7 +272,7 @@ if (enabled_proteingroups)
     ## build data for plotting
     bar.data = data.frame(name = c(names(ca_samples_pepProportion), names(ca_samples_intProportion)),
                           value = c(ca_samples_pepProportion, ca_samples_intProportion))
-    bar.data$name = factor(bar.data$name, levels=bar.data$name)
+    bar.data$name = shortenStrings(simplifyNames(as.character(factor(bar.data$name, levels=bar.data$name))))
     bar.data$group = c(rep("pepCount", length(ca_samples_pepProportion)), rep("int", length(ca_samples_intProportion)))
     #pdf("test.pdf")
     main_sub_found = ""
@@ -428,7 +431,7 @@ if (enabled_evidence)
       return (unlist(strsplit(x, split=";", fixed=T)))
     }))))
   })
-  length(protGroupCount)
+  #length(protGroupCount)
   
   ## peptides per raw.file
   pepCount = sapply(unique(d_evd$raw.file), function(rf){
