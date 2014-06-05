@@ -14,8 +14,9 @@ require(directlabels)
 
 argv = commandArgs(TRUE)
 #argv = c('C:\\projects\\QC\\data\\txt_SILAC', 'OFF')
-#cat("Command line args are:")
+#cat("Command line args are:\n")
 #cat(paste(argv, collapse="\n", sep=""))
+#cat("\n")
 
 if(!(length(argv) %in% 1:2))
 {

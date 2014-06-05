@@ -84,10 +84,6 @@ if %argC%==2 (
   if exist !yaml_file! (
     ECHO Using YAML configuration file '!yaml_file!'
     ECHO.
-    REM escape spaces in path by surrounding with quotes
-    REM see http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
-    REM for fancy escaping rules
-    set yaml_file=^"!yaml_file!^"
   ) else (
     ECHO Error: Yaml file '!yaml_file!' given as second argument does not exist.
     ECHO Every QC script run will create a default .yaml file in the respective txt folder, which you can COPY
@@ -102,7 +98,13 @@ REM up versioning
 set R_LIBS=%I%\R-3.1.0\library
 REM echo R_LIBS=%I%\R-3.1.0\library
 
-%I%\R-3.1.0\bin\x64\rscript --vanilla %I%\compute_QC_report.R ^"%txt%\^" !yaml_file!
+REM works WITH and WITHOUT spaces in !txt!
+if "%yaml_file%" NEQ "" (
+  ECHO Using YAML '!yaml_file!' file and calling R now ...
+  %I%\R-3.1.0\bin\x64\rscript --vanilla %I%\compute_QC_report.R !txt! !yaml_file!
+) else (
+  %I%\R-3.1.0\bin\x64\rscript --vanilla %I%\compute_QC_report.R !txt!
+)
 REM report error, if any
 if ERRORLEVEL 1 (
   ECHO Failed folder %txt%

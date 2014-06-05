@@ -55,4 +55,7 @@ columns (e.g. by using lower case for ALL columns) and
 ensures columns are identically named across MQ versions.
 We only of one case: "protease" == "enzyme".
 }
+\details{
+If the file is empty, this function stops with an error.
+}
 
