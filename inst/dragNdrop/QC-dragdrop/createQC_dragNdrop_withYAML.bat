@@ -1,13 +1,12 @@
-REM Here we hardcode the YAML file to forward to 'createQC_dragNdrop.bat'
-REM The '%~dp0' just prefixes the name with the path to this .bat file
-REM i.e. the config should be right next to it.
+@echo OFF
+REM Here we hardcode the YAML file which is forwarded to 'createQC_dragNdrop.bat'
+REM The '%~dp0' just prefixes the YAML file with the path to this .bat file
+REM i.e. the YAML file should be right next to it.
 REM You can also put the .yaml file somewhere else and hardcode the path
 REM e.g. set yaml_file=c:\temp\my.yaml
 REM Just make sure the file ending remains '.yaml'
 set yaml_file=%~dp0\config_v0.49.yaml
 
-
-@echo OFF
 ECHO.
 ECHO This batch file allows invoking 'createQC_dragNdrop.bat'
 ECHO with a YAML config file which resides in this directory.
@@ -31,7 +30,7 @@ ECHO.
 ECHO.
 REM Calling original bat file with two arguments
 REM We use %~dp0 to get the path of this bat file, since the working directory depends on the calling environment
-%~dp0\createQC_dragNdrop.bat %1 %yaml_file%
+%~dp0\createQC_dragNdrop.bat %1 ^"%yaml_file%^"
 
 
 :end

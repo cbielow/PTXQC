@@ -38,7 +38,7 @@ if %argC%==0 (
   goto end
 )
 if !argC! gtr 2 (
-  ECHO Too many arguments! (At most two are allowed^)
+  ECHO Too many arguments^^! (At most two are allowed^)
   ECHO !USAGE!
   goto end
 )
@@ -72,7 +72,8 @@ if %is_dir%==1 (
 ECHO Txt folder is at '%txt%'
 
 if %argC%==2 (
-  set yaml_file=%2
+  REM we use %~dpnx2 instead of %2 to get rid of potential extra surrounding quotes
+  set yaml_file=%~dpnx2
   ECHO.
   REM check file extension. We could also use %~x2 to get the file extension
   if !yaml_file:~-5! NEQ .yaml (
@@ -81,22 +82,27 @@ if %argC%==2 (
     goto end
   )
   if exist !yaml_file! (
-    ECHO Using YAML configuration file !yaml_file!
+    ECHO Using YAML configuration file '!yaml_file!'
     ECHO.
+    REM escape spaces in path by surrounding with quotes
+    REM see http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
+    REM for fancy escaping rules
+    set yaml_file=^"!yaml_file!^"
   ) else (
     ECHO Error: Yaml file '!yaml_file!' given as second argument does not exist.
     ECHO Every QC script run will create a default .yaml file in the respective txt folder, which you can COPY
     ECHO and use as input to any subsequent run.
     ECHO.
     goto end
-  ))
+  )
+)
 
 REM use R_LIBS, not R_LIBS_USER, since the latter will APPEND to the search path, i.e. if the package is installed locally, it will take precedence and mess
 REM up versioning
 set R_LIBS=%I%\R-3.1.0\library
 REM echo R_LIBS=%I%\R-3.1.0\library
 
-%I%\R-3.1.0\bin\x64\rscript --vanilla %I%\compute_QC_report.R !txt! !yaml_file!
+%I%\R-3.1.0\bin\x64\rscript --vanilla %I%\compute_QC_report.R ^"%txt%\^" !yaml_file!
 REM report error, if any
 if ERRORLEVEL 1 (
   ECHO Failed folder %txt%

@@ -14,7 +14,9 @@ require(directlabels)
 
 argv = commandArgs(TRUE)
 #argv = c('C:\\projects\\QC\\data\\txt_SILAC', 'OFF')
-#print(argv)
+#cat("Command line args are:")
+#cat(paste(argv, collapse="\n", sep=""))
+
 if(!(length(argv) %in% 1:2))
 {
   stop("Wrong number of parameters!\nUsage: <thisScript.R> <PATH_TO_TXT> [<PATH_TO_YAML_CONFIG>]\n");
@@ -27,7 +29,7 @@ if (!file.info(PATH_TO_TXT)$isdir)
 }
 
 YAML_CONFIG = list()
-if (length(argv)==2)
+if (length(argv)==2 && nchar(argv[2])>0)
 {
   YAML_CONFIG = yaml.load_file(input = argv[2])
 }
