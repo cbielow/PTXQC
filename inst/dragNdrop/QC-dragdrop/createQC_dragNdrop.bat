@@ -66,7 +66,7 @@ if %is_dir%==1 (
   set txt=%1
 ) else ( 
   echo -- %1 is a file
-  set txt=%~dp1
+  set txt="%~dp1\"
 ) 
 
 ECHO Txt folder is at '%txt%'
