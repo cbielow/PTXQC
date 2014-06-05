@@ -232,15 +232,17 @@ if (enabled_proteingroups)
   
   
   ### warn of special contaminants!
-  ## these need to be in FASTA headers!
-  contaminant_alarm = list(c("MYCOPLASMA", 1)) # name (FASTA), threshold for % of unique peptides
-  #contaminant_alarm = list(c("MYCOPLASMA", 1), c("corrbt7", 1)) # name (FASTA), threshold for % of unique peptides
-  for (ca_entry in contaminant_alarm)
+  ## these need to be in FASTA headers (description is not enough)!
+  ## syntax:  list( contaminant1 = c(name, threshold), contaminant2 = c(...), ...)
+  contaminant_alarm = list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
+  #contaminant_alarm = list("cont_MYCO" = c("MYCOPLASMA", 1), "cont_corrbt" = c("corrbt7", 1)) 
+  yaml_contaminants = getYAML(yaml_obj, "File$ProteinGroups$SpecialContaminants", contaminant_alarm)
+  for (ca_entry in yaml_contaminants)
   {
-    #ca_entry = contaminant_alarm[[1]]
+    #ca_entry = yaml_contaminants[[1]]
     ca = ca_entry[1]
   
-    # ca = contaminant_alarm[1]
+    # ca = yaml_contaminants[1]
     # idx = 1:30
     idx = grep(ca, d_pg$fasta.header, ignore.case = T)
   
@@ -254,10 +256,10 @@ if (enabled_proteingroups)
     ca_protgroups = d_pg$protein.ids[idx]
     ca_samples_pep = colSums(d_pg[idx, idx_uniquePep, drop=F])
     
-    ca_samples_intProportion = colSums(d_pg[idx, idx_intensity, drop=F]) / colSums(d_pg[, idx_intensity, drop=F]) * 100
+    ca_samples_intProportion = colSums(d_pg[idx, idx_intensity, drop=F]) / colSums(d_pg[, idx_intensity, drop=F], na.rm = T) * 100
     names(ca_samples_intProportion) = paste0("int", delLCP(names(ca_samples_intProportion)))
   
-    ca_samples_pepProportion = colSums(d_pg[idx, idx_uniquePep, drop=F]) / colSums(d_pg[, idx_uniquePep, drop=F]) * 100
+    ca_samples_pepProportion = colSums(d_pg[idx, idx_uniquePep, drop=F]) / colSums(d_pg[, idx_uniquePep, drop=F], na.rm = T) * 100
     above.thres = (ca_samples_pepProportion > as.numeric(ca_entry[2]))
     names(ca_samples_pepProportion) = paste0("pep", delLCP(names(ca_samples_pepProportion)))
     
@@ -283,23 +285,28 @@ if (enabled_proteingroups)
       main_col="black"
     }
   
-    plotContUser = function(datav, extra_limit) {
-      cat(paste0("CA entry is ", extra_limit, "\n"))
-      datav$section = as.integer(seq(0, nrow(datav)/40, length.out = nrow(datav)))
-      pr = ggplot(datav, aes_string(x = "factor(name)", y = "value")) +
-          geom_bar(stat="identity", aes_string(fill = "group"), position = "dodge") +
-          theme(axis.text.x = element_text(angle=90)) +
-          xlab("")  +
-          theme(plot.title = element_text(colour = main_col)) +
-          ylab("abundance (%)") +
-          ylim(c(0, max(extra_limit, max(bar.data$value, extra_limit)*1.1))) +
-          geom_hline(yintercept = extra_limit, linetype = 'dashed') +
-          facet_wrap(~ section, ncol = 1, scales = "free_x")
-      pr = addGGtitle(pr, paste0("PG: Contaminant '", ca, "'"), main_sub_found)
-      print(pr) 
+    if (sum(bar.data$value)==0)
+    { ## identifier was not found in any sample
+      plot(0:100, 0:100, type="n", axes=F, xlab="",ylab="")
+      mtext(line=-2, paste0("Contaminant '", ca, "' was not found in any sample.\n\nDid you use the correct database?"))  
+    } else {
+      plotContUser = function(datav, extra_limit) {
+        cat(paste0("CA entry is ", extra_limit, "\n"))
+        datav$section = as.integer(seq(0, nrow(datav)/40, length.out = nrow(datav)))
+        pr = ggplot(datav, aes_string(x = "factor(name)", y = "value")) +
+            geom_bar(stat="identity", aes_string(fill = "group"), position = "dodge") +
+            theme(axis.text.x = element_text(angle=90)) +
+            xlab("")  +
+            theme(plot.title = element_text(colour = main_col)) +
+            ylab("abundance (%)") +
+            ylim(c(0, max(extra_limit, max(bar.data$value, extra_limit)*1.1))) +
+            geom_hline(yintercept = extra_limit, linetype = 'dashed') +
+            facet_wrap(~ section, ncol = 1, scales = "free_x")
+        pr = addGGtitle(pr, paste0("PG: Contaminant '", ca, "'"), main_sub_found)
+        print(pr) 
+      }
+      byXflex(data = bar.data, indices = 1:nrow(bar.data), subset_size = 120, FUN = plotContUser, sort_indices=T, extra_limit = as.numeric(ca_entry[2]))
     }
-    byXflex(data = bar.data, indices = 1:nrow(bar.data), subset_size = 120, FUN = plotContUser, sort_indices=T, extra_limit = as.numeric(ca_entry[2]))
-    
   
     #dev.off()
     
@@ -927,10 +934,19 @@ yaml.user.warning =
 # Possible binary values are 'no' and 'yes'.
 # In addition, some parameters support other values (e.g. 'auto', which usually relies on a heuristic to decide if something should be plotted).
 # By default, parameters which support 'auto' have a name which ends in 'wA' (withAuto).
+# Furthermore, there is the SpecialContaminants section, where you can trigger the generation of a plot
+# which just shows the fraction of proteins containing a certain string.
+# By default we search for 'MYCOPLASMA' in the protein identifier, i.e. your txt should be derived from a 
+# run using a database containing these identifiers (the FASTA description is not enough).
+# Each of the special contaminants requires has its own section (e.g. 'cont_MYCO:') with two parameters: 
+# - a string          = name within the protein identifier
+# - an integer number = a threshold in % which will be plotted to visually ease interpretation
+# 
 #
-# Do not add extra values (since they are ignored anyway and might even destroy the integrity of this configuration file).
-# Only modify existing values, but not their names. I.e. only change 123 but not 'test'
-# test: 123
+# With the exception(!) of extra 'SpecialContaminants':
+#   Do NOT add extra values (since they are ignored anyway and might even destroy the integrity of this configuration file).
+#   Only modify existing values, but not their names. I.e. only change 123 but not 'test'
+#   test: 123
 #
 #
 "
