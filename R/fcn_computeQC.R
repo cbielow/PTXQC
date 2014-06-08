@@ -396,6 +396,85 @@ if (enabled_proteingroups)
     rownames(data) = simplifyNames(rownames(data), infix_iterations = 2)
     getPCA(data = data, gg_layer = ggtitle(paste("PG: PCA\n", sub(".", " ", cond, fixed=T))))
   }
+  
+  ##################################
+  ## ratio plots
+  ##################################
+  
+  ## get ratio column
+  ratio_cols = grepv("^ratio\\.h\\.l", colnames(d_pg))
+  ## remove everything else
+  ratio_cols = grepv("^ratio.h.l.normalized", ratio_cols, invert=T)
+  ratio_cols = grepv("^ratio.h.l.count", ratio_cols, invert=T)
+  ratio_cols = grepv("^ratio.h.l.variability", ratio_cols, invert=T)
+  ratio_cols
+  
+  if (length(ratio_cols) > 0)
+  {
+    d_sub = log2(d_pg[,ratio_cols, drop=F])
+    ## rename "ratio.l.h" to "ratio.l.h.l.h"
+    colnames(d_sub)[1] = "l.h"
+    ## simplify the rest
+    colnames(d_sub)[-1] = simplifyNames(delLCP(colnames(d_sub)[-1]))
+    #summary(d_sub)
+    # 
+    # plot(density(d_sub[,1], bw = "SJ", adjust=1, na.rm=T, n=128))
+    # plot(d_sub[,1])
+    # h = density(d_sub[,1], bw = "SJ", adjust=1, na.rm=T, n=128)
+    
+    
+    ## get ranges to fix breaks for density intervals
+    # breaks = seq(min(d_sub, na.rm=T), max(d_sub, na.rm=T), length.out=(max(dd, na.rm=T)-min(dd, na.rm=T))/0.5)
+    # mid = hist(d_sub[, 1], breaks = breaks)$mids
+    ratio.densities = do.call(rbind, (lapply(1:ncol(d_sub), function(x) {
+      h = density(d_sub[ ,x], bw = "SJ", adjust=2, na.rm=T)
+      name = colnames(d_sub)[x]
+      count = sum(getMaxima(h$y))
+      if (count > 1) name = paste(name, "*")
+      df = data.frame(x = h$x, y = h$y, col = name, multimodal = (count>1))
+      return (df)
+    })))
+    ratio.densities$alpha = c(0.8, 1)[ratio.densities$multimodal+1]
+    ratio.densities$ltype = c("dotted", "solid")[ratio.densities$multimodal+1]
+    #head((ratio.densities))
+    
+    title_ratio = "PG: ratio density"
+    title_col = "black"
+    if (any(ratio.densities$multimodal))
+    {
+      title_ratio = paste0(title_ratio, "\nWarning: multimodal densities detected")
+      title_col = "red"
+    }
+    
+    plotRatios = function(df_ratios, d_min, d_max, title_col)
+    {
+      br = c(2, 5, 10, 20);
+      print(
+        ggplot(data = df_ratios, aes_string(x = "x", y = "y", colour = "col")) + 
+          facet_grid(col ~ ., scales = "free_y") +
+          geom_line(aes_string(linetype="ltype", alpha = "alpha"), size = 1.2) +
+          geom_area(aes_string(fill = "col"), alpha=0.5) +
+          xlab("ratio")  +
+          ylab("density")  +
+          #facet_grid(col ~ ) +
+          scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400), guide_legend("")) + 
+          scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=400), guide_legend("")) +
+          scale_linetype_manual(values = c("dotted"="dotted", "solid"="solid"), 
+                                labels=c("dotted"="unimodal", "solid"="multimodal"),
+                                guide_legend("mode")
+          ) +
+          scale_x_continuous(limits = c(d_min, d_max), trans = "identity", breaks = c(-br, 0, br), labels=c(paste0("1/",2^(br)), 0, 2^br)) +
+          guides(alpha=FALSE, colour=FALSE) +
+          theme(plot.title = element_text(colour = title_col)) +
+          ggtitle(title_ratio)
+      )
+      return (1)
+    }
+    
+    byXflex(ratio.densities, ratio.densities$col, 5, plotRatios, sort_indices = F, d_min = min(d_sub, na.rm=T), d_max = max(d_sub, na.rm=T), title_col)
+    
+  }
+  
 }
 
 ######
@@ -726,17 +805,17 @@ if (enabled_evidence)
   d_evd.m.d$block = factor(assignBlocks(d_evd.m.d$fc.raw.file, 15))
   ## identical limits for all plots
   d_evd.xlim = quantile(d_evd.m.d$retention.length, c(0,1))
+  d_evd.xlim = c(max(1e-2,d_evd.xlim[1]), d_evd.xlim[2]) ## could give negative numbers and we plan to plot on log scale
   d_evd.ylim = quantile(d_evd.m.d$dens, c(0,1))
   for (bl in unique(d_evd.m.d$block))
   {
     print(ggplot(d_evd.m.d[d_evd.m.d$block==bl,], aes_string(x = "retention.length", y = "dens", colour = "fc.raw.file")) +
             geom_line(stat="identity") +
             xlab("retention length [min]") +
-            xlim(d_evd.xlim) +
             theme(axis.text.x = element_text(angle=90)) +
             ylab("density") +
             ylim(d_evd.ylim) +
-            scale_x_continuous(trans = "log10", breaks = c(0.01, 0.1, 0.25, 0.5, 1, 3, 10, 30)) +
+            scale_x_continuous(limits=d_evd.xlim, trans = "log10", breaks = c(0.01, 0.1, 0.25, 0.5, 1, 3, 10, 30)) +
             ggtitle("EVD: Peak width histogram") +
             theme(legend.title=element_blank())
     )
