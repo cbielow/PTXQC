@@ -576,7 +576,7 @@ addGGtitle <- function(pl, main, sub=""){
 }
 
 
-#' Find the local maxima in a vector of numbers
+#' Find the local maxima in a vector of numbers.
 #' 
 #' A vector of booleans is returned with the same length as input (omitting NA's)
 #' which contains TRUE when there is a maximum.
@@ -584,12 +584,13 @@ addGGtitle <- function(pl, main, sub=""){
 #' 
 #' @param x           Vector of numbers
 #' @param thresh_rel  Minimum relative intensity to maximum intensity of 'x' required
-#'                    to be a maximum (i.e., a noise threshold). Default is 20%.
+#'                    to be a maximum (i.e., a noise threshold). Default is 20\%.
 #' @return Vector of bool's, where TRUE indicates a local maximum.
 #' 
 #' @examples
 #'     r = getMaxima(c(1,0,3,4,5,0))                                
 #'     all(r == c(1,0,0,0,1,0))
+#'     
 getMaxima = function(x, thresh_rel = 0.2)
 {
   pos = rep(FALSE, length(x))
