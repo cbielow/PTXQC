@@ -591,6 +591,8 @@ addGGtitle <- function(pl, main, sub=""){
 #'     r = getMaxima(c(1,0,3,4,5,0))                                
 #'     all(r == c(1,0,0,0,1,0))
 #'     
+#' @export     
+#'     
 getMaxima = function(x, thresh_rel = 0.2)
 {
   pos = rep(FALSE, length(x))
