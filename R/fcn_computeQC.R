@@ -218,19 +218,21 @@ if (enabled_proteingroups)
   #abline(a=5, b=0, col="red", lwd=4)
   plotContsPG = function(datav) {
     datav$section = as.integer(seq(0, nrow(datav)/40, length.out=nrow(datav)))
-    print(
-      ggplot(data=datav, aes_string(x = "x", y = "y")) + geom_bar(stat="identity") +
+    pl = 
+      ggplot(data=datav, aes_string(x = "x", y = "y")) +
+        geom_bar(stat="identity") +
         theme(axis.text.x = element_text(angle=90)) +
         xlab("")  +
         ggtitle("PG: Contaminant per condition") +
         ylab("contaminant (% intensity)") +
         geom_hline(aes_string(yintercept = "5"), linetype = 'dashed') +
         facet_wrap(~ section, ncol = 1, scales="free_x")
-    )
+    return (pl)
   }
   df.con_stats = data.frame(x=colnames(con_stats), y=as.vector(con_stats[1,]))
-  byXflex(df.con_stats, 1:length(df.con_stats), 120, plotContsPG, sort_indices=T)
-  
+  # plot list (for later plotting)
+  pg_plots_cont = byXflex(df.con_stats, 1:length(df.con_stats), 120, plotContsPG, sort_indices=T)
+  for (p in pg_plots_cont) print(p);
   
   ### warn of special contaminants!
   ## these need to be in FASTA headers (description is not enough)!
@@ -390,10 +392,14 @@ if (enabled_proteingroups)
   {
     #cond = names(clusterCols)[3]
     print(clusterCols[cond])
-    data = t(d_pg[, unlist(clusterCols[cond])])
+    if (length(clusterCols[cond]) <= 1) 
+    { ## only one condition.. PCA does not make sense (and will not work)
+      next;
+    }
+    data = t(d_pg[, unlist(clusterCols[cond]), drop=F])
     ## remove constant/zero columns (== dimensions == proteins)
-    data = data[, colSums(data) > 0]
-    rownames(data) = simplifyNames(rownames(data), infix_iterations = 2)
+    data = data[, colSums(data) > 0, drop=F]
+    rownames(data) = simplifyNames(strings = rownames(data), infix_iterations = 2)
     getPCA(data = data, gg_layer = ggtitle(paste("PG: PCA\n", sub(".", " ", cond, fixed=T))))
   }
   
@@ -415,7 +421,10 @@ if (enabled_proteingroups)
     ## rename "ratio.l.h" to "ratio.l.h.l.h"
     colnames(d_sub)[1] = "l.h"
     ## simplify the rest
-    colnames(d_sub)[-1] = simplifyNames(delLCP(colnames(d_sub)[-1]))
+    if (ncol(d_sub) > 1) 
+    {
+      colnames(d_sub)[-1] = simplifyNames(strings = delLCP(colnames(d_sub)[-1]))
+    }
     #summary(d_sub)
     # 
     # plot(density(d_sub[,1], bw = "SJ", adjust=1, na.rm=T, n=128))
@@ -743,9 +752,10 @@ if (enabled_evidence)
     ## rewrite prot names, and subsume 6th and below as 'other'
     d_evd.cont.only_sub$proteins[!(d_evd.cont.only_sub$proteins %in% top5)] = 'other'
     ## aggregate identical proteins
-    d_sum = ddply(d_evd.cont.only_sub[, c("intensity", "proteins", "fc.raw.file")], c("proteins", "fc.raw.file"), function(x) summarise(x, s.intensity=sum(intensity, na.rm=T)))
+    ##  use sum(as.numeric(.)) to prevent overflow
+    d_sum = ddply(d_evd.cont.only_sub[, c("intensity", "proteins", "fc.raw.file")], c("proteins", "fc.raw.file"), function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm=T)))
     ## normalize by total intensity of raw file
-    d_norm = ddply(d_evd_sub[, c("intensity", "fc.raw.file")],  "fc.raw.file", function(x) summarise(x, s.intensity=sum(intensity, na.rm=T)))
+    d_norm = ddply(d_evd_sub[, c("intensity", "fc.raw.file")],  "fc.raw.file", function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm=T)))
     d_sum$s.intensity = d_sum$s.intensity / d_norm$s.intensity[match(d_sum$fc.raw.file, d_norm$fc.raw.file)] * 100
     ## shorten protein-groups (at most two protein names)
     d_sum$proteins = sapply(d_sum$proteins, function(x) {
@@ -905,27 +915,29 @@ if (enabled_msms)
   
   
   ## peptides per RT or m/z ...
-  raws_perPlot = 5
+  raws_perPlot = 15
   smr_msmsMC = summary(d_msms$missed.cleavages)
   fcMCRTSubset <- function(d_sub, smr_msmsMC)
   {
-    pl = ggplot(data = d_sub, aes_string(x = "missed.cleavages", y = "..density..", colour = "fc.raw.file")) + 
-                geom_freqpoly(binwidth = 1, origin = -0.5) +
-                xlim(from = smr_msmsMC["Min."]-0.5, to = smr_msmsMC["Max."]+1.5) +
-                ylim(0, 1) +
-                xlab("missed cleavages") + 
-                ylab("density") +  
+    st_bin.m = melt(d_sub, id.vars = c("fc.raw.file"))
+    pl = 
+      ggplot(data = st_bin.m, aes_string(x = "factor(fc.raw.file)", y = "value", fill = "variable")) + 
+                geom_bar(stat="identity") +
+                xlab("RAW file") +  
+                ylab("missed cleavages [%]") + 
                 theme(legend.title=element_blank()) +
-                scale_color_brewer(palette="Set2")
-    pl = addGGtitle(pl, "MSMS: Missed cleavages per RAW file", "(includes contaminants)")
+                scale_color_brewer(palette="Set2") +
+                coord_flip()
+      pl = addGGtitle(pl, "MSMS: Missed cleavages per RAW file", "(includes contaminants)")
     print(pl)
     return(pl)
   }
-  pp = byXflex(d_msms, d_msms$raw.file, raws_perPlot, fcMCRTSubset, smr_msmsMC=smr_msmsMC)
+  st_bin = ddply(d_msms, "fc.raw.file", .fun = function(x) table(x$missed.cleavages)/nrow(x))
+  pp = byXflex(st_bin, st_bin$fc.raw.file, raws_perPlot, fcMCRTSubset, smr_msmsMC=smr_msmsMC)
   
   no_mcs = d_msms$missed.cleavages==0
-  mcZero = as.vector(by(no_mcs, d_msms$raw.file, function(x) sum(x)/length(x)*100))
-  mcZero_stat = 100-rev(quantile(mcZero, probs=c(0,0.5,1)))
+  mcZero = st_bin[, "0"] * 100
+  mcZero_stat = 100 - rev(quantile(mcZero, probs=c(0,0.5,1)))
   cat(pastet("missedCleavages>0 (min,median,max) [%]", paste0(mcZero_stat, collapse=",")), file=stats_file, append=T, sep="\n")
   
 }

@@ -163,6 +163,8 @@ LCSn = function(strings, min_LCS_length=7)
   ## abort if there is no chance of finding a suitably long substring
   if (min(nchar(strings)) < min_LCS_length) return("");
   
+  if (length(strings) <= 1) return (strings)
+  
   ## apply LCS to all strings, using the shortest as reference
   idx_ref = which(nchar(strings)==min(nchar(strings)))[1]
   strings_other = strings[-idx_ref]  
