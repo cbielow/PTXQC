@@ -635,16 +635,22 @@ if (enabled_evidence)
   ##
   ## charge distribution
   ##
-  raw.file.count = length(unique(d_evd$fc.raw.file))
-  font_size = ifelse(raw.file.count < 30, 14, 14 / round(raw.file.count/30))
-  print(
-    ggplot(d_evd, aes_string(x = "fc.raw.file", fill = "factor(charge)")) +
-      geom_bar() + 
-      theme(axis.text.x = element_text(angle=90,size=font_size,hjust=.5,vjust=.5,face="plain")) +
-      xlab("") + 
-      ylab("count") +
-      ggtitle("EVD: charge distribution")
-  )
+  fcChargePlot = function(d_sub)
+  {
+    print(
+      mosaicPlot(d_evd$fc.raw.file, d_evd$charge) +
+             xlab("RAW file") +
+             ylab("fraction [%]") +
+             guides(fill=guide_legend(title="charge"), color=FALSE) + # avoid black line in legend
+             coord_flip() +
+             theme(axis.text.y=element_blank(), axis.ticks=element_blank()) +
+             ggtitle("EVD: charge distribution")
+    )
+    return (1);
+  }
+  byXflex(d_evd[, c("fc.raw.file", "charge")], d_evd$fc.raw.file, 30, fcChargePlot, sort_indices = FALSE)
+  
+  
   
   ## peptides per RT 
   raws_perPlot = 8
@@ -662,6 +668,7 @@ if (enabled_evidence)
                 theme(legend.title=element_blank()) +
                 scale_color_brewer(palette="Set2")
     print(qp)
+    return (1)
   }
   byXflex(d_evd, d_evd$raw.file, raws_perPlot, fcRTSubset, smr_evdRT=smr_evdRT)
   
@@ -926,7 +933,8 @@ if (enabled_msms)
                 xlab("RAW file") +  
                 ylab("missed cleavages [%]") + 
                 theme(legend.title=element_blank()) +
-                scale_color_brewer(palette="Set2") +
+                scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000"), 10)) +
+                geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
                 coord_flip()
       pl = addGGtitle(pl, "MSMS: Missed cleavages per RAW file", "(includes contaminants)")
     print(pl)

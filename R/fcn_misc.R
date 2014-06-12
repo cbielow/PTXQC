@@ -617,3 +617,34 @@ getMaxima = function(x, thresh_rel = 0.2)
   if (up) pos[length(x)] = TRUE ## if we ended going up, the last point is a maximum
   return (pos)
 }
+
+#' Mosaic plot of two columns in long format.
+#' 
+#' Found at http://stackoverflow.com/questions/19233365/how-to-create-a-marimekko-mosaic-plot-in-ggplot2
+#' Modified (e.g. to pass R check)
+#' 
+#' Returns a ggplot object without printing it.
+#' This allows to further modify the plot (e.g. rename axis, color schemes etc)
+#' 
+#' @param var1 Vector of factors
+#' @param var2 Vector of factors
+#' @return ggplot object
+#' 
+#' 
+#' @export
+#' 
+mosaicPlot = function(var1, var2)
+{
+  lev_var1 = length(levels(var1))
+  
+  pl.data = as.data.frame(prop.table(table(var1, var2)))
+  pl.data$margin_var1 = prop.table(table(var1))
+  pl.data$var2_height = pl.data$Freq / pl.data$margin_var1
+  pl.data$var1_center = c(0, cumsum(pl.data$margin_var1)[(1:lev_var1) -1]) + pl.data$margin_var1 / 2
+  
+  pl = 
+    ggplot(pl.data, aes_string(x = "var1_center", y = "var2_height")) +
+      geom_bar(stat = "identity", aes_string(width = "margin_var1", fill = "var2"), color = "black")  +
+      geom_text(aes_string(label = "as.character(var1)", x = "var1_center", y = 1.05)) 
+  return (pl)
+}
