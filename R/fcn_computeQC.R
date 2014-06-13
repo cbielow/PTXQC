@@ -493,65 +493,110 @@ if (enabled_proteingroups)
 enabled_evidence = getYAML(yaml_obj, "File$Evidence$enabled", TRUE)
 if (enabled_evidence)
 {
-  #d_evd = readMQ(txt_files$evd, type="ev", nrows=10000)
-  #colnames(d_evd)[grep("ount", colnames(d_evd))]
+  #d_evd_s = readMQ(txt_files$evd, type="ev", nrows=10000)
+  #colnames(d_evd)
+  #[grep("ount", colnames(d_evd))]
   
-  d_evd = readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration", "Match.Time.Difference", "^Sequence$", "^intensity$", "Mass\\.Error", "^uncalibrated...calibrated." , "Raw.file", "^Protein.Group.IDs$", "Contaminant", "Retention.time$", "^m.z$", "^Contaminant", "[RK]\\.Count", "^Charge$", "modified.sequence", "charge"))
+  d_evd = readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration", "Match.Time.Difference", "^Sequence$", "^intensity$", "Mass\\.Error", "^uncalibrated...calibrated." , "Raw.file", "^Protein.Group.IDs$", "Contaminant", "Retention.time$", "^m.z$", "^Contaminant", "[RK]\\.Count", "^Charge$", "modified.sequence", "^Mass$"))
   #d_evd = readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("labeling.state", "Match.Time.Difference", "fasta.headers", "^intensity$", "Raw.file", "^Protein.Group.IDs$"))
   #summary(head(d_evd))
   #head(d_evd)
   #colnames(d_evd)
-  
+{
   ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
   #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
   #head(dsub[is.na(dsub[,2]),])
   #sum(0==(dsub[,1]) & is.na(dsub[,2]))
+  ##
+  ## MQ1.4 MTD is either: NA or a number
+  ##
+  
   
   # use only if it contains information (all NA if disabled)
-  mtd = (d_evd$match.time.difference!="")
-  head(mtd)
-  # if empty, just fill it with "true"
-  length(na.omit(d_evd$match.time.difference))==0
-  if (length(na.omit(d_evd$match.time.difference))==0) mtd = rep(T,length(mtd))
+  has_mtd = !is.na(d_evd$match.time.difference)
+  head(has_mtd)
+  # if ALL na's, just fill it with "true"
+  #length(na.omit(d_evd$match.time.difference))==0
+  #if (length(na.omit(d_evd$match.time.difference))==0) has_mtd = rep(T,length(mtd))
   
-  protGroupCount = sapply(unique(d_evd$raw.file), function(rf){
-    length(unique(unlist(sapply(as.character(d_evd$protein.group.ids[d_evd$raw.file==rf & mtd]), function(x) {
-      return (unlist(strsplit(x, split=";", fixed=T)))
-    }))))
+  ## only count protein groups from non-inferred evidence
+  # get only the column without MTDs
+  d_evd$hasMTD = has_mtd
+  protGroupCount_pre = ddply(d_evd[, c("hasMTD", "raw.file", "protein.group.ids")], "raw.file", .fun = function(x){
+    ## proteins
+    # remove duplicates (since strsplit below is expensive)
+    x$group_mtdinfo = paste(x$protein.group.ids, x$hasMTD, sep="_")
+    xpro = x[!duplicated(x$group_mtdinfo),]
+    p_groups = lapply(as.character(xpro$protein.group.ids), function(x) {
+      return (strsplit(x, split=";", fixed=T))
+    })
+    # get number of unique groups
+    pg_count_noMBR = length(unique(unlist(p_groups[!xpro$hasMTD])))
+    pg_count_extraMBR = length(unique(unlist(p_groups))) - pg_count_noMBR
+    
+    ## peptides
+    ## (we count double sequences... mhh...)
+    pep_count_noMBR = sum(!x$hasMTD)
+    pep_count_MBRgain = nrow(x) - pep_count_noMBR
+    
+    return (c(proteinCount_noMBR = pg_count_noMBR, 
+              proteinCount_MBRgain = pg_count_extraMBR,
+              pep_count_noMBR = pep_count_noMBR,
+              pep_count_MBRgain = pep_count_MBRgain))
   })
-  #length(protGroupCount)
-  
-  ## peptides per raw.file
-  pepCount = sapply(unique(d_evd$raw.file), function(rf){
-    sum(d_evd$raw.file==rf & !is.na(mtd))})
-  ## .. including inferred
-  pepCount_wMatch = sapply(unique(d_evd$raw.file), function(rf){
-    length((d_evd$sequence[d_evd$raw.file==rf]))})
-  
+  protGroupCount_pre
+  ## manually melt
+  pgc =       data.frame(raw.file = protGroupCount_pre$raw.file, protCount = protGroupCount_pre$proteinCount_noMBR, match = "no")
+  pgc = rbind(pgc,
+              data.frame(raw.file = protGroupCount_pre$raw.file, protCount = protGroupCount_pre$proteinCount_MBRgain, match = "yes"))
+  pgc
+
   # combine Prot & Pep stats
   ## Warn: this is still different from summary.txt...
-  ppg = as.data.frame(cbind(protGroupCount, pepCount, pepCount_wMatch))
-  ppg$file = d_evd$fc.raw.file[match(rownames(ppg), d_evd$raw.file)]
-  head(ppg)
-  colnames(ppg) = c("# protein groups", "# peptides", "# peptides\n(incl. matched)", "file")
-  mdat = melt(ppg, id.vars="file")
+  #colnames(ppg) = c("# protein groups", "# peptides", "# peptides\n(incl. matched)", "file")
+  #mdat = melt(ppg, id.vars="file")
   
-  head(mdat)
-  mdat$block = factor(assignBlocks(mdat$file, 15))
-  max(mdat$value)
-  
+  head(pgc)
+  pgc$block = factor(assignBlocks(pgc$raw.file, 30))
+  max_prot = max(protGroupCount_pre$proteinCount_noMBR + protGroupCount_pre$proteinCount_MBRgain)
   #require(RColorBrewer)
-  for (bl in unique(mdat$block))
-  {
-    print(ggplot(mdat[mdat$block==bl,], aes_string(x = "variable", y = "value", fill = "file")) +
-            geom_bar(stat = "identity", position = "dodge") +
+  ddply(pgc, "block", .fun = function(x) {
+    x$s.raw.file = simplifyNames((as.character(x$raw.file)))
+    print(ggplot(x, aes_string(x = "s.raw.file", y = "protCount", fill = "match")) +
+            geom_bar(stat = "identity", position = "stack") +
             xlab("") +
-            ylim(0, max(mdat$value)) +
+            ylim(0, max_prot) +
             scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400)) +
-            ggtitle("EV: Peptide/Protein ID stats (small bias vs SM.txt)") + 
-            ylab("count") 
+            ggtitle("EV: Protein ID stats (small bias vs SM.txt)") + 
+            ylab("count") +
+            coord_flip()
           )
-  }
+    return (1)
+  })
+  
+  
+  pepc =       data.frame(raw.file = protGroupCount_pre$raw.file, pepCount = protGroupCount_pre$pep_count_noMBR, match = "no")
+  pepc = rbind(pepc,
+               data.frame(raw.file = protGroupCount_pre$raw.file, pepCount = protGroupCount_pre$pep_count_MBRgain, match = "yes"))
+  pepc
+  
+  head(pepc)
+  pepc$block = factor(assignBlocks(pepc$raw.file, 30))
+  max_pep = max(protGroupCount_pre$pep_count_noMBR + protGroupCount_pre$pep_count_MBRgain)
+  #require(RColorBrewer)
+  ddply(pepc, "block", .fun = function(x) {
+    x$s.raw.file = simplifyNames((as.character(x$raw.file)))
+    print(ggplot(x, aes_string(x = "s.raw.file", y = "pepCount", fill = "match")) +
+            geom_bar(stat = "identity", position = "stack") +
+            xlab("") +
+            ylim(0, max_pep) +
+            scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400)) +
+            ggtitle("EV: Peptide ID stats (small bias vs SM.txt)") + 
+            ylab("count") +
+            coord_flip()
+    )
+    return (1)
+  })
     
   ##
   ## retention time calibration (to see if window was sufficiently large)
@@ -671,73 +716,119 @@ if (enabled_evidence)
     return (1)
   }
   byXflex(d_evd, d_evd$raw.file, raws_perPlot, fcRTSubset, smr_evdRT=smr_evdRT)
-  
+} 
   ## histograms of mass error
   
-  ## MQ seems to mess up mass recal on iTRAQ samples, by reporting ppm errors which include modifications
+  ## MQ seems to mess up mass recal on some (iTRAQ) samples, by reporting ppm errors which include modifications
   ## , thus one sees >1e5 ppm, e.g. 144.10 Da
   ##  this affects both 'uncalibrated.mass.error..ppm.'   and
   ##                    'mass.error..ppm.'
   ## HOWEVER, 'uncalibrated...calibrated.m.z..ppm.' seems unaffected, but is not available in all MQ versions :(
-  ##
+  ##    also, 'mass' and 'm/z' columns seem unaffected.
+  ##  But weirdly, one cannot reconstruct mass_error[ppm] from 'm/z' and mass columns (m/z is just too close to the theoretical value)
+  ##  , this might be due to lacking precision of the stored numbers though
+  ## The MQ list reports one case with high ppm error (8000), where the KR.count was at fault. We cannot
+  ## reconstruct this.
   recal_message = ""
-  if (median(d_evd$uncalibrated.mass.error..ppm., na.rm=T) > 1e3)
+  ## check each raw file individually (usually its just a few who are affected)
+  de_cal = ddply(d_evd, "raw.file", .fun = function(x) (quantile(abs(x$uncalibrated.mass.error..ppm.), probs = 0.5, na.rm=T)) > 1e3)
+  if (any(de_cal[,2]))
   {
-    recal_message = "m/z recalibration bugfix applied"
-    #install.packages('OrgMassSpecR')
-    #require(OrgMassSpecR)
-    ## we need to add water to the theoMass, since there is a bug in OrgMassSpecR::MonoisotopicMass()
-    if (packageVersion("OrgMassSpecR") <= '0.4.3') {
-      m_water = MonoisotopicMass(formula = list(H=2, O=1), charge = 0)  
-    } else
-    { ## see https://github.com/OrgMassSpec/OrgMassSpec.github.io/issues/1 for status
-      m_water = 0 ## we just hope that a later package will fix the bug!!
-    }
-    ## compute theoretical mass
-    d_evd$theomz = sapply(1:nrow(d_evd), function(x) MonoisotopicMass(formula = ConvertPeptide(d_evd$sequence[x]), charge = d_evd$charge[x]) + m_water/d_evd$charge[x])
-    ## re-estimate 'mass.error..ppm.'
-    d_evd$mass.error..ppm.2 = (d_evd$theomz - d_evd$m.z) / d_evd$theomz * 1e6
-    #hist(d_evd$mass.error..ppm. - d_evd$mass.error..ppm.2, 100000, xlim=c(-30,30))
+    ## for stats, show how many % of spectra suffer from this
+    de_cal_pc = ddply(d_evd, "raw.file", .fun = function(x) (sum((abs(x$uncalibrated.mass.error..ppm.)) > 1e3, na.rm=T) / nrow(x) * 100))
+    de_cal_pc_pl = de_cal_pc[de_cal_pc[,2]>0, ]
+    byXflex(de_cal_pc_pl, 1:nrow(de_cal_pc_pl), 25, function(x) {
+      dc = x[, 2]
+      names(dc) = x[, 1]
+      barplot(dc, horiz=T, las=2, main = "RAW files affected by wrong calibration numbers", xlab="% of ID's affected", cex.names = 0.5)
+    })
+    affected_raw_files = de_cal_pc_pl[, 1]
+    
     ## re-compute 'uncalibrated.mass.error..ppm.'
-    if ("uncalibrated...calibrated.m.z..ppm." %in% colnames(d_evd))
-    { ## this MQ version has it...
-      d_evd$uncalibrated.mass.error..ppm.2 = d_evd$mass.error..ppm.2 + d_evd$uncalibrated...calibrated.m.z..ppm.
-    } else {
-      recal_message = paste(recal_message, "(uncalibrated not recoverable)")
-      d_evd$uncalibrated.mass.error..ppm.2 = 0
+    
+    if (!("uncalibrated...calibrated.m.z..ppm." %in% colnames(d_evd)))
+    {
+      stop("column missing: 'uncalibrated...calibrated.m.z..ppm.'")
     }
+    if (!("mass" %in% colnames(d_evd)))
+    {
+      stop("column missing: 'mass'")
+    }
+    
+    { ## this MQ version has it...
+      
+#       counts =  d_evd$k.count + d_evd$r.count
+#       idx_decal = (abs(d_evd$uncalibrated.mass.error..ppm.) > 30)
+#       hist(d_evd$mass - d_evd$m.z * d_evd$charge, 1000)
+#       unique(d_evd$mass - d_evd$m.z * d_evd$charge)
+#       hist(counts[!idx_decal])
+      
+      recal_message = "m/z recalibration bugfix applied"
+      
+      d_evd$theomz = d_evd$mass / d_evd$charge + 1.00726
+      
+      ## re-estimate 'mass.error..ppm.'
+      d_evd$mass.error..ppm.2 = (d_evd$theomz - d_evd$m.z) / d_evd$theomz * 1e6
+      #hist(d_evd$mass.error..ppm.2, 1000)
+      #plot(d_evd$mass.error..ppm.2, d_evd$mass)
+      #hist(d_evd$mass.error..ppm. - d_evd$mass.error..ppm.2, 100000, xlim=c(-30,30))
+      d_evd$uncalibrated.mass.error..ppm.2 = d_evd$mass.error..ppm.2 + d_evd$uncalibrated...calibrated.m.z..ppm.
+      
+      # check if fix worked
+      de_cal2 = ddply(d_evd, "raw.file", .fun = function(x) (median(abs(x$uncalibrated.mass.error..ppm.2), na.rm=T)) > 1e3)
+      if (any(de_cal2[,2]))
+      {
+        ## fix did not work
+        recal_message = "m/z recalibration bugfix applied but failed\n(there are still large numbers)"
+      }
+      
+    }
+#      else {
+#       recal_message = "m/z recalibration bugfix cannot be applied\n(uncalibrated values not recoverable)\naffected samples are set to 0")
+#       d_evd$uncalibrated.mass.error..ppm.2[d_evd$raw.file %in% affected_raw_files ] = 0
+#     }
     #hist(d_evd$uncalibrated.mass.error..ppm. - d_evd$uncalibrated.mass.error..ppm.2, 100000, xlim=c(-30,30))
     
+    idx_overwrite = (d_evd$raw.file %in% affected_raw_files)
     ## overwrite original values
-    d_evd$mass.error..ppm. = d_evd$mass.error..ppm.2
-    d_evd$uncalibrated.mass.error..ppm. = d_evd$uncalibrated.mass.error..ppm.2
+    d_evd$mass.error..ppm.[idx_overwrite] = d_evd$mass.error..ppm.2[idx_overwrite]
+    d_evd$uncalibrated.mass.error..ppm.[idx_overwrite] = d_evd$uncalibrated.mass.error..ppm.2[idx_overwrite]
 
+    #max_ume = max(abs(d_evd$uncalibrated.mass.error..ppm.), na.rm=T)
+    #max_idx = which (abs(d_evd$uncalibrated.mass.error..ppm.) == max_ume)
+    #d_evd[max_idx,]
+    #iqr
+    
   }
   
   
   ## some outliers have 5000ppm or so.. messing up the plot
   ## , so either remove outliers before (quantile estimation seems not robust enough) or don't plot them (default)
-  plotAlignDiff = function(d_evd)
+  plotAlignDiff = function(d_evd, affected_raw_files)
   {
     ## sort by rawfile name
     d_evd = d_evd[order(as.character(d_evd$raw.file)),]
+    col = c("black", "red")[(unique(d_evd$raw.file) %in% affected_raw_files) + 1]
+    
     boxplot(uncalibrated.mass.error..ppm. ~ raw.file, d_evd, names=d_evd$fc.raw.file[match(unique(d_evd$raw.file), d_evd$raw.file)], 
-            ylab="ppm error", main = "EVD: Uncalibrated mass error",
-            las=2, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75))
+            ylab="ppm error", main = "EVD: Uncalibrated mass error", horizontal = TRUE,
+            las=1, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75), cex.names = 0.5, col = col)
     if (nchar(recal_message)) mtext(text=recal_message, side=3, col="red")
   }
-  pp = byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiff, sort_indices=T)
+  pp = byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiff, sort_indices=T, affected_raw_files=affected_raw_files)
   
-  plotAlignDiffCal = function(d_evd)
+  plotAlignDiffCal = function(d_evd, affected_raw_files)
   {
     ## sort by rawfile name
     d_evd = d_evd[order(as.character(d_evd$raw.file)),]
+    col = c("black", "red")[(unique(d_evd$raw.file) %in% affected_raw_files) + 1]
+    
     boxplot(mass.error..ppm. ~ raw.file, d_evd, names=d_evd$fc.raw.file[match(unique(d_evd$raw.file), d_evd$raw.file)], 
-            ylab="ppm error", main = "EVD: Calibrated mass error",
-            las=2, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75))
+            ylab="ppm error", main = "EVD: Calibrated mass error", horizontal = TRUE,
+            las=2, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75), cex.names = 0.5, col = col)
     if (nchar(recal_message)) mtext(text=recal_message, side=3, col="red")
   }
-  pp = byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiffCal, sort_indices=T)
+  pp = byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiffCal, sort_indices=T, affected_raw_files=affected_raw_files)
   
   ## compute how well calibration worked
   cal_medians = as.vector(by(d_evd$mass.error..ppm., d_evd$raw.file, median, na.rm=T))
