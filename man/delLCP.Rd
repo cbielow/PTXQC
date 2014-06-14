@@ -12,7 +12,7 @@ delLCP(x)
 Shortened vector of strings
 }
 \description{
-Removes the longest common prefix (LCP) from a vector of
-strings.
+If only a single string is given, no shortening will be
+done.
 }
 

@@ -45,6 +45,8 @@ getYAML = function(config, param_name, default)
 
 #' Removes the longest common prefix (LCP) from a vector of strings.
 #' 
+#' If only a single string is given, no shortening will be done.
+#' 
 #' @param x Vector of strings with common prefix
 #' @return Shortened vector of strings
 #' 
@@ -54,6 +56,8 @@ getYAML = function(config, param_name, default)
 delLCP <- function(x)
 {
   #require(Biobase)
+  if (length(x) <= 1) return(x)
+  
   lcp = nchar(lcPrefix( x ))   # shorten string (remove common prefix)
   x = sapply(x, substring, lcp+1)
   return (x)
@@ -225,7 +229,7 @@ simplifyNames = function(strings, infix_iterations=2, min_LCS_length=7)
 #' Shorten a string to a maximum length and indicate shorting by appending '..'
 #' 
 #' Some axis labels are sometimes just too long and printing them will either
-#' squeeze the acutal plot (ggplot) or make the labels disappear beyond the margins (graphics::plot)
+#' squeeze the actual plot (ggplot) or make the labels disappear beyond the margins (graphics::plot)
 #' One ad-hoc way of avoiding this is to shorten the names, hoping they are still meaningful to the viewer.
 #' 
 #' @param x             Vector of input strings

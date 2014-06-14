@@ -208,8 +208,11 @@ if (enabled_proteingroups)
   d_pg = readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")
   
   ## Contaminants stats
-  idx_int = colnames(d_pg)[grep("^intensity\\.", colnames(d_pg))]
-  idx_int
+  idx_int = grepv("^intensity\\.", colnames(d_pg))
+  if (length(idx_int) == 0)
+  { ##apparently no conditions were used, so there is just 'intensity'
+    idx_int = "intensity"
+  }
   con_stats = t(sapply(idx_int, function(x) sum(as.numeric(d_pg[d_pg$contaminant=="+", x]))/sum(as.numeric(d_pg[, x]))*100 ))
   con_stats[is.na(con_stats)] = 0
   colnames(con_stats) = shortenStrings(simplifyNames(delLCP(idx_int)), max_len = 12)
@@ -231,7 +234,7 @@ if (enabled_proteingroups)
   }
   df.con_stats = data.frame(x=colnames(con_stats), y=as.vector(con_stats[1,]))
   # plot list (for later plotting)
-  pg_plots_cont = byXflex(df.con_stats, 1:length(df.con_stats), 120, plotContsPG, sort_indices=T)
+  pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 120, plotContsPG, sort_indices=T)
   for (p in pg_plots_cont) print(p);
   
   ### warn of special contaminants!
@@ -799,6 +802,9 @@ if (enabled_evidence)
     #d_evd[max_idx,]
     #iqr
     
+  } else
+  {
+    affected_raw_files = c()
   }
   
   
@@ -1062,36 +1068,39 @@ if (enabled_msmsscans)
   ## scan event number
   scan.event.number = NULL ## make R check happy
   #require(plyr)
-  DF = ddply(d_msmsScan, c("scan.event.number", "identified"), summarise, n = length(scan.event.number))
-  DF$n1 = (DF$n)+1
-  ratio = sapply(sort(unique(DF$scan.event.number)), function(x) {
-      subs = DF[DF$scan.event.number==x,]  
-      v = subs$n[subs$identified=="+"] * 100 / sum(subs$n)
-      v = ifelse(length(v), v, 0) ## replace empty with 0
-      return (v)
-      }
+  DF = ddply(d_msmsScan, c("scan.event.number", "identified", "fc.raw.file"), summarise, n = length(scan.event.number))
+  df.ratio = ddply(DF, c("scan.event.number", "fc.raw.file"), function(x)
+  {
+    xp = xm = 0
+    if ("+" %in% x$identified) xp = x$n[x$identified=="+"]
+    if ("-" %in% x$identified) xm = x$n[x$identified=="-"]
+    rt = xp * 100 / sum(xp, xm)
+    return (rt)
+  })
+  head(df.ratio)
+
+  plotScanEvent = function(df.ratio)
+  {
+    print(
+      ggplot(df.ratio, aes_string(x = "scan.event.number", y = "V1")) +
+        geom_bar(stat="identity") +
+        xlab("scan event") +
+        ylab("percent identified") +
+        facet_wrap(~ fc.raw.file) +
+        ggtitle(paste0("MSMSscans: Scan event performance"))
     )
-  df.ratio = data.frame(ratio=unlist(ratio))
-  df.ratio$x = 1:nrow(df.ratio)
-  df.ratio
-  print(
-    ggplot(df.ratio, aes_string(x = "x", y = "ratio")) +
-      geom_bar(stat="identity") +
-      xlab("scan event") +
-      ylab("percent identified") +
-      ggtitle(paste0("MSMSscans: Scan event performance"))
-  )
+    return (1)
+  }
+  byXflex(df.ratio, df.ratio$fc.raw.file, 9, plotScanEvent)
   
-#   print(
-#     ggplot(DF, aes_string(x = "scan.event.number", y = "n1", fill = "identified")) + 
-#       geom_bar(stat="identity") +
-#       scale_y_log10() +
-#       facet_grid(. ~ identified) +
-#       xlab("scan event number") + ggtitle("Scan event performance") + ylab("count (log scale)")
-#   )
-#   #   ggplot(d_msmsScan, aes_string(x = "Elapsed.Time", "Ion.Injection.Time")) +
-  #     #geom_bar(binwidth = 1) +
-  #     geom_point() + stat_density2d(geom="tile", aes_string(fill = "..density.."), contour = FALSE)
+#   tt = ddply(d_msmsScan, c("scan.event.number", "fc.raw.file", "identified"), summarise, n = mean(ion.injection.time))
+#   # tt = tt[tt$identified=="+",]
+#   head(tt)
+#   
+#   ggplot(tt, aes_string(x = "scan.event.number", y = "n", col = "fc.raw.file")) +
+#        scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=400), guide_legend("")) +
+#        geom_point() 
+#        
   #   
   #   print(ggplot(d_msmsScan, aes_string(x = "Scan.event.number", y = "Ion.Injection.Time")) +
   #           #geom_bar(binwidth = 1) +
