@@ -32,7 +32,6 @@
 #' @importFrom plotrix addtable2plot
 #' @importFrom reshape2 melt
 #' @importFrom RColorBrewer brewer.pal
-#' @importFrom OrgMassSpecR MonoisotopicMass ConvertPeptide
 #' @importFrom yaml as.yaml
 #' @importFrom splines ns
 #'  
