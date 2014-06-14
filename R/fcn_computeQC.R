@@ -683,7 +683,7 @@ if (enabled_evidence)
   fcChargePlot = function(d_sub)
   {
     print(
-      mosaicPlot(d_evd$fc.raw.file, d_evd$charge) +
+      mosaicPlot(d_sub$fc.raw.file, d_sub$charge) +
              xlab("RAW file") +
              ylab("fraction [%]") +
              guides(fill=guide_legend(title="charge"), color=FALSE) + # avoid black line in legend
@@ -865,13 +865,13 @@ if (enabled_evidence)
     ## plot
     print(ggplot(d_sum) +
       geom_bar(aes_string(x = "factor(fc.raw.file)", y = "s.intensity", fill = "factor(proteins)"), stat="identity") +
-      theme(axis.text.x = element_text(angle=90)) +
       xlab("")  +
       ggtitle("EVD: Contaminant per RAW file") +
       ylab("contaminant (% intensity)") +
       geom_hline(aes_string(yintercept = "5"), linetype='dashed') +
       guides(fill = guide_legend(nrow = 2, ncol = 3, byrow = TRUE, reverse = T)) +
-      theme(legend.position="top", legend.title=element_blank())
+      theme(legend.position="top", legend.title=element_blank()) +
+      coord_flip()
     )
       
   }
