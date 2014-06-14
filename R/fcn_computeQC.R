@@ -1012,8 +1012,7 @@ if (enabled_msms)
   d_msms = readMQ(txt_files$msms, type="msms", col_subset=c("Missed\\.cleavages", "^Raw.file$"))
   
   
-  ## peptides per RT or m/z ...
-  raws_perPlot = 15
+  ## missed cleavages per Raw file
   smr_msmsMC = summary(d_msms$missed.cleavages)
   fcMCRTSubset <- function(d_sub, smr_msmsMC)
   {
@@ -1031,10 +1030,16 @@ if (enabled_msms)
     print(pl)
     return(pl)
   }
-  st_bin = ddply(d_msms, "fc.raw.file", .fun = function(x) table(x$missed.cleavages)/nrow(x))
-  pp = byXflex(st_bin, st_bin$fc.raw.file, raws_perPlot, fcMCRTSubset, smr_msmsMC=smr_msmsMC)
+  max_mc = max(d_msms$missed.cleavages)
+  st_bin = ddply(d_msms, "fc.raw.file", .fun = function(x) {
+    t = table(x$missed.cleavages)/nrow(x)
+    r = rep(0, max_mc + 1)
+    names(r) = as.character(0:max_mc)
+    r[names(t)] = t
+    return (r)
+  })
+  pp = byXflex(st_bin, st_bin$fc.raw.file, 25, fcMCRTSubset, smr_msmsMC=smr_msmsMC)
   
-  no_mcs = d_msms$missed.cleavages==0
   mcZero = st_bin[, "0"] * 100
   mcZero_stat = 100 - rev(quantile(mcZero, probs=c(0,0.5,1)))
   cat(pastet("missedCleavages>0 (min,median,max) [%]", paste0(mcZero_stat, collapse=",")), file=stats_file, append=T, sep="\n")
