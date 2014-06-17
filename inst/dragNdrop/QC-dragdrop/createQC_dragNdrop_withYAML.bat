@@ -5,7 +5,7 @@ REM i.e. the YAML file should be right next to it.
 REM You can also put the .yaml file somewhere else and hardcode the path
 REM e.g. set yaml_file=c:\temp\my.yaml
 REM Just make sure the file ending remains '.yaml'
-set yaml_file=%~dp0\config_v0.49.yaml
+set yaml_file=%~dp0\config.yaml
 
 ECHO.
 ECHO This batch file allows invoking 'createQC_dragNdrop.bat'
