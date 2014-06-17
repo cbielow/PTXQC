@@ -81,6 +81,7 @@ time_start = Sys.time()
 
 stats_file = paste(txt_folder, "\\report_", report_version, "_stats.txt", sep="")
 unlink(stats_file)
+cat("Statistics summary:", file=stats_file, append=F, sep="\n")
 
 report_file = paste(txt_folder, "\\report_", report_version, ".pdf", sep="")
 pdf(report_file, onefile=T)
@@ -496,7 +497,10 @@ enabled_evidence = getYAML(yaml_obj, "File$Evidence$enabled", TRUE)
 if (enabled_evidence)
 {
   #d_evd_s = readMQ(txt_files$evd, type="ev", nrows=10000)
+  #d_evd_s = readMQ(txt_files$evd, type="ev")
+  #head(d_evd_s)
   #colnames(d_evd)
+  #table(d_evd_s$reverse)
   #[grep("ount", colnames(d_evd))]
   
   d_evd = readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration", "Match.Time.Difference", "^Sequence$", "^intensity$", "Mass\\.Error", "^uncalibrated...calibrated." , "Raw.file", "^Protein.Group.IDs$", "Contaminant", "Retention.time$", "^m.z$", "^Contaminant", "[RK]\\.Count", "^Charge$", "modified.sequence", "^Mass$"))
@@ -713,7 +717,9 @@ if (enabled_evidence)
                 ylab("ID count") +
                 ggtitle("EVD: IDs over RT") +
                 theme(legend.title=element_blank()) +
-                scale_color_brewer(palette="Set2")
+                scale_fill_manual(values = rep(c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", 
+                                                 "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00",
+                                                 "#cab2d6", "#6a3d9a", "#ffff99"), 10))
     print(qp)
     return (1)
   }
@@ -1014,6 +1020,7 @@ if (enabled_msms)
   ### this is the real missed cleavages estimate ... but slow
   #d_msms = readMQ(txt_files$msms, type="msms", nrows=10)
   #colnames(d_msms)
+  #head(d_msms)
   d_msms = readMQ(txt_files$msms, type="msms", col_subset=c("Missed\\.cleavages", "^Raw.file$"))
   
   
@@ -1058,14 +1065,84 @@ if (enabled_msms)
 enabled_msmsscans = getYAML(yaml_obj, "File$MsMsScans$enabled", TRUE)
 if (enabled_msmsscans)
 {
-  #d_msmsScan = readMQ(txt_files$msmsScan, type="msms", nrows=10)
-  d_msmsScan = readMQ(txt_files$msmsScan, type="msms", col_subset=c("^Identified", "Scan.event.number", "Raw.file", "Elapsed.Time", "Ion.Injection.Time"))
+  #d_msmsScan_h = readMQ(txt_files$msmsScan, type="msms", nrows=2)
+  d_msmsScan = readMQ(txt_files$msmsScan, type="msms", col_subset=c("^retention.time$", "^Identified", "Scan.event.number", "Raw.file", "Elapsed.Time", "Ion.Injection.Time"))
   #colnames(d_msmsScan)
   #head(d_msmsScan)
   #unique(d_msmsScan$Identified)
   
   ## scan event number
   scan.event.number = NULL ## make R check happy
+  
+  ## maximum scan event over time
+  # round RT to 1 min intervals
+  d_msmsScan$rRT = round(d_msmsScan$retention.time/1)*1
+  DFmse = ddply(d_msmsScan, c("fc.raw.file", "rRT"), summarise, maxSE = max(scan.event.number))
+  head(DFmse)
+  plotMaxSEinRT = function(data)
+  { 
+    print(
+    ggplot(data, aes_string(x = "rRT", y = "maxSE", col = "fc.raw.file")) +
+      #geom_line(stat="identity") +
+      xlab("retention time [min]") +
+      ylab("highest N") +
+      stat_smooth(method = "loess", formula = y ~ x, se = FALSE, span = 0.1) +
+      guides(color=guide_legend(title="")) +
+      ggtitle("MSMSscans: Scan event performance (smoothed)")
+    )
+    return (1)
+  }
+  byXflex(DFmse, DFmse$fc.raw.file, 9, plotMaxSEinRT)
+  
+  
+  ## scan event counts
+  DFc = ddply(d_msmsScan, c("scan.event.number", "fc.raw.file"), summarise, n = length(scan.event.number))
+  dfc.ratio = ddply(DFc, "fc.raw.file", function(x, maxn)
+  {
+    ## sort x by scan event
+    x <<- x[order(x$scan.event.number),]
+    event_count = x$n
+    ## verify its monotonically increasing
+    if (is.unsorted(rev(event_count))) {
+      print(x)
+      stop("Scan event distribution is not monotonically increasing!")
+    } 
+    ## verify that there are no gaps
+    if (max(x$scan.event.number) != nrow(x)) {
+      print(x)
+      stop("Scan event distribution has unexpected holes...!")
+    }
+    
+    event_pre = c(event_count[-1], 0)
+    event_diff = event_count - event_pre
+    
+    ## build new DF of fixed length
+    sn = x$scan.event.number
+    if (max(sn) < maxn) 
+    {
+      event_diff = c(event_diff, rep(0, maxn-max(sn)))
+      sn = c(sn, (max(sn)+1):maxn)
+    }
+    DF.new = data.frame(scan.event.number = sn, n = event_diff)
+    return (DF.new)
+  }, maxn = max(DFc$scan.event.number))
+  head(dfc.ratio)
+  
+  plotScanEventDiff = function(dfc.ratio)
+  {
+    print(
+      ggplot(dfc.ratio, aes_string(x = "scan.event.number", y = "n")) +
+        geom_bar(stat="identity") +
+        xlab("scan event") +
+        ylab("highest N") +
+        facet_wrap(~ fc.raw.file) +
+        ggtitle(paste0("MSMSscans: Scan event performance"))
+    )
+    return (1)
+  }
+  byXflex(dfc.ratio, dfc.ratio$fc.raw.file, 9, plotScanEventDiff)
+
+
   #require(plyr)
   DF = ddply(d_msmsScan, c("scan.event.number", "identified", "fc.raw.file"), summarise, n = length(scan.event.number))
   df.ratio = ddply(DF, c("scan.event.number", "fc.raw.file"), function(x)
@@ -1091,6 +1168,7 @@ if (enabled_msmsscans)
     return (1)
   }
   byXflex(df.ratio, df.ratio$fc.raw.file, 9, plotScanEvent)
+  
   
 #   tt = ddply(d_msmsScan, c("scan.event.number", "fc.raw.file", "identified"), summarise, n = mean(ion.injection.time))
 #   # tt = tt[tt$identified=="+",]

@@ -652,3 +652,16 @@ mosaicPlot = function(var1, var2)
       geom_text(aes_string(label = "as.character(var1)", x = "var1_center", y = 1.05)) 
   return (pl)
 }
+
+#' A string concatenation function, more readable than 'paste()'.
+#' 
+#' @param a Char vector
+#' @param b Char vector
+#' @return Concatenated string (no separator)
+#'
+#' @export
+#'
+`%+%` <- function(a, b)
+{
+  return (paste(a, b, sep=""))
+} 

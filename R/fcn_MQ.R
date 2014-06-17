@@ -150,8 +150,8 @@ readMQ <- function(file, filter="C+R", type="pg", col_subset=NA, add_fs_col=T, L
     }
     
     ### add abundance index columns (for both, intensity and lfq.intensity)
-    int_cols= colnames(data)[grep("intensity", colnames(data))]
-    data[, sub("intensity", "AbInd", int_cols)] = apply(data[,int_cols], 2, function(x)
+    int_cols = grepv("intensity", colnames(data))
+    data[, sub("intensity", "AbInd", int_cols)] = apply(data[,int_cols, drop=F], 2, function(x)
                                                   {
                                                     x / data[,"mol..weight..kda."]
                                                   })
