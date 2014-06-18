@@ -1018,10 +1018,56 @@ if (enabled_msms)
 {
   ### missed cleavages (again)
   ### this is the real missed cleavages estimate ... but slow
-  #d_msms = readMQ(txt_files$msms, type="msms", nrows=10)
-  #colnames(d_msms)
+  #d_msms_s = readMQ(txt_files$msms, type="msms", nrows=10)
+  #colnames(d_msms_s)
   #head(d_msms)
-  d_msms = readMQ(txt_files$msms, type="msms", col_subset=c("Missed\\.cleavages", "^Raw.file$"))
+  d_msms = readMQ(txt_files$msms, type="msms", col_subset=c("Missed\\.cleavages", "^Raw.file$", "mass.deviations..da.", "reverse"))
+  ms2_decal = ddply(d_msms, "fc.raw.file", .fun = function(x) {
+    #system.time((ms = unlist(sapply(x$mass.deviations..da., function(xs) strsplit(xs, split=";", fixed=T)))))
+    # much faster:
+    #system.time((ms = unlist(strsplit(paste(x$mass.deviations..da., sep="", collapse=";"), split=";", fixed=T))))
+    idx_nr = which(x$reverse == "")
+    ## select a representative subset, otherwise the number of datapoints is just too large
+    step = ceiling(length(idx_nr)/1000)
+    idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=step)]
+    
+    x_nr = paste(x$mass.deviations..da.[idx_nr_subset], sep="", collapse=";")
+    ms = unlist(strsplit(x_nr, split=";", fixed=T))
+    df.ms = data.frame(msErr = ms, type="forward")
+    
+    if (sum(x$reverse == "+") > 0)
+    {
+      idx_nr = which(x$reverse == "+")
+      ## select a representative subset, otherwise the number of datapoints is just too large
+      step = ceiling(length(idx_nr)/1000)
+      idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=step)]
+      
+      x_nr = paste(x$mass.deviations..da.[idx_nr_subset], sep="", collapse=";")
+      ms = unlist(strsplit(x_nr, split=";", fixed=T))
+      df.ms = rbind(df.ms, data.frame(msErr = ms, type="decoy"))
+    }
+    
+    return (df.ms)
+  })
+  head(ms2_decal)
+  ## precision (plotting is just so much quicker, despite using a fixed binwidth)
+  ms2_decal$msErr = round(as.numeric(as.character(ms2_decal$msErr)), digits=2)
+  head(ms2_decal)
+  
+  fcPlotMS2Dec <- function(d_sub)
+  {
+    pl = 
+      ggplot(data = d_sub, aes_string(x = "msErr", fill="type")) + 
+      geom_histogram(binwidth = 0.05) +
+      xlab("fragment mass delta [Da]") +  
+      ylab("count") + 
+      scale_fill_manual(values = c("#99d594",  "#ff0000")) +
+      ggtitle("MSMS: Fragment mass errors per RAW file") +
+      facet_wrap(~fc.raw.file)
+    print(pl)
+    return(pl)
+  }
+  pp = byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, fcPlotMS2Dec)
   
   
   ## missed cleavages per Raw file
@@ -1076,19 +1122,33 @@ if (enabled_msmsscans)
   
   ## maximum scan event over time
   # round RT to 1 min intervals
-  d_msmsScan$rRT = round(d_msmsScan$retention.time/1)*1
-  DFmse = ddply(d_msmsScan, c("fc.raw.file", "rRT"), summarise, maxSE = max(scan.event.number))
+  d_msmsScan$rRT = round(d_msmsScan$retention.time/2)*2
+  
+  DFmse = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
+    ## sort by RT
+    if (is.unsorted(x$retention.time))
+    { ## should not happen, but just to make sure
+      x = x[, order(x$retention.time)]
+    }
+    ## only take the highest SE in a series
+    maxN = getMaxima(x$scan.event.number, thresh_rel = 0.0)
+    df.max = x[maxN,]
+    ## use median of that within one RT bin
+    meanN = ddply(df.max, c("rRT"), summarise, medSE = median(scan.event.number))
+    return (meanN)    
+  })
+  
   head(DFmse)
   plotMaxSEinRT = function(data)
   { 
     print(
-    ggplot(data, aes_string(x = "rRT", y = "maxSE", col = "fc.raw.file")) +
-      #geom_line(stat="identity") +
+    ggplot(data, aes_string(x = "rRT", y = "medSE", col = "fc.raw.file")) +
+      geom_point(stat="identity", position = "jitter") +
       xlab("retention time [min]") +
-      ylab("highest N") +
-      stat_smooth(method = "loess", formula = y ~ x, se = FALSE, span = 0.1) +
+      ylab("highest N [median per RT bin]") +
+      #stat_smooth(method = "loess", formula = y ~ x, se = FALSE, span = 0.1) +
       guides(color=guide_legend(title="")) +
-      ggtitle("MSMSscans: Scan event performance (smoothed)")
+      ggtitle("MSMSscans: Scan event performance")
     )
     return (1)
   }
@@ -1100,7 +1160,6 @@ if (enabled_msmsscans)
   dfc.ratio = ddply(DFc, "fc.raw.file", function(x, maxn)
   {
     ## sort x by scan event
-    x <<- x[order(x$scan.event.number),]
     event_count = x$n
     ## verify its monotonically increasing
     if (is.unsorted(rev(event_count))) {
