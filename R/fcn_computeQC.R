@@ -822,7 +822,7 @@ if (enabled_evidence)
     col = c("black", "red")[(unique(d_evd$raw.file) %in% affected_raw_files) + 1]
     
     boxplot(uncalibrated.mass.error..ppm. ~ raw.file, d_evd, names=d_evd$fc.raw.file[match(unique(d_evd$raw.file), d_evd$raw.file)], 
-            ylab="ppm error", main = "EVD: Uncalibrated mass error", horizontal = TRUE,
+            xlab="ppm error", main = "EVD: Uncalibrated mass error", horizontal = TRUE,
             las=1, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75), cex.names = 0.5, col = col)
     if (nchar(recal_message)) mtext(text=recal_message, side=3, col="red")
   }
@@ -835,7 +835,7 @@ if (enabled_evidence)
     col = c("black", "red")[(unique(d_evd$raw.file) %in% affected_raw_files) + 1]
     
     boxplot(mass.error..ppm. ~ raw.file, d_evd, names=d_evd$fc.raw.file[match(unique(d_evd$raw.file), d_evd$raw.file)], 
-            ylab="ppm error", main = "EVD: Calibrated mass error", horizontal = TRUE,
+            xlab="ppm error", main = "EVD: Calibrated mass error", horizontal = TRUE,
             las=2, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75), cex.names = 0.5, col = col)
     if (nchar(recal_message)) mtext(text=recal_message, side=3, col="red")
   }
