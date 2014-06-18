@@ -26,6 +26,7 @@ Now, you should have the following structure
 
     <network-drive>\QC-dragdrop\
                                \createQC_dragNdrop.bat
+                               \createQC_dragNdrop_withYAML.bat
                                \_internal\
                                          \R-3.1.0  (version may differ)
                                          \compute_QC_report.R
