@@ -37,7 +37,7 @@
 #'  
 #' @export
 #'           
-createReport <- function(txt_folder, yaml_obj = list())
+#createReport <- function(txt_folder, yaml_obj = list())
 {
   
 if (0) ## for local execution and debug
@@ -836,7 +836,7 @@ if (enabled_evidence)
     
     boxplot(mass.error..ppm. ~ raw.file, d_evd, names=d_evd$fc.raw.file[match(unique(d_evd$raw.file), d_evd$raw.file)], 
             xlab="ppm error", main = "EVD: Calibrated mass error", horizontal = TRUE,
-            las=2, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75), cex.names = 0.5, col = col)
+            las=1, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75), cex.names = 0.5, col = col)
     if (nchar(recal_message)) mtext(text=recal_message, side=3, col="red")
   }
   pp = byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiffCal, sort_indices=T, affected_raw_files=affected_raw_files)
@@ -1194,7 +1194,7 @@ if (enabled_msmsscans)
         geom_bar(stat="identity") +
         xlab("scan event") +
         ylab("highest N") +
-        facet_wrap(~ fc.raw.file) +
+        facet_wrap(~ fc.raw.file, scales = "free_y") +
         ggtitle(paste0("MSMSscans: Scan event performance"))
     )
     return (1)
