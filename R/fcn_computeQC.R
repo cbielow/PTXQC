@@ -37,7 +37,7 @@
 #'  
 #' @export
 #'           
-#createReport <- function(txt_folder, yaml_obj = list())
+createReport <- function(txt_folder, yaml_obj = list())
 {
   
 if (0) ## for local execution and debug
@@ -395,7 +395,7 @@ if (enabled_proteingroups)
   {
     #cond = names(clusterCols)[3]
     print(clusterCols[cond])
-    if (length(clusterCols[cond]) <= 1) 
+    if (length(clusterCols[[cond]]) <= 1) 
     { ## only one condition.. PCA does not make sense (and will not work)
       next;
     }
