@@ -20,6 +20,7 @@ Imports:
     plotrix,
     plyr,
     reshape2,
-    seqinr
+    seqinr,
+    proto
 License: file LICENSE
 Roxygen: list(wrap = TRUE)
