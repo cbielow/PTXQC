@@ -47,7 +47,7 @@ if (0) ## for local execution and debug
   
 ### script starts...
 
-if (!file.info(txt_folder)$isdir)
+if (!any(file.info(txt_folder)$isdir, na.rm=T))
 {
   stop(paste0("Argument txt_folder with value '", txt_folder, "' is not a valid directory\n"));
 }
@@ -88,6 +88,9 @@ pdf(report_file, onefile=T)
 
 yaml_file = paste(txt_folder, "\\report_", report_version, ".yaml", sep="")
 
+## prepare for readMQ()
+mq = MQDataReader$new()
+
 ######
 ######  parameters.txt ...
 ######
@@ -95,7 +98,7 @@ yaml_file = paste(txt_folder, "\\report_", report_version, ".yaml", sep="")
 enabled_parameters = getYAML(yaml_obj, "File$Parameters$enabled", TRUE)
 if (enabled_parameters)
 {
-  d_parAll = readMQ(txt_files$param, type="par")
+  d_parAll = mq$readMQ(txt_files$param, type="par")
   
   line_break = "\n  "; ## use space to make it work with table
   ## remove AIF stuff
@@ -156,8 +159,7 @@ if (enabled_parameters)
 enabled_summary = getYAML(yaml_obj, "File$Summary$enabled", TRUE)
 if (enabled_summary)
 {
-    
-  d_smy = readMQ(txt_files$summary, type="sm")
+  d_smy = mq$readMQ(txt_files$summary, type="sm")
   #colnames(d_smy)
   #colnames(d_smy[[1]])
   
@@ -205,7 +207,7 @@ enabled_proteingroups = getYAML(yaml_obj, "File$ProteinGroups$enabled", TRUE)
 if (enabled_proteingroups)
 {
     
-  d_pg = readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")
+  d_pg = mq$readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")
   
   ## Contaminants stats
   idx_int = grepv("^intensity\\.", colnames(d_pg))
@@ -234,7 +236,7 @@ if (enabled_proteingroups)
   }
   df.con_stats = data.frame(x=colnames(con_stats), y=as.vector(con_stats[1,]))
   # plot list (for later plotting)
-  pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 120, plotContsPG, sort_indices=T)
+  pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 120, plotContsPG, sort_indices=F)
   for (p in pg_plots_cont) print(p);
   
   ### warn of special contaminants!
@@ -313,7 +315,7 @@ if (enabled_proteingroups)
         pr = addGGtitle(pr, paste0("PG: Contaminant '", ca, "'"), main_sub_found)
         print(pr) 
       }
-      byXflex(data = bar.data, indices = 1:nrow(bar.data), subset_size = 120, FUN = plotContUser, sort_indices=T, extra_limit = as.numeric(ca_entry[2]))
+      byXflex(data = bar.data, indices = 1:nrow(bar.data), subset_size = 120, FUN = plotContUser, sort_indices=F, extra_limit = as.numeric(ca_entry[2]))
     }
   
     #dev.off()
@@ -342,7 +344,7 @@ if (enabled_proteingroups)
   int_dev = RSD(medians)
   int_dev.s = pastet("INT RSD [%]", round(int_dev, 3))
   boxplotCompare(data1 = d_pg[, colsW, drop=F], data2=NA, log2_ratios = T, 
-                 mainlab="intensity distribution", 
+                 mainlab="PG: intensity distribution", 
                  sublab=paste0("RSD ", round(int_dev_no0, 1),"% (should be < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
                  abline = 25)
   cat(int_dev.s, file=stats_file, append=T, sep="\n")
@@ -362,7 +364,7 @@ if (enabled_proteingroups)
     lfq_dev = RSD(medians)
     lfq_dev.s = pastet("LFQ RSD [%]", round(lfq_dev, 3))
     boxplotCompare(d_pg[, colsW, drop=F], NA, T, ylab="LFQ", 
-                   mainlab="LFQ intensity distribution", 
+                   mainlab="PG: LFQ intensity distribution", 
                    sublab= paste0("RSD ", round(lfq_dev_no0, 1),"% (should be < 5%)\nRSD ", round(lfq_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
                    abline = 25)
     cat(lfq_dev.s, file=stats_file, append=T, sep="\n")
@@ -496,15 +498,21 @@ if (enabled_proteingroups)
 enabled_evidence = getYAML(yaml_obj, "File$Evidence$enabled", TRUE)
 if (enabled_evidence)
 {
-  #d_evd_s = readMQ(txt_files$evd, type="ev", nrows=10000)
-  #d_evd_s = readMQ(txt_files$evd, type="ev")
+  #d_evd_s = mq$readMQ(txt_files$evd, type="ev", nrows=10000)
+  #d_evd_s = mq$readMQ(txt_files$evd, type="ev")
   #head(d_evd_s)
   #colnames(d_evd)
   #table(d_evd_s$reverse)
   #[grep("ount", colnames(d_evd))]
   
-  d_evd = readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration", "Match.Time.Difference", "^Sequence$", "^intensity$", "Mass\\.Error", "^uncalibrated...calibrated." , "Raw.file", "^Protein.Group.IDs$", "Contaminant", "Retention.time$", "^m.z$", "^Contaminant", "[RK]\\.Count", "^Charge$", "modified.sequence", "^Mass$"))
-  #d_evd = readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("labeling.state", "Match.Time.Difference", "fasta.headers", "^intensity$", "Raw.file", "^Protein.Group.IDs$"))
+  d_evd = mq$readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration", "Match.Time.Difference", "^Sequence$", "^intensity$", "Mass\\.Error", "^uncalibrated...calibrated." , "Raw.file", "^Protein.Group.IDs$", "Contaminant", "Retention.time$", "^m.z$", "^Contaminant", "[RK]\\.Count", "^Charge$", "modified.sequence", "^Mass$"))
+  
+  ## sort by rawfile as shown in the summary.txt (or whatever the first txt file was)
+  d_evd = d_evd[order(match(as.character(d_evd$fc.raw.file), mq$raw_file_mapping$to)),]
+  ## sort fc.raw.file's factor values as well
+  d_evd$fc.raw.file = factor(d_evd$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
+  
+  #d_evd = mq$readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("labeling.state", "Match.Time.Difference", "fasta.headers", "^intensity$", "Raw.file", "^Protein.Group.IDs$"))
   #summary(head(d_evd))
   #head(d_evd)
   #colnames(d_evd)
@@ -528,7 +536,8 @@ if (enabled_evidence)
   ## only count protein groups from non-inferred evidence
   # get only the column without MTDs
   d_evd$hasMTD = has_mtd
-  protGroupCount_pre = ddply(d_evd[, c("hasMTD", "raw.file", "protein.group.ids")], "raw.file", .fun = function(x){
+  
+  protGroupCount_pre = ddply(d_evd[, c("hasMTD", "fc.raw.file", "protein.group.ids")], "fc.raw.file", .fun = function(x){
     ## proteins
     # remove duplicates (since strsplit below is expensive)
     x$group_mtdinfo = paste(x$protein.group.ids, x$hasMTD, sep="_")
@@ -552,23 +561,26 @@ if (enabled_evidence)
   })
   protGroupCount_pre
   ## manually melt
-  pgc =       data.frame(raw.file = protGroupCount_pre$raw.file, protCount = protGroupCount_pre$proteinCount_noMBR, match = "no")
+  pgc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, protCount = protGroupCount_pre$proteinCount_noMBR, match = "no")
   pgc = rbind(pgc,
-              data.frame(raw.file = protGroupCount_pre$raw.file, protCount = protGroupCount_pre$proteinCount_MBRgain, match = "yes"))
+              data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, protCount = protGroupCount_pre$proteinCount_MBRgain, match = "yes"))
   pgc
-
+  ## re-order (ddply somehow reorders, even if we use ordered factors...)
+  pgc$fc.raw.file = factor(pgc$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
+  #levels(pgc$fc.raw.file)
+  
   # combine Prot & Pep stats
   ## Warn: this is still different from summary.txt...
   #colnames(ppg) = c("# protein groups", "# peptides", "# peptides\n(incl. matched)", "file")
   #mdat = melt(ppg, id.vars="file")
   
   head(pgc)
-  pgc$block = factor(assignBlocks(pgc$raw.file, 30))
+  pgc$block = factor(assignBlocks(pgc$fc.raw.file, 30))
   max_prot = max(protGroupCount_pre$proteinCount_noMBR + protGroupCount_pre$proteinCount_MBRgain)
   #require(RColorBrewer)
   ddply(pgc, "block", .fun = function(x) {
-    x$s.raw.file = simplifyNames((as.character(x$raw.file)))
-    print(ggplot(x, aes_string(x = "s.raw.file", y = "protCount", fill = "match")) +
+    #x$s.raw.file = simplifyNames((as.character(x$raw.file)))
+    print(ggplot(x, aes_string(x = "fc.raw.file", y = "protCount", fill = "match")) +
             geom_bar(stat = "identity", position = "stack") +
             xlab("") +
             ylim(0, max_prot) +
@@ -581,18 +593,20 @@ if (enabled_evidence)
   })
   
   
-  pepc =       data.frame(raw.file = protGroupCount_pre$raw.file, pepCount = protGroupCount_pre$pep_count_noMBR, match = "no")
+  pepc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, pepCount = protGroupCount_pre$pep_count_noMBR, match = "no")
   pepc = rbind(pepc,
-               data.frame(raw.file = protGroupCount_pre$raw.file, pepCount = protGroupCount_pre$pep_count_MBRgain, match = "yes"))
+               data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, pepCount = protGroupCount_pre$pep_count_MBRgain, match = "yes"))
   pepc
+  ## re-order (ddply somehow reorders, even if we use ordered factors...)
+  pepc$fc.raw.file = factor(pepc$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
   
   head(pepc)
-  pepc$block = factor(assignBlocks(pepc$raw.file, 30))
+  pepc$block = factor(assignBlocks(pepc$fc.raw.file, 30))
   max_pep = max(protGroupCount_pre$pep_count_noMBR + protGroupCount_pre$pep_count_MBRgain)
   #require(RColorBrewer)
   ddply(pepc, "block", .fun = function(x) {
-    x$s.raw.file = simplifyNames((as.character(x$raw.file)))
-    print(ggplot(x, aes_string(x = "s.raw.file", y = "pepCount", fill = "match")) +
+    #x$s.raw.file = simplifyNames((as.character(x$raw.file)))
+    print(ggplot(x, aes_string(x = "fc.raw.file", y = "pepCount", fill = "match")) +
             geom_bar(stat = "identity", position = "stack") +
             xlab("") +
             ylim(0, max_pep) +
@@ -645,7 +659,7 @@ if (enabled_evidence)
         print(pl)
       }
       
-      byX(d_evd[,c("retention.time", "retention.time.calibration", "fc.raw.file")], as.numeric(as.factor(d_evd$fc.raw.file)), 8, splitRTAlignByRawFile)
+      byX(d_evd[,c("retention.time", "retention.time.calibration", "fc.raw.file")], as.numeric(as.factor(d_evd$fc.raw.file)), 8, splitRTAlignByRawFile, sort_indices = F)
     }
   }
   
@@ -723,7 +737,7 @@ if (enabled_evidence)
     print(qp)
     return (1)
   }
-  byXflex(d_evd, d_evd$raw.file, raws_perPlot, fcRTSubset, smr_evdRT=smr_evdRT)
+  byXflex(d_evd, d_evd$raw.file, raws_perPlot, fcRTSubset, smr_evdRT=smr_evdRT, sort_indices = FALSE)
 } 
   ## histograms of mass error
   
@@ -749,7 +763,7 @@ if (enabled_evidence)
       dc = x[, 2]
       names(dc) = x[, 1]
       barplot(dc, horiz=T, las=2, main = "RAW files affected by wrong calibration numbers", xlab="% of ID's affected", cex.names = 0.5)
-    })
+    }, sort_indices=F)
     affected_raw_files = de_cal_pc_pl[, 1]
     
     ## re-compute 'uncalibrated.mass.error..ppm.'
@@ -817,8 +831,6 @@ if (enabled_evidence)
   ## , so either remove outliers before (quantile estimation seems not robust enough) or don't plot them (default)
   plotAlignDiff = function(d_evd, affected_raw_files)
   {
-    ## sort by rawfile name
-    d_evd = d_evd[order(as.character(d_evd$raw.file)),]
     col = c("black", "red")[(unique(d_evd$raw.file) %in% affected_raw_files) + 1]
     
     boxplot(uncalibrated.mass.error..ppm. ~ raw.file, d_evd, names=d_evd$fc.raw.file[match(unique(d_evd$raw.file), d_evd$raw.file)], 
@@ -826,12 +838,10 @@ if (enabled_evidence)
             las=1, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75), cex.names = 0.5, col = col)
     if (nchar(recal_message)) mtext(text=recal_message, side=3, col="red")
   }
-  pp = byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiff, sort_indices=T, affected_raw_files=affected_raw_files)
+  pp = byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiff, sort_indices=F, affected_raw_files=affected_raw_files)
   
   plotAlignDiffCal = function(d_evd, affected_raw_files)
   {
-    ## sort by rawfile name
-    d_evd = d_evd[order(as.character(d_evd$raw.file)),]
     col = c("black", "red")[(unique(d_evd$raw.file) %in% affected_raw_files) + 1]
     
     boxplot(mass.error..ppm. ~ raw.file, d_evd, names=d_evd$fc.raw.file[match(unique(d_evd$raw.file), d_evd$raw.file)], 
@@ -839,7 +849,7 @@ if (enabled_evidence)
             las=1, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75), cex.names = 0.5, col = col)
     if (nchar(recal_message)) mtext(text=recal_message, side=3, col="red")
   }
-  pp = byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiffCal, sort_indices=T, affected_raw_files=affected_raw_files)
+  pp = byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiffCal, sort_indices=F, affected_raw_files=affected_raw_files)
   
   ## compute how well calibration worked
   cal_medians = as.vector(by(d_evd$mass.error..ppm., d_evd$raw.file, median, na.rm=T))
@@ -886,7 +896,7 @@ if (enabled_evidence)
     )
       
   }
-  pp = byXflex(d_evd[, c("intensity", "proteins", "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices=T, plotCont, top5=cont.top5.names)
+  pp = byXflex(d_evd[, c("intensity", "proteins", "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices=F, plotCont, top5=cont.top5.names)
   
   con_stats_smry = quantile(con_stats[,1], probs=c(0,0.5,1))
   cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=stats_file, append=T, sep="\n")  
@@ -946,23 +956,30 @@ if (enabled_evidence)
   raws = as.factor(sort(as.character(unique(d_evd$fc.raw.file))))
 
   ## plot overview: percent of duplicate identifications (exclusion not "long" enough)
-  percent_duplicates = sapply(raws, function(rf) { 
-    idx = which(d_evd$fc.raw.file==rf) ## subset of certain raw.file
-    d = d_evd[idx,c("raw.file","modified.sequence", "charge", "match.time.difference")]
-    nrDuplicated = sum(duplicated(d) ) # | duplicated(d, fromLast=TRUE)) ## depending on how we want to count...
-    return (nrDuplicated/nrow(d)*100)
-  })
-  d_dups = data.frame(name = as.character(raws), 
-                      dups = percent_duplicates)
+  d_dups = ddply(d_evd[, c("fc.raw.file","modified.sequence", "charge", "match.time.difference")], "fc.raw.file", 
+    function(d_sub)
+    { 
+      nrDuplicated = sum(duplicated(d_sub) ) # | duplicated(d, fromLast=TRUE)) ## depending on how we want to count...
+      dups = data.frame(dups = nrDuplicated/nrow(d_sub)*100)
+      return (dups)
+    })
   twinThresh = 100 ## disabled for now... (much too slow)
-  print(
-    ggplot(d_dups) + geom_bar(stat="identity", aes_string(x = "name", y = "dups")) +
+  
+  fcnPlotTwin = function(d_dups)
+  {
+    print(
+    ggplot(d_dups) + geom_bar(stat="identity", aes_string(x = "fc.raw.file", y = "dups")) +
                      xlab("") +
                      ylab("percent") +
                      ggtitle(paste0("EVD: Percent twin sequences (same sequence, q, rawfile)\n(more details when >", twinThresh, "%)")) + 
                      theme(axis.text.x = element_text(angle=90))
-  )
-  if (max(percent_duplicates)>twinThresh)
+    )
+    return(TRUE)
+  }
+  byXflex(d_dups, d_dups$fc.raw.file, 30, fcnPlotTwin, sort_indices = F)
+  
+
+  if (max(d_dups$dups)>twinThresh)
   { ## warn:: very!! slow!!
     d_evd$duplicateMinRTDiff = NA;
     #install.packages("foreach")
@@ -1018,10 +1035,16 @@ if (enabled_msms)
 {
   ### missed cleavages (again)
   ### this is the real missed cleavages estimate ... but slow
-  #d_msms_s = readMQ(txt_files$msms, type="msms", nrows=10)
+  #d_msms_s = mq$readMQ(txt_files$msms, type="msms", nrows=10)
   #colnames(d_msms_s)
   #head(d_msms)
-  d_msms = readMQ(txt_files$msms, type="msms", col_subset=c("Missed\\.cleavages", "^Raw.file$", "mass.deviations..da.", "reverse"))
+  d_msms = mq$readMQ(txt_files$msms, type="msms", col_subset=c("Missed\\.cleavages", "^Raw.file$", "mass.deviations..da.", "reverse"))
+  
+  d_msms = d_msms[order(match(as.character(d_msms$fc.raw.file), mq$raw_file_mapping$to)),]
+  ## sort fc.raw.file's factor values as well
+  d_msms$fc.raw.file = factor(d_msms$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
+  
+  
   ms2_decal = ddply(d_msms, "fc.raw.file", .fun = function(x) {
     #system.time((ms = unlist(sapply(x$mass.deviations..da., function(xs) strsplit(xs, split=";", fixed=T)))))
     # much faster:
@@ -1067,7 +1090,7 @@ if (enabled_msms)
     print(pl)
     return(pl)
   }
-  pp = byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, fcPlotMS2Dec)
+  pp = byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, fcPlotMS2Dec, sort_indices=F)
   
   
   ## missed cleavages per Raw file
@@ -1096,7 +1119,7 @@ if (enabled_msms)
     r[names(t)] = t
     return (r)
   })
-  pp = byXflex(st_bin, st_bin$fc.raw.file, 25, fcMCRTSubset, smr_msmsMC=smr_msmsMC)
+  pp = byXflex(st_bin, st_bin$fc.raw.file, 25, fcMCRTSubset, smr_msmsMC=smr_msmsMC, sort_indices=F)
   
   mcZero = st_bin[, "0"] * 100
   mcZero_stat = 100 - rev(quantile(mcZero, probs=c(0,0.5,1)))
@@ -1111,11 +1134,16 @@ if (enabled_msms)
 enabled_msmsscans = getYAML(yaml_obj, "File$MsMsScans$enabled", TRUE)
 if (enabled_msmsscans)
 {
-  #d_msmsScan_h = readMQ(txt_files$msmsScan, type="msms", nrows=2)
-  d_msmsScan = readMQ(txt_files$msmsScan, type="msms", col_subset=c("^retention.time$", "^Identified", "Scan.event.number", "Raw.file", "Elapsed.Time", "Ion.Injection.Time"))
+  #d_msmsScan_h = mq$readMQ(txt_files$msmsScan, type="msms", nrows=2)
+  d_msmsScan = mq$readMQ(txt_files$msmsScan, type="msms", col_subset=c("^retention.time$", "^Identified", "Scan.event.number", "Raw.file", "Elapsed.Time", "Ion.Injection.Time"))
   #colnames(d_msmsScan)
   #head(d_msmsScan)
   #unique(d_msmsScan$Identified)
+  
+  d_msmsScan = d_msmsScan[order(match(as.character(d_msmsScan$fc.raw.file), mq$raw_file_mapping$to)),]
+  ## sort fc.raw.file's factor values as well
+  d_msmsScan$fc.raw.file = factor(d_msmsScan$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
+  
   
   ## scan event number
   scan.event.number = NULL ## make R check happy
@@ -1152,7 +1180,7 @@ if (enabled_msmsscans)
     )
     return (1)
   }
-  byXflex(DFmse, DFmse$fc.raw.file, 9, plotMaxSEinRT)
+  byXflex(DFmse, DFmse$fc.raw.file, 9, plotMaxSEinRT, sort_indices=F)
   
   
   ## scan event counts
@@ -1199,7 +1227,7 @@ if (enabled_msmsscans)
     )
     return (1)
   }
-  byXflex(dfc.ratio, dfc.ratio$fc.raw.file, 9, plotScanEventDiff)
+  byXflex(dfc.ratio, dfc.ratio$fc.raw.file, 9, plotScanEventDiff, sort_indices=F)
 
 
   #require(plyr)
@@ -1226,7 +1254,7 @@ if (enabled_msmsscans)
     )
     return (1)
   }
-  byXflex(df.ratio, df.ratio$fc.raw.file, 9, plotScanEvent)
+  byXflex(df.ratio, df.ratio$fc.raw.file, 9, plotScanEvent, sort_indices=F)
   
   
 #   tt = ddply(d_msmsScan, c("scan.event.number", "fc.raw.file", "identified"), summarise, n = mean(ion.injection.time))
