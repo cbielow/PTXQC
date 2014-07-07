@@ -16,15 +16,15 @@
 ## CLASS 'MQDataReader'
 MQDataReader <- proto()
 
-#' Constructor for class 'MQDataReader'
+#' Constructor for class 'MQDataReader'.
 #'
 #' This class is used to read MQ data tables using readMQ() while holding
-#' the internal raw file --> short raw file name mapping
-#' and updating/using it every time readMQ() is called.
+#' the internal raw file --> short raw file name mapping (stored in a member called 
+#' 'raw_file_mapping') and updating/using it every time readMQ() is called.
 #' 
+#' @name MQDataReader$new
 #' @import proto
 #' 
-#' @export
 MQDataReader$new <- function(.)
 {
   proto(., raw_file_mapping = data.frame())
@@ -66,12 +66,11 @@ MQDataReader$new <- function(.)
 #'               "toNA": replace by NA
 #'               "impute": replace by lowest LFQ value >0 (simulating 'noise')
 #' @param ... Additional parameters passed on to read.delim()             
-#' @return data.frame
-
+#' @return A data.frame of the respective file
+#' 
+#' @name MQDataReader$readMQ
 #' @import utils
 #' @import graphics
-#' 
-#' @export
 #' 
 MQDataReader$readMQ <- function(., file, filter="C+R", type="pg", col_subset=NA, add_fs_col=10, LFQ_action=FALSE, ...)
 {
@@ -236,8 +235,15 @@ MQDataReader$readMQ <- function(., file, filter="C+R", type="pg", col_subset=NA,
 
 #' Plots the current mapping of Raw file names to their shortened version.
 #'
+#' Convenience function to plot the mapping (e.g. to a PDF device for reporting).
+#' The data frame can be accessed directly via '.$raw_file_mapping'.
 #' If no mapping exists, the function prints a warning to console and omits the plot.
 #'
+#' @return Returns 'TRUE' if mapping is present. 'FALSE' otherwise (no plot is generated).
+#'
+#' @name MQDataReader$plotNameMapping
+#' @import plotrix
+#' 
 MQDataReader$plotNameMapping <- function(.)
 {
   if (length(.$raw_file_mapping) > 0)
@@ -256,6 +262,7 @@ MQDataReader$plotNameMapping <- function(.)
                   title="Info: mapping of raw files to their short names" %+% extra) 
   } else {
     cat("No mapping found. Omitting plot.")
+    return (FALSE);
   }
     
   return (TRUE);  
