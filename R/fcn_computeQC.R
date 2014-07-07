@@ -329,6 +329,16 @@ if (enabled_proteingroups)
   
   clusterCols = list()
   ## intensity boxplots ##
+  param_name_EV_intThresh = "File$ProteinGroups$IntensityThreshLog2_num"
+  param_def_EV_intThresh = 25 ## default median intensity in log2 scale
+  param_EV_intThresh = getYAML(yaml_obj, param_name_EV_intThresh, param_def_EV_intThresh)
+  if (!is.numeric(param_EV_intThresh) || !(param_EV_intThresh %in% 1:100))
+  { ## reset if value is weird
+    print("YAML value for '" %+% param_name_EV_intThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_intThresh %+% ".")
+    param_EV_intThresh = param_def_EV_intThresh
+  }
+  
+  
   colsSIL = grepv("^intensity.[HLM].", colnames(d_pg))
   colsLF = grepv("^intensity.[^HLM].", colnames(d_pg))
   colsOneCond = "intensity"
@@ -346,7 +356,7 @@ if (enabled_proteingroups)
   boxplotCompare(data1 = d_pg[, colsW, drop=F], data2=NA, log2_ratios = T, 
                  mainlab="PG: intensity distribution", 
                  sublab=paste0("RSD ", round(int_dev_no0, 1),"% (should be < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
-                 abline = 25)
+                 abline = param_EV_intThresh)
   cat(int_dev.s, file=stats_file, append=T, sep="\n")
   
   ## LFQ boxplots
@@ -366,7 +376,7 @@ if (enabled_proteingroups)
     boxplotCompare(d_pg[, colsW, drop=F], NA, T, ylab="LFQ", 
                    mainlab="PG: LFQ intensity distribution", 
                    sublab= paste0("RSD ", round(lfq_dev_no0, 1),"% (should be < 5%)\nRSD ", round(lfq_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
-                   abline = 25)
+                   abline = param_EV_intThresh)
     cat(lfq_dev.s, file=stats_file, append=T, sep="\n")
   }
   
@@ -386,7 +396,7 @@ if (enabled_proteingroups)
     boxplotCompare(d_pg[, colsW, drop=F], NA, T, ylab="Reporter", 
                    mainlab="Reporter intensity distribution", 
                    sublab= paste0("RSD ", round(reprt_dev_no0, 1),"% (should be < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
-                   abline = 25)
+                   abline = param_EV_intThresh)
     cat(reprt_dev.s, file=stats_file, append = T, sep="\n")
   }
   
@@ -577,16 +587,27 @@ if (enabled_evidence)
   head(pgc)
   pgc$block = factor(assignBlocks(pgc$fc.raw.file, 30))
   max_prot = max(protGroupCount_pre$proteinCount_noMBR + protGroupCount_pre$proteinCount_MBRgain)
+  
+  param_name_EV_protThresh = "File$Evidence$ProteinCountThresh_num"
+  param_def_EV_protThresh = 3500
+  param_EV_protThresh = getYAML(yaml_obj, param_name_EV_protThresh, param_def_EV_protThresh)
+  if (!is.numeric(param_EV_protThresh) || !(param_EV_protThresh %in% 1:1e5))
+  { ## reset if value is weird
+    print("YAML value for '" %+% param_name_EV_protThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_protThresh %+% ".")
+    param_EV_protThresh = param_def_EV_protThresh
+  }
+    
   #require(RColorBrewer)
   ddply(pgc, "block", .fun = function(x) {
     #x$s.raw.file = simplifyNames((as.character(x$raw.file)))
     print(ggplot(x, aes_string(x = "fc.raw.file", y = "protCount", fill = "match")) +
             geom_bar(stat = "identity", position = "stack") +
             xlab("") +
-            ylim(0, max_prot) +
+            ylab("count") +
+            ylim(0, max(param_EV_protThresh, max_prot)*1.1) +
             scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400)) +
             ggtitle("EV: Protein ID stats (small bias vs SM.txt)") + 
-            ylab("count") +
+            geom_abline(alpha = 0.5, intercept = param_EV_protThresh, slope = 0, colour = "green", linetype = "dashed", size = 1.5) +
             coord_flip()
           )
     return (1)
@@ -603,16 +624,27 @@ if (enabled_evidence)
   head(pepc)
   pepc$block = factor(assignBlocks(pepc$fc.raw.file, 30))
   max_pep = max(protGroupCount_pre$pep_count_noMBR + protGroupCount_pre$pep_count_MBRgain)
+  
+  param_name_EV_pepThresh = "File$Evidence$PeptideCountThresh_num"
+  param_def_EV_pepThresh = 15000
+  param_EV_pepThresh = getYAML(yaml_obj, param_name_EV_pepThresh, param_def_EV_pepThresh)
+  if (!is.numeric(param_EV_pepThresh) || !(param_EV_pepThresh %in% 1:1e6))
+  { ## reset if value is weird
+    print("YAML value for '" %+% param_name_EV_pepThresh %+% "' is invalid ('" %+% param_EV_pepThresh %+% "'). Using default of " %+% param_def_EV_pepThresh %+% ".")
+    param_EV_pepThresh = param_def_EV_pepThresh
+  }
+
   #require(RColorBrewer)
   ddply(pepc, "block", .fun = function(x) {
     #x$s.raw.file = simplifyNames((as.character(x$raw.file)))
     print(ggplot(x, aes_string(x = "fc.raw.file", y = "pepCount", fill = "match")) +
             geom_bar(stat = "identity", position = "stack") +
             xlab("") +
-            ylim(0, max_pep) +
+            ylab("count") +
+            ylim(0, max(param_EV_protThresh, max_pep)*1.1) +
+            geom_abline(alpha = 0.5, intercept = param_EV_pepThresh, slope = 0, colour = "green", linetype = "dashed", size = 1.5) +
             scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400)) +
             ggtitle("EV: Peptide ID stats (small bias vs SM.txt)") + 
-            ylab("count") +
             coord_flip()
     )
     return (1)
@@ -1302,9 +1334,15 @@ yaml.user.warning =
 # Note that each parameter level has two more spaces for indentation
 # A value is assigned using a colon followed by a space, i.e. ': '
 #
-# Possible binary values are 'no' and 'yes'.
-# In addition, some parameters support other values (e.g. 'auto', which usually relies on a heuristic to decide if something should be plotted).
-# By default, parameters which support 'auto' have a name which ends in 'wA' (withAuto).
+# The values that can be taken by a parameter are indicated by the SUFFIX of the name.
+# '<name>_num' :  a numeric value is expected
+# '<name>_wA'  :  'no', 'yes', 'auto' (see below)
+# '<name>      :  'no', 'yes'
+#
+# By default (no special ending) parameters are BINARY (yes or no).
+# Parameters ending in 'wA' (== 'withAuto') offer a heuristic to decide if something should be plotted.
+# Finally, numerical parameters... well.. are numerical (usually integer).
+#
 # Furthermore, there is the SpecialContaminants section, where you can trigger the generation of a plot
 # which just shows the fraction of proteins containing a certain string.
 # By default we search for 'MYCOPLASMA' in the protein identifier, i.e. your txt should be derived from a 
