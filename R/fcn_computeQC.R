@@ -706,6 +706,25 @@ if (enabled_evidence)
            xlab="time [min]",
            ylab="count")
       
+      ## thin out data, since it takes ages to draw the plot in PDF (100k datapoints are common)
+      evd_RT_thin = d_evd[,c("retention.time", "retention.time.calibration", "fc.raw.file")]
+      ##  .. everything this close together is deleted
+      RT_delta = (max(evd_RT_thin$retention.time) - min(evd_RT_thin$retention.time))/1000
+      evd_RT_t = ddply(evd_RT_thin, "fc.raw.file", function(x) {
+        nstart = nrow(x)
+        #x = evd_RT_thin[1:1000,]
+        ## first remove duplicates (they cannot possibly pass the filter)
+        x = x[!duplicated(x$retention.time), ]
+        ##
+        x = x[order(x$retention.time), ]
+        local_deltas = c(0, (x$retention.time[-1] - x$retention.time[-nrow(x)]))
+        ld_cs = cumsum(local_deltas)
+        x = x[!duplicated(round(ld_cs / RT_delta)),]
+        print("Saved " %+% round(100 - nrow(x)/nstart*100) %+% "% for " %+% x$fc.raw.file[1])
+        return(x)
+      })
+      ##head(evd_RT_t)
+      
       #require(splines) ## for ns()
       splitRTAlignByRawFile = function(RTdata) {
         pl = ggplot(data=RTdata, aes_string(x = "retention.time", y = "retention.time.calibration")) 
@@ -718,9 +737,10 @@ if (enabled_evidence)
           ylab("match time difference [min]") +
           xlab("retention time [min]")
         print(pl)
+        return(1)
       }
       
-      byX(d_evd[,c("retention.time", "retention.time.calibration", "fc.raw.file")], as.numeric(as.factor(d_evd$fc.raw.file)), 8, splitRTAlignByRawFile, sort_indices = F)
+      byX(evd_RT_t, as.numeric(as.factor(evd_RT_t$fc.raw.file)), 8, splitRTAlignByRawFile, sort_indices = F)
     }
   }
   
