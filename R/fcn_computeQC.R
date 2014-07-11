@@ -163,8 +163,8 @@ if (enabled_summary)
   #colnames(d_smy)
   #colnames(d_smy[[1]])
   
-  id_rate_bad = getYAML(yaml_obj, "File$IDRate$Thresh_bad_num", 20)
-  id_rate_great = getYAML(yaml_obj, "File$IDRate$Thresh_great_num", 35)
+  id_rate_bad = getYAML(yaml_obj, "File$Summary$IDRate$Thresh_bad_num", 20)
+  id_rate_great = getYAML(yaml_obj, "File$Summary$IDRate$Thresh_great_num", 35)
   
   ### MS/MS identified [%]
   dms = d_smy[[1]][,"ms.ms.identified...."]
