@@ -27,7 +27,7 @@ MQDataReader <- proto()
 #' 
 MQDataReader$new <- function(.)
 {
-  proto(., raw_file_mapping = data.frame())
+  proto(., raw_file_mapping = NULL, mq.data = NULL)
 }
 
 ##
@@ -39,13 +39,14 @@ MQDataReader$new <- function(.)
 #' Since MaxQuant changes capitalization and sometimes even column names, it seemed convenient
 #' to have a function which just reads a txt file and returns unified column names, irrespective of the MQ version.
 #' So, it unifies access to columns (e.g. by using lower case for ALL columns) and ensures columns are
-#' identically named across MQ versions. We only of one case: "protease" == "enzyme".
+#' identically named across MQ versions. We know of only one case: "protease" == "enzyme".
 #'
 #' If the file is empty, this function stops with an error.
 #'
-#' @param .      A 'this' pointer (in C++ terms). Use it to refer/change internal members. It's implicitly added, thus not required too call the function!
+#' @param .      A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!
 #' @param file   (Relative) path to a MQ txt file ()
-#' @param filter Searched for "C" and "R". If present, [c]ontaminants and [r]everse hits are removed
+#' @param filter Searched for "C" and "R". If present, [c]ontaminants and [r]everse hits are removed if the respective columns are present.
+#'               E.g. to filter both, \code{filter = "C+R"}
 #' @param type   Allowed values are:
 #'               "pg" (proteinGroups) [default], adds abundance index columns (*AbInd*, replacing 'intensity')
 #'               "sm" (summary), splits into three row subsets (raw.file, condition, total)
@@ -57,7 +58,7 @@ MQDataReader$new <- function(.)
 #'                   common prefix AND common substrings removed (\code{\link{simplifyNames}})
 #'                           E.g. two rawfiles named 'OrbiXL_2014_Hek293_Control', 'OrbiXL_2014_Hek293_Treated' will give
 #'                                                   'Control', 'Treated'
-#'                   If 'add_fs_col' is a number AND the longest short-name is still longer, the names are discarded and replaced by
+#'                   If \code{add_fs_col} is a number AND the longest short-name is still longer, the names are discarded and replaced by
 #'                   a running ID of the form 'f<x>', where <x> is a number from 1 to N.
 #'                   If the function is called again and a mapping already exists, this mapping is used.
 #'                   Should some raw.files be unknown (ie the mapping from the previous file is incomplete), an error is thrown.
@@ -72,7 +73,7 @@ MQDataReader$new <- function(.)
 #' @import utils
 #' @import graphics
 #' 
-MQDataReader$readMQ <- function(., file, filter="C+R", type="pg", col_subset=NA, add_fs_col=10, LFQ_action=FALSE, ...)
+MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, add_fs_col=10, LFQ_action=FALSE, ...)
 {
   cat(paste("Reading file", file,"...\n"))
   ## error message if failure should occur below
@@ -101,38 +102,40 @@ MQDataReader$readMQ <- function(., file, filter="C+R", type="pg", col_subset=NA,
     #print (colnames(data_header))
   }
   
-  data = try(read.delim(file, na.strings=c("NA", "n. def."), stringsAsFactors=F, comment.char="#", colClasses = col_subset, ...))
-  if (inherits(data, 'try-error')) stop(msg_parse_error, call.=F);
+  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def."), stringsAsFactors=F, comment.char="#", colClasses = col_subset, ...))
+  if (inherits(.$mq.data, 'try-error')) stop(msg_parse_error, call.=F);
   
-  #colnames(data)
+  #colnames(.$mq.data)
   
-  cat(paste0("Read ", nrow(data), " entries from ", file,".\n"))
+  cat(paste0("Read ", nrow(.$mq.data), " entries from ", file,".\n"))
   
   ### just make everything lower.case (MQ versions keep changing it and we want it to be reproducible)
-  colnames(data) = tolower(colnames(data))
+  colnames(.$mq.data) = tolower(colnames(.$mq.data))
   ## rename some columns since MQ 1.2 vs. 1.3 differ....
-  colnames(data)[colnames(data)=="protease"] = "enzyme"
+  colnames(.$mq.data)[colnames(.$mq.data)=="protease"] = "enzyme"
   
+  ## work in-place on 'contaminant' column
+  .$substitute("contaminant");
+  .$substitute("reverse");
+  if (grepl("C", filter) & ("contaminant" %in% colnames(.$mq.data))) .$mq.data = .$mq.data[!(.$mq.data$contaminant),]
+  if (grepl("R", filter) & ("reverse" %in% colnames(.$mq.data))) .$mq.data = .$mq.data[!(.$mq.data$reverse),]
   
   ## proteingroups.txt special treatment
   if (type=="pg")
   {
-    if (grepl("C", filter)) data = data[data$contaminant != "+",]
-    if (grepl("R", filter)) data = data[data$reverse != "+",]
-    
     stats = data.frame(n=NA, v=NA)
     if (LFQ_action!=FALSE)
     { ## replace erroneous zero LFQ values with something else
       cat("Starting LFQ action.\nReplacing ...\n")
-      lfq_cols = grepv("^lfq", colnames(data))
+      lfq_cols = grepv("^lfq", colnames(.$mq.data))
       for (cc in lfq_cols)
       {
         ## get corresponding raw intensity column
         rawint_col = sub("^lfq\\.", "", cc)
-        if (!(rawint_col %in% colnames(data))) {stop(paste0("Could not find column '", rawint_col, "' in dataframe with columns: ", paste(colnames(data), collapse=",")), "\n")}
-        vals = data[, cc]
+        if (!(rawint_col %in% colnames(.$mq.data))) {stop(paste0("Could not find column '", rawint_col, "' in dataframe with columns: ", paste(colnames(.$mq.data), collapse=",")), "\n")}
+        vals = .$mq.data[, cc]
         ## affected rows
-        bad_rows = (data[, rawint_col]>0 & data[, cc]==0)
+        bad_rows = (.$mq.data[, rawint_col]>0 & .$mq.data[, cc]==0)
         if (sum(bad_rows, na.rm=T)==0) {next;}
         ## take action
         if (LFQ_action=="toNA" | LFQ_action=="impute") {
@@ -144,9 +147,9 @@ MQDataReader$readMQ <- function(., file, filter="C+R", type="pg", col_subset=NA,
             ## replace with minimum noise value (>0!)
             vals[bad_rows] = impVal;
           }
-          cat(paste0("   '", cc, "' ", sum(bad_rows, na.rm=T), ' entries (', sum(bad_rows, na.rm=T)/nrow(data)*100,'%) with ', impVal, '\n'))
+          cat(paste0("   '", cc, "' ", sum(bad_rows, na.rm=T), ' entries (', sum(bad_rows, na.rm=T)/nrow(.$mq.data)*100,'%) with ', impVal, '\n'))
           ## add column
-          data[, paste0("c", cc)] = vals;
+          .$mq.data[, paste0("c", cc)] = vals;
           ##
           stats = rbind(stats, c(sum(bad_rows, na.rm=T), impVal))
           
@@ -161,32 +164,29 @@ MQDataReader$readMQ <- function(., file, filter="C+R", type="pg", col_subset=NA,
     }
     
     ### add abundance index columns (for both, intensity and lfq.intensity)
-    int_cols = grepv("intensity", colnames(data))
-    data[, sub("intensity", "AbInd", int_cols)] = apply(data[,int_cols, drop=F], 2, function(x)
+    int_cols = grepv("intensity", colnames(.$mq.data))
+    .$mq.data[, sub("intensity", "AbInd", int_cols)] = apply(.$mq.data[,int_cols, drop=F], 2, function(x)
     {
-      x / data[,"mol..weight..kda."]
+      x / .$mq.data[,"mol..weight..kda."]
     })
     
   } else if (type=="sm")
     ## summary.txt special treatment
   { ## split
-    idx_group = which(data$enzyme=="" | is.na(data$enzyme))[1]
-    raw.files = data[1:(idx_group-1), ]
-    groups = data[idx_group:(nrow(data)-1), ]
-    total = data
-    data = raw.files ## temporary, until we have assigned the fc.raw.files
+    idx_group = which(.$mq.data$enzyme=="" | is.na(.$mq.data$enzyme))[1]
+    raw.files = .$mq.data[1:(idx_group-1), ]
+    groups = .$mq.data[idx_group:(nrow(.$mq.data)-1), ]
+    total = .$mq.data
+    .$mq.data = raw.files ## temporary, until we have assigned the fc.raw.files
   }
   
   
-  if (add_fs_col & "raw.file" %in% colnames(data))
+  if (add_fs_col & "raw.file" %in% colnames(.$mq.data))
   {
     ## check if we already have a mapping
-    if (length(.$raw_file_mapping) > 0)
+    if (is.null(.$raw_file_mapping))
     {
-     
-    } else {
-      
-      rf_name = unique(data$raw.file)
+      rf_name = unique(.$mq.data$raw.file)
       ## remove prefix
       rf_name_s = delLCP(rf_name)
       ## remove infix (2 iterations)
@@ -208,7 +208,7 @@ MQDataReader$readMQ <- function(., file, filter="C+R", type="pg", col_subset=NA,
       { ## resort to short naming convention
         .$raw_file_mapping[, "best effort"] = .$raw_file_mapping$to
         cat("Filenames are longer than the maximal allowed size of '" %+% add_fs_col %+% "'. Resorting to short versions 'f...'.\n\n")
-        maxl = length(unique(data$raw.file))
+        maxl = length(unique(.$mq.data$raw.file))
         .$raw_file_mapping$to = paste("f", sprintf(paste0("%0", nchar(maxl), "d"), 1:maxl)) ## with leading 0's if required
         ## plot a mapping table ... (this might not be the best place to do it though..)
         .$plotNameMapping()
@@ -216,37 +216,37 @@ MQDataReader$readMQ <- function(., file, filter="C+R", type="pg", col_subset=NA,
       
     }
     ## do the mapping    
-    data$fc.raw.file = as.factor(.$raw_file_mapping$to[match(data$raw.file, .$raw_file_mapping$from)])
+    .$mq.data$fc.raw.file = as.factor(.$raw_file_mapping$to[match(.$mq.data$raw.file, .$raw_file_mapping$from)])
     ## check for NA's
-    if (any(is.na(data$fc.raw.file)))
+    if (any(is.na(.$mq.data$fc.raw.file)))
     {
-      missing = unique(data$raw.file[is.na(data$fc.raw.file)])
+      missing = unique(.$mq.data$raw.file[is.na(.$mq.data$fc.raw.file)])
       stop("Generation of short Raw file names failed due to missing mapping entries:" %+% paste(missing, collapse=", ", sep=""))
     }
   }
 
   if (type=="sm") { ## post processing for summary
-    data = list(raw = raw.files, groups = groups, total = total)
+    .$mq.data = list(raw = raw.files, groups = groups, total = total)
   }
   
-  return (data);
+  return (.$mq.data);
 } ## end readMQ()
 
 
 #' Plots the current mapping of Raw file names to their shortened version.
 #'
 #' Convenience function to plot the mapping (e.g. to a PDF device for reporting).
-#' The data frame can be accessed directly via '.$raw_file_mapping'.
+#' The data frame can be accessed directly via \code{.$raw_file_mapping}.
 #' If no mapping exists, the function prints a warning to console and omits the plot.
 #'
-#' @return Returns 'TRUE' if mapping is present. 'FALSE' otherwise (no plot is generated).
+#' @return Returns \code{TRUE} if mapping is present. 'FALSE' otherwise (no plot is generated).
 #'
 #' @name MQDataReader$plotNameMapping
 #' @import plotrix
 #' 
 MQDataReader$plotNameMapping <- function(.)
 {
-  if (length(.$raw_file_mapping) > 0)
+  if (!is.null(.$raw_file_mapping))
   {
     extra = ""
     if ("best effort" %in% colnames(.$raw_file_mapping))
@@ -266,4 +266,38 @@ MQDataReader$plotNameMapping <- function(.)
   }
     
   return (TRUE);  
+}
+
+#' Replaces values in the mq.data member with (binary) values.
+#'
+#' Most MQ tables contain columns like 'contaminants' or 'reverse', whose values are either empty strings
+#' or "+", which is inconvenient and can be much better represented as TRUE/FALSE.
+#' The params \code{valid_entries} and \code{replacements} contain the matched pairs, which determine what is replaced with what.
+#' 
+#' @param colname       Name of the column (e.g. "contaminants") in the mq.data table
+#' @param valid_entries Vector of values to be replaced (must contain all values expected in the column -- fails otherwise)
+#' @param replacements  Vector of values inserted with the same length as \code{valid_entries}.
+#' @return Returns \code{TRUE} if successful.
+#'
+#' @name MQDataReader$substitute
+#' 
+MQDataReader$substitute <- function(., colname, valid_entries = c("","+"), replacements = c(FALSE, TRUE))
+{
+  if (length(valid_entries) == 0)
+  {
+    stop("Entries given to $substitute() must not be empty.")
+  }
+  if (length(valid_entries) != length(replacements))
+  {
+    stop("In function $substitute(): 'valid_entries' and 'replacements' to not have the same length!")
+  }
+  if (colname %in% colnames(.$mq.data))
+  {
+    ## verify that there are only known entries (usually c("","+") )
+    setD_c = setdiff(.$mq.data[, colname], valid_entries)
+    if (length(setD_c) > 0) stop(paste0("'", colname, "' column contains unknown entry (", paste(setD_c, collapse=",", sep="") ,")."))
+    ## replace with TRUE/FALSE
+    .$mq.data[, colname] = replacements[ match(.$mq.data[, colname], valid_entries) ];
+  }
+  return (TRUE);
 }

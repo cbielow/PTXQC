@@ -163,10 +163,13 @@ if (enabled_summary)
   #colnames(d_smy)
   #colnames(d_smy[[1]])
   
+  id_rate_bad = getYAML(yaml_obj, "File$IDRate$Thresh_bad_num", 20)
+  id_rate_great = getYAML(yaml_obj, "File$IDRate$Thresh_great_num", 35)
+  
   ### MS/MS identified [%]
   dms = d_smy[[1]][,"ms.ms.identified...."]
-  lab_IDd = c("bad (<20%)", "ok (20-35%)", "great (>35%)")
-  d_smy[[1]]$color = factor(cut(dms, breaks=c(-1, 20, 35, 100), labels=lab_IDd))
+  lab_IDd = c("bad (<" %+% id_rate_bad %+% "%)", "ok (" %+% id_rate_bad %+% "-" %+% id_rate_great %+% "%)", "great (>" %+% id_rate_great %+% "%)")
+  d_smy[[1]]$color = factor(cut(dms, breaks=c(-1, id_rate_bad, id_rate_great, 100), labels=lab_IDd))
   #unique(d_smy[[1]]$color)
   cols_IDd = c("red", "blue", "green")
   cols_IDs_active = cols_IDd[lab_IDd %in% unique(d_smy[[1]]$color)]
@@ -215,7 +218,7 @@ if (enabled_proteingroups)
   { ##apparently no conditions were used, so there is just 'intensity'
     idx_int = "intensity"
   }
-  con_stats = t(sapply(idx_int, function(x) sum(as.numeric(d_pg[d_pg$contaminant=="+", x]))/sum(as.numeric(d_pg[, x]))*100 ))
+  con_stats = t(sapply(idx_int, function(x) sum(as.numeric(d_pg[d_pg$contaminant, x]))/sum(as.numeric(d_pg[, x]))*100 ))
   con_stats[is.na(con_stats)] = 0
   colnames(con_stats) = shortenStrings(simplifyNames(delLCP(idx_int)), max_len = 12)
   
@@ -297,7 +300,7 @@ if (enabled_proteingroups)
   
     if (sum(bar.data$value)==0)
     { ## identifier was not found in any sample
-      plot(0:100, 0:100, type="n", axes=F, xlab="",ylab="")
+      plot(0:100, 0:100, type="n", axes=F, xlab="", ylab="")
       mtext(line=-2, paste0("Contaminant '", ca, "' was not found in any sample.\n\nDid you use the correct database?"))  
     } else {
       plotContUser = function(datav, extra_limit) {
@@ -432,7 +435,11 @@ if (enabled_proteingroups)
   
   if (length(ratio_cols) > 0)
   {
-    d_sub = log2(d_pg[,ratio_cols, drop=F])
+    colnames(d_pg)
+    
+    ## remove reverse and contaminants (might skew the picture)
+    idx_row = !d_pg$contaminant & !d_pg$reverse
+    d_sub = log2(d_pg[idx_row, ratio_cols, drop=F])
     ## rename "ratio.l.h" to "ratio.l.h.l.h"
     colnames(d_sub)[1] = "l.h"
     ## simplify the rest
@@ -462,7 +469,29 @@ if (enabled_proteingroups)
     ratio.densities$ltype = c("dotted", "solid")[ratio.densities$multimodal+1]
     #head((ratio.densities))
     
-    title_ratio = "PG: ratio density"
+    
+    legend_title = "group"
+    ## compute label incorporation?
+    ratio.mode = ddply(ratio.densities, "col", .fun = function(x) {
+      mode = x$x[which.max(x$y)]
+      return (data.frame(mode = mode))
+    })
+    if (max(abs(ratio.mode$mode)) > 3) { ## on more than ratio 1:8 or 8:1 ratio, report label incorporation
+      ## back to normal scale
+      ratio.norm = 2^ratio.mode$mode
+      ## compute incorporation
+      ratio.inc =  ratio.norm / (ratio.norm+1) * 100
+      ## round
+      ratio.mode$li = round(ratio.inc)
+      ## new label
+      ratio.mode$col_new = ratio.mode$col %+% " (" %+% ratio.mode$li %+% "%)"
+      ## replace column names in data.frame
+      ratio.densities$col = ratio.mode$col_new[match(ratio.densities$col, ratio.mode$col)]
+      ## notify user via legend title
+      legend_title = "group\n(with label inc)"
+    }
+    
+    title_ratio = "PG: ratio density\n(w/o contaminants)"
     title_col = "black"
     if (any(ratio.densities$multimodal))
     {
@@ -481,13 +510,13 @@ if (enabled_proteingroups)
           xlab("ratio")  +
           ylab("density")  +
           #facet_grid(col ~ ) +
-          scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400), guide_legend("")) + 
-          scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=400), guide_legend("")) +
+          scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400), guide_legend(legend_title)) + 
+          scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=400), guide_legend(legend_title)) +
           scale_linetype_manual(values = c("dotted"="dotted", "solid"="solid"), 
                                 labels=c("dotted"="unimodal", "solid"="multimodal"),
                                 guide_legend("mode")
           ) +
-          scale_x_continuous(limits = c(d_min, d_max), trans = "identity", breaks = c(-br, 0, br), labels=c(paste0("1/",2^(br)), 0, 2^br)) +
+          scale_x_continuous(limits = c(d_min, d_max), trans = "identity", breaks = c(-br, 0, br), labels=c(paste0("1/",2^(br)), 1, 2^br)) +
           guides(alpha=FALSE, colour=FALSE) +
           theme(plot.title = element_text(colour = title_col)) +
           ggtitle(title_ratio)
@@ -498,7 +527,7 @@ if (enabled_proteingroups)
     byXflex(ratio.densities, ratio.densities$col, 5, plotRatios, sort_indices = F, d_min = min(d_sub, na.rm=T), d_max = max(d_sub, na.rm=T), title_col)
     
   }
-  
+    
 }
 
 ######
@@ -508,8 +537,8 @@ if (enabled_proteingroups)
 enabled_evidence = getYAML(yaml_obj, "File$Evidence$enabled", TRUE)
 if (enabled_evidence)
 {
-  #d_evd_s = mq$readMQ(txt_files$evd, type="ev", nrows=10000)
-  #d_evd_s = mq$readMQ(txt_files$evd, type="ev")
+  #d_evd_s = mq$readMQ(txt_files$evd, type="ev", filter = "", nrows=10000)
+  #d_evd_s = mq$readMQ(txt_files$evd, type="ev", filter = "")
   #head(d_evd_s)
   #colnames(d_evd)
   #table(d_evd_s$reverse)
@@ -891,7 +920,7 @@ if (enabled_evidence)
   ## elaborate contaminant fraction per Raw.file
   ## find top 5 contaminants (globally)
   d_evd.totalInt = sum(as.numeric(d_evd$intensity), na.rm=T)
-  d_evd.cont.only = d_evd[d_evd$contaminant=="+",]
+  d_evd.cont.only = d_evd[d_evd$contaminant,]
   cont.top = by(d_evd.cont.only, d_evd.cont.only$proteins, function(x) sum(as.numeric(x$intensity), na.rm=T) / d_evd.totalInt*100)
   cont.top.sort = sort(cont.top, decreasing=T)
   #head(cont.top.sort)
@@ -899,7 +928,7 @@ if (enabled_evidence)
   plotCont = function(d_evd_sub, top5) 
   { 
     intensity = NULL ## to make R CHECK happy...
-    d_evd.cont.only_sub = d_evd_sub[d_evd_sub$contaminant=="+",]
+    d_evd.cont.only_sub = d_evd_sub[d_evd_sub$contaminant,]
     ## rewrite prot names, and subsume 6th and below as 'other'
     d_evd.cont.only_sub$proteins[!(d_evd.cont.only_sub$proteins %in% top5)] = 'other'
     ## aggregate identical proteins
@@ -1026,7 +1055,7 @@ if (enabled_evidence)
       idx = which(d_evd$fc.raw.file==rf) ## subset of certain raw.file
       d_string = sapply(idx, function(x) 
         ## MTD is important to not consider inferred evidence by match between runs
-        paste0(d_evd[x,c("raw.file","modified.sequence", "charge", "match.time.difference")],collapse=""))
+        paste0(d_evd[x,c("raw.file","modified.sequence", "charge", "match.time.difference")], collapse=""))
       groups = Filter(function(x) length(x)>1, split(idx, d_string))
       head(groups)
       ## for each group: get minimal RT difference between all elements
@@ -1067,10 +1096,10 @@ if (enabled_msms)
 {
   ### missed cleavages (again)
   ### this is the real missed cleavages estimate ... but slow
-  #d_msms_s = mq$readMQ(txt_files$msms, type="msms", nrows=10)
+  #d_msms_s = mq$readMQ(txt_files$msms, type="msms", filter = "", nrows=10)
   #colnames(d_msms_s)
   #head(d_msms)
-  d_msms = mq$readMQ(txt_files$msms, type="msms", col_subset=c("Missed\\.cleavages", "^Raw.file$", "mass.deviations..da.", "reverse"))
+  d_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c("Missed\\.cleavages", "^Raw.file$", "mass.deviations..da.", "reverse"))
   
   d_msms = d_msms[order(match(as.character(d_msms$fc.raw.file), mq$raw_file_mapping$to)),]
   ## sort fc.raw.file's factor values as well
@@ -1081,7 +1110,7 @@ if (enabled_msms)
     #system.time((ms = unlist(sapply(x$mass.deviations..da., function(xs) strsplit(xs, split=";", fixed=T)))))
     # much faster:
     #system.time((ms = unlist(strsplit(paste(x$mass.deviations..da., sep="", collapse=";"), split=";", fixed=T))))
-    idx_nr = which(x$reverse == "")
+    idx_nr = which(!x$reverse)
     ## select a representative subset, otherwise the number of datapoints is just too large
     step = ceiling(length(idx_nr)/1000)
     idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=step)]
@@ -1090,9 +1119,9 @@ if (enabled_msms)
     ms = unlist(strsplit(x_nr, split=";", fixed=T))
     df.ms = data.frame(msErr = ms, type="forward")
     
-    if (sum(x$reverse == "+") > 0)
+    if (any(x$reverse))
     {
-      idx_nr = which(x$reverse == "+")
+      idx_nr = which(x$reverse)
       ## select a representative subset, otherwise the number of datapoints is just too large
       step = ceiling(length(idx_nr)/1000)
       idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=step)]
@@ -1166,8 +1195,8 @@ if (enabled_msms)
 enabled_msmsscans = getYAML(yaml_obj, "File$MsMsScans$enabled", TRUE)
 if (enabled_msmsscans)
 {
-  #d_msmsScan_h = mq$readMQ(txt_files$msmsScan, type="msms", nrows=2)
-  d_msmsScan = mq$readMQ(txt_files$msmsScan, type="msms", col_subset=c("^retention.time$", "^Identified", "Scan.event.number", "Raw.file", "Elapsed.Time", "Ion.Injection.Time"))
+  #d_msmsScan_h = mq$readMQ(txt_files$msmsScan, type="msms", filter = "", nrows=2)
+  d_msmsScan = mq$readMQ(txt_files$msmsScan, type="msms", filter = "", col_subset=c("^retention.time$", "^Identified", "Scan.event.number", "Raw.file", "Elapsed.Time", "Ion.Injection.Time"))
   #colnames(d_msmsScan)
   #head(d_msmsScan)
   #unique(d_msmsScan$Identified)
@@ -1360,7 +1389,7 @@ yaml.user.warning =
 #
 "
 cat(paste0(yaml.user.warning, as.yaml(yaml_obj)), file=yaml_file)
-cat(paste("Report file created at\n\n    ", txt_folder, "\\", report_file, "\n\n",sep=""))
+cat(paste("Report file created at\n\n    ", txt_folder, "\\", report_file, "\n\n", sep=""))
 cat(paste0("\n\nTime elapsed: ", round(as.double(Sys.time() - time_start, units="mins"), 1), " min\n\n"))
 
 ## return path to PDF report and YAML config
