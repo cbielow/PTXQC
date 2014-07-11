@@ -3,14 +3,16 @@
 \alias{MQDataReader$readMQ}
 \title{Wrapper to read a MQ txt file (e.g. proteinGroups.txt).}
 \arguments{
-  \item{.}{A 'this' pointer (in C++ terms). Use it to
-  refer/change internal members. It's implicitly added,
-  thus not required too call the function!}
+  \item{.}{A 'this' pointer. Use it to refer/change
+  internal members. It's implicitly added, thus not
+  required too call the function!}
 
   \item{file}{(Relative) path to a MQ txt file ()}
 
   \item{filter}{Searched for "C" and "R". If present,
-  [c]ontaminants and [r]everse hits are removed}
+  [c]ontaminants and [r]everse hits are removed if the
+  respective columns are present. E.g. to filter both,
+  \code{filter = "C+R"}}
 
   \item{type}{Allowed values are: "pg" (proteinGroups)
   [default], adds abundance index columns (*AbInd*,
@@ -30,13 +32,14 @@
   (\code{\link{simplifyNames}}) E.g. two rawfiles named
   'OrbiXL_2014_Hek293_Control',
   'OrbiXL_2014_Hek293_Treated' will give 'Control',
-  'Treated' If 'add_fs_col' is a number AND the longest
-  short-name is still longer, the names are discarded and
-  replaced by a running ID of the form 'f<x>', where <x> is
-  a number from 1 to N. If the function is called again and
-  a mapping already exists, this mapping is used. Should
-  some raw.files be unknown (ie the mapping from the
-  previous file is incomplete), an error is thrown.}
+  'Treated' If \code{add_fs_col} is a number AND the
+  longest short-name is still longer, the names are
+  discarded and replaced by a running ID of the form
+  'f<x>', where <x> is a number from 1 to N. If the
+  function is called again and a mapping already exists,
+  this mapping is used. Should some raw.files be unknown
+  (ie the mapping from the previous file is incomplete), an
+  error is thrown.}
 
   \item{LFQ_action}{[For type=='pg' only] An additional
   custom LFQ column ('cLFQ...') is created where zero
@@ -59,7 +62,7 @@ just reads a txt file and returns unified column names,
 irrespective of the MQ version. So, it unifies access to
 columns (e.g. by using lower case for ALL columns) and
 ensures columns are identically named across MQ versions.
-We only of one case: "protease" == "enzyme".
+We know of only one case: "protease" == "enzyme".
 }
 \details{
 If the file is empty, this function stops with an error.
