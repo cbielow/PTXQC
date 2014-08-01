@@ -519,6 +519,8 @@ if (enabled_proteingroups)
           scale_x_continuous(limits = c(d_min, d_max), trans = "identity", breaks = c(-br, 0, br), labels=c(paste0("1/",2^(br)), 1, 2^br)) +
           guides(alpha=FALSE, colour=FALSE) +
           theme(plot.title = element_text(colour = title_col)) +
+          theme_bw() +
+          geom_vline(alpha = 0.5, xintercept = 0, colour = "green", linetype = "dashed", size = 1.5) +
           ggtitle(title_ratio)
       )
       return (1)
