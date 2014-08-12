@@ -36,7 +36,7 @@
 #'  
 #' @export
 #'           
-#createReport <- function(txt_folder, yaml_obj = list())
+createReport <- function(txt_folder, yaml_obj = list())
 {
   
 if (0) ## for local execution and debug
@@ -976,49 +976,79 @@ if (enabled_evidence)
   cal_medians = as.vector(by(d_evd$mass.error..ppm., d_evd$raw.file, median, na.rm=T))
   cal_stats = quantile(cal_medians, probs=c(0,0.5,1))
   cat(pastet("medianCalibratedMassError(min,median,max) [ppm]", paste(cal_stats, collapse=",")), file=stats_file, append=T, sep="\n") 
+
+
+  ## elaborate contaminant fraction per Raw.file (this is not possible from PG, since raw files could be merged)
+  ## find top 5 contaminants (globally)
   
   ## if possible, work on protein names (since MQ1.4), else use proteinIDs
   if ("protein.names" %in% colnames(d_evd))
   {
-    evd_pname = "protein.names"
+    evd_pname = "protein.names"        
   } else {
     evd_pname = "proteins" 
   }
-  ## elaborate contaminant fraction per Raw.file
-  ## find top 5 contaminants (globally)
+  ## protein.names are sometimes not unique, e.g. if a contaminant is involved:
+  ## "P02768;CON__P02768-1" and "P02768" will both give the same name (since contaminant name is empty)
+  ## Thus, the distribution of bars will look slightly different (but summed percentages are identical)
+
+  ## some protein.names are empty (usually the CON__ ones) ... so we substitute with ID
+  d_evd$pname = d_evd[, evd_pname];
+  d_evd$pname[d_evd$pname==""] = d_evd$proteins[d_evd$pname==""] ## a NOP if it already is 'proteins', but ok
+
   d_evd.totalInt = sum(as.numeric(d_evd$intensity), na.rm=T)
   d_evd.cont.only = d_evd[d_evd$contaminant,]
-  cont.top = by(d_evd.cont.only, d_evd.cont.only[,evd_pname], function(x) sum(as.numeric(x$intensity), na.rm=T) / d_evd.totalInt*100)
+  cont.top = by(d_evd.cont.only, d_evd.cont.only$pname, function(x) sum(as.numeric(x$intensity), na.rm=T) / d_evd.totalInt*100)
   cont.top.sort = sort(cont.top, decreasing=T)
   #head(cont.top.sort)
   cont.top5.names = names(cont.top.sort)[1:5]
-  plotCont = function(d_evd_sub, top5, evd_pname) 
+  
+
+  plotCont = function(d_evd_sub, top5) 
   { 
+    #top5 = cont.top5.names
+    #d_evd_sub = d_evd[, c("intensity", "pname", "fc.raw.file", "contaminant", "proteins", "protein.names")]
+    #head(d_evd_sub)
+    
     intensity = NULL ## to make R CHECK happy...
     d_evd.cont.only_sub = d_evd_sub[d_evd_sub$contaminant,]
     ## rewrite prot names, and subsume 6th and below as 'other'
-    d_evd.cont.only_sub[!(d_evd.cont.only_sub[,evd_pname] %in% top5), evd_pname] = 'other'
+    d_evd.cont.only_sub[!(d_evd.cont.only_sub$pname %in% top5), "pname"] = 'other'
     ## aggregate identical proteins
     ##  use sum(as.numeric(.)) to prevent overflow
-    d_sum = ddply(d_evd.cont.only_sub[, c("intensity", evd_pname, "fc.raw.file")], c(evd_pname, "fc.raw.file"), 
+    d_sum = ddply(d_evd.cont.only_sub[, c("intensity", "pname", "fc.raw.file")], c("pname", "fc.raw.file"), 
                   function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm=T)))
     ## normalize by total intensity of raw file
     d_norm = ddply(d_evd_sub[, c("intensity", "fc.raw.file")],  "fc.raw.file", 
                    function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm=T)))
     d_sum$s.intensity = d_sum$s.intensity / d_norm$s.intensity[match(d_sum$fc.raw.file, d_norm$fc.raw.file)] * 100
     ## shorten protein-groups (at most two protein names)
-    d_sum[,evd_pname] = sapply(d_sum[,evd_pname], function(x) {
+    d_sum$pname = sapply(d_sum$pname, function(x) {
       p.split = unlist(strsplit(x, split=";"))
-      ifelse(length(p.split)<=2, paste(p.split, sep="", collapse=";"),
-                                 paste0(paste(p.split[1:2], sep="", collapse=";"),";..."))
+      ## shorten entries as well (at most 20 characters)
+      p.split_s = sapply(p.split, function(x) ifelse(nchar(x)>20, paste0(substr(x, start=1, stop=18), ".."), x))
+      r = ifelse(length(p.split_s)<=2, paste(p.split_s, sep="", collapse=";"),
+                                       paste0(paste(p.split_s[1:2], sep="", collapse=";"),";..."))
+      return(r)
     })
+    ## order of pname determines order of bars    
+    d_sum1 = d_sum[d_sum$pname!="other",]
+    d_sum2 = d_sum[d_sum$pname=="other",]
+    d_sum = rbind(d_sum1, d_sum2)
+    ## value of factors determines order in the legend
+    ## --> make proteins a factor, with 'other' being the first
+    d_sum$pname = factor(d_sum$pname, levels=unique(c("other", d_sum$pname)))
+    as.numeric(d_sum$pname)
     
     ## plot
     print(ggplot(d_sum) +
-      geom_bar(aes_string(x = "factor(fc.raw.file)", y = "s.intensity", fill = paste0('factor(', evd_pname,')')), stat="identity") +
+      geom_bar(aes_string(x = "factor(fc.raw.file)", y = "s.intensity", fill = "pname"), stat="identity") +
       xlab("")  +
+      theme_bw() +
       ggtitle("EVD: Contaminant per RAW file") +
       ylab("contaminant (% intensity)") +
+      scale_fill_manual(values = brewer.pal(6,"Accent")) + 
+      scale_colour_manual(values = brewer.pal(6,"Accent")) +
       geom_hline(aes_string(yintercept = "5"), linetype='dashed') +
       guides(fill = guide_legend(nrow = 2, ncol = 3, byrow = TRUE, reverse = T)) +
       theme(legend.position="top", legend.title=element_blank()) +
@@ -1027,8 +1057,11 @@ if (enabled_evidence)
       
   }
 
-  pp = byXflex(d_evd[, c("intensity", evd_pname, "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices=F, plotCont, top5=cont.top5.names, evd_pname=evd_pname)
+  pp = byXflex(d_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices=F, plotCont, top5=cont.top5.names)
   
+
+
+
   con_stats_smry = quantile(con_stats[,1], probs=c(0,0.5,1))
   cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=stats_file, append=T, sep="\n")  
   
