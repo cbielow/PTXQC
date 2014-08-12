@@ -39,7 +39,11 @@ MQDataReader$new <- function(.)
 #' Since MaxQuant changes capitalization and sometimes even column names, it seemed convenient
 #' to have a function which just reads a txt file and returns unified column names, irrespective of the MQ version.
 #' So, it unifies access to columns (e.g. by using lower case for ALL columns) and ensures columns are
-#' identically named across MQ versions. We know of only one case: "protease" == "enzyme".
+#' identically named across MQ versions:
+#'  old term                  new term
+#'  -----------------------------------------
+#'  protease                  enzyme
+#'  protein.descriptions      fasta.headers
 #'
 #' If the file is empty, this function stops with an error.
 #'
@@ -75,6 +79,8 @@ MQDataReader$new <- function(.)
 #' 
 MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, add_fs_col=10, LFQ_action=FALSE, ...)
 {
+  # . = MQDataReader$new() ## debug
+  # ... = NULL
   cat(paste("Reading file", file,"...\n"))
   ## error message if failure should occur below
   msg_parse_error = paste0("\n\nParsing the file '", file, "' failed. See message above why. If the file is not usable but other files are ok, disable the corresponding section in the YAML config.")
@@ -113,7 +119,8 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   colnames(.$mq.data) = tolower(colnames(.$mq.data))
   ## rename some columns since MQ 1.2 vs. 1.3 differ....
   colnames(.$mq.data)[colnames(.$mq.data)=="protease"] = "enzyme"
-  
+  colnames(.$mq.data)[colnames(.$mq.data)=="protein.descriptions"] = "fasta.headers"
+        
   ## work in-place on 'contaminant' column
   .$substitute("contaminant");
   .$substitute("reverse");
@@ -121,8 +128,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   if (grepl("R", filter) & ("reverse" %in% colnames(.$mq.data))) .$mq.data = .$mq.data[!(.$mq.data$reverse),]
   
   ## proteingroups.txt special treatment
-  if (type=="pg")
-  {
+  if (type=="pg") {
     stats = data.frame(n=NA, v=NA)
     if (LFQ_action!=FALSE)
     { ## replace erroneous zero LFQ values with something else
@@ -170,10 +176,10 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       x / .$mq.data[,"mol..weight..kda."]
     })
     
-  } else if (type=="sm")
+  } else if (type=="sm") {
     ## summary.txt special treatment
-  { ## split
-    idx_group = which(.$mq.data$enzyme=="" | is.na(.$mq.data$enzyme))[1]
+    ## split by a column which has values for raw.files but not for groups (e.g. instrument, NOT enzyme since it can be all NA if disabled)
+    idx_group = which(.$mq.data$instrument=="" | is.na(.$mq.data$instrument))[1]
     raw.files = .$mq.data[1:(idx_group-1), ]
     groups = .$mq.data[idx_group:(nrow(.$mq.data)-1), ]
     total = .$mq.data
@@ -242,7 +248,6 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
 #' @return Returns \code{TRUE} if mapping is present. 'FALSE' otherwise (no plot is generated).
 #'
 #' @name MQDataReader$plotNameMapping
-#' @import plotrix
 #' 
 MQDataReader$plotNameMapping <- function(.)
 {
@@ -251,15 +256,33 @@ MQDataReader$plotNameMapping <- function(.)
     extra = ""
     if ("best effort" %in% colnames(.$raw_file_mapping))
     {
-      extra = "\n(automatic shortening of names was not sufficiently short - see 'best effort'"
+      extra = "\n(automatic shortening of names was not sufficiently short - see 'best effort')"
     }
-    plot(0:100, 0:100, type="n", axes=F, xlab="", ylab="")
-    #tbl_cex = ifelse(bad_id_count<25, 1, 25/bad_id_count)
-    addtable2plot("topleft", y=NULL, 
-                  .$raw_file_mapping,
-                  xjust=0, yjust=1,
-                  xpad=0, ypad=0.1,
-                  title="Info: mapping of raw files to their short names" %+% extra) 
+    
+    #mq_mapping = mq$raw_file_mapping
+    mq_mapping = .$raw_file_mapping
+    mq_mapping$ypos = -(1:nrow(mq_mapping))
+    head(mq_mapping)
+    mq_mapping.long = melt(mq_mapping, id.vars = c("ypos"), measure.vars=c("from","to","best effort"))
+    head(mq_mapping.long)
+    mq_mapping.long$variable = as.character(mq_mapping.long$variable)
+    mq_mapping.long$col = "#000000";
+    mq_mapping.long$col[mq_mapping.long$variable=="to"] = "#5F0000"
+    mq_mapping.long$variable[mq_mapping.long$variable=="to"] = 9
+    mq_mapping.long$variable[mq_mapping.long$variable=="from"] = 8
+    mq_mapping.long$variable[mq_mapping.long$variable=="best effort"] = 12
+    mq_mapping.long$variable = as.numeric(mq_mapping.long$variable)
+    mq_mapping.long$size = 2;
+    df.header = data.frame(ypos = 0, variable = c(8,9,12), value = c("original", "short\nname", "best_effort"), col = "#000000", size=3)
+    mq_mapping.long2 = rbind(mq_mapping.long, df.header)
+    mqmap_pl = ggplot(mq_mapping.long2, aes_string(x = "variable", y = "ypos"))  +
+      geom_text(aes_string(label="value"), color = mq_mapping.long2$col, hjust=1, size=mq_mapping.long2$size) +
+      coord_cartesian(xlim=c(0,15)) +
+      theme_bw() +
+      theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
+            axis.text = element_blank(), strip.text = element_blank(), legend.position = "none") +
+      ggtitle("Info: mapping of raw files to their short names" %+% extra)
+    print(mqmap_pl)
   } else {
     cat("No mapping found. Omitting plot.")
     return (FALSE);

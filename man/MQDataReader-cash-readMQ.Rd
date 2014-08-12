@@ -61,8 +61,9 @@ column names, it seemed convenient to have a function which
 just reads a txt file and returns unified column names,
 irrespective of the MQ version. So, it unifies access to
 columns (e.g. by using lower case for ALL columns) and
-ensures columns are identically named across MQ versions.
-We know of only one case: "protease" == "enzyme".
+ensures columns are identically named across MQ versions:
+old term new term -----------------------------------------
+protease enzyme protein.descriptions fasta.headers
 }
 \details{
 If the file is empty, this function stops with an error.

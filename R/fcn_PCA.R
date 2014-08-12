@@ -55,7 +55,8 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
       geom_text(size = 3, angle=0, aes_string(label = "class", colour = "ord", vjust = "1")) +
       geom_hline(yintercept=0, colour="gray65") +
       #theme(panel.background=element_rect("black")) +
-      geom_vline(xintercept=0, colour="gray65")
+      geom_vline(xintercept=0, colour="gray65") +
+      theme_bw()
   )
   }
   

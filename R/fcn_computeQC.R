@@ -27,9 +27,8 @@
 #'          
 #' @import ggplot2
 #' @import directlabels
-#' @importFrom PerformanceAnalytics textplot
 #' @importFrom plyr ddply summarise
-#' @importFrom plotrix addtable2plot
+#' @importFrom grid unit
 #' @importFrom reshape2 melt
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom yaml as.yaml
@@ -37,7 +36,7 @@
 #'  
 #' @export
 #'           
-createReport <- function(txt_folder, yaml_obj = list())
+#createReport <- function(txt_folder, yaml_obj = list())
 {
   
 if (0) ## for local execution and debug
@@ -84,7 +83,7 @@ unlink(stats_file)
 cat("Statistics summary:", file=stats_file, append=F, sep="\n")
 
 report_file = paste(txt_folder, "\\report_", report_version, ".pdf", sep="")
-pdf(report_file, onefile=T)
+pdf(report_file, onefile=T) #, family="Courier")
 
 yaml_file = paste(txt_folder, "\\report_", report_version, ".yaml", sep="")
 
@@ -100,56 +99,65 @@ if (enabled_parameters)
 {
   d_parAll = mq$readMQ(txt_files$param, type="par")
   
-  line_break = "\n  "; ## use space to make it work with table
+  line_break = "\n"; ## use space to make it work with table
   ## remove AIF stuff
   d_parAll = d_parAll[!grepl("^AIF ", d_parAll$parameter),]
   d_parAll$value = gsub(";", line_break, d_parAll$value)
   ## seperate FASTA files (usually they destroy the layout)
   idx_fastafile = grepl("fasta file", d_parAll$parameter, ignore.case = T)
   d_par_file = d_parAll[idx_fastafile, ]
+  fasta_files = sapply(unlist(strsplit(d_par_file$value, "\n")), function(x) rev(strsplit(x,"\\", fixed=T)[[1]])[1])
   d_par = d_parAll[!idx_fastafile, ]
   ## remove duplicates
   d_par = d_par[!duplicated(d_par$parameter),]
   rownames(d_par) = d_par$parameter
+  
   ## trim long param names (the user should know what they mean)
   d_par$parameter = sapply(d_par$parameter, function (s) {
-    allowed_len = nchar("Keep low-scoring versions of ..."); 
+    allowed_len = nchar("Min. score for unmodified .."); 
     if (nchar(s) > allowed_len) {
-      s = paste(substring(s, 1, allowed_len), "...", collapse = "", sep=" ")
+      s = paste(substring(s, 1, allowed_len), "..", collapse = "", sep="")
     }
     return (s)
   })
-  
   ## break long values into multiple lines (to preserve table width)
-  d_par$value = sapply(d_par$value, function (s) {
-    allowed_len = nchar("  Acetyl (Protein N-term)"); ## this is a typical entry -- everything which is longer gets split
-    if (nchar(s) > allowed_len) {
-      s_beg = seq(1, nchar(s) - 1, allowed_len)
-      s = paste(unlist(substring(s, s_beg, s_beg + allowed_len)), collapse = line_break)
-    }
-    return (s)
+  d_par$value = sapply(d_par$value, function (s) 
+  {
+    allowed_len = nchar("Use least modified peptide"); ## this is a typical entry -- everything which is longer gets split
+    r = paste(sapply(unlist(strsplit(s, line_break, fixed=T)), function(s1) {
+      if (nchar(s1) > allowed_len) {
+        s_beg = seq(1, nchar(s1) - 1, allowed_len)
+        s1 = paste(unlist(substring(s1, s_beg, s_beg + allowed_len)), collapse = line_break)
+      }
+      return(s1)
+    }), collapse = line_break)
+    return (r)
   })
   
   ## two column layout
-  d_par$parameter_ = NA
-  d_par$value_ = NA
-  mid = nrow(d_par)/2
-  d_par$parameter_[1:mid] = d_par$parameter[(mid+1):nrow(d_par)]
-  d_par$value_[1:mid] = d_par$value[(mid+1):nrow(d_par)]
-  d_par = d_par[1:mid,]
+  mid = floor(nrow(d_par)/2)
+  d_par$page = 1
+  d_par$page[1:mid] = 0
   
+  d_par$ypos = -rep(1:mid, 2)
+  head(d_par)
+  d_par.long = melt(d_par, id.vars = c("ypos", "page"), measure.vars=c("parameter", "value"))
+  head(d_par.long)
+  d_par.long$variable = as.character(d_par.long$variable)
+  d_par.long$variable[d_par.long$variable=="parameter"] = 10
+  d_par.long$variable[d_par.long$variable=="value"] = 5
+  par_pl = ggplot(d_par.long, aes_string(x = "variable", y = "ypos"))  +
+    coord_cartesian(xlim=c(2, 0)) + 
+    geom_text(aes_string(label = "value", colour = "variable"), family="mono", hjust=1, size=2) +
+    facet_wrap(~ page, ncol=2) +
+    scale_colour_manual(values=c("#000000", "#5F0000")) +
+    theme_bw() +
+    theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
+          axis.text = element_blank(), strip.text = element_blank(), legend.position="none") +
+    ggtitle("PAR: parameters") +
+    geom_text(data = data.frame(variable=0, ypos=-mid-2, page=0), label = paste(fasta_files, collapse=line_break), size=2, hjust=0)
+  print(par_pl)
   ##todo: read in mqpar.xml to get group information and ppm tolerances (parameters.txt just gives Group1)
-  
-  palette(c("black", "DarkBlue"))
-  palette()
-  tcol = matrix(2, nrow=nrow(d_par), ncol=ncol(d_par))
-  tcol[, c(1,3)] = 1
-  #install.packages("PerformanceAnalytics")
-  #require(PerformanceAnalytics)
-  textplot(d_par, halign="left", valign="center",  show.rownames=F, show.colnames=F, col.data=tcol)
-  title(main="PAR: Parameters")
-  mtext(text=gsub("(.*)", "  \\1", d_par_file$value), side=1, adj=0, line=3, omd=c(0,0,0,0)+0.1, cex=0.8)
-  #dev.off()
 }
 
 ######
@@ -190,14 +198,34 @@ if (enabled_summary)
   bad_id_count = sum(d_smy[[1]]$color==lab_IDd[1])
   if (bad_id_count>0)
   {
-    plot(0:100, 0:100, type="n", axes=F, xlab="", ylab="")
-    tbl_cex = ifelse(bad_id_count<25, 1, 25/bad_id_count)
-    addtable2plot("topleft", y=NULL, 
-                  d_smy[[1]][d_smy[[1]]$color==lab_IDd[1],c("raw.file","ms.ms.identified....")],
-                  xjust=0, yjust=-0.0,
-                  xpad=0, ypad=0.5,
-                  title=paste0("SM: Files with '", lab_IDd[1], "' ID rate (", round(bad_id_count*100/nrow(d_smy[[1]])),"% of samples)\n"),
-                  cex=tbl_cex)
+    sm_badID = d_smy[[1]][d_smy[[1]]$color==lab_IDd[1],c("raw.file","ms.ms.identified....")]
+    if (nrow(sm_badID) > 40)
+    {
+      sm_badID[40, "raw.file"] = paste(nrow(sm_badID) - 39, "more ...");
+      sm_badID[40, "ms.ms.identified...."] = ""
+      sm_badID = sm_badID[1:40, ]
+    }
+    sm_badID$ypos = -(1:nrow(sm_badID))
+    head(sm_badID)
+    sm_badID.long = melt(sm_badID, id.vars = c("ypos"), measure.vars=c("raw.file","ms.ms.identified...."))
+    head(sm_badID.long)
+    sm_badID.long$variable = as.character(sm_badID.long$variable)
+    sm_badID.long$col = "#000000";
+    sm_badID.long$col[sm_badID.long$variable=="ms.ms.identified...."] = "#5F0000"
+    sm_badID.long$variable[sm_badID.long$variable=="raw.file"] = "6"
+    sm_badID.long$variable[sm_badID.long$variable=="ms.ms.identified...."] = "8"
+    sm_badID.long$variable = as.numeric(sm_badID.long$variable)
+    sm_badID.long$size = 2
+    sm_badID.long2 = rbind(data.frame(ypos=0, variable=c(6, 8), value=c("raw file", "% identified"), col="#000000", size=3), sm_badID.long)
+    smbad_pl = ggplot(sm_badID.long2, aes_string(x = "variable", y = "ypos"))  +
+      xlim(0, 11) + 
+      geom_text(aes_string(label = "value"), color = sm_badID.long2$col, hjust=1, size=sm_badID.long2$size) +
+      theme_bw() +
+      theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
+            axis.text = element_blank(), strip.text = element_blank(), legend.position="none") +
+      ggtitle(paste0("SM: Files with '", lab_IDd[1], "' ID rate (", round(bad_id_count*100/nrow(d_smy[[1]])),"% of samples)"))
+      
+    print(smbad_pl)
   }
 }  
 
@@ -207,6 +235,7 @@ if (enabled_summary)
 ######
 
 enabled_proteingroups = getYAML(yaml_obj, "File$ProteinGroups$enabled", TRUE)
+enabled_pg_ratioLabIncThresh = getYAML(yaml_obj, "File$ProteinGroups$LabelIncThresh", 8)
 if (enabled_proteingroups)
 {
     
@@ -414,7 +443,8 @@ if (enabled_proteingroups)
     { ## only one condition.. PCA does not make sense (and will not work)
       next;
     }
-    data = t(d_pg[, unlist(clusterCols[cond]), drop=F])
+    ## remove contaminants
+    data = t(d_pg[!d_pg$contaminant, unlist(clusterCols[cond]), drop=F])
     ## remove constant/zero columns (== dimensions == proteins)
     data = data[, colSums(data) > 0, drop=F]
     rownames(data) = simplifyNames(strings = rownames(data), infix_iterations = 2)
@@ -476,7 +506,10 @@ if (enabled_proteingroups)
       mode = x$x[which.max(x$y)]
       return (data.frame(mode = mode))
     })
-    if (max(abs(ratio.mode$mode)) > 3) { ## on more than ratio 1:8 or 8:1 ratio, report label incorporation
+    
+    ## on more than ratio 1:8 or 8:1 ratio, report label incorporation
+    # enabled_pg_ratioLabIncThresh == 8 by default
+    if (max(abs(ratio.mode$mode)) > abs(log2(enabled_pg_ratioLabIncThresh))) {
       ## back to normal scale
       ratio.norm = 2^ratio.mode$mode
       ## compute incorporation
@@ -546,7 +579,12 @@ if (enabled_evidence)
   #table(d_evd_s$reverse)
   #[grep("ount", colnames(d_evd))]
   
-  d_evd = mq$readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration", "Match.Time.Difference", "^Sequence$", "^intensity$", "Mass\\.Error", "^uncalibrated...calibrated." , "Raw.file", "^Protein.Group.IDs$", "Contaminant", "Retention.time$", "^m.z$", "^Contaminant", "[RK]\\.Count", "^Charge$", "modified.sequence", "^Mass$"))
+  ## protein.names is only available from MQ 1.4 onwards
+  d_evd = mq$readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration", 
+                                                                       "Match.Time.Difference", "^Sequence$", "^intensity$", "Mass\\.Error", 
+                                                                       "^uncalibrated...calibrated." , "Raw.file", "^Protein.Group.IDs$", 
+                                                                       "Contaminant", "Retention.time$", "^m.z$", "^Contaminant", "[RK]\\.Count", 
+                                                                       "^Charge$", "modified.sequence", "^Mass$", "^protein.names$"))
   
   ## sort by rawfile as shown in the summary.txt (or whatever the first txt file was)
   d_evd = d_evd[order(match(as.character(d_evd$fc.raw.file), mq$raw_file_mapping$to)),]
@@ -939,28 +977,37 @@ if (enabled_evidence)
   cal_stats = quantile(cal_medians, probs=c(0,0.5,1))
   cat(pastet("medianCalibratedMassError(min,median,max) [ppm]", paste(cal_stats, collapse=",")), file=stats_file, append=T, sep="\n") 
   
+  ## if possible, work on protein names (since MQ1.4), else use proteinIDs
+  if ("protein.names" %in% colnames(d_evd))
+  {
+    evd_pname = "protein.names"
+  } else {
+    evd_pname = "proteins" 
+  }
   ## elaborate contaminant fraction per Raw.file
   ## find top 5 contaminants (globally)
   d_evd.totalInt = sum(as.numeric(d_evd$intensity), na.rm=T)
   d_evd.cont.only = d_evd[d_evd$contaminant,]
-  cont.top = by(d_evd.cont.only, d_evd.cont.only$proteins, function(x) sum(as.numeric(x$intensity), na.rm=T) / d_evd.totalInt*100)
+  cont.top = by(d_evd.cont.only, d_evd.cont.only[,evd_pname], function(x) sum(as.numeric(x$intensity), na.rm=T) / d_evd.totalInt*100)
   cont.top.sort = sort(cont.top, decreasing=T)
   #head(cont.top.sort)
   cont.top5.names = names(cont.top.sort)[1:5]
-  plotCont = function(d_evd_sub, top5) 
+  plotCont = function(d_evd_sub, top5, evd_pname) 
   { 
     intensity = NULL ## to make R CHECK happy...
     d_evd.cont.only_sub = d_evd_sub[d_evd_sub$contaminant,]
     ## rewrite prot names, and subsume 6th and below as 'other'
-    d_evd.cont.only_sub$proteins[!(d_evd.cont.only_sub$proteins %in% top5)] = 'other'
+    d_evd.cont.only_sub[!(d_evd.cont.only_sub[,evd_pname] %in% top5), evd_pname] = 'other'
     ## aggregate identical proteins
     ##  use sum(as.numeric(.)) to prevent overflow
-    d_sum = ddply(d_evd.cont.only_sub[, c("intensity", "proteins", "fc.raw.file")], c("proteins", "fc.raw.file"), function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm=T)))
+    d_sum = ddply(d_evd.cont.only_sub[, c("intensity", evd_pname, "fc.raw.file")], c(evd_pname, "fc.raw.file"), 
+                  function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm=T)))
     ## normalize by total intensity of raw file
-    d_norm = ddply(d_evd_sub[, c("intensity", "fc.raw.file")],  "fc.raw.file", function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm=T)))
+    d_norm = ddply(d_evd_sub[, c("intensity", "fc.raw.file")],  "fc.raw.file", 
+                   function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm=T)))
     d_sum$s.intensity = d_sum$s.intensity / d_norm$s.intensity[match(d_sum$fc.raw.file, d_norm$fc.raw.file)] * 100
     ## shorten protein-groups (at most two protein names)
-    d_sum$proteins = sapply(d_sum$proteins, function(x) {
+    d_sum[,evd_pname] = sapply(d_sum[,evd_pname], function(x) {
       p.split = unlist(strsplit(x, split=";"))
       ifelse(length(p.split)<=2, paste(p.split, sep="", collapse=";"),
                                  paste0(paste(p.split[1:2], sep="", collapse=";"),";..."))
@@ -968,7 +1015,7 @@ if (enabled_evidence)
     
     ## plot
     print(ggplot(d_sum) +
-      geom_bar(aes_string(x = "factor(fc.raw.file)", y = "s.intensity", fill = "factor(proteins)"), stat="identity") +
+      geom_bar(aes_string(x = "factor(fc.raw.file)", y = "s.intensity", fill = paste0('factor(', evd_pname,')')), stat="identity") +
       xlab("")  +
       ggtitle("EVD: Contaminant per RAW file") +
       ylab("contaminant (% intensity)") +
@@ -979,7 +1026,8 @@ if (enabled_evidence)
     )
       
   }
-  pp = byXflex(d_evd[, c("intensity", "proteins", "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices=F, plotCont, top5=cont.top5.names)
+
+  pp = byXflex(d_evd[, c("intensity", evd_pname, "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices=F, plotCont, top5=cont.top5.names, evd_pname=evd_pname)
   
   con_stats_smry = quantile(con_stats[,1], probs=c(0,0.5,1))
   cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=stats_file, append=T, sep="\n")  
@@ -1177,37 +1225,44 @@ if (enabled_msms)
   
   
   ## missed cleavages per Raw file
-  smr_msmsMC = summary(d_msms$missed.cleavages)
-  fcMCRTSubset <- function(d_sub, smr_msmsMC)
-  {
-    st_bin.m = melt(d_sub, id.vars = c("fc.raw.file"))
-    pl = 
-      ggplot(data = st_bin.m, aes_string(x = "factor(fc.raw.file)", y = "value", fill = "variable")) + 
-                geom_bar(stat="identity") +
-                xlab("RAW file") +  
-                ylab("missed cleavages [%]") + 
-                theme(legend.title=element_blank()) +
-                scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000"), 10)) +
-                geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
-                coord_flip()
-      pl = addGGtitle(pl, "MSMS: Missed cleavages per RAW file", "(includes contaminants)")
-    print(pl)
-    return(pl)
-  }
   max_mc = max(d_msms$missed.cleavages)
-  st_bin = ddply(d_msms, "fc.raw.file", .fun = function(x) {
-    t = table(x$missed.cleavages)/nrow(x)
-    r = rep(0, max_mc + 1)
-    names(r) = as.character(0:max_mc)
-    r[names(t)] = t
-    return (r)
-  })
-  pp = byXflex(st_bin, st_bin$fc.raw.file, 25, fcMCRTSubset, smr_msmsMC=smr_msmsMC, sort_indices=F)
+  if (!is.na(max_mc))
+  { ## MC's require an enzyme to be set
+    smr_msmsMC = summary(d_msms$missed.cleavages)
+    fcMCRTSubset <- function(d_sub, smr_msmsMC)
+    {
+      st_bin.m = melt(d_sub, id.vars = c("fc.raw.file"))
+      pl = 
+        ggplot(data = st_bin.m, aes_string(x = "factor(fc.raw.file)", y = "value", fill = "variable")) + 
+                  geom_bar(stat="identity") +
+                  xlab("RAW file") +  
+                  ylab("missed cleavages [%]") + 
+                  theme(legend.title=element_blank()) +
+                  scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000"), 10)) +
+                  geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
+                  coord_flip()
+        pl = addGGtitle(pl, "MSMS: Missed cleavages per RAW file", "(includes contaminants)")
+      print(pl)
+      return(pl)
+    }
+    
+    st_bin = ddply(d_msms, "fc.raw.file", .fun = function(x) {
+      t = table(x$missed.cleavages)/nrow(x)
+      r = rep(0, max_mc + 1)
+      names(r) = as.character(0:max_mc)
+      cat("r")
+      cat(r)
+      r[names(t)] = t
+      return (r)
+    })
+    pp = byXflex(st_bin, st_bin$fc.raw.file, 25, fcMCRTSubset, smr_msmsMC=smr_msmsMC, sort_indices=F)
+    
+    mcZero = st_bin[, "0"] * 100
+    mcZero_stat = 100 - rev(quantile(mcZero, probs=c(0,0.5,1)))
+    cat(pastet("missedCleavages>0 (min,median,max) [%]", paste0(mcZero_stat, collapse=",")), file=stats_file, append=T, sep="\n")
+  } ## end MC check
   
-  mcZero = st_bin[, "0"] * 100
-  mcZero_stat = 100 - rev(quantile(mcZero, probs=c(0,0.5,1)))
-  cat(pastet("missedCleavages>0 (min,median,max) [%]", paste0(mcZero_stat, collapse=",")), file=stats_file, append=T, sep="\n")
-  
+ 
 }
 
 ######
