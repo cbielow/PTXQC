@@ -235,7 +235,7 @@ if (enabled_summary)
 ######
 
 enabled_proteingroups = getYAML(yaml_obj, "File$ProteinGroups$enabled", TRUE)
-enabled_pg_ratioLabIncThresh = getYAML(yaml_obj, "File$ProteinGroups$LabelIncThresh", 8)
+enabled_pg_ratioLabIncThresh = getYAML(yaml_obj, "File$ProteinGroups$RatioPlot$LabelIncThresh_num", 8)
 if (enabled_proteingroups)
 {
     
@@ -510,6 +510,7 @@ if (enabled_proteingroups)
     ## on more than ratio 1:8 or 8:1 ratio, report label incorporation
     # enabled_pg_ratioLabIncThresh == 8 by default
     if (max(abs(ratio.mode$mode)) > abs(log2(enabled_pg_ratioLabIncThresh))) {
+      cat(paste0("Maximum ratio (log2) was ", max(abs(ratio.mode$mode)), ", reaching the threshold of ", abs(log2(enabled_pg_ratioLabIncThresh)), " for label-incorporation computation.\nComputing ratios ...\n"))
       ## back to normal scale
       ratio.norm = 2^ratio.mode$mode
       ## compute incorporation
@@ -522,6 +523,9 @@ if (enabled_proteingroups)
       ratio.densities$col = ratio.mode$col_new[match(ratio.densities$col, ratio.mode$col)]
       ## notify user via legend title
       legend_title = "group\n(with label inc)"
+    } else
+    {
+      cat(paste0("Maximum ratio (log2) was ", max(abs(ratio.mode$mode)), ", NOT reaching the threshold of ", abs(log2(enabled_pg_ratioLabIncThresh)), " for label-incorporation computation.\nSkipping ratios ...\n"))
     }
     
     title_ratio = "PG: ratio density\n(w/o contaminants)"
