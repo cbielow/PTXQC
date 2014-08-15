@@ -115,6 +115,16 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   
   cat(paste0("Read ", nrow(.$mq.data), " entries from ", file,".\n"))
   
+  ### checking for invalid rows
+  inv_lines = .$getInvalidLines();
+  if (length(inv_lines) > 0)
+  {
+    stop(paste0("\n\nError: file '", file, "' seems to have been edited in Microsoft Excel and",
+                                           " has artificial line-breaks which destroy the data at lines (roughly):\n",
+                                           paste(inv_lines, collapse="\n"), "\nPlease fix (e.g. try LibreOffice 4.0.x or above)!"))
+  }
+  
+  
   ### just make everything lower.case (MQ versions keep changing it and we want it to be reproducible)
   colnames(.$mq.data) = tolower(colnames(.$mq.data))
   ## rename some columns since MQ 1.2 vs. 1.3 differ....
@@ -323,4 +333,45 @@ MQDataReader$substitute <- function(., colname, valid_entries = c("","+"), repla
     .$mq.data[, colname] = replacements[ match(.$mq.data[, colname], valid_entries) ];
   }
   return (TRUE);
+}
+
+
+#' Detect broken lines (e.g. due to Excel import+export)
+#'
+#' When editing a MQ txt file in Microsoft Excel, saving the file can cause it to be corrupted,
+#' since Excel has a single cell content limit of 32k characters 
+#' (see http://office.microsoft.com/en-001/excel-help/excel-specifications-and-limits-HP010342495.aspx)
+#' while MQ can easily reach 60k (e.g. in oxidation sites column).
+#' Thus, affected cells will trigger a line break, effectively splitting one line into two (or more).
+#' 
+#' We detect this by counting the number of NA's per row and finding outliers.
+#' The line break then must be in this line (plus the preceeding or following one). Depending on where
+#' the break happened we can also detect both lines right away (if both have more NA's than expected).
+#'
+#' Currently, we have no good strategy to fix this problem since columns are not aligned any longer, which
+#' leads to columns not having the class (e.g. numeric) they should have.
+#' (thus one would need to un-do the linebreak and read the whole file again)
+#' 
+#' [Solution to the problem: try LibreOffice 4.0.x or above -- seems not to have this limitation]
+#' 
+#' @return Returns a vector of indices of broken (i.e. invalid) lines
+#'
+#' @name MQDataReader$getInvalidLines
+#' 
+MQDataReader$getInvalidLines <- function(.)
+{
+  if (!inherits(.$mq.data, 'data.frame'))
+  {
+    stop("In 'MQDataReader$getInvalidLines': function called before data was loaded. Internal error. Exiting.", call.=F);
+  }
+  
+  counts = apply(.$mq.data, 1, function(x) sum(is.na(x)));
+  ## NA counts should be roughly equal across rows
+  expected_count = quantile(counts, probs = 0.75)
+  print("Table:")
+  print(table(counts))
+  print(paste0("NAn count limit: 3*", expected_count, " = ", expected_count * 3))
+  broken_rows = which(counts > expected_count * 3)
+  
+  return (broken_rows);
 }
