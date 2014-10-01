@@ -13,6 +13,30 @@
 #install.packages("proto")
 #require(proto)
 
+#'
+#' Convenience wrapper for MQDataReader when only a single MQ file should be read
+#' and file mapping need not be stored
+#' 
+#' For params, see \code{\link{MQDataReader$readMQ}}.
+#' 
+#' #' @param file   (Relative) path to a MQ txt file ()
+#' @param filter see \code{\link{MQDataReader$readMQ}}
+#' @param type   see \code{\link{MQDataReader$readMQ}}
+#' @param col_subset see \code{\link{MQDataReader$readMQ}}
+#' @param add_fs_col see \code{\link{MQDataReader$readMQ}}
+#' @param LFQ_action see \code{\link{MQDataReader$readMQ}}
+#' @param ... see \code{\link{MQDataReader$readMQ}}
+#' @return see \code{\link{MQDataReader$readMQ}}
+#'
+#' @export
+#' 
+read.MQ <- function(file, filter="", type="pg", col_subset=NA, add_fs_col=10, LFQ_action=FALSE, ...)
+{
+  mq = MQDataReader$new()
+  mq$readMQ(file, filter, type, col_subset, add_fs_col, LFQ_action, ...)
+}
+
+
 ## CLASS 'MQDataReader'
 MQDataReader <- proto()
 
@@ -30,6 +54,7 @@ MQDataReader$new <- function(.)
   proto(., raw_file_mapping = NULL, mq.data = NULL)
 }
 
+
 ##
 ## Functions
 ##
@@ -40,11 +65,20 @@ MQDataReader$new <- function(.)
 #' to have a function which just reads a txt file and returns unified column names, irrespective of the MQ version.
 #' So, it unifies access to columns (e.g. by using lower case for ALL columns) and ensures columns are
 #' identically named across MQ versions:
+#' \preformatted{
 #'  old term                  new term
 #'  -----------------------------------------
 #'  protease                  enzyme
 #'  protein.descriptions      fasta.headers
-#'
+#' }
+#' 
+#' 
+#' Example of usage:
+#' \preformatted{
+#'   mq = MQDataReader$new()
+#'   d_evd = mq$readMQ("evidence.txt", type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration")) 
+#' }
+#' 
 #' If the file is empty, this function stops with an error.
 #'
 #' @param .      A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!
@@ -77,6 +111,7 @@ MQDataReader$new <- function(.)
 #' @import utils
 #' @import graphics
 #' 
+# (not exported!)
 MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, add_fs_col=10, LFQ_action=FALSE, ...)
 {
   # . = MQDataReader$new() ## debug
@@ -116,14 +151,16 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   cat(paste0("Read ", nrow(.$mq.data), " entries from ", file,".\n"))
   
   ### checking for invalid rows
-  inv_lines = .$getInvalidLines();
-  if (length(inv_lines) > 0)
+  if (type != "sm") ## summary.txt has irregular structure
   {
-    stop(paste0("\n\nError: file '", file, "' seems to have been edited in Microsoft Excel and",
-                                           " has artificial line-breaks which destroy the data at lines (roughly):\n",
-                                           paste(inv_lines, collapse="\n"), "\nPlease fix (e.g. try LibreOffice 4.0.x or above)!"))
+    inv_lines = .$getInvalidLines();
+    if (length(inv_lines) > 0)
+    {
+      stop(paste0("\n\nError: file '", file, "' seems to have been edited in Microsoft Excel and",
+                                             " has artificial line-breaks which destroy the data at lines (roughly):\n",
+                                             paste(inv_lines, collapse="\n"), "\nPlease fix (e.g. try LibreOffice 4.0.x or above)!"))
+    }
   }
-  
   
   ### just make everything lower.case (MQ versions keep changing it and we want it to be reproducible)
   colnames(.$mq.data) = tolower(colnames(.$mq.data))
@@ -188,8 +225,8 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     
   } else if (type=="sm") {
     ## summary.txt special treatment
-    ## split by a column which has values for raw.files but not for groups (e.g. instrument, NOT enzyme since it can be all NA if disabled)
-    idx_group = which(.$mq.data$instrument=="" | is.na(.$mq.data$instrument))[1]
+    ## split by a column which has values for raw.files but not for groups (e.g. multiplicity, NOT instrument (missing in 1.2), NOT enzyme since it can be all NA if disabled)
+    idx_group = which(.$mq.data$multiplicity=="" | is.na(.$mq.data$multiplicity))[1]
     raw.files = .$mq.data[1:(idx_group-1), ]
     groups = .$mq.data[idx_group:(nrow(.$mq.data)-1), ]
     total = .$mq.data
@@ -370,8 +407,8 @@ MQDataReader$getInvalidLines <- function(.)
   expected_count = quantile(counts, probs = 0.75)
   print("Table:")
   print(table(counts))
-  print(paste0("NAn count limit: 3*", expected_count, " = ", expected_count * 3))
-  broken_rows = which(counts > expected_count * 3)
+  print(paste0("NAn count limit: 3*", expected_count, " + 10 = ", expected_count * 3 + 10))
+  broken_rows = which(counts > (expected_count * 3 + 10))
   
   return (broken_rows);
 }

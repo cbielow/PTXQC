@@ -62,10 +62,16 @@ just reads a txt file and returns unified column names,
 irrespective of the MQ version. So, it unifies access to
 columns (e.g. by using lower case for ALL columns) and
 ensures columns are identically named across MQ versions:
-old term new term -----------------------------------------
-protease enzyme protein.descriptions fasta.headers
+\preformatted{ old term new term
+----------------------------------------- protease enzyme
+protein.descriptions fasta.headers }
 }
 \details{
+Example of usage: \preformatted{ mq = MQDataReader$new()
+d_evd = mq$readMQ("evidence.txt", type="ev", filter="R",
+col_subset=c("proteins", "Retention.Length",
+"retention.time.calibration")) }
+
 If the file is empty, this function stops with an error.
 }
 
