@@ -351,7 +351,7 @@ MQDataReader$plotNameMapping <- function(.)
 #'
 #' @name MQDataReader$substitute
 #' 
-MQDataReader$substitute <- function(., colname, valid_entries = c("","+"), replacements = c(FALSE, TRUE))
+MQDataReader$substitute <- function(., colname, valid_entries = c(NA, "","+"), replacements = c(FALSE, FALSE, TRUE))
 {
   if (length(valid_entries) == 0)
   {
@@ -405,10 +405,13 @@ MQDataReader$getInvalidLines <- function(.)
   counts = apply(.$mq.data, 1, function(x) sum(is.na(x)));
   ## NA counts should be roughly equal across rows
   expected_count = quantile(counts, probs = 0.75)
-  print("Table:")
-  print(table(counts))
-  print(paste0("NAn count limit: 3*", expected_count, " + 10 = ", expected_count * 3 + 10))
   broken_rows = which(counts > (expected_count * 3 + 10))
+  if (length(broken_rows) > 0)
+  {
+    print("Table:")
+    print(table(counts))
+    print(paste0("NAn count limit: 3*", expected_count, " + 10 = ", expected_count * 3 + 10))    
+  }
   
   return (broken_rows);
 }

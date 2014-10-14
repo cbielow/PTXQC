@@ -106,6 +106,11 @@ boxplotCompare <- function(data1, data2 = NA,
   
   ## compute global y-limits (so we can fix it across plots)
   ylims = boxplot.stats(datar$value)$stats[c(1, 5)]
+  ## make sure to inlude abline (if existing)
+  if (!is.na(abline))
+  {
+    ylims = c(ylims[1], max(ylims[2], abline))
+  }
   fcn_boxplot_internal = function(data, abline = NA) 
   {
     #require(ggplot2)

@@ -338,11 +338,11 @@ correctSetSize = function(item_count, initial_set_size)
   blocks = seq(from = 1, to = item_count, by = initial_set_size)
   blockcount = length(blocks)
   lastblocksize = item_count - tail(blocks, n = 1) + 1
-  cat(paste("Naively, last set has size", lastblocksize, "\n"))
+  #cat(paste("Naively, last set has size", lastblocksize, "\n"))
   if (lastblocksize < initial_set_size * 0.5 & blockcount > 1)
   { ## last block is not full, reduce block count if more than one block
     blockcount = blockcount - 1
-    cat(paste("reducing number of sets to", blockcount, "\n"))
+    #cat(paste("reducing number of sets to", blockcount, "\n"))
   }
   ## distribute equally among fixed number of sets
   set_size = ceiling(item_count / blockcount)
@@ -379,14 +379,14 @@ byX <- function(data, indices, subset_size = 5, FUN, sort_indices = TRUE, ...)
   groups = unique(indices)
   if (sort_indices)
   {
-    cat(paste0("Sorting indices (", length(groups), ")...\n"))
+    #cat(paste0("Sorting indices (", length(groups), ")...\n"))
     groups = factor(sort(as.character(groups)))
-    cat(paste0(groups))
-    cat()
+    #cat(paste0(groups))
+    #cat()
   }
   blocks = seq(from = 1, to = length(groups), by = subset_size)
   result = lapply(blocks, function(x) {
-    cat(paste("block", x, " ... "))
+    #cat(paste("block", x, " ... "))
     range = x:(min(x+subset_size-1, length(groups)))
     lns = indices %in% groups[range];
     subset = data[lns, , drop=F]
@@ -665,3 +665,52 @@ mosaicPlot = function(var1, var2)
 {
   return (paste(a, b, sep=""))
 } 
+
+#'
+#' Given a vector of (short/long) filenames, translate to the (long/short) version
+#' 
+#' @param f_names Vector of filenames
+#' @param mapping A data.frame with from,to columns
+#' @return A vector of translated file names
+#'
+#' @export
+#'
+renameFile = function(f_names, mapping)
+{
+  if (all(f_names %in% mapping$from)) {      ## from -> to
+    f_new = mapping$to[match(f_names, mapping$from)]
+  } else if (all(f_names %in% mapping$to)) { ## to -> from
+    f_new = mapping$from[match(f_names, mapping$to)]
+  } else {
+    stop("Error in renameFile: filenames cannot be found in mapping!")
+  }
+  
+  return (f_new)
+} 
+
+
+#'
+#' Inverse the order of items on the x-axis (for discrete scales)
+#'
+#' @param values The vector of values as given to the x aestetic.
+#' @return ggplot object, concatenatable with '+'
+#'
+scale_x_discrete_reverse = function(values)
+{
+  if (!("factor" %in% class(values))) stop("Cannot use scale_x_discrete_reverse() on non-factor()")
+  return (scale_x_discrete(limits = rev(levels(values)) ))
+}
+
+#'
+#' Inverse the order of items on the y-axis (for discrete scales)
+#'
+#' @param values The vector of values as given to the y aestetic.
+#' @return ggplot object, concatenatable with '+'
+#'
+scale_y_discrete_reverse = function(values)
+{
+  if (!("factor" %in% class(values))) stop("Cannot use scale_y_discrete_reverse() on non-factor()")
+  return (scale_y_discrete(limits = rev(levels(values)) ))
+}
+
+

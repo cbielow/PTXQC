@@ -18,11 +18,12 @@
 #' @param txt_folder Path to txt output folder of MaxQuant (e.g. "c:/data/Hek293/txt")
 #' @param yaml_obj   A nested list object with configuration parameters for the report.
 #'                   Useful to switch off certain plots or skip entire sections.
-#' @return List with two strings: 
+#' @return List with three strings: 
 #'          \itemize{
-#'            \item pdf_filename  Path to PDF report
-#'            \item yaml_filename Path to a YAML configuration file used during report generation. 
-#'                                Parameters missing in yaml_obj (input param) were restored to default.
+#'            \item pdf_filename     Path to PDF report
+#'            \item yaml_filename    Path to a YAML configuration file used during report generation. 
+#'                                   Parameters missing in yaml_obj (input param) were restored to default.
+#'            \item heatmap_filename Path to Heatmap table
 #'          }
 #'          
 #' @import ggplot2
@@ -31,12 +32,11 @@
 #' @importFrom grid unit
 #' @importFrom reshape2 melt
 #' @importFrom RColorBrewer brewer.pal
-#' @importFrom yaml as.yaml
 #' @importFrom splines ns
 #'  
 #' @export
 #'           
-createReport <- function(txt_folder, yaml_obj = list())
+#createReport <- function(txt_folder, yaml_obj = list())
 {
   
 if (0) ## for local execution and debug
@@ -56,6 +56,11 @@ if (class(yaml_obj) != "list")
 {
   stop(paste0("Argument 'yaml_obj' is not of type list\n"));
 }
+
+
+## list of data.frames containing one QC metric per list for each Raw file
+## used for heat map later on
+QCM = list()
 
 
 txt_files = list()
@@ -86,6 +91,9 @@ report_file = paste(txt_folder, "\\report_", report_version, ".pdf", sep="")
 pdf(report_file, onefile=T) #, family="Courier")
 
 yaml_file = paste(txt_folder, "\\report_", report_version, ".yaml", sep="")
+
+heatmap_values_file = paste(txt_folder, "\\report_", report_version, "_heatmap.txt", sep="")
+
 
 ## prepare for readMQ()
 mq = MQDataReader$new()
@@ -157,7 +165,7 @@ if (enabled_parameters)
     ggtitle("PAR: parameters") +
     geom_text(data = data.frame(variable=0, ypos=-mid-2, page=0), label = paste(fasta_files, collapse=line_break), size=2, hjust=0)
   print(par_pl)
-  ##todo: read in mqpar.xml to get group information and ppm tolerances (parameters.txt just gives Group1)
+  ##todo: read in mqpar.xml to get group information and ppm tolerances for all groups (parameters.txt just gives Group1)
 }
 
 ######
@@ -193,6 +201,11 @@ if (enabled_summary)
       ylim(0, max(dms)*1.1) + 
       guides(color=guide_legend(title="ID class"))
     )
+  ## QC measure for contamination
+  qc_sm_id = d_smy[[1]][, c("raw.file", "ms.ms.identified....")]
+  qc_sm_id$X030X.SM.MS2_ID_rate = pmin(1, qc_sm_id$ms.ms.identified.... / id_rate_great)
+  QCM[["SM.MS2_ID_rate"]] = qc_sm_id[,c("raw.file", "X030X.SM.MS2_ID_rate")]
+  
   
   ## table of files with 'bad' MS/MS id rate
   bad_id_count = sum(d_smy[[1]]$color==lab_IDd[1])
@@ -249,7 +262,7 @@ if (enabled_proteingroups)
   }
   con_stats = t(sapply(idx_int, function(x) sum(as.numeric(d_pg[d_pg$contaminant, x]))/sum(as.numeric(d_pg[, x]))*100 ))
   con_stats[is.na(con_stats)] = 0
-  colnames(con_stats) = shortenStrings(simplifyNames(delLCP(idx_int)), max_len = 12)
+  colnames(con_stats) = simplifyNames(delLCP(idx_int))
   
   #barplot(con_stats, ylim=c(0,max(20, max(con_stats)*1.1)), main="PG: Contaminant per condition", xlab="", ylab="% intensity of contaminants", las=3,)
   #abline(a=5, b=0, col="red", lwd=4)
@@ -258,7 +271,7 @@ if (enabled_proteingroups)
     pl = 
       ggplot(data=datav, aes_string(x = "x", y = "y")) +
         geom_bar(stat="identity") +
-        theme(axis.text.x = element_text(angle=90)) +
+        theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
         xlab("")  +
         ggtitle("PG: Contaminant per condition") +
         ylab("contaminant (% intensity)") +
@@ -337,7 +350,7 @@ if (enabled_proteingroups)
         datav$section = as.integer(seq(0, nrow(datav)/40, length.out = nrow(datav)))
         pr = ggplot(datav, aes_string(x = "factor(name)", y = "value")) +
             geom_bar(stat="identity", aes_string(fill = "group"), position = "dodge") +
-            theme(axis.text.x = element_text(angle=90)) +
+            theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
             xlab("")  +
             theme(plot.title = element_text(colour = main_col)) +
             ylab("abundance (%)") +
@@ -359,8 +372,18 @@ if (enabled_proteingroups)
     
   } ## contaminant loop
   
+  
+  ##
+  ## stats file
+  ##
+  con_stats_smry = quantile(con_stats[,1], probs=c(0,0.5,1))
+  cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=stats_file, append=T, sep="\n")  
+  
+  
   clusterCols = list()
-  ## intensity boxplots ##
+  ##
+  ## intensity boxplots
+  ##
   param_name_EV_intThresh = "File$ProteinGroups$IntensityThreshLog2_num"
   param_def_EV_intThresh = 25 ## default median intensity in log2 scale
   param_EV_intThresh = getYAML(yaml_obj, param_name_EV_intThresh, param_def_EV_intThresh)
@@ -391,7 +414,9 @@ if (enabled_proteingroups)
                  abline = param_EV_intThresh)
   cat(int_dev.s, file=stats_file, append=T, sep="\n")
   
+  ##
   ## LFQ boxplots
+  ##
   colsSIL = grepv("^lfq.intensity.[HLM].", colnames(d_pg))
   colsLF = grepv("^lfq.intensity.[^HLM].", colnames(d_pg))
   if (length(c(colsSIL, colsLF)) > 0)
@@ -412,7 +437,9 @@ if (enabled_proteingroups)
     cat(lfq_dev.s, file=stats_file, append=T, sep="\n")
   }
   
-  ## for iTRAQ/TMT, reporter ion intensity boxplot
+  ##
+  ## iTRAQ/TMT, reporter ion intensity boxplot
+  ##
   colsITRAQ = grepv("^reporter.intensity.[0-9].", colnames(d_pg))
   if (length(colsITRAQ) > 0)
   {
@@ -426,13 +453,16 @@ if (enabled_proteingroups)
     reprt_dev = RSD(medians)
     reprt_dev.s = pastet("Reporter RSD [%]", round(reprt_dev, 3))
     boxplotCompare(d_pg[, colsW, drop=F], NA, T, ylab="Reporter", 
-                   mainlab="Reporter intensity distribution", 
+                   mainlab="PG: Reporter intensity distribution", 
                    sublab= paste0("RSD ", round(reprt_dev_no0, 1),"% (should be < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
                    abline = param_EV_intThresh)
     cat(reprt_dev.s, file=stats_file, append = T, sep="\n")
   }
   
   
+  ##
+  ## PCA
+  ##
   ## some clustering (its based on intensity / lfq.intensity columns..)
   ## todo: maybe add ratios -- requires loading from txt though..
   for (cond in names(clusterCols))
@@ -451,10 +481,10 @@ if (enabled_proteingroups)
     getPCA(data = data, gg_layer = ggtitle(paste("PG: PCA\n", sub(".", " ", cond, fixed=T))))
   }
   
+  
   ##################################
   ## ratio plots
   ##################################
-  
   ## get ratio column
   ratio_cols = grepv("^ratio\\.h\\.l", colnames(d_pg))
   ## remove everything else
@@ -589,8 +619,28 @@ if (enabled_evidence)
                                                                        "^uncalibrated...calibrated." , "Raw.file", "^Protein.Group.IDs$", 
                                                                        "Contaminant", "Retention.time$", "^m.z$", "^Contaminant", "[RK]\\.Count", 
                                                                        "^Charge$", "modified.sequence", "^Mass$", "^protein.names$"))
+  ##
+  ## write peptides to stats file (remnant from proteinGroups)
+  ##
+  for (ca_entry in contaminant_alarm)
+  {
+    ca = ca_entry[1]
+    ## this relies on ProteinGroups and Evidence!!!!
+    if (enabled_proteingroups)
+    {
+      idx_pg = grep(ca, d_pg$fasta.header, ignore.case = T)
+      if (length(idx_pg))
+      { ## found something
+        idx_pep = which(d_evd$protein.group.ids %in% d_pg$id[idx_pg])
+        cat(pastet("contamination-proteins:", ca, paste((d_pg$majority.protein.ids[idx_pg]), collapse=",")), file=stats_file, append=T, sep="\n") 
+        cat(pastet("contamination-peptides:", ca, paste(unique(d_evd$sequence[idx_pep]), collapse=",")), file=stats_file, append=T, sep="\n") 
+      }
+    }
+  }
   
+  ##
   ## sort by rawfile as shown in the summary.txt (or whatever the first txt file was)
+  ##
   d_evd = d_evd[order(match(as.character(d_evd$fc.raw.file), mq$raw_file_mapping$to)),]
   ## sort fc.raw.file's factor values as well
   d_evd$fc.raw.file = factor(d_evd$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
@@ -677,16 +727,24 @@ if (enabled_evidence)
             geom_bar(stat = "identity", position = "stack") +
             xlab("") +
             ylab("count") +
+            scale_x_discrete_reverse(x$fc.raw.file) +
             ylim(0, max(param_EV_protThresh, max_prot)*1.1) +
             scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400)) +
-            ggtitle("EV: Protein ID stats (small bias vs SM.txt)") + 
+            ggtitle("EV: Protein ID count") + 
             geom_abline(alpha = 0.5, intercept = param_EV_protThresh, slope = 0, colour = "green", linetype = "dashed", size = 1.5) +
             coord_flip()
           )
     return (1)
   })
+  ## QC measure for protein ID performance
+  qc_protc = pgc[pgc$match=="no", c("fc.raw.file", "protCount")]
+  qc_protc$X045X.EVD.Protein_Count = pmin(1, qc_protc$protCount / param_EV_protThresh)
+  QCM[["EVD.ProtCount"]] = qc_protc[, c("fc.raw.file", "X045X.EVD.Protein_Count")]
   
   
+  ##
+  ## EVD: peptide count
+  ##
   pepc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, pepCount = protGroupCount_pre$pep_count_noMBR, match = "no")
   pepc = rbind(pepc,
                data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, pepCount = protGroupCount_pre$pep_count_MBRgain, match = "yes"))
@@ -714,15 +772,21 @@ if (enabled_evidence)
             geom_bar(stat = "identity", position = "stack") +
             xlab("") +
             ylab("count") +
-            ylim(0, max(param_EV_protThresh, max_pep)*1.1) +
+            scale_x_discrete_reverse(x$fc.raw.file) +
+            ylim(0, max(param_EV_pepThresh, max_pep)*1.1) +
             geom_abline(alpha = 0.5, intercept = param_EV_pepThresh, slope = 0, colour = "green", linetype = "dashed", size = 1.5) +
             scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400)) +
-            ggtitle("EV: Peptide ID stats (small bias vs SM.txt)") + 
+            ggtitle("EV: Peptide ID count") + 
             coord_flip()
     )
     return (1)
   })
-    
+  
+  ## QC measure for peptide ID performance
+  qc_pepc = pepc[pepc$match=="no", c("fc.raw.file", "pepCount")]
+  qc_pepc$X040X.EVD.Peptide_Count = pmin(1, qc_pepc$pepCount / param_EV_pepThresh)
+  QCM[["EVD.PepCount"]] = qc_pepc[, c("fc.raw.file", "X040X.EVD.Peptide_Count")]
+  
   ##
   ## retention time calibration (to see if window was sufficiently large)
   if (any(d_evd$retention.time.calibration, na.rm=T)) 
@@ -764,7 +828,7 @@ if (enabled_evidence)
         local_deltas = c(0, (x$retention.time[-1] - x$retention.time[-nrow(x)]))
         ld_cs = cumsum(local_deltas)
         x = x[!duplicated(round(ld_cs / RT_delta)),]
-        print("Saved " %+% round(100 - nrow(x)/nstart*100) %+% "% for " %+% x$fc.raw.file[1])
+        #print("Saved " %+% round(100 - nrow(x)/nstart*100) %+% "% for " %+% x$fc.raw.file[1])
         return(x)
       })
       ##head(evd_RT_t)
@@ -778,13 +842,21 @@ if (enabled_evidence)
           geom_point(alpha=0.5) +
           stat_smooth(method = "lm", formula = y ~ ns(x,30), se = TRUE, size=1, colour = "red") +
           facet_wrap( ~ fc.raw.file) +
-          ylab("match time difference [min]") +
+          ylab("RT correction [min]") +
           xlab("retention time [min]")
         print(pl)
         return(1)
       }
       
       byX(evd_RT_t, as.numeric(as.factor(evd_RT_t$fc.raw.file)), 8, splitRTAlignByRawFile, sort_indices = F)
+      
+      ## QC measure for alignment quality
+      ## compute deviation of medians
+      qc_RT = ddply(d_evd[, c("match.time.difference", "fc.raw.file")], "fc.raw.file", 
+                    function(x) data.frame(X024X.EVD.RT_Align = median(x$match.time.difference, na.rm=T))) #gauss2Mix(x$match.time.difference)))
+      qc_RT$X024X.EVD.RT_Align = qualGauss(qc_RT$X024X.EVD.RT_Align)
+      QCM[["X024X.EVD.RT_Align"]] = qc_RT
+      
     }
   }
   
@@ -825,6 +897,8 @@ if (enabled_evidence)
   ##
   ## charge distribution
   ##
+  ## todo: this is using MBR peptides which changes the distribution (usually making bad samples better) -- remove MBR peptides??
+  ##       same for other plots down below
   fcChargePlot = function(d_sub)
   {
     print(
@@ -832,6 +906,7 @@ if (enabled_evidence)
              xlab("RAW file") +
              ylab("fraction [%]") +
              guides(fill=guide_legend(title="charge"), color=FALSE) + # avoid black line in legend
+             scale_x_reverse() +
              coord_flip() +
              theme(axis.text.y=element_blank(), axis.ticks=element_blank()) +
              ggtitle("EVD: charge distribution")
@@ -840,6 +915,10 @@ if (enabled_evidence)
   }
   byXflex(d_evd[, c("fc.raw.file", "charge")], d_evd$fc.raw.file, 30, fcChargePlot, sort_indices = FALSE)
   
+  ## QC measure for charge uniform-ness
+  qc_charge = ddply(d_evd[, c("charge",  "raw.file")], "raw.file", function(x) data.frame(raw.file = x$raw.file[1], X010X.EVD.charge = (sum(x$charge==2)/nrow(x))))
+  qc_charge$X010X.EVD.charge = qualGauss(qc_charge$X010X.EVD.charge)
+  QCM[["EVD.charge2"]] = qc_charge
   
   
   ## peptides per RT 
@@ -863,6 +942,12 @@ if (enabled_evidence)
     return (1)
   }
   byXflex(d_evd, d_evd$raw.file, raws_perPlot, fcRTSubset, smr_evdRT=smr_evdRT, sort_indices = FALSE)
+  
+  ## QC measure for uniform-ness
+  QCM[["ID_rate_over_RT"]] = ddply(d_evd[, c("retention.time",  "raw.file")], "raw.file", 
+                                 function(x) data.frame(raw.file = x$raw.file[1], X015X.EVD.ID_rate_over_RT = qualUniform(x$retention.time)))
+  
+  
 } 
   ## histograms of mass error
   
@@ -954,28 +1039,50 @@ if (enabled_evidence)
   
   ## some outliers have 5000ppm or so.. messing up the plot
   ## , so either remove outliers before (quantile estimation seems not robust enough) or don't plot them (default)
-  plotAlignDiff = function(d_evd, affected_raw_files)
+  plotAlignDiff = function(d_sub, affected_raw_files)
   {
-    col = c("black", "red")[(unique(d_evd$raw.file) %in% affected_raw_files) + 1]
-    
-    boxplot(uncalibrated.mass.error..ppm. ~ raw.file, d_evd, names=d_evd$fc.raw.file[match(unique(d_evd$raw.file), d_evd$raw.file)], 
-            xlab="ppm error", main = "EVD: Uncalibrated mass error", horizontal = TRUE,
-            las=1, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75), cex.names = 0.5, col = col)
-    if (nchar(recal_message)) mtext(text=recal_message, side=3, col="red")
+    d_sub$col = c("black", "red")[(d_sub$raw.file %in% affected_raw_files) + 1]
+    ylim_g = boxplot.stats(d_sub$uncalibrated.mass.error..ppm.)$stats[c(1, 5)]
+    pl = ggplot(d_sub, col=d_sub$col) +
+        geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm."), varwidth=TRUE, outlier.shape = NA) +
+        coord_flip() +
+        ylab("ppm error") +
+        xlab("") +
+        ylim(ylim_g) +
+        scale_colour_manual(values = c("black", "red")) +
+        scale_x_discrete_reverse(d_sub$fc.raw.file)
+    pl = addGGtitle(pl, "EVD: Uncalibrated mass error", recal_message)
+    print(pl)
   }
   pp = byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiff, sort_indices=F, affected_raw_files=affected_raw_files)
   
-  plotAlignDiffCal = function(d_evd, affected_raw_files)
+  plotAlignDiffCal = function(d_sub, affected_raw_files)
   {
-    col = c("black", "red")[(unique(d_evd$raw.file) %in% affected_raw_files) + 1]
-    
-    boxplot(mass.error..ppm. ~ raw.file, d_evd, names=d_evd$fc.raw.file[match(unique(d_evd$raw.file), d_evd$raw.file)], 
-            xlab="ppm error", main = "EVD: Calibrated mass error", horizontal = TRUE,
-            las=1, outline=FALSE, varwidth=T, pars = list(cex.axis=0.75), cex.names = 0.5, col = col)
-    if (nchar(recal_message)) mtext(text=recal_message, side=3, col="red")
+    col = c("black", "red")[(unique(d_sub$raw.file) %in% affected_raw_files) + 1]
+    ylim_g = boxplot.stats(d_sub$mass.error..ppm.)$stats[c(1, 5)]
+    pl = ggplot(d_sub, col=d_sub$col) +
+      geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm."), varwidth=TRUE, outlier.shape = NA) +
+      coord_flip() +
+      ylab("ppm error") +
+      xlab("") +
+      ylim(ylim_g) +
+      scale_colour_manual(values = c("black", "red")) +
+      scale_x_discrete_reverse(d_sub$fc.raw.file)
+    pl = addGGtitle(pl, "EVD: Calibrated mass error", recal_message)
+    print(pl)
+    return (1)
   }
   pp = byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiffCal, sort_indices=F, affected_raw_files=affected_raw_files)
-  
+  ## QC measure for post-calibration ppm error
+  ## .. assume 0 centered and StdDev of observed data
+  obs_par = ddply(d_evd[, c("mass.error..ppm.", "fc.raw.file")], "fc.raw.file", function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm=T), sd = sd(x$mass.error..ppm., na.rm=T)))
+  cal_sd = mean(obs_par$sd)
+  qc_MS1Cal = data.frame(fc.raw.file = obs_par$fc.raw.file, 
+                         X025X.EVD.MS1_Calibration = sapply(obs_par$mu, function(x) dnorm(x, mean = 0, sd = cal_sd)))
+  QCM[["EVD.MS1_calibration"]] = qc_MS1Cal
+
+
+
   ## compute how well calibration worked
   cal_medians = as.vector(by(d_evd$mass.error..ppm., d_evd$raw.file, median, na.rm=T))
   cal_stats = quantile(cal_medians, probs=c(0,0.5,1))
@@ -1056,33 +1163,19 @@ if (enabled_evidence)
       geom_hline(aes_string(yintercept = "5"), linetype='dashed') +
       guides(fill = guide_legend(nrow = 2, ncol = 3, byrow = TRUE, reverse = T)) +
       theme(legend.position="top", legend.title=element_blank()) +
-      coord_flip()
+      coord_flip() +
+      scale_x_discrete_reverse(d_sum$fc.raw.file)
     )
       
   }
 
   pp = byXflex(d_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices=F, plotCont, top5=cont.top5.names)
   
+  ## QC measure for contamination
+  qc_contaminants = ddply(d_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
+                          function(x) data.frame(fc.raw.file = x$fc.raw.file[1], X001X.EVD.Contaminants = 1 - (sum(x$intensity[x$contaminant], na.rm=T)/sum(x$intensity, na.rm=T))))
+  QCM[["EVD.Contaminants"]] = qc_contaminants
 
-
-
-  con_stats_smry = quantile(con_stats[,1], probs=c(0,0.5,1))
-  cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=stats_file, append=T, sep="\n")  
-  
-  ## write peptides to stats file
-  for (ca_entry in contaminant_alarm)
-  {
-    ca = ca_entry[1]
-    ## this relies on ProteinGroups!!!
-    idx_pg = grep(ca, d_pg$fasta.header, ignore.case = T)
-    if (length(idx_pg))
-    { ## found something
-      idx_pep = which(d_evd$protein.group.ids %in% d_pg$id[idx_pg])
-      cat(pastet("contamination-proteins:", ca, paste((d_pg$majority.protein.ids[idx_pg]), collapse=",")), file=stats_file, append=T, sep="\n") 
-      cat(pastet("contamination-peptides:", ca, paste(unique(d_evd$sequence[idx_pep]), collapse=",")), file=stats_file, append=T, sep="\n") 
-    }
-  }
-  
   
   ### peak width (all raw.files --- too much for large experiments)
   #   print(ggplot(d_evd, aes_string(x="retention.length", colour="fc.raw.file")) +
@@ -1090,15 +1183,18 @@ if (enabled_evidence)
   #           scale_x_log10() + xlab("retention length") + ggtitle("EVD: Peak width histogram")
   #         )
   ## compute density manually
-  d_evd.m = melt(d_evd[,c("retention.length","fc.raw.file")])
-  d_evd.m.d = ddply(d_evd.m, "fc.raw.file", .fun = function(x) 
-  {
-    tmp = density(x$value, na.rm=T)
+  fcn_peakWidth = function(x) 
+  {      
+    tmp = density(x$retention.length, na.rm=T)
     x1 = tmp$x
     y1 = tmp$y
-    data.frame(retention.length = x1, dens = y1, fc.raw.file = unique(x$fc.raw.file))
-  })    
+    data.frame(retention.length = x1, dens = y1, fc.raw.file = x$fc.raw.file[1])
+  }
+  d_evd.m.d = ddply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = fcn_peakWidth)
+  ## the merged (=average peak)  
+  #d_evd.m.d = rbind(d_evd.m.d, fcn_peakWidth(data.frame(retention.length = d_evd$retention.length, fc.raw.file="merge")))  
   head(d_evd.m.d)
+  tail(d_evd.m.d)
   d_evd.m.d$block = factor(assignBlocks(d_evd.m.d$fc.raw.file, 15))
   ## identical limits for all plots
   d_evd.xlim = quantile(d_evd.m.d$retention.length, c(0,1))
@@ -1109,14 +1205,18 @@ if (enabled_evidence)
     print(ggplot(d_evd.m.d[d_evd.m.d$block==bl,], aes_string(x = "retention.length", y = "dens", colour = "fc.raw.file")) +
             geom_line(stat="identity") +
             xlab("retention length [min]") +
-            theme(axis.text.x = element_text(angle=90)) +
+            theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
             ylab("density") +
             ylim(d_evd.ylim) +
             scale_x_continuous(limits=d_evd.xlim, trans = "log10", breaks = c(0.01, 0.1, 0.25, 0.5, 1, 3, 10, 30)) +
-            ggtitle("EVD: Peak width histogram") +
+            ggtitle("EVD: Peak width distribution") +
             theme(legend.title=element_blank())
     )
   }
+  ## QC measure for reproducibility of peak shape
+  qc_evd_PeakShape = ddply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", 
+                           .fun = function(x) data.frame(X017X.EVD.RT_Peak_Similarity = ks.test(x$retention.length, d_evd$retention.length)$p.value))
+  QCM[["EVD.PeakShape"]] = qc_evd_PeakShape
 
   
   ### barplot
@@ -1139,13 +1239,16 @@ if (enabled_evidence)
     ggplot(d_dups) + geom_bar(stat="identity", aes_string(x = "fc.raw.file", y = "dups")) +
                      xlab("") +
                      ylab("percent") +
-                     ggtitle(paste0("EVD: Percent twin sequences (same sequence, q, rawfile)\n(more details when >", twinThresh, "%)")) + 
-                     theme(axis.text.x = element_text(angle=90))
+                     ggtitle(paste0("EVD: Percent twin sequences (identical sequence & charge & rawfile)")) + 
+                     theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
     )
     return(TRUE)
   }
   byXflex(d_dups, d_dups$fc.raw.file, 30, fcnPlotTwin, sort_indices = F)
-  
+  ## QC measure for centered-ness of MS2-calibration
+  qc_evd_twin = d_dups
+  qc_evd_twin$X020X.EVD.Twin_Sequences = 1 - (qc_evd_twin$dups/100)
+  QCM[["EVD.Twin"]] = qc_evd_twin[, c("fc.raw.file", "X020X.EVD.Twin_Sequences")]
 
   if (max(d_dups$dups)>twinThresh)
   { ## warn:: very!! slow!!
@@ -1235,30 +1338,42 @@ if (enabled_msms)
       
       x_nr = paste(x$mass.deviations..da.[idx_nr_subset], sep="", collapse=";")
       ms = unlist(strsplit(x_nr, split=";", fixed=T))
-      df.ms = rbind(df.ms, data.frame(msErr = ms, type="decoy"))
+      ## only merge if we have hits (reverse hits might be few and $mass.deviations..da. might be empty)
+      if (length(ms)) df.ms = rbind(df.ms, data.frame(msErr = ms, type="decoy"))
     }
     
     return (df.ms)
   })
   head(ms2_decal)
+  ms2_decal$msErr = as.numeric(as.character(ms2_decal$msErr))
+  ms2_binwidth = (max(ms2_decal$msErr, na.rm=T) - min(ms2_decal$msErr, na.rm=T))/20
   ## precision (plotting is just so much quicker, despite using a fixed binwidth)
-  ms2_decal$msErr = round(as.numeric(as.character(ms2_decal$msErr)), digits=2)
+  ms2_decal$msErr = round(ms2_decal$msErr, digits=ceiling(-log10(ms2_binwidth)+1))
   head(ms2_decal)
   
   fcPlotMS2Dec <- function(d_sub)
   {
     pl = 
       ggplot(data = d_sub, aes_string(x = "msErr", fill="type")) + 
-      geom_histogram(binwidth = 0.05) +
+      geom_histogram(binwidth = ms2_binwidth) +
       xlab("fragment mass delta [Da]") +  
       ylab("count") + 
       scale_fill_manual(values = c("#99d594",  "#ff0000")) +
-      ggtitle("MSMS: Fragment mass errors per RAW file") +
+      ggtitle("MSMS: Fragment mass errors per Raw file") +
       facet_wrap(~fc.raw.file)
     print(pl)
     return(pl)
   }
   pp = byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, fcPlotMS2Dec, sort_indices=F)
+  ## QC measure for centered-ness of MS2-calibration
+  head(ms2_decal)
+  qc_MS2_decal = ddply(ms2_decal, "fc.raw.file", 
+                       function(x){
+                         xx = na.omit(x$msErr);
+                         data.frame(X028X.MSMS.MS2_Calibration = qualCentered(xx), center=median(xx), max=max(abs(xx)))
+                       }) 
+  qc_MS2_decal
+  QCM[["MSMS.MS2_Calibration"]] = qc_MS2_decal[, c("fc.raw.file", "X028X.MSMS.MS2_Calibration")]
   
   
   ## missed cleavages per Raw file
@@ -1277,8 +1392,9 @@ if (enabled_msms)
                   theme(legend.title=element_blank()) +
                   scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000"), 10)) +
                   geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
-                  coord_flip()
-        pl = addGGtitle(pl, "MSMS: Missed cleavages per RAW file", "(includes contaminants)")
+                  coord_flip() +
+                  scale_x_discrete_reverse(st_bin.m$fc.raw.file)
+      pl = addGGtitle(pl, "MSMS: Missed cleavages per RAW file", "(includes contaminants)")
       print(pl)
       return(pl)
     }
@@ -1297,6 +1413,14 @@ if (enabled_msms)
     mcZero = st_bin[, "0"] * 100
     mcZero_stat = 100 - rev(quantile(mcZero, probs=c(0,0.5,1)))
     cat(pastet("missedCleavages>0 (min,median,max) [%]", paste0(mcZero_stat, collapse=",")), file=stats_file, append=T, sep="\n")
+    
+    ## QC measure for missed-cleavages variation
+    qc_mc = data.frame(fc.raw.file = st_bin$fc.raw.file, X004X.MSMS.MC = st_bin[, "0"])
+    QCM[["MSMS.MC"]] = qc_mc
+    qc_mc$X007X.MSMS.MC_Var = qualGauss(qc_mc$X004X.MSMS.MC)
+    QCM[["MSMS.MC_Var"]] = qc_mc
+    
+    
   } ## end MC check
   
  
@@ -1333,7 +1457,7 @@ if (enabled_msmsscans)
     { ## should not happen, but just to make sure
       x = x[, order(x$retention.time)]
     }
-    ## only take the highest SE in a series
+    ## only take the highest scan event (SE) in a series
     maxN = getMaxima(x$scan.event.number, thresh_rel = 0.0)
     df.max = x[maxN,]
     ## use median of that within one RT bin
@@ -1351,14 +1475,20 @@ if (enabled_msmsscans)
       ylab("highest N [median per RT bin]") +
       #stat_smooth(method = "loess", formula = y ~ x, se = FALSE, span = 0.1) +
       guides(color=guide_legend(title="")) +
-      ggtitle("MSMSscans: Scan event performance")
+      ggtitle("MSMSscans: TopN over RT")
     )
     return (1)
   }
   byXflex(DFmse, DFmse$fc.raw.file, 9, plotMaxSEinRT, sort_indices=F)
   
+  ## QC measure for smoothness of TopN over RT
+  qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame(X012X.MSMSScans.TopN_over_RT = qualUniform(x$medSE)))
+  QCM[["MSMSscans.TopN_over_RT"]] = qc_TopNRT
   
+  
+  ##
   ## scan event counts
+  ##
   DFc = ddply(d_msmsScan, c("scan.event.number", "fc.raw.file"), summarise, n = length(scan.event.number))
   dfc.ratio = ddply(DFc, "fc.raw.file", function(x, maxn)
   {
@@ -1395,16 +1525,24 @@ if (enabled_msmsscans)
     print(
       ggplot(dfc.ratio, aes_string(x = "scan.event.number", y = "n")) +
         geom_bar(stat="identity") +
-        xlab("scan event") +
-        ylab("highest N") +
+        xlab("highest scan event") +
+        ylab("count") +
         facet_wrap(~ fc.raw.file, scales = "free_y") +
-        ggtitle(paste0("MSMSscans: Scan event performance"))
+        ggtitle(paste0("MSMSscans: TopN"))
     )
     return (1)
   }
   byXflex(dfc.ratio, dfc.ratio$fc.raw.file, 9, plotScanEventDiff, sort_indices=F)
+  
+  ## QC measure for always reaching the maximum TopN
+  maxTopN = max(dfc.ratio$scan.event.number)
+  qc_TopN = ddply(dfc.ratio, "fc.raw.file", function(x) data.frame(X035X.MSMSScans.TopN_high = qualHighest(x$n, maxTopN)))
+  QCM[["MSMSscans.TopN"]] = qc_TopN
+  
 
-
+  ##
+  ## Scan event: % identified
+  ##
   #require(plyr)
   DF = ddply(d_msmsScan, c("scan.event.number", "identified", "fc.raw.file"), summarise, n = length(scan.event.number))
   df.ratio = ddply(DF, c("scan.event.number", "fc.raw.file"), function(x)
@@ -1412,100 +1550,45 @@ if (enabled_msmsscans)
     xp = xm = 0
     if ("+" %in% x$identified) xp = x$n[x$identified=="+"]
     if ("-" %in% x$identified) xm = x$n[x$identified=="-"]
-    rt = xp * 100 / sum(xp, xm)
-    return (rt)
+    ratio = xp * 100 / sum(xp, xm)
+    return (data.frame(ratio = ratio, count = sum(x$n)))
   })
   head(df.ratio)
 
   plotScanEvent = function(df.ratio)
   {
     print(
-      ggplot(df.ratio, aes_string(x = "scan.event.number", y = "V1")) +
+      ggplot(df.ratio, aes_string(x = "scan.event.number", y = "ratio", alpha = "count")) +
         geom_bar(stat="identity") +
         xlab("scan event") +
         ylab("percent identified") +
         facet_wrap(~ fc.raw.file) +
-        ggtitle(paste0("MSMSscans: Scan event performance"))
+        ggtitle(paste0("MSMSscans: TopN identified"))
     )
     return (1)
   }
   byXflex(df.ratio, df.ratio$fc.raw.file, 9, plotScanEvent, sort_indices=F)
   
+  ## QC measure for constantly identifiying peptides, irrespective of scan event number
+  ## -- we weight scan events by their number of occurence
+  qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame(X038X.MSMSScans.TopN_ID_rate = qualUniform(x$ratio, x$count)))
+  QCM[["MSMSscans.TopN_ID"]] = qc_TopN_ID
   
-#   tt = ddply(d_msmsScan, c("scan.event.number", "fc.raw.file", "identified"), summarise, n = mean(ion.injection.time))
-#   # tt = tt[tt$identified=="+",]
-#   head(tt)
-#   
-#   ggplot(tt, aes_string(x = "scan.event.number", y = "n", col = "fc.raw.file")) +
-#        scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=400), guide_legend("")) +
-#        geom_point() 
-#        
-  #   
-  #   print(ggplot(d_msmsScan, aes_string(x = "Scan.event.number", y = "Ion.Injection.Time")) +
-  #           #geom_bar(binwidth = 1) +
-  #           geom_point() +
-  #           xlab("scan number") + ggtitle("Peak width histogram") +
-  #           #geom_density2d() +
-  #           stat_density2d(geom="tile", aes_string(fill = "..density.."), contour = FALSE)
-  #         )
-  #   
-  #   hist(d_msmsScan$Elapsed.Time)
-  #   cor(d_msmsScan$Elapsed.Time, d_msmsScan$Ion.Injection.Time)
-  #   
-  #   d_msmsScan$Scan.event.number2 = as.numeric(as.character(d_msmsScan$Scan.event.number))
-  #   d_msmsScan$Ion.Injection.Time2 = as.numeric(as.character(d_msmsScan$Ion.Injection.Time))
-  #   d_msmsScan$Identified2 = (as.character(d_msmsScan$Ion.Injection.Time))
-  #   
-  #   ggplot(d_msmsScan, aes_string(x = "Scan.event.number2", y = "Ion.Injection.Time2", z = "Identified2")) + stat_contour()
 }
+
+hm = getQCHeatMap(QCM, mq$raw_file_mapping)
+print(hm[["plot"]])
+write.table(hm[["table"]], file = heatmap_values_file, quote= T, sep = "\t", row.names=F)
 
 ### close PDF
 dev.off();
 
 ### write YAML config
-yaml.user.warning = 
-"# This is a configuration file for PTXQC reporting.
-# One such file is generated automatically every time a report PDF is created.
-# You can make a copy of this file, then modify its values and use the copy as an input to another round of report generation,
-# e.g., to exclude/include certain plots or change some global settings.
-#
-# It is recommended to work on a copy of this file, such that this original configuration reflects the content of the report.
-# 
-# Note that upon report generation, this file will be overwritten again (with potentially new values, if and depending on the YAML config you provided).
-#
-# This file has a certain structure, which should be *retained* when editing.
-# Note that each parameter level has two more spaces for indentation
-# A value is assigned using a colon followed by a space, i.e. ': '
-#
-# The values that can be taken by a parameter are indicated by the SUFFIX of the name.
-# '<name>_num' :  a numeric value is expected
-# '<name>_wA'  :  'no', 'yes', 'auto' (see below)
-# '<name>      :  'no', 'yes'
-#
-# By default (no special ending) parameters are BINARY (yes or no).
-# Parameters ending in 'wA' (== 'withAuto') offer a heuristic to decide if something should be plotted.
-# Finally, numerical parameters... well.. are numerical (usually integer).
-#
-# Furthermore, there is the SpecialContaminants section, where you can trigger the generation of a plot
-# which just shows the fraction of proteins containing a certain string.
-# By default we search for 'MYCOPLASMA' in the protein identifier, i.e. your txt should be derived from a 
-# run using a database containing these identifiers (the FASTA description is not enough).
-# Each of the special contaminants requires has its own section (e.g. 'cont_MYCO:') with two parameters: 
-# - a string          = name within the protein identifier
-# - an integer number = a threshold in % which will be plotted to visually ease interpretation
-# 
-#
-# With the exception(!) of extra 'SpecialContaminants':
-#   Do NOT add extra values (since they are ignored anyway and might even destroy the integrity of this configuration file).
-#   Only modify existing values, but not their names. I.e. only change 123 but not 'test'
-#   test: 123
-#
-#
-"
-cat(paste0(yaml.user.warning, as.yaml(yaml_obj)), file=yaml_file)
+writeYAML(yaml_file, yaml_obj)
+
 cat(paste("Report file created at\n\n    ", txt_folder, "\\", report_file, "\n\n", sep=""))
 cat(paste0("\n\nTime elapsed: ", round(as.double(Sys.time() - time_start, units="mins"), 1), " min\n\n"))
 
 ## return path to PDF report and YAML config
-return (list(report_filename = report_file, yaml_filename = yaml_file))
+return (list(report_filename = report_file, yaml_filename = yaml_file, heatmap_filename = heatmap_values_file))
 }
