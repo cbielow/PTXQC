@@ -458,7 +458,7 @@ assignBlocks = function(values, set_size = 5, sort_values = TRUE)
   ## sort
   if (sort_values)
   {
-    cat(paste0("Sorting values (", length(groups), ")..."))
+    #cat(paste0("Sorting values (", length(groups), ")..."))
     groups = factor(sort(as.character(groups)))
   }
   
@@ -713,4 +713,25 @@ scale_y_discrete_reverse = function(values)
   return (scale_y_discrete(limits = rev(levels(values)) ))
 }
 
-
+#'
+#' Add the value of a variable to an environment (fast append)
+#'
+#' The environment must exist, and its name must be given as string literal in 'env_name'!
+#' The value of the variable 'v' will be stored under the name given in 'v_name'.
+#' If 'v_name' is not given, a variable name will be created by increasing an internal counter
+#' and using the its value padded with zeros as name (i.e., "0001", "0002" etc).
+#' 
+#' @param env_name String of the environment variable
+#' @param v Value to be inserted
+#' @param v_name String used as variable name. Automatically generated if omitted.
+#' @return Always TRUE
+#'
+#'
+appendEnv = function(env_name, v, v_name = NULL)
+{
+  e = eval(as.name(env_name))
+  e$.counter <- e$.counter + 1
+  
+  e[[sprintf("%04d",e$.counter)]] <- v ## pad with 0's, to ensure correct order when calling ls() on env_name
+  return(TRUE)
+}

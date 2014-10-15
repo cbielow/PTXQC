@@ -8,7 +8,8 @@
 #'                           Default: NA (no lines)
 #' @param gg_layer           More parameters added to a ggplot object (ggplot(x) + gg_layer)                 
 
-#' @return [invisible] The PCA object as returned by \code{\link[stats]{prcomp}}, access $x for PC values
+#' @return [invisible] Named list with "PCA": The PCA object as returned by \code{\link[stats]{prcomp}}, access $x for PC values
+#'                                 and "plots": list of plot objects (one or two)
 #' 
 #' @import ggplot2
 #' @importFrom stats prcomp
@@ -42,6 +43,9 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
   {
     scores$ord = as.numeric(factor(rownames(data)))
   }
+  
+  lpl = list();
+  
   # plot of observations
   if (do_plot)
   {
@@ -49,7 +53,7 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
     if (show.Line) pl = pl + geom_path(aes_string(x = "pathX", y = "pathY", color = "ord", alpha = "0.5"))
     pl = pl + scale_colour_gradient(low="red", high="darkgreen")
     pl = pl + gg_layer
-    print(
+    lpl[[1]] = 
       pl +
       geom_point(aes_string(colour = "ord"), size = 1) +
       geom_text(size = 3, angle=0, aes_string(label = "class", colour = "ord", vjust = "1")) +
@@ -57,7 +61,6 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
       #theme(panel.background=element_rect("black")) +
       geom_vline(xintercept=0, colour="gray65") +
       theme_bw()
-  )
   }
   
  
@@ -79,7 +82,7 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
                         x2=correlations$PC1, y2=correlations$PC2)
     
     
-    print(
+    lpl[[2]] = 
       ggplot() +
       geom_path(data=corcir, aes_string(x = "x", y = "y"), colour="gray65") +  ## open circles
       geom_segment(data=arrows, aes_string(x = "x1", y = "y1", xend = "x2", yend = "y2"), colour="gray65") +
@@ -89,9 +92,9 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
       xlim(-1.1,1.1) + ylim(-1.1,1.1) +
       labs(x="pc1 axis", y="pc2 axis") +
       ggtitle("Circle of correlations")
-    )
+
   }
-  return (invisible(pc))
+  return (list("PCA" = invisible(pc), "plots" = lpl))
 }
 
 

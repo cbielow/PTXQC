@@ -166,5 +166,47 @@ gauss2Mix = function(x)
 
 
 
+#'
+#' From a list of vectors, compute all vs. all Kolmogorov-Smirnoff p-values
+#' 
+#' ... and report the row of the matrix which has maximum sum (i.e the best "reference" distribution).
+#' The returned data.frame has as many rows as distributions given and two columns.
+#' The first column 'name' gives the name of the list element, the second column 'ks_best' gives the p-value of the
+#' Kolmogorov-Smirnoff test to the "reference" distribution (which was picked by maximising the sum of p-values).
+#' Thus, the row with a p-value of 1 is the reference distribution.
+#' 
+#' @param x List of vectors, where each vector holds a distribution
+#' @return A data.frame with ks-test values of the "reference" to all other distributions (see Details)
+#'
+#'
+bestKS = function(x) {
+  
+  if (class(x) != "list") stop("Function bestKS() expects a list!")
+  
+  ## result matrix
+  rr = matrix(0, nrow=length(x), ncol=length(x))
+  ## compute upper diagonal
+  for (i in 1:length(x))
+  {
+    for (j in (i+1):length(x))
+    {
+      if (j>length(x)) next;
+      rr[i,j] = ks.test(x[[i]], x[[j]])$p.value
+    }
+  }
+  ## fill diagonal with 1's
+  diag(rr) = 1
+  ## add up all values for each reference distribution (equivalent to just rowSums on full matrix)
+  rr_sums = rowSums(rr, na.rm=T) + colSums(rr, na.rm=T)
+  ## pick best
+  r_max = which.max(rr_sums)
+  ## get values
+  v = pmax(rr[r_max,], rr[, r_max])
+  
+  return(data.frame(name = names(x), ks_best = v))
+         
+}
+
+
 
 

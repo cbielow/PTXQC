@@ -29,7 +29,7 @@
 #' @param boxes_per_page  Maximum number of boxplots per plot. Yields multiple plots if more columns are given.
 #' @param abline Draw a horziontal green line at the specified y-position (e.g. to indicate target median values)
 #' 
-#' @return List of printed ggplots
+#' @return List of ggplot objects
 #' 
 #' @import ggplot2
 #' @importFrom reshape2 melt
@@ -128,11 +128,11 @@ boxplotCompare <- function(data1, data2 = NA,
     {
       pl = pl + geom_abline(alpha = 0.5, intercept = abline, slope = 0, colour = "green")
     }
-    print(pl)
+    return(pl)
   }
   #ex: fcn_boxplot_internal(datar[datar$section<2,])
-  byXflex(data = datar, indices = datar$variable, subset_size = boxes_per_page, sort_indices = F, FUN = fcn_boxplot_internal, abline)
-  
+  lpl = byXflex(data = datar, indices = datar$variable, subset_size = boxes_per_page, sort_indices = F, FUN = fcn_boxplot_internal, abline)
+  return (lpl)
 }
 
 

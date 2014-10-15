@@ -22,8 +22,9 @@ getPCA(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
   (ggplot(x) + gg_layer)}
 }
 \value{
-[invisible] The PCA object as returned by
-\code{\link[stats]{prcomp}}, access $x for PC values
+[invisible] Named list with "PCA": The PCA object as
+returned by \code{\link[stats]{prcomp}}, access $x for PC
+values and "plots": list of plot objects (one or two)
 }
 \description{
 Create a principal component analysis (PCA) plot for the

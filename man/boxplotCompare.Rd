@@ -28,7 +28,7 @@ boxplotCompare(data1, data2 = NA, log2_ratios = T, ylab = "intensity",
   values)}
 }
 \value{
-List of printed ggplots
+List of ggplot objects
 }
 \description{
 Given two data.frames, each with matching rows and columns

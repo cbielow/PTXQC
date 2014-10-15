@@ -3,14 +3,14 @@
 \alias{MQDataReader$plotNameMapping}
 \title{Plots the current mapping of Raw file names to their shortened version.}
 \value{
-Returns \code{TRUE} if mapping is present. 'FALSE'
-otherwise (no plot is generated).
+Returns a mapping plot if mapping is available, 'NULL'
+otherwise.
 }
 \description{
 Convenience function to plot the mapping (e.g. to a PDF
 device for reporting). The data frame can be accessed
 directly via \code{.$raw_file_mapping}. If no mapping
-exists, the function prints a warning to console and omits
-the plot.
+exists, the function prints a warning to console and
+returns NULL (which is safe to use in print(NULL)).
 }
 

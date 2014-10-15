@@ -10,8 +10,8 @@ qualGauss(x)
   state of 2)}
 }
 \value{
-Numeric vector of qualities for matching the entries of
-'x', ranging from 0 (bad agreement) to 1 (perfect)
+Numeric vector of qualities, same length of 'x', ranging
+from 0 (bad agreement) to 1 (perfect)
 }
 \description{
 For each index i, compute a Gaussian G from x \\ x_i and

@@ -51,7 +51,7 @@ MQDataReader <- proto()
 #' 
 MQDataReader$new <- function(.)
 {
-  proto(., raw_file_mapping = NULL, mq.data = NULL)
+  proto(., raw_file_mapping = NULL, mq.data = NULL, mapping.created = FALSE)
 }
 
 
@@ -114,6 +114,9 @@ MQDataReader$new <- function(.)
 # (not exported!)
 MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, add_fs_col=10, LFQ_action=FALSE, ...)
 {
+  ## it's either present already or will be created
+  .$mapping.created = FALSE
+  
   # . = MQDataReader$new() ## debug
   # ... = NULL
   cat(paste("Reading file", file,"...\n"))
@@ -263,8 +266,8 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
         cat("Filenames are longer than the maximal allowed size of '" %+% add_fs_col %+% "'. Resorting to short versions 'f...'.\n\n")
         maxl = length(unique(.$mq.data$raw.file))
         .$raw_file_mapping$to = paste("f", sprintf(paste0("%0", nchar(maxl), "d"), 1:maxl)) ## with leading 0's if required
-        ## plot a mapping table ... (this might not be the best place to do it though..)
-        .$plotNameMapping()
+        ## indicate to outside that a new table is ready
+        .$mapping.created = FALSE
       }
       
     }
@@ -290,9 +293,9 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
 #'
 #' Convenience function to plot the mapping (e.g. to a PDF device for reporting).
 #' The data frame can be accessed directly via \code{.$raw_file_mapping}.
-#' If no mapping exists, the function prints a warning to console and omits the plot.
+#' If no mapping exists, the function prints a warning to console and returns NULL (which is safe to use in print(NULL)).
 #'
-#' @return Returns \code{TRUE} if mapping is present. 'FALSE' otherwise (no plot is generated).
+#' @return Returns a mapping plot if mapping is available, 'NULL' otherwise.
 #'
 #' @name MQDataReader$plotNameMapping
 #' 
@@ -329,13 +332,13 @@ MQDataReader$plotNameMapping <- function(.)
       theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
             axis.text = element_blank(), strip.text = element_blank(), legend.position = "none") +
       ggtitle("Info: mapping of raw files to their short names" %+% extra)
-    print(mqmap_pl)
+    return(mqmap_pl)
   } else {
     cat("No mapping found. Omitting plot.")
-    return (FALSE);
+    return (NULL);
   }
     
-  return (TRUE);  
+  return (NULL);  
 }
 
 #' Replaces values in the mq.data member with (binary) values.
