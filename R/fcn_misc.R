@@ -246,7 +246,7 @@ simplifyNames = function(strings, infix_iterations=2, min_LCS_length=7)
 shortenStrings = function(x, max_len = 12, print_warning = TRUE)
 {
   idx = nchar(x) > max_len
-  if (print_warning)
+  if (print_warning & any(idx))
   {
     cat("The following labels will be shortened to ease plotting:\n")
     cat(paste0("  ", paste(x[idx], collapse="\n  ")))
@@ -389,7 +389,7 @@ byX <- function(data, indices, subset_size = 5, FUN, sort_indices = TRUE, ...)
     #cat(paste("block", x, " ... "))
     range = x:(min(x+subset_size-1, length(groups)))
     lns = indices %in% groups[range];
-    subset = data[lns, , drop=F]
+    subset = droplevels(data[lns, , drop=F])
     rownames(subset) = rownames(data)[lns]
     #cat(paste("call\n"))
     r = FUN(subset, ...)    
@@ -698,6 +698,7 @@ renameFile = function(f_names, mapping)
 scale_x_discrete_reverse = function(values)
 {
   if (!("factor" %in% class(values))) stop("Cannot use scale_x_discrete_reverse() on non-factor()")
+  values = droplevels(values)
   return (scale_x_discrete(limits = rev(levels(values)) ))
 }
 
@@ -710,6 +711,7 @@ scale_x_discrete_reverse = function(values)
 scale_y_discrete_reverse = function(values)
 {
   if (!("factor" %in% class(values))) stop("Cannot use scale_y_discrete_reverse() on non-factor()")
+  values = droplevels(values)
   return (scale_y_discrete(limits = rev(levels(values)) ))
 }
 
@@ -729,7 +731,7 @@ scale_y_discrete_reverse = function(values)
 #'
 appendEnv = function(env_name, v, v_name = NULL)
 {
-  e = eval(as.name(env_name))
+  e = eval.parent(as.name(env_name), n=3)
   e$.counter <- e$.counter + 1
   
   e[[sprintf("%04d",e$.counter)]] <- v ## pad with 0's, to ensure correct order when calling ls() on env_name

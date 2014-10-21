@@ -71,6 +71,64 @@ qualUniform = function(x, weight=vector())
   return (q)    
 }
 
+
+#'
+#' Test for uniform distribution using Kolmogorov-Smirnoff
+#'
+#' If only 'x' is given, a one sample KS test is done (min and max are taken from 'x').
+#' If both 'x' and 'y' are given, a two-sample KS test is conducted.
+#' 
+#' Thoughts: this test has multiple problems:
+#'      - is much too stringent, leading to p-values  ~ 0 very quickly
+#'      - looking at the 'D' statistic instead is also not good:
+#'            - using a Gaussian, centered at the middle of the data range, gives
+#'              D~0.17, i.e. q=1-D=0.83, which seems to high
+#'            - if only one bin dominates, its position strongly influences D:
+#'              e.g. 
+#'                (all data at the right (or left)):
+#'                ks.test(c(100,100,rep(0,100)), y="punif", min=min(x), max=max(x)) ==> d=0.98 (bad fit, thus good metric)
+#'                (all data at the center):
+#'                ks.test(c(0,100,rep(50,100)), y="punif", min=min(x), max=max(x))  ==> d=0.57 (similarly bad fit, but metric just does not reflect it)
+#'
+qualUnifKS = function(x, y = NULL)
+{
+  if (is.null(y)) return (ks.test(x, y="punif", min=min(x), max=max(x))$p.value)
+  else return (ks.test(x, y)$p.value)
+}
+
+#'
+#' Discete ChiSquare-test on raw (unbinned) data
+#' 
+#' Data are first assigned to bins of equal width using 'hist()'.
+#' 
+#' If only 'x' is given, its distribution of compared to a uniform distribution.
+#' If 'y' is given as well, 'x' vs. 'y' is compared (after binning).
+#' If counts of 'x' and 'y' differ, the binned counts of the vector with higher counts 
+#' are rescaled by N/M to match the smaller one (this might lead to bias).
+#' 
+#' 
+#'
+#'
+qualUniform_C2 = function(x, y = NULL, bin_count = 30)
+{
+  
+  if (!is.null(y)) {
+    xy = c(x,y)
+    h = hist(c(x,y), breaks = bin_count, plot = FALSE)
+    hx = hist(x, breaks = h$breaks, plot = FALSE)
+    hy = hist(y, breaks = h$breaks, plot = FALSE)
+    if (length(x) != length(y)) { ## rescale
+      fac = length(x) / length(y)
+    }
+  }
+  else xy = x;
+  
+  
+  
+  chisq.test
+  
+}
+
 #' 
 #' Compute position of each element in a vector, assuming the rest of the data is a Gaussian
 #' 
@@ -167,13 +225,13 @@ gauss2Mix = function(x)
 
 
 #'
-#' From a list of vectors, compute all vs. all Kolmogorov-Smirnoff p-values
+#' From a list of vectors, compute all vs. all Kolmogorov-Smirnoff statistics (D)
 #' 
 #' ... and report the row of the matrix which has maximum sum (i.e the best "reference" distribution).
 #' The returned data.frame has as many rows as distributions given and two columns.
-#' The first column 'name' gives the name of the list element, the second column 'ks_best' gives the p-value of the
-#' Kolmogorov-Smirnoff test to the "reference" distribution (which was picked by maximising the sum of p-values).
-#' Thus, the row with a p-value of 1 is the reference distribution.
+#' The first column 'name' gives the name of the list element, the second column 'ks_best' gives '1-statistic' of the
+#' Kolmogorov-Smirnoff test to the "reference" distribution (which was picked by maximising the sum of 'ks_best').
+#' Thus, the row with a 'ks_best' of 1 is the reference distribution.
 #' 
 #' @param x List of vectors, where each vector holds a distribution
 #' @return A data.frame with ks-test values of the "reference" to all other distributions (see Details)
@@ -191,7 +249,7 @@ bestKS = function(x) {
     for (j in (i+1):length(x))
     {
       if (j>length(x)) next;
-      rr[i,j] = ks.test(x[[i]], x[[j]])$p.value
+      rr[i,j] = 1 - ks.test(x[[i]], x[[j]])$statistic
     }
   }
   ## fill diagonal with 1's

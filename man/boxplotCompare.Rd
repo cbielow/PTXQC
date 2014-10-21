@@ -3,16 +3,14 @@
 \alias{boxplotCompare}
 \title{Boxplots - one for each condition (=column) in a data frame.}
 \usage{
-boxplotCompare(data1, data2 = NA, log2_ratios = T, ylab = "intensity",
-  mainlab = ylab, sublab = "", boxes_per_page = 30, abline = NA)
+boxplotCompare(data, log2 = T, ylab = "intensity", mainlab = ylab,
+  sublab = "", boxes_per_page = 30, abline = NA)
 }
 \arguments{
-  \item{data1}{Data frame with numerical expression data}
+  \item{data}{Data frame in long format with numerical
+  expression data}
 
-  \item{data2}{Optional second data frame (with matching
-  rows and columns)}
-
-  \item{log2_ratios}{Apply log2 to the data (yes/no)}
+  \item{log2}{Apply log2 to the data (yes/no)}
 
   \item{ylab}{Label on Y-axis}
 
@@ -21,7 +19,7 @@ boxplotCompare(data1, data2 = NA, log2_ratios = T, ylab = "intensity",
   \item{sublab}{Sub title}
 
   \item{boxes_per_page}{Maximum number of boxplots per
-  plot. Yields multiple plots if more columns are given.}
+  plot. Yields multiple plots if more groups are given.}
 
   \item{abline}{Draw a horziontal green line at the
   specified y-position (e.g. to indicate target median
@@ -31,15 +29,12 @@ boxplotCompare(data1, data2 = NA, log2_ratios = T, ylab = "intensity",
 List of ggplot objects
 }
 \description{
-Given two data.frames, each with matching rows and columns
-and just containing expression data. We plot the column
-ratios and annotate with correlation. If just one
-data.frame is given, we assume that it contains the data
-(e.g. ratios, or LFQ) already (no correlation will be
-reported).
+Given a data.frame with two columns in long format (name,
+value; in that order), each group (given from 1st column)
+is plotted as a bar.
 }
 \details{
 Boxes are shaded: many NA or Inf lead to more transparency.
-Allows to easily spot sparse columns.
+Allows to easily spot sparse groups
 }
 

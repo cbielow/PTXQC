@@ -242,6 +242,9 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     ## check if we already have a mapping
     if (is.null(.$raw_file_mapping))
     {
+      ##
+      ## mapping will have: $from, $to and optionally $best_effort (if shorting was unsuccessful and numbers had to be used)
+      ##
       rf_name = unique(.$mq.data$raw.file)
       ## remove prefix
       rf_name_s = delLCP(rf_name)
@@ -260,16 +263,15 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       .$raw_file_mapping = data.frame(from = rf_name, to = rf_name_s, stringsAsFactors = FALSE)
       ## check if the minimal length was reached
       add_fs_col = 10
-      if (is.numeric(add_fs_col) & max(nchar((.$raw_file_mapping$to))) > add_fs_col)
+      if (max(nchar(.$raw_file_mapping$to)) > add_fs_col)
       { ## resort to short naming convention
         .$raw_file_mapping[, "best effort"] = .$raw_file_mapping$to
         cat("Filenames are longer than the maximal allowed size of '" %+% add_fs_col %+% "'. Resorting to short versions 'f...'.\n\n")
         maxl = length(unique(.$mq.data$raw.file))
         .$raw_file_mapping$to = paste("f", sprintf(paste0("%0", nchar(maxl), "d"), 1:maxl)) ## with leading 0's if required
-        ## indicate to outside that a new table is ready
-        .$mapping.created = FALSE
       }
-      
+      ## indicate to outside that a new table is ready
+      .$mapping.created = FALSE
     }
     ## do the mapping    
     .$mq.data$fc.raw.file = as.factor(.$raw_file_mapping$to[match(.$mq.data$raw.file, .$raw_file_mapping$from)])
@@ -295,7 +297,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
 #' The data frame can be accessed directly via \code{.$raw_file_mapping}.
 #' If no mapping exists, the function prints a warning to console and returns NULL (which is safe to use in print(NULL)).
 #'
-#' @return Returns a mapping plot if mapping is available, 'NULL' otherwise.
+#' @return Returns a list of mapping plots if mapping is available, 'NULL' otherwise.
 #'
 #' @name MQDataReader$plotNameMapping
 #' 
@@ -303,36 +305,53 @@ MQDataReader$plotNameMapping <- function(.)
 {
   if (!is.null(.$raw_file_mapping))
   {
+    table_header = c("original", "short\nname")
+    xpos = c(9, 11)
     extra = ""
     if ("best effort" %in% colnames(.$raw_file_mapping))
     {
       extra = "\n(automatic shortening of names was not sufficiently short - see 'best effort')"
+      table_header = c(table_header, "best_effort")
+      xpos = c(9, 11, 13)
     }
     
     #mq_mapping = mq$raw_file_mapping
     mq_mapping = .$raw_file_mapping
-    mq_mapping$ypos = -(1:nrow(mq_mapping))
-    head(mq_mapping)
-    mq_mapping.long = melt(mq_mapping, id.vars = c("ypos"), measure.vars=c("from","to","best effort"))
-    head(mq_mapping.long)
-    mq_mapping.long$variable = as.character(mq_mapping.long$variable)
-    mq_mapping.long$col = "#000000";
-    mq_mapping.long$col[mq_mapping.long$variable=="to"] = "#5F0000"
-    mq_mapping.long$variable[mq_mapping.long$variable=="to"] = 9
-    mq_mapping.long$variable[mq_mapping.long$variable=="from"] = 8
-    mq_mapping.long$variable[mq_mapping.long$variable=="best effort"] = 12
-    mq_mapping.long$variable = as.numeric(mq_mapping.long$variable)
-    mq_mapping.long$size = 2;
-    df.header = data.frame(ypos = 0, variable = c(8,9,12), value = c("original", "short\nname", "best_effort"), col = "#000000", size=3)
-    mq_mapping.long2 = rbind(mq_mapping.long, df.header)
-    mqmap_pl = ggplot(mq_mapping.long2, aes_string(x = "variable", y = "ypos"))  +
-      geom_text(aes_string(label="value"), color = mq_mapping.long2$col, hjust=1, size=mq_mapping.long2$size) +
-      coord_cartesian(xlim=c(0,15)) +
-      theme_bw() +
-      theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
-            axis.text = element_blank(), strip.text = element_blank(), legend.position = "none") +
-      ggtitle("Info: mapping of raw files to their short names" %+% extra)
-    return(mqmap_pl)
+    
+    mappingChunk = function(mq_mapping)
+    {
+      mq_mapping$ypos = -(1:nrow(mq_mapping))
+      head(mq_mapping)
+      mq_mapping.long = melt(mq_mapping, id.vars = c("ypos"))
+      head(mq_mapping.long)
+      mq_mapping.long$variable = as.character(mq_mapping.long$variable)
+      mq_mapping.long$col = "#000000";
+      mq_mapping.long$col[mq_mapping.long$variable=="to"] = "#5F0000"
+      mq_mapping.long$variable[mq_mapping.long$variable=="from"] = xpos[1]
+      mq_mapping.long$variable[mq_mapping.long$variable=="to"] = xpos[2]
+      if (nchar(extra)) mq_mapping.long$variable[mq_mapping.long$variable=="best effort"] = xpos[3]
+      mq_mapping.long$variable = as.numeric(mq_mapping.long$variable)
+      mq_mapping.long$size = 2;
+      
+      df.header = data.frame(ypos = 1, variable = xpos, value = table_header, col = "#000000", size=3)
+      mq_mapping.long2 = rbind(mq_mapping.long, df.header)
+      mq_mapping.long2$hpos = 0 ## left aligned,  1=right aligned
+      mq_mapping.long2$hpos[mq_mapping.long2$variable==xpos[1]] = 1
+      mq_mapping.long2$hpos[mq_mapping.long2$variable==xpos[2]] = 0
+      if (nchar(extra)) mq_mapping.long2$hpos[mq_mapping.long2$variable==xpos[3]] = 0
+      
+      mqmap_pl = ggplot(mq_mapping.long2, aes_string(x = "variable", y = "ypos"))  +
+        geom_text(aes_string(label="value"), color = mq_mapping.long2$col, hjust=mq_mapping.long2$hpos, size=mq_mapping.long2$size) +
+        coord_cartesian(xlim=c(0,20)) +
+        theme_bw() +
+        theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), 
+              axis.title = element_blank(), panel.border = element_blank(),
+              axis.text = element_blank(), strip.text = element_blank(), legend.position = "none") +
+        ggtitle("Info: mapping of raw files to their short names" %+% extra)
+      return(mqmap_pl)
+    }
+    l_plots = byXflex(mq_mapping, 1:nrow(mq_mapping), 20, mappingChunk, sort_indices=F);
+    return (l_plots)
   } else {
     cat("No mapping found. Omitting plot.")
     return (NULL);
