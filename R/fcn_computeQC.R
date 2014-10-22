@@ -197,8 +197,9 @@ if (enabled_summary)
     )
   ## QC measure for contamination
   qc_sm_id = d_smy[[1]][, c("raw.file", "ms.ms.identified....")]
-  qc_sm_id$X030X.SM.MS2_ID_rate = pmin(1, qc_sm_id$ms.ms.identified.... / id_rate_great)
-  QCM[["SM.MS2_ID_rate"]] = qc_sm_id[,c("raw.file", "X030X.SM.MS2_ID_rate")]
+  cname = "X030X.SM.MS2_ID_rate (>" %+% id_rate_great %+% ")"
+  qc_sm_id[, cname] = pmin(1, qc_sm_id$ms.ms.identified.... / id_rate_great)
+  QCM[["SM.MS2_ID_rate"]] = qc_sm_id[,c("raw.file", cname)]
   
   
   ## table of files with 'bad' MS/MS id rate
@@ -611,7 +612,7 @@ if (enabled_evidence)
   #d_evd_s = mq$readMQ(txt_files$evd, type="ev", filter = "", nrows=10000)
   #d_evd_s = mq$readMQ(txt_files$evd, type="ev", filter = "")
   #head(d_evd_s)
-  #colnames(d_evd)
+  #colnames(d_evd_s)
   #table(d_evd_s$reverse)
   #[grep("ount", colnames(d_evd))]
   
@@ -684,8 +685,9 @@ if (enabled_evidence)
   for (pl in lpl) GPL$add(pl);
   ## QC measure for peptide intensity
   qc_pepint = medians_pep
-  qc_pepint$X003X.EVD.Peptide_Intensity = pmin(1, qc_pepint$med / param_def_EV_intThresh)
-  QCM[["EVD.PepIntensity"]] = qc_pepint[, c("fc.raw.file", "X003X.EVD.Peptide_Intensity")]
+  cname = "X003X.EVD.Peptide_Intensity (>" %+% param_def_EV_intThresh %+% ")"
+  qc_pepint[,cname] = pmin(1, qc_pepint$med / param_def_EV_intThresh)
+  QCM[["EVD.PepIntensity"]] = qc_pepint[, c("fc.raw.file", cname)]
   
   
   # use only if it contains information (all NA if disabled)
@@ -767,8 +769,9 @@ if (enabled_evidence)
   })
   ## QC measure for protein ID performance
   qc_protc = pgc[pgc$match=="no", c("fc.raw.file", "protCount")]
-  qc_protc$X045X.EVD.Protein_Count = pmin(1, qc_protc$protCount / param_EV_protThresh)
-  QCM[["EVD.ProtCount"]] = qc_protc[, c("fc.raw.file", "X045X.EVD.Protein_Count")]
+  cname = "X045X.EVD.Protein_Count (>" %+% param_EV_protThresh %+% ")"
+  qc_protc[,cname] = pmin(1, qc_protc$protCount / param_EV_protThresh)
+  QCM[["EVD.ProtCount"]] = qc_protc[, c("fc.raw.file", cname)]
   
   
   ##
@@ -813,8 +816,9 @@ if (enabled_evidence)
   
   ## QC measure for peptide ID performance
   qc_pepc = pepc[pepc$match=="no", c("fc.raw.file", "pepCount")]
-  qc_pepc$X040X.EVD.Peptide_Count = pmin(1, qc_pepc$pepCount / param_EV_pepThresh)
-  QCM[["EVD.PepCount"]] = qc_pepc[, c("fc.raw.file", "X040X.EVD.Peptide_Count")]
+  cname = "X040X.EVD.Peptide_Count (>" %+% param_EV_pepThresh %+% ")"
+  qc_pepc[,cname] = pmin(1, qc_pepc$pepCount / param_EV_pepThresh)
+  QCM[["EVD.PepCount"]] = qc_pepc[, c("fc.raw.file", cname)]
   
   ##
   ## retention time calibration (to see if window was sufficiently large)
@@ -1080,11 +1084,25 @@ if (enabled_evidence)
         scale_colour_manual(values = c("black", "red")) +
         scale_x_discrete_reverse(d_sub$fc.raw.file)
     pl = addGGtitle(pl, "EVD: Uncalibrated mass error", recal_message)
+    #print(pl)
     GPL$add(pl)
     return(1)
   }
   byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiff, sort_indices=F, affected_raw_files=affected_raw_files)
+
+  param_name_EV_PrecursorTolPPM = "File$Evidence$PrecursorTolPPM"
+  param_def_EV_PrecursorTolPPM = 20
+  param_EV_PrecursorTolPPM = getYAML(yaml_obj, param_name_EV_PrecursorTolPPM, param_def_EV_PrecursorTolPPM)
+  qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
+                      function(x) data.frame(med_rat = qualCenteredRef(median(x$uncalibrated.mass.error..ppm., na.rm=T), param_EV_PrecursorTolPPM)))
+  colnames(qc_MS1deCal) = c("fc.raw.file", "X025X.EVD.MS1_DeCalibration (" %+% param_EV_PrecursorTolPPM %+% ")")
+  QCM[["EVD.MS1_decalibration"]] = qc_MS1deCal
+
+
   
+  ##
+  ## post calibration
+  ##
   plotAlignDiffCal = function(d_sub, affected_raw_files)
   {
     col = c("black", "red")[(unique(d_sub$raw.file) %in% affected_raw_files) + 1]
@@ -1107,7 +1125,7 @@ if (enabled_evidence)
   obs_par = ddply(d_evd[, c("mass.error..ppm.", "fc.raw.file")], "fc.raw.file", function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm=T), sd = sd(x$mass.error..ppm., na.rm=T)))
   cal_sd = mean(obs_par$sd)
   qc_MS1Cal = data.frame(fc.raw.file = obs_par$fc.raw.file, 
-                         X025X.EVD.MS1_Calibration = sapply(obs_par$mu, function(x) dnorm(x, mean = 0, sd = cal_sd)))
+                         X026X.EVD.MS1_Calibration = sapply(obs_par$mu, function(x) dnorm(x, mean = 0, sd = cal_sd)))
   QCM[["EVD.MS1_calibration"]] = qc_MS1Cal
 
 
@@ -1202,7 +1220,7 @@ if (enabled_evidence)
   
   ## QC measure for contamination
   qc_contaminants = ddply(d_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
-                          function(x) data.frame(fc.raw.file = x$fc.raw.file[1], X001X.EVD.Contaminants = 1 - (sum(x$intensity[x$contaminant], na.rm=T)/sum(x$intensity, na.rm=T))))
+                          function(x) data.frame(X001X.EVD.Contaminants = 1 - (sum(as.numeric(x$intensity[x$contaminant]), na.rm=T)/sum(as.numeric(x$intensity), na.rm=T))))
   QCM[["EVD.Contaminants"]] = qc_contaminants
 
   
@@ -1625,7 +1643,7 @@ if (enabled_msmsscans)
         xlab("scan event") +
         ylab("percent identified") +
         facet_wrap(~ fc.raw.file) +
-        ggtitle(paste0("MSMSscans: TopN % identified"))
+        ggtitle(paste0("MSMSscans: TopN % identified over N"))
     return (p)
   }
   pl = byXflex(df.ratio, df.ratio$fc.raw.file, 9, plotScanEvent, sort_indices=F)
@@ -1633,8 +1651,8 @@ if (enabled_msmsscans)
   
   ## QC measure for constantly identifiying peptides, irrespective of scan event number
   ## -- we weight scan events by their number of occurence
-  qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame(X038X.MSMSScans.TopN_ID_rate = qualUniform(x$ratio, x$count)))
-  QCM[["MSMSscans.TopN_ID"]] = qc_TopN_ID
+  qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame(X038X.MSMSScans.TopN_ID_rate_over_N = qualUniform(x$ratio, x$count)))
+  QCM[["MSMSscans.TopN_ID_over_N"]] = qc_TopN_ID
   
 }
 

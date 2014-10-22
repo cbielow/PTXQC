@@ -10,6 +10,7 @@
 #' Columns are ordered by name. Then characters in the column name are modified as follows: "." --> ": " and "_" --> " ".
 #' All substrings enclosed by 'X[0-9]*X.' will be removed (can be used for sorting columns).
 #' 
+#' To judge the quality of each raw file a summary column is added, values being the mean of all other columns per row.
 #'        
 #' @param QCM List of data.frames, each having a 'raw.file' column and a metric column of arbitrary name
 #' @param raw_file_mapping Data.frame with 'from' and 'to' columns for name mapping to unify names from list entries
@@ -43,6 +44,12 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   
   ## final heat map of QC metrics
   QCM_final = Reduce(function(a,b) merge(a,b,all = TRUE), QCM_shortNames)
+  ## add summary column
+  QCM_final$X999X.Summary = apply(QCM_final[,!grepl("fc.raw.file", colnames(QCM_final))], 1, function(row) {
+    row[is.na(row)] = 0  ## replace NA with 0, since it will bias the mean otherwise
+    return(mean(row))
+  })
+  
   ## reorder file names
   QCM_final = QCM_final[match(raw_file_mapping$to, QCM_final$fc.raw.file), ]
   ## ... fix factor levels

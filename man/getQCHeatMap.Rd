@@ -29,6 +29,10 @@ modified as follows: "." --> ": " and "_" --> " ". All
 substrings enclosed by 'X[0-9]*X.' will be removed (can be
 used for sorting columns).
 }
+\details{
+To judge the quality of each raw file a summary column is
+added, values being the mean of all other columns per row.
+}
 \examples{
 mapping = data.frame(from=c("A.raw","B.raw"), to=c("A","B"))
   QC_data = list(somedata  = data.frame(raw.file=c("A.raw", "B.raw"), "X005X.EVD.Some_later" = 1:2),

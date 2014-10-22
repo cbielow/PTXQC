@@ -14,6 +14,27 @@ qualCentered = function(x)
   return (q)
 }
 
+#'
+#' Quality metric for 'centeredness' of a distribution with maximum reference
+#' 
+#' Ranges between 0 (worst score) and 1 (best score).
+#' The best score is achieved when 'x' is close to the center of the interval (given by 'tol').
+#' If 'x' is close to the border (on either side), the score decreases linearly to zero.
+#' Can be used for uncalibrated mass errors, as a measure of how well they are centered around 0.
+#' 
+#' @param x  Position in interval [-tol, tol]
+#' @param tol Border of interval
+#' @return Value between [0, 1]
+#' 
+#' 
+qualCenteredRef = function(x, tol)
+{
+  if (tol <=0) stop("qualCenteredRef(): negative or zero interval border not allowed!")
+  if (abs(x) > tol) warning("qualCenteredRef(): Position is outside of interval. Score will be set to 0.")
+  q = 1 - (abs(x) / tol)
+  q = max(0, q) ## avoid negative scores if abs(x)>tol
+  return (q)
+}
 
 #'
 #' Compute deviation from uniform distribution
@@ -90,6 +111,10 @@ qualUniform = function(x, weight=vector())
 #'                (all data at the center):
 #'                ks.test(c(0,100,rep(50,100)), y="punif", min=min(x), max=max(x))  ==> d=0.57 (similarly bad fit, but metric just does not reflect it)
 #'
+#' @param x Vector of values from distribution 1
+#' @param y Vector of values from distribution 2 (or assumed uniform if omitted)
+#' @return p.value of KS test
+#' 
 qualUnifKS = function(x, y = NULL)
 {
   if (is.null(y)) return (ks.test(x, y="punif", min=min(x), max=max(x))$p.value)
@@ -109,25 +134,25 @@ qualUnifKS = function(x, y = NULL)
 #' 
 #'
 #'
-qualUniform_C2 = function(x, y = NULL, bin_count = 30)
-{
-  
-  if (!is.null(y)) {
-    xy = c(x,y)
-    h = hist(c(x,y), breaks = bin_count, plot = FALSE)
-    hx = hist(x, breaks = h$breaks, plot = FALSE)
-    hy = hist(y, breaks = h$breaks, plot = FALSE)
-    if (length(x) != length(y)) { ## rescale
-      fac = length(x) / length(y)
-    }
-  }
-  else xy = x;
-  
-  
-  
-  chisq.test
-  
-}
+# qualUniform_C2 = function(x, y = NULL, bin_count = 30)
+# {
+#   
+#   if (!is.null(y)) {
+#     xy = c(x,y)
+#     h = hist(c(x,y), breaks = bin_count, plot = FALSE)
+#     hx = hist(x, breaks = h$breaks, plot = FALSE)
+#     hy = hist(y, breaks = h$breaks, plot = FALSE)
+#     if (length(x) != length(y)) { ## rescale
+#       fac = length(x) / length(y)
+#     }
+#   }
+#   else xy = x;
+#   
+#   
+#   
+#   chisq.test
+#   
+# }
 
 #' 
 #' Compute position of each element in a vector, assuming the rest of the data is a Gaussian

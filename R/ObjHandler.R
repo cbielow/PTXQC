@@ -26,7 +26,7 @@ ObjHandler$new = function(.)
 
 #' Add objects
 #' 
-#' @see getList
+#' Also see 'getList'.
 #'
 #' @param .      A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!
 #' @param obj   Value to be inserted
@@ -49,7 +49,7 @@ ObjHandler$add = function(., obj, name = NA)
 
 #' Get an object
 #' 
-#' @see getList
+#' Also see 'getList'.
 #'
 #' @param . A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!
 #' @param name  Name of list entry to return
@@ -67,7 +67,7 @@ ObjHandler$get = function(., name)
 #' 
 #' Get the objects as list
 #' 
-#' @see addObj
+#' Also see 'addObj()'.
 #'
 #' @param . A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!
 #' @return A list holding all objects
