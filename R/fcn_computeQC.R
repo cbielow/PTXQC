@@ -198,7 +198,7 @@ if (enabled_summary)
   ## QC measure for contamination
   qc_sm_id = d_smy[[1]][, c("raw.file", "ms.ms.identified....")]
   cname = "X030X.SM.MS2_ID_rate (>" %+% id_rate_great %+% ")"
-  qc_sm_id[, cname] = pmin(1, qc_sm_id$ms.ms.identified.... / id_rate_great)
+  qc_sm_id[, cname] = qualLinThresh(qc_sm_id$ms.ms.identified.... , id_rate_great)
   QCM[["SM.MS2_ID_rate"]] = qc_sm_id[,c("raw.file", cname)]
   
   
@@ -478,7 +478,7 @@ if (enabled_proteingroups)
     ## remove contaminants
     data = t(d_pg[!d_pg$contaminant, unlist(clusterCols[cond]), drop=F])
     ## remove constant/zero columns (== dimensions == proteins)
-    data = data[, colSums(data) > 0, drop=F]
+    data = data[, colSums(data, na.rm=T) > 0, drop=F]
     rownames(data) = simplifyNames(strings = rownames(data), infix_iterations = 2)
     lpl = getPCA(data = data, gg_layer = ggtitle(paste("PG: PCA\n", sub(".", " ", cond, fixed=T))))[["plots"]]
     for (pl in lpl) GPL$add(pl);
@@ -686,7 +686,7 @@ if (enabled_evidence)
   ## QC measure for peptide intensity
   qc_pepint = medians_pep
   cname = "X003X.EVD.Peptide_Intensity (>" %+% param_def_EV_intThresh %+% ")"
-  qc_pepint[,cname] = pmin(1, qc_pepint$med / param_def_EV_intThresh)
+  qc_pepint[,cname] = qualLinThresh(qc_pepint$med, param_def_EV_intThresh)
   QCM[["EVD.PepIntensity"]] = qc_pepint[, c("fc.raw.file", cname)]
   
   
@@ -770,7 +770,7 @@ if (enabled_evidence)
   ## QC measure for protein ID performance
   qc_protc = pgc[pgc$match=="no", c("fc.raw.file", "protCount")]
   cname = "X045X.EVD.Protein_Count (>" %+% param_EV_protThresh %+% ")"
-  qc_protc[,cname] = pmin(1, qc_protc$protCount / param_EV_protThresh)
+  qc_protc[,cname] = qualLinThresh(qc_protc$protCount, param_EV_protThresh)
   QCM[["EVD.ProtCount"]] = qc_protc[, c("fc.raw.file", cname)]
   
   
@@ -817,7 +817,7 @@ if (enabled_evidence)
   ## QC measure for peptide ID performance
   qc_pepc = pepc[pepc$match=="no", c("fc.raw.file", "pepCount")]
   cname = "X040X.EVD.Peptide_Count (>" %+% param_EV_pepThresh %+% ")"
-  qc_pepc[,cname] = pmin(1, qc_pepc$pepCount / param_EV_pepThresh)
+  qc_pepc[,cname] = qualLinThresh(qc_pepc$pepCount, param_EV_pepThresh)
   QCM[["EVD.PepCount"]] = qc_pepc[, c("fc.raw.file", cname)]
   
   ##
@@ -886,7 +886,7 @@ if (enabled_evidence)
       ## QC measure for alignment quality
       ## compute deviation of medians
       qc_RT = ddply(d_evd[, c("match.time.difference", "fc.raw.file")], "fc.raw.file", 
-                    function(x) data.frame(X024X.EVD.RT_Align = gauss2Mix(x$match.time.difference)))
+                    function(x) data.frame(X024X.EVD.RT_Align = qualGauss2Mix(x$match.time.difference)))
       QCM[["X024X.EVD.RT_Align"]] = qc_RT
       
     }
@@ -947,9 +947,9 @@ if (enabled_evidence)
   }
   byXflex(d_evd[, c("fc.raw.file", "charge")], d_evd$fc.raw.file, 30, fcChargePlot, sort_indices = FALSE)
   
-  ## QC measure for charge uniform-ness
+  ## QC measure for charge centeredness
   qc_charge = ddply(d_evd[, c("charge",  "raw.file")], "raw.file", function(x) data.frame(raw.file = x$raw.file[1], X010X.EVD.charge = (sum(x$charge==2)/nrow(x))))
-  qc_charge$X010X.EVD.charge = qualGauss(qc_charge$X010X.EVD.charge)
+  qc_charge$X010X.EVD.charge = qualMedianDist(qc_charge$X010X.EVD.charge)
   QCM[["EVD.charge2"]] = qc_charge
   
   
@@ -1094,7 +1094,7 @@ if (enabled_evidence)
   param_def_EV_PrecursorTolPPM = 20
   param_EV_PrecursorTolPPM = getYAML(yaml_obj, param_name_EV_PrecursorTolPPM, param_def_EV_PrecursorTolPPM)
   qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
-                      function(x) data.frame(med_rat = qualCenteredRef(median(x$uncalibrated.mass.error..ppm., na.rm=T), param_EV_PrecursorTolPPM)))
+                      function(x) data.frame(med_rat = qualCenteredRef(x$uncalibrated.mass.error..ppm., param_EV_PrecursorTolPPM)))
   colnames(qc_MS1deCal) = c("fc.raw.file", "X025X.EVD.MS1_DeCalibration (" %+% param_EV_PrecursorTolPPM %+% ")")
   QCM[["EVD.MS1_decalibration"]] = qc_MS1deCal
 
@@ -1123,9 +1123,8 @@ if (enabled_evidence)
   ## QC measure for post-calibration ppm error
   ## .. assume 0 centered and StdDev of observed data
   obs_par = ddply(d_evd[, c("mass.error..ppm.", "fc.raw.file")], "fc.raw.file", function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm=T), sd = sd(x$mass.error..ppm., na.rm=T)))
-  cal_sd = mean(obs_par$sd)
   qc_MS1Cal = data.frame(fc.raw.file = obs_par$fc.raw.file, 
-                         X026X.EVD.MS1_Calibration = sapply(obs_par$mu, function(x) dnorm(x, mean = 0, sd = cal_sd)))
+                         X026X.EVD.MS1_Calibration = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
   QCM[["EVD.MS1_calibration"]] = qc_MS1Cal
 
 
@@ -1220,7 +1219,9 @@ if (enabled_evidence)
   
   ## QC measure for contamination
   qc_contaminants = ddply(d_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
-                          function(x) data.frame(X001X.EVD.Contaminants = 1 - (sum(as.numeric(x$intensity[x$contaminant]), na.rm=T)/sum(as.numeric(x$intensity), na.rm=T))))
+                          function(x) data.frame(X001X.EVD.Contaminants =
+                                                   1-qualLinThresh(sum(as.numeric(x$intensity[x$contaminant]), na.rm=T)/
+                                                                sum(as.numeric(x$intensity), na.rm=T))))
   QCM[["EVD.Contaminants"]] = qc_contaminants
 
   
@@ -1280,7 +1281,7 @@ if (enabled_evidence)
   ## QC measure for reproducibility of peak shape
   ##.. create a list of distributions
   l_dists = dlply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", function(x) return(x$retention.length))
-  qc_evd_PeakShape = bestKS(l_dists)
+  qc_evd_PeakShape = qualBestKS(l_dists)
   colnames(qc_evd_PeakShape) = c("fc.raw.file", "X017X.EVD.RT_Peak_Similarity")
   QCM[["EVD.PeakShape"]] = qc_evd_PeakShape
 
@@ -1314,7 +1315,7 @@ if (enabled_evidence)
   byXflex(d_dups, d_dups$fc.raw.file, 30, fcnPlotTwin, sort_indices = F)
   ## QC measure for centered-ness of MS2-calibration
   qc_evd_twin = d_dups
-  qc_evd_twin$X020X.EVD.Twin_Sequences = 1 - (qc_evd_twin$dups/100)
+  qc_evd_twin$X020X.EVD.Twin_Sequences = 1 - qualLinThresh(qc_evd_twin$dups/100)
   QCM[["EVD.Twin"]] = qc_evd_twin[, c("fc.raw.file", "X020X.EVD.Twin_Sequences")]
 
   if (max(d_dups$dups)>twinThresh)
@@ -1436,17 +1437,18 @@ if (enabled_msms)
   ## QC measure for centered-ness of MS2-calibration
   head(ms2_decal)
   qc_MS2_decal = ddply(ms2_decal, "fc.raw.file", 
-                       function(x){
+                       function(x)
+                       {
                          xx = na.omit(x$msErr);
-                         data.frame(X028X.MSMS.MS2_Calibration = qualCentered(xx), center=median(xx), max=max(abs(xx)))
+                         data.frame(X028X.MSMS.MS2_Calibration = qualCentered(xx))
                        }) 
   qc_MS2_decal
   QCM[["MSMS.MS2_Calibration"]] = qc_MS2_decal[, c("fc.raw.file", "X028X.MSMS.MS2_Calibration")]
   
   
   ## missed cleavages per Raw file
-  max_mc = max(d_msms$missed.cleavages)
-  if (!is.na(max_mc))
+  max_mc = max(-Inf, d_msms$missed.cleavages, na.rm=T) ## will be -Inf iff enzyme was not specified and columns is 100% NA
+  if (!is.infinite(max_mc))
   { ## MC's require an enzyme to be set
     smr_msmsMC = summary(d_msms$missed.cleavages)
     fcMCRTSubset <- function(d_sub, smr_msmsMC)
@@ -1485,7 +1487,7 @@ if (enabled_msms)
     ## QC measure for missed-cleavages variation
     qc_mc = data.frame(fc.raw.file = st_bin$fc.raw.file, X004X.MSMS.MC = st_bin[, "0"])
     QCM[["MSMS.MC"]] = qc_mc
-    qc_mc$X007X.MSMS.MC_Var = qualGauss(qc_mc$X004X.MSMS.MC)
+    qc_mc$X007X.MSMS.MC_Var = qualMedianDist(qc_mc$X004X.MSMS.MC)
     QCM[["MSMS.MC_Var"]] = qc_mc
     
     

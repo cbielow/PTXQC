@@ -250,6 +250,7 @@ shortenStrings = function(x, max_len = 12, print_warning = TRUE)
   {
     cat("The following labels will be shortened to ease plotting:\n")
     cat(paste0("  ", paste(x[idx], collapse="\n  ")))
+    cat("\n")
   }
   x[idx] = paste0(substr(x[idx], 1, max_len-2), "..")
   return (x)

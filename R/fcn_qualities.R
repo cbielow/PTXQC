@@ -1,8 +1,37 @@
+
 #'
-#' Quality metric for 'centeredness' of a distribution
+#' Quality metric with linear response to input, reaching the maximum score at the given threshold.
 #' 
 #' Ranges between 0 (worst score) and 1 (best score).
+#' Useful for performance measures where reaching a certain reference threshold 't'
+#' will be enough to reach 100%.
+#' The input range from [0, t] is scored from 0-100%.
+#' 
+#' @param x Numeric value(s) between [0, inf]
+#' @param t Threshold value, which indicates 100%
+#' @return Value between [0, 1]
+#' 
+#' 
+qualLinThresh = function(x, t = 1)
+{
+  if (any(x < 0)) stop("qualLinThresh(): negative input 'x' not allowed!")
+  if (t < 0) stop("qualLinThresh(): negative threshold 't' not allowed!")
+  
+  q = pmin(1, x / t)
+  return (q)
+}
+
+
+#'
+#' Quality metric for 'centeredness' of a distribution around zero.
+#' 
+#' Ranges between 0 (worst score) and 1 (best score).
+#' A median of zero gives the best score of 1. the most extreme value of the distribution.
+#' The closer the median is to the most extreme value of the distribution, the smaller the score (until reaching 0).
 #' Can be used for calibrated mass errors, as a measure of how well they are centered around 0.
+#' E.g. if the median is 0.1, while the range is [-0.5,0.5], the score will be 0.8 (punishing the 20% deviation).
+#' If the range of data is asymmetric, e.g. [-1.5,-0.5] and does not include zero, the score cannot reach 1, 
+#' since the median can never be zero.
 #' 
 #' @param x Numeric values (e.g. ppm errors)
 #' @return Value between [0, 1]
@@ -15,14 +44,14 @@ qualCentered = function(x)
 }
 
 #'
-#' Quality metric for 'centeredness' of a distribution with maximum reference
+#' Quality metric for 'centeredness' of a distribution around zero with an external range.
 #' 
 #' Ranges between 0 (worst score) and 1 (best score).
-#' The best score is achieved when 'x' is close to the center of the interval (given by 'tol').
-#' If 'x' is close to the border (on either side), the score decreases linearly to zero.
+#' The best score is achieved when the median of 'x' is close to the center of the interval (given by 'tol').
+#' If median of 'x' is close to the border (on either side), the score decreases linearly to zero.
 #' Can be used for uncalibrated mass errors, as a measure of how well they are centered around 0.
 #' 
-#' @param x  Position in interval [-tol, tol]
+#' @param x  Vector of values (hopefully in interval [-tol, tol])
 #' @param tol Border of interval
 #' @return Value between [0, 1]
 #' 
@@ -30,11 +59,59 @@ qualCentered = function(x)
 qualCenteredRef = function(x, tol)
 {
   if (tol <=0) stop("qualCenteredRef(): negative or zero interval border not allowed!")
-  if (abs(x) > tol) warning("qualCenteredRef(): Position is outside of interval. Score will be set to 0.")
-  q = 1 - (abs(x) / tol)
+  m = median(x, na.rm=T)
+  if (abs(m) > tol) warning("qualCenteredRef(): Median of x is outside of interval. Score will be set to 0.")
+  q = 1 - (abs(m) / tol)
   q = max(0, q) ## avoid negative scores if abs(x)>tol
   return (q)
 }
+
+#'
+#' Quality metric which increases as function of square root
+#' 
+#' Ranges between 0 (worst score) and 1 (best score).
+#' Can be used for input which ranges between [0,1], where
+#' Deviations from the best input start to deteriorate very quickly as a function of square root.
+#' q = 1 - sqrt(1-x)  ## (for highIsGood=TRUE)
+#' q = 1 - sqrt(x)    ## (for highIsGood=FALSE)
+#' See examples.
+#' 
+#' @param x A numeric value between [0,1]
+#' @return Value between [0, 1]
+#' 
+#' @examples
+#' qualSqrt(1)    ## 1
+#' qualSqrt(0.8)  ## 0.5527864
+#' qualSqrt(0.2)  ## 0.1055728
+#' qualSqrt(0)    ## 0
+#' 
+#' qualSqrt(1, highIsGood=F)    ## 0
+#' qualSqrt(0.8, highIsGood=F)  ## 0.1055728
+#' qualSqrt(0.2, highIsGood=F)  ## 0.5527864
+#' qualSqrt(0, highIsGood=F)    ## 1
+qualSqrt = function(x, highIsGood=T)
+{
+  if (highIsGood) q = 1 - sqrt(1-x) else q = 1 - sqrt(x)
+  return (q)
+}
+
+#'
+#' Quality metric which measures the absolute distance from median
+#' 
+#' Ranges between 0 (worst score) and 1 (best score).
+#' Can be used for input which ranges between [0,1], where
+#' deviations from the median of the sample represent the score for each sample point.
+#' 
+#' @param x A vector numeric values between [0,1]
+#' @return A vector of the same size as x, with quality values between [0, 1]
+
+qualMedianDist = function(x)
+{
+  if (any(x < 0 | x > 1)) stop("qualMedianDist(): x values out of range [0,1]!")
+  q = 1 - abs(x - median(x, na.rm=T))
+  return (q)
+}
+
 
 #'
 #' Compute deviation from uniform distribution
@@ -52,14 +129,16 @@ qualCenteredRef = function(x, tol)
 #' @examples 
 #'  stopifnot(qualUniform(c(3,3,3))==1)
 #'  stopifnot(qualUniform(c(4,0,0))==0)         
-#'  stopifnot(qualUniform(c(4,0,0), c(1,0,0))==1) 
+#'
+#'  ## how 'uniform' is a vector where only a single index has weight?-- answer: very
+#'  stopifnot(qualUniform(c(4,0,0), c(1,0,0))==1)   
 #'  stopifnot(qualUniform(c(4,0,0), c(0,1,0))==1)     
 #'  stopifnot(qualUniform(c(0,4,0))==0)              
 #'  stopifnot(abs(qualUniform(c(3,2,1))-0.58578) < 0.0001)
 #'  stopifnot(abs(qualUniform(c(1,2,3))-0.58578) < 0.0001)
 #'  stopifnot(qualUniform(c(1,2,3), c(0,1,0))==1)   
 #'  stopifnot(abs(qualUniform(c(1,2,3))-0.58578) < 0.0001)
-#'  stopifnot(abs(qualUniform(c(1,2,3), c(0,1,1))- 0.56949) < 0.0001)
+#'  stopifnot(abs(qualUniform(c(1,2,3), c(0,1,1))- 0.590316) < 0.0001)
 #'  stopifnot(abs(qualUniform(c(2,3), c(1,1))-0.552786) < 0.0001)
 #'  stopifnot(abs(qualUniform(1:120)-0.38661) < 0.0001)
 #'  
@@ -77,12 +156,14 @@ qualUniform = function(x, weight=vector())
 
   n = length(x)
   #y = 1/n ## expected intensity (no weights)
-  y = sum(x*weight) ## weighted intensity (expected)
+  y = sum(x*weight) ## expected weighted intensity
   y
   p = 1/2
-  ## bin with highest weight has 100% intensity
+  ## for worst possible score, assume bin with highest weight has all the counts
+  ## i.e. error is 1-expected == 1-y for 100% bin, and abs(0-y)=y for all other bins of zero intensity
   idx_maxWeight = which(weight == max(weight))[1]
-  worst = ((1-y)^p)*weight[idx_maxWeight] + ((1/n)^p)*sum(weight[-idx_maxWeight])
+  worst = ((1-y)^p)*weight[idx_maxWeight] + (y^p)*sum(weight[-idx_maxWeight])
+  ## worst ==0, iff weight-vector has only one non-zero entry, e.g. c(0,1,0)
   #worst = ((1-y)^p) + (n-1)*((1/n)^p)
   worst  
   ## score of current distribution
@@ -179,6 +260,23 @@ qualGauss = function(x)
 }
 
 
+
+#' 
+#' Compute probability of Gaussian (mu=m, sd=s) at a position 0, with reference to the max obtainable probablity.
+#' 
+#' Measure for centeredness around 0.
+#' Highest score is 1, worst score is 0.
+#' 
+#' @param mu Center of Gaussian
+#' @param sd SD of Gaussian
+#' @return quality, ranging from 0 (bad agreement) to 1 (perfect, i.e. centered at 0)
+#' 
+qualGaussDev = function(mu, sd)
+{
+  q = dnorm(0, mean = mu, sd = sd) / dnorm(mu, mean = mu, sd = sd)
+  return (q)
+}
+
 #'
 #' Score a distribution of values, where the best possible distribution is right-skewed.
 #' 
@@ -229,7 +327,7 @@ qualHighest = function(x, N)
 #' @importFrom mixtools normalmixEM2comp
 #' 
 #' 
-gauss2Mix = function(x)
+qualGauss2Mix = function(x)
 {
   d = na.omit(x)
   fit2 = normalmixEM2comp(d, c(0.3,0.6), c(0,0), c(1.5,0.1), eps= 1e-8, maxit = 1000, verb=FALSE)
@@ -262,7 +360,7 @@ gauss2Mix = function(x)
 #' @return A data.frame with ks-test values of the "reference" to all other distributions (see Details)
 #'
 #'
-bestKS = function(x) {
+qualBestKS = function(x) {
   
   if (class(x) != "list") stop("Function bestKS() expects a list!")
   

@@ -142,17 +142,20 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     col_subset = colnames(data_header)
     col_subset[ idx_keep] = NA     ## default action for selected columns
     col_subset[!idx_keep] = "NULL" ## skip over unselected columns during reading
+    ## keep the 'id' column if available (for checking data integrity: invalid line-breaks)
+    if ("id" %in% colnames(data_header)) col_subset[which("id"==colnames(data_header))] = NA
     cat(paste("Keeping", sum(idx_keep),"of",length(idx_keep),"columns!\n"))
     #print (colnames(data_header))
   }
   
-  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def."), stringsAsFactors=F, comment.char="#", colClasses = col_subset, ...))
+  ## comment.char should be "", since lines will be TRUNCATED starting at the comment char.. and a protein identifier might contain just anything...
+  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def."), stringsAsFactors=F, comment.char="", colClasses = col_subset, ...))
   if (inherits(.$mq.data, 'try-error')) stop(msg_parse_error, call.=F);
   
   #colnames(.$mq.data)
   
   cat(paste0("Read ", nrow(.$mq.data), " entries from ", file,".\n"))
-  
+
   ### checking for invalid rows
   if (type != "sm") ## summary.txt has irregular structure
   {
@@ -170,7 +173,10 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   ## rename some columns since MQ 1.2 vs. 1.3 differ....
   colnames(.$mq.data)[colnames(.$mq.data)=="protease"] = "enzyme"
   colnames(.$mq.data)[colnames(.$mq.data)=="protein.descriptions"] = "fasta.headers"
-        
+  
+
+  
+  
   ## work in-place on 'contaminant' column
   .$substitute("contaminant");
   .$substitute("reverse");
@@ -403,11 +409,12 @@ MQDataReader$substitute <- function(., colname, valid_entries = c(NA, "","+"), r
 #' while MQ can easily reach 60k (e.g. in oxidation sites column).
 #' Thus, affected cells will trigger a line break, effectively splitting one line into two (or more).
 #' 
-#' We detect this by counting the number of NA's per row and finding outliers.
+#' If the table has an 'id' column, we can simply check the numbers are consecutive. If no 'id' column is available,
+#' we detect line-breaks by counting the number of NA's per row and finding outliers.
 #' The line break then must be in this line (plus the preceeding or following one). Depending on where
 #' the break happened we can also detect both lines right away (if both have more NA's than expected).
 #'
-#' Currently, we have no good strategy to fix this problem since columns are not aligned any longer, which
+#' Currently, we have no good strategy to fix the problem since columns are not aligned any longer, which
 #' leads to columns not having the class (e.g. numeric) they should have.
 #' (thus one would need to un-do the linebreak and read the whole file again)
 #' 
@@ -423,16 +430,28 @@ MQDataReader$getInvalidLines <- function(.)
   {
     stop("In 'MQDataReader$getInvalidLines': function called before data was loaded. Internal error. Exiting.", call.=F);
   }
-  
-  counts = apply(.$mq.data, 1, function(x) sum(is.na(x)));
-  ## NA counts should be roughly equal across rows
-  expected_count = quantile(counts, probs = 0.75)
-  broken_rows = which(counts > (expected_count * 3 + 10))
-  if (length(broken_rows) > 0)
+  broken_rows = c()
+  if ("id" %in% colnames(.$mq.data))
   {
-    print("Table:")
-    print(table(counts))
-    print(paste0("NAn count limit: 3*", expected_count, " + 10 = ", expected_count * 3 + 10))    
+    last_id = as.numeric(as.character(.$mq.data$id[nrow(.$mq.data)]))
+    if (is.na(last_id) || (last_id+1)!=nrow(.$mq.data))
+    {
+      print(paste0("While checking ID column: last ID was '", last_id, "', while table has '", nrow(.$mq.data), "' rows."))
+      broken_rows = which(!is.numeric(as.character(.$mq.data$id)))
+    }
+  } else
+  {
+    cols = !grepl("ratio", colnames(.$mq.data)) ## exclude ratio columns, since these can have regular NA's in unpredictable frequency
+    counts = apply(.$mq.data[, cols], 1, function(x) sum(is.na(x)));
+    ## NA counts should be roughly equal across rows
+    expected_count = quantile(counts, probs = 0.75)
+    broken_rows = which(counts > (expected_count * 3 + 10))
+    if (length(broken_rows) > 0)
+    {
+      print("Table:")
+      print(table(counts))
+      print(paste0("NAn count limit: 3*", expected_count, " + 10 = ", expected_count * 3 + 10))    
+    }
   }
   
   return (broken_rows);
