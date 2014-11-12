@@ -22,7 +22,7 @@
 #'          \itemize{
 #'            \item pdf_filename     Path to PDF report
 #'            \item yaml_filename    Path to a YAML configuration file used during report generation. 
-#'                                   Parameters missing in yaml_obj (input param) were restored to default.
+#'                                   Parameters missing in yaml_obj (input param) are restored to default.
 #'            \item heatmap_filename Path to Heatmap table
 #'          }
 #'          
@@ -87,7 +87,7 @@ cat("Statistics summary:", file=stats_file, append=F, sep="\n")
 report_file = paste(txt_folder, "\\report_", report_version, ".pdf", sep="")
 yaml_file = paste(txt_folder, "\\report_", report_version, ".yaml", sep="")
 heatmap_values_file = paste(txt_folder, "\\report_", report_version, "_heatmap.txt", sep="")
-R_plots_file = paste(txt_folder, "\\report_", report_version, "_plots.R", sep="")
+R_plots_file = paste(txt_folder, "\\report_", report_version, "_plots.Rdata", sep="")
 
 ## prepare for readMQ()
 mq = MQDataReader$new()
@@ -137,11 +137,11 @@ if (enabled_parameters)
   })
   
   ## two column layout
-  mid = floor(nrow(d_par)/2)
+  mid = ceiling(nrow(d_par)/2)
   d_par$page = 1
   d_par$page[1:mid] = 0
   
-  d_par$ypos = -rep(1:mid, 2)
+  d_par$ypos = -c(1:mid, (1:mid)[1:(nrow(d_par)-mid)])
   head(d_par)
   d_par.long = melt(d_par, id.vars = c("ypos", "page"), measure.vars=c("parameter", "value"))
   head(d_par.long)
@@ -178,6 +178,7 @@ if (enabled_summary)
   
   ### MS/MS identified [%]
   dms = d_smy[[1]][,"ms.ms.identified...."]
+  dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was aquired
   lab_IDd = c("bad (<" %+% id_rate_bad %+% "%)", "ok (" %+% id_rate_bad %+% "-" %+% id_rate_great %+% "%)", "great (>" %+% id_rate_great %+% "%)")
   d_smy[[1]]$color = factor(cut(dms, breaks=c(-1, id_rate_bad, id_rate_great, 100), labels=lab_IDd))
   #unique(d_smy[[1]]$color)
@@ -243,7 +244,7 @@ if (enabled_summary)
 ######
 
 enabled_proteingroups = getYAML(yaml_obj, "File$ProteinGroups$enabled", TRUE)
-enabled_pg_ratioLabIncThresh = getYAML(yaml_obj, "File$ProteinGroups$RatioPlot$LabelIncThresh_num", 8)
+enabled_pg_ratioLabIncThresh = getYAML(yaml_obj, "File$ProteinGroups$RatioPlot$LabelIncThresh_num", 4)
 if (enabled_proteingroups)
 {
     
@@ -294,7 +295,7 @@ if (enabled_proteingroups)
   
     # ca = yaml_contaminants[1]
     # idx = 1:30
-    idx = grep(ca, d_pg$fasta.header, ignore.case = T)
+    idx = grep(ca, d_pg$fasta.headers, ignore.case = T)
   
     ## we might or might not have found something... we plot it anyways, so the user can be sure that we searched for it
   
@@ -306,10 +307,10 @@ if (enabled_proteingroups)
     ca_protgroups = d_pg$protein.ids[idx]
     ca_samples_pep = colSums(d_pg[idx, idx_uniquePep, drop=F])
     
-    ca_samples_intProportion = colSums(d_pg[idx, idx_intensity, drop=F]) / colSums(d_pg[, idx_intensity, drop=F], na.rm = T) * 100
+    ca_samples_intProportion = colSums(d_pg[idx, idx_intensity, drop=F], na.rm = T) / colSums(d_pg[, idx_intensity, drop=F], na.rm = T) * 100
     names(ca_samples_intProportion) = paste0("int", delLCP(names(ca_samples_intProportion)))
   
-    ca_samples_pepProportion = colSums(d_pg[idx, idx_uniquePep, drop=F]) / colSums(d_pg[, idx_uniquePep, drop=F], na.rm = T) * 100
+    ca_samples_pepProportion = colSums(d_pg[idx, idx_uniquePep, drop=F], na.rm = T) / colSums(d_pg[, idx_uniquePep, drop=F], na.rm = T) * 100
     above.thres = (ca_samples_pepProportion > as.numeric(ca_entry[2]))
     names(ca_samples_pepProportion) = paste0("pep", delLCP(names(ca_samples_pepProportion)))
     
@@ -324,7 +325,7 @@ if (enabled_proteingroups)
     #pdf("test.pdf")
     main_sub_found = ""
     main_col = "red"
-    if (sum(above.thres) == 0) {
+    if (sum(above.thres, na.rm=T) == 0) {
       #install.packages("gridExtra")
       #library(gridExtra)
       #grid.newpage()
@@ -335,10 +336,16 @@ if (enabled_proteingroups)
       main_col="black"
     }
   
-    if (sum(bar.data$value)==0)
+    if (sum(bar.data$value, na.rm=T)==0)
     { ## identifier was not found in any sample
-      plot(0:100, 0:100, type="n", axes=F, xlab="", ylab="")
-      mtext(line=-2, paste0("Contaminant '", ca, "' was not found in any sample.\n\nDid you use the correct database?"))  
+      pl_cont = ggplot(data.frame(text = paste0("Contaminant '", ca, "' was not found in any sample.\n\nDid you use the correct database?"), ypos=1, xpos=1), 
+                                  aes_string(x = "xpos", y = "ypos"))  +
+        geom_text(aes_string(label = "text"), colour = "red", family="mono") +
+        theme_bw() +
+        theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
+              axis.text = element_blank(), strip.text = element_blank(), legend.position="none") +
+        ggtitle("PG: Contaminants")
+      GPL$add(pl_cont)
     } else {
       plotContUser = function(datav, extra_limit) {
         #cat(paste0("CA entry is ", extra_limit, "\n"))
@@ -410,7 +417,7 @@ if (enabled_proteingroups)
                  sublab=paste0("RSD ", round(int_dev_no0, 1),"% (should be < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
                  abline = param_PG_intThresh)
   for (pl in lpl) GPL$add(pl);
-            
+  rm("lpl")          
   cat(int_dev.s, file=stats_file, append=T, sep="\n")
   
   ##
@@ -480,8 +487,8 @@ if (enabled_proteingroups)
     ## remove constant/zero columns (== dimensions == proteins)
     data = data[, colSums(data, na.rm=T) > 0, drop=F]
     rownames(data) = simplifyNames(strings = rownames(data), infix_iterations = 2)
-    lpl = getPCA(data = data, gg_layer = ggtitle(paste("PG: PCA\n", sub(".", " ", cond, fixed=T))))[["plots"]]
-    for (pl in lpl) GPL$add(pl);
+    lpl = try(getPCA(data = data, gg_layer = ggtitle(paste("PG: PCA\n", sub(".", " ", cond, fixed=T))))[["plots"]])
+    if (!inherits(lpl, "try-error")) for (pl in lpl) GPL$add(pl);
   }
   
   
@@ -489,11 +496,13 @@ if (enabled_proteingroups)
   ## ratio plots
   ##################################
   ## get ratio column
-  ratio_cols = grepv("^ratio\\.h\\.l", colnames(d_pg))
+  ratio_cols = grepv("^ratio\\.[hm]\\.l", colnames(d_pg))
   ## remove everything else
-  ratio_cols = grepv("^ratio.h.l.normalized", ratio_cols, invert=T)
-  ratio_cols = grepv("^ratio.h.l.count", ratio_cols, invert=T)
-  ratio_cols = grepv("^ratio.h.l.variability", ratio_cols, invert=T)
+  ratio_cols = grepv("^ratio.[hm].l.normalized", ratio_cols, invert=T)
+  ratio_cols = grepv("^ratio.[hm].l.count", ratio_cols, invert=T)
+  ratio_cols = grepv("^ratio.[hm].l.variability", ratio_cols, invert=T)
+  ratio_cols = grepv("^ratio.[hm].l.significance.a", ratio_cols, invert=T) ## from MQ 1.0.1x
+  ratio_cols = grepv("^ratio.[hm].l.significance.b", ratio_cols, invert=T)
   ratio_cols
   
   if (length(ratio_cols) > 0)
@@ -503,12 +512,14 @@ if (enabled_proteingroups)
     ## remove reverse and contaminants (might skew the picture)
     idx_row = !d_pg$contaminant & !d_pg$reverse
     d_sub = log2(d_pg[idx_row, ratio_cols, drop=F])
-    ## rename "ratio.l.h" to "ratio.l.h.l.h"
-    colnames(d_sub)[1] = "l.h"
+    ## rename "ratio.h.l" to "h.l" (same for m.l in tripleSILAC)
+    idx_globalRatio = grep("ratio\\.[hm]\\.l$", colnames(d_sub))
+    if (length(idx_globalRatio)) colnames(d_sub)[idx_globalRatio] = gsub("^ratio\\.", "", colnames(d_sub)[idx_globalRatio])
     ## simplify the rest
-    if (ncol(d_sub) > 1) 
+    if (ncol(d_sub) > length(idx_globalRatio))
     {
-      colnames(d_sub)[-1] = simplifyNames(strings = delLCP(colnames(d_sub)[-1]))
+      idx_other = setdiff(1:ncol(d_sub), idx_globalRatio)
+      colnames(d_sub)[idx_other] = simplifyNames(strings = delLCP(colnames(d_sub)[idx_other]))
     }
     #summary(d_sub)
     # 
@@ -521,8 +532,10 @@ if (enabled_proteingroups)
     # breaks = seq(min(d_sub, na.rm=T), max(d_sub, na.rm=T), length.out=(max(dd, na.rm=T)-min(dd, na.rm=T))/0.5)
     # mid = hist(d_sub[, 1], breaks = breaks)$mids
     ratio.densities = do.call(rbind, (lapply(1:ncol(d_sub), function(x) {
-      h = density(d_sub[ ,x], bw = "SJ", adjust=2, na.rm=T)
       name = colnames(d_sub)[x]
+      ## density estimation can fail if not enough data
+      h = try(density(na.omit(d_sub[ ,x]), bw = "SJ", adjust=2, na.rm=T))
+      if (inherits(h, "try-error")) return (data.frame(x = 1, y = 1, col = name, multimodal = FALSE))
       count = sum(getMaxima(h$y))
       if (count > 1) name = paste(name, "*")
       df = data.frame(x = h$x, y = h$y, col = name, multimodal = (count>1))
@@ -573,6 +586,7 @@ if (enabled_proteingroups)
     {
       br = c(2, 5, 10, 20);
       GPL$add(
+      #print(
         ggplot(data = df_ratios, aes_string(x = "x", y = "y", colour = "col")) + 
           facet_grid(col ~ ., scales = "free_y") +
           geom_line(aes_string(linetype="ltype", alpha = "alpha"), size = 1.2) +
@@ -596,10 +610,10 @@ if (enabled_proteingroups)
       return (1)
     }
     
-    byXflex(ratio.densities, ratio.densities$col, 5, plotRatios, sort_indices = F, d_min = min(d_sub, na.rm=T), d_max = max(d_sub, na.rm=T), title_col)
+    byXflex(ratio.densities, ratio.densities$col, 5, plotRatios, sort_indices = F, d_min = quantile(d_sub, na.rm=T, probs=0.00), d_max = quantile(d_sub, na.rm=T, probs=1), title_col)
     
   }
-    
+  ## rm("d_pg") required in evidence....
 }
 
 ######
@@ -609,7 +623,7 @@ if (enabled_proteingroups)
 enabled_evidence = getYAML(yaml_obj, "File$Evidence$enabled", TRUE)
 if (enabled_evidence)
 {
-  #d_evd_s = mq$readMQ(txt_files$evd, type="ev", filter = "", nrows=10000)
+  #d_evd_s = mq$readMQ(txt_files$evd, type="ev", filter = "", nrows=100)
   #d_evd_s = mq$readMQ(txt_files$evd, type="ev", filter = "")
   #head(d_evd_s)
   #colnames(d_evd_s)
@@ -686,7 +700,7 @@ if (enabled_evidence)
   ## QC measure for peptide intensity
   qc_pepint = medians_pep
   cname = "X003X.EVD.Peptide_Intensity (>" %+% param_def_EV_intThresh %+% ")"
-  qc_pepint[,cname] = qualLinThresh(qc_pepint$med, param_def_EV_intThresh)
+  qc_pepint[,cname] = qualLinThresh(2^qc_pepint$med, 2^param_def_EV_intThresh) ## use non-log space 
   QCM[["EVD.PepIntensity"]] = qc_pepint[, c("fc.raw.file", cname)]
   
   
@@ -822,6 +836,8 @@ if (enabled_evidence)
   
   ##
   ## retention time calibration (to see if window was sufficiently large)
+  ## (not supported in MQ 1.0.13)  
+  ##
   if (any(d_evd$retention.time.calibration, na.rm=T)) 
   {
     MBR_warning = ""
@@ -842,10 +858,10 @@ if (enabled_evidence)
     } else
     {
       ## global histogram of delta times
-      hist(d_evd$retention.time.calibration, 100, 
-           main=paste0("EV: Summary of time difference between\nmatched features across files\n", MBR_warning), 
-           xlab="time [min]",
-           ylab="count")
+      ##hist(d_evd$retention.time.calibration, 100, 
+      ##     main=paste0("EV: Summary of time difference between\nmatched features across files\n", MBR_warning), 
+      ##     xlab="time [min]",
+      ##     ylab="count")
       
       ## thin out data, since it takes ages to draw the plot in PDF (100k datapoints are common)
       evd_RT_thin = d_evd[,c("retention.time", "retention.time.calibration", "fc.raw.file")]
@@ -865,7 +881,7 @@ if (enabled_evidence)
         return(x)
       })
       ##head(evd_RT_t)
-      
+      rm("evd_RT_thin")
       #require(splines) ## for ns()
       splitRTAlignByRawFile = function(RTdata) {
         pl = ggplot(data=RTdata, aes_string(x = "retention.time", y = "retention.time.calibration")) 
@@ -996,15 +1012,23 @@ if (enabled_evidence)
   recal_message = ""
   ## check each raw file individually (usually its just a few who are affected)
   de_cal = ddply(d_evd, "raw.file", .fun = function(x) (quantile(abs(x$uncalibrated.mass.error..ppm.), probs = 0.5, na.rm=T)) > 1e3)
-  if (any(de_cal[,2]))
+  if (any(de_cal[,2], na.rm=T))
   {
     ## for stats, show how many % of spectra suffer from this
-    de_cal_pc = ddply(d_evd, "raw.file", .fun = function(x) (sum((abs(x$uncalibrated.mass.error..ppm.)) > 1e3, na.rm=T) / nrow(x) * 100))
+    de_cal_pc = ddply(d_evd, "raw.file", .fun = function(x) dc = sum((abs(x$uncalibrated.mass.error..ppm.)) > 1e3, na.rm=T) / nrow(x) * 100)
+    #colnames(de_cal_pc) = c("raw.file","dc")
     de_cal_pc_pl = de_cal_pc[de_cal_pc[,2]>0, ]
+    de_cal_pc_pl$fc.raw.file = factor(renameFile(de_cal_pc_pl$raw.file, mq$raw_file_mapping))
     byXflex(de_cal_pc_pl, 1:nrow(de_cal_pc_pl), 25, function(x) {
-      dc = x[, 2]
-      names(dc) = x[, 1]
-      barplot(dc, horiz=T, las=2, main = "RAW files affected by wrong calibration numbers", xlab="% of ID's affected", cex.names = 0.5)
+      p = ggplot(x) + 
+        geom_bar(aes_string(x = "fc.raw.file", y = "dc"), stat="identity") + 
+        coord_flip() + 
+        scale_x_discrete_reverse(x$fc.raw.file) +
+        ggtitle("RAW files affected by wrong calibration numbers") +
+        ylab("% of ID's affected") +
+        xlab("")
+      GPL$add(p)
+      return(1)
     }, sort_indices=F)
     affected_raw_files = de_cal_pc_pl[, 1]
     
@@ -1094,7 +1118,13 @@ if (enabled_evidence)
   param_def_EV_PrecursorTolPPM = 20
   param_EV_PrecursorTolPPM = getYAML(yaml_obj, param_name_EV_PrecursorTolPPM, param_def_EV_PrecursorTolPPM)
   qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
-                      function(x) data.frame(med_rat = qualCenteredRef(x$uncalibrated.mass.error..ppm., param_EV_PrecursorTolPPM)))
+                      function(x) {
+                        x = na.omit(x$uncalibrated.mass.error..ppm.)
+                        ## if empty, give the Raw file highest score...
+                        if (length(x)==0) r = 1 else r = qualCenteredRef(x, param_EV_PrecursorTolPPM)
+                        return (data.frame(med_rat = r))
+                      })
+                        
   colnames(qc_MS1deCal) = c("fc.raw.file", "X025X.EVD.MS1_DeCalibration (" %+% param_EV_PrecursorTolPPM %+% ")")
   QCM[["EVD.MS1_decalibration"]] = qc_MS1deCal
 
@@ -1224,67 +1254,72 @@ if (enabled_evidence)
                                                                 sum(as.numeric(x$intensity), na.rm=T))))
   QCM[["EVD.Contaminants"]] = qc_contaminants
 
-  
-  ### peak width (all raw.files --- too much for large experiments)
-  #   GPL$add(ggplot(d_evd, aes_string(x="retention.length", colour="fc.raw.file")) +
-  #           geom_density() +
-  #           scale_x_log10() + xlab("retention length") + ggtitle("EVD: Peak width histogram")
-  #         )
-  ## compute density manually
-  fcn_peakWidth = function(x) 
-  {      
-    tmp = density(x$retention.length, na.rm=T)
-    x1 = tmp$x
-    y1 = tmp$y
-    data.frame(retention.length = x1, dens = y1, fc.raw.file = x$fc.raw.file[1])
-  }
-  d_evd.m.d_l = dlply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = fcn_peakWidth)
-  d_evd.m.d = Reduce(rbind, d_evd.m.d_l)
-  ## the merged (=average peak)  
-  #d_evd.m.d = rbind(d_evd.m.d, fcn_peakWidth(data.frame(retention.length = d_evd$retention.length, fc.raw.file="merge")))  
-  head(d_evd.m.d)
-  tail(d_evd.m.d)
-  ## median and position in density
-  d_evd.m.d_med = ddply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = function(x) {
-    fcr = as.character(x$fc.raw.file[1])
-    #cat(fcr)
-    m = median(x$retention.length, na.rm=T);
-    ## closest point in density
-    idx = which.min(abs(m - d_evd.m.d_l[[fcr]]$retention.length))
-    y = d_evd.m.d_l[[fcr]]$dens[idx]
-    return(data.frame(m = m, y = y))
-  })
-
-
-  d_evd.m.d$block = factor(assignBlocks(d_evd.m.d$fc.raw.file, 8))
-  ## identical limits for all plots
-  d_evd.xlim = quantile(d_evd.m.d$retention.length, c(0,1))
-  d_evd.xlim = c(max(1e-1,d_evd.xlim[1]), d_evd.xlim[2]) ## could give negative numbers and we plan to plot on log scale
-  d_evd.ylim = quantile(d_evd.m.d$dens, c(0,1))
-  for (bl in unique(d_evd.m.d$block))
+  ####
+  #### peak length (not supported in MQ 1.0.13)
+  ####
+  if ("retention.length" %in% colnames(d_evd))  
   {
-    p = ggplot(d_evd.m.d[d_evd.m.d$block==bl,], aes_string(x = "retention.length", y = "dens", colour = "fc.raw.file")) +
-            #scale_fill_manual(values = brewer.pal(8,"Accent")) + 
-            #scale_colour_manual(values = brewer.pal(8,"Accent")) +
-            xlab("retention length [min]") +
-            ylab("density") +
-            ylim(d_evd.ylim) +
-            scale_x_continuous(limits=d_evd.xlim, trans = "log10", breaks = c(0.01, 0.1, 0.25, 0.5, 1, 3, 10, 30)) +
-            ggtitle("EVD: Peak width distribution") +
-            theme(legend.title=element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-            geom_line(stat="identity", size=2, alpha=0.7) +
-            geom_point(data = d_evd.m.d_med[d_evd.m.d_med$fc.raw.file %in% d_evd.m.d$fc.raw.file[d_evd.m.d$block==bl],],
-                       aes_string(x="m", y="y", colour = "fc.raw.file"), size=2) ## currently not visible (confusing)
-    #print(p)
-    GPL$add(p)
-  }
-  ## QC measure for reproducibility of peak shape
-  ##.. create a list of distributions
-  l_dists = dlply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", function(x) return(x$retention.length))
-  qc_evd_PeakShape = qualBestKS(l_dists)
-  colnames(qc_evd_PeakShape) = c("fc.raw.file", "X017X.EVD.RT_Peak_Similarity")
-  QCM[["EVD.PeakShape"]] = qc_evd_PeakShape
-
+    ### peak width (all raw.files --- too much for large experiments)
+    #   GPL$add(ggplot(d_evd, aes_string(x="retention.length", colour="fc.raw.file")) +
+    #           geom_density() +
+    #           scale_x_log10() + xlab("retention length") + ggtitle("EVD: Peak width histogram")
+    #         )
+    ## compute density manually
+    fcn_peakWidth = function(x) 
+    {      
+      tmp = try(density(x$retention.length, na.rm=T), TRUE)
+      if (inherits(tmp, "try-error")) return (data.frame(retention.length = 0, dens = 0, fc.raw.file = x$fc.raw.file[1]))
+      x1 = tmp$x
+      y1 = tmp$y
+      data.frame(retention.length = x1, dens = y1, fc.raw.file = x$fc.raw.file[1])
+    }
+    d_evd.m.d_l = dlply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = fcn_peakWidth)
+    d_evd.m.d = Reduce(rbind, d_evd.m.d_l)
+    ## the merged (=average peak)  
+    #d_evd.m.d = rbind(d_evd.m.d, fcn_peakWidth(data.frame(retention.length = d_evd$retention.length, fc.raw.file="merge")))  
+    head(d_evd.m.d)
+    tail(d_evd.m.d)
+    ## median and position in density
+    d_evd.m.d_med = ddply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = function(x) {
+      fcr = as.character(x$fc.raw.file[1])
+      #cat(fcr)
+      m = median(x$retention.length, na.rm=T);
+      ## closest point in density
+      idx = which.min(abs(m - d_evd.m.d_l[[fcr]]$retention.length))
+      y = d_evd.m.d_l[[fcr]]$dens[idx]
+      return(data.frame(m = m, y = y))
+    })
+  
+  
+    d_evd.m.d$block = factor(assignBlocks(d_evd.m.d$fc.raw.file, 8))
+    ## identical limits for all plots
+    d_evd.xlim = quantile(d_evd.m.d$retention.length, c(0,1))
+    d_evd.xlim = c(max(1e-1,d_evd.xlim[1]), d_evd.xlim[2]) ## could give negative numbers and we plan to plot on log scale
+    d_evd.ylim = quantile(d_evd.m.d$dens, c(0,1))
+    for (bl in unique(d_evd.m.d$block))
+    {
+      p = ggplot(d_evd.m.d[d_evd.m.d$block==bl,], aes_string(x = "retention.length", y = "dens", colour = "fc.raw.file")) +
+              #scale_fill_manual(values = brewer.pal(8,"Accent")) + 
+              #scale_colour_manual(values = brewer.pal(8,"Accent")) +
+              xlab("retention length [min]") +
+              ylab("density") +
+              ylim(d_evd.ylim) +
+              scale_x_continuous(limits=d_evd.xlim, trans = "log10", breaks = c(0.01, 0.1, 0.25, 0.5, 1, 3, 10, 30)) +
+              ggtitle("EVD: Peak width distribution") +
+              theme(legend.title=element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+              geom_line(stat="identity", size=2, alpha=0.7) +
+              geom_point(data = d_evd.m.d_med[d_evd.m.d_med$fc.raw.file %in% d_evd.m.d$fc.raw.file[d_evd.m.d$block==bl],],
+                         aes_string(x="m", y="y", colour = "fc.raw.file"), size=2) ## currently not visible (confusing)
+      #print(p)
+      GPL$add(p)
+    }
+    ## QC measure for reproducibility of peak shape
+    ##.. create a list of distributions
+    l_dists = dlply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", function(x) return(x$retention.length))
+    qc_evd_PeakShape = qualBestKS(l_dists)
+    colnames(qc_evd_PeakShape) = c("fc.raw.file", "X017X.EVD.RT_Peak_Similarity")
+    QCM[["EVD.PeakShape"]] = qc_evd_PeakShape
+  } ## end retention length (aka peak width)
   
   ### barplot
   ## determine duplicated sequences
@@ -1362,7 +1397,7 @@ if (enabled_evidence)
     }
     pp = byXflex(d_evd, d_evd$fc.raw.file, raws_perPlot, plotTimeDiff, sort_indices=F)
   }  
-  
+  rm("d_evd")
 }  
 
 
@@ -1378,7 +1413,7 @@ if (enabled_msms)
   #d_msms_s = mq$readMQ(txt_files$msms, type="msms", filter = "", nrows=10)
   #colnames(d_msms_s)
   #head(d_msms)
-  d_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c("Missed\\.cleavages", "^Raw.file$", "mass.deviations..da.", "reverse"))
+  d_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c("Missed\\.cleavages", "^Raw.file$", "^mass.deviations", "reverse"), check_invalid_lines = F)
   
   d_msms = d_msms[order(match(as.character(d_msms$fc.raw.file), mq$raw_file_mapping$to)),]
   ## sort fc.raw.file's factor values as well
@@ -1434,7 +1469,10 @@ if (enabled_msms)
     return(1)
   }
   byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, fcPlotMS2Dec, sort_indices=F)
+  
+  ##
   ## QC measure for centered-ness of MS2-calibration
+  ##
   head(ms2_decal)
   qc_MS2_decal = ddply(ms2_decal, "fc.raw.file", 
                        function(x)
@@ -1442,11 +1480,13 @@ if (enabled_msms)
                          xx = na.omit(x$msErr);
                          data.frame(X028X.MSMS.MS2_Calibration = qualCentered(xx))
                        }) 
+  rm("ms2_decal")
   qc_MS2_decal
   QCM[["MSMS.MS2_Calibration"]] = qc_MS2_decal[, c("fc.raw.file", "X028X.MSMS.MS2_Calibration")]
   
-  
+  ##
   ## missed cleavages per Raw file
+  ##
   max_mc = max(-Inf, d_msms$missed.cleavages, na.rm=T) ## will be -Inf iff enzyme was not specified and columns is 100% NA
   if (!is.infinite(max_mc))
   { ## MC's require an enzyme to be set
@@ -1494,6 +1534,7 @@ if (enabled_msms)
   } ## end MC check
   
  
+  rm("d_msms")
 }
 
 ######
@@ -1504,158 +1545,165 @@ enabled_msmsscans = getYAML(yaml_obj, "File$MsMsScans$enabled", TRUE)
 if (enabled_msmsscans)
 {
   #d_msmsScan_h = mq$readMQ(txt_files$msmsScan, type="msms", filter = "", nrows=2)
-  d_msmsScan = mq$readMQ(txt_files$msmsScan, type="msms", filter = "", col_subset=c("^retention.time$", "^Identified", "Scan.event.number", "Raw.file", "Elapsed.Time", "Ion.Injection.Time"))
-  #colnames(d_msmsScan)
-  #head(d_msmsScan)
-  #unique(d_msmsScan$Identified)
-  
-  d_msmsScan = d_msmsScan[order(match(as.character(d_msmsScan$fc.raw.file), mq$raw_file_mapping$to)),]
-  ## sort fc.raw.file's factor values as well
-  d_msmsScan$fc.raw.file = factor(d_msmsScan$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
-  
-  
-  ## scan event number
-  scan.event.number = NULL ## make R check happy
-  
-  ## maximum scan event over time
-  # round RT to 1 min intervals
-  d_msmsScan$rRT = round(d_msmsScan$retention.time/2)*2
-  
-  DFmse = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
-    ## sort by RT
-    if (is.unsorted(x$retention.time))
-    { ## should not happen, but just to make sure
-      x = x[, order(x$retention.time)]
-    }
-    ## only take the highest scan event (SE) in a series
-    maxN = getMaxima(x$scan.event.number, thresh_rel = 0.0)
-    df.max = x[maxN,]
-    ## use median of that within one RT bin
-    meanN = ddply(df.max, c("rRT"), summarise, medSE = median(scan.event.number))
-    return (meanN)    
-  })
-  
-  head(DFmse)
-  plotMaxSEinRT = function(data)
-  { 
-    GPL$add(
-      ggplot(data, aes_string(x = "rRT", y = "medSE", col = "fc.raw.file")) +
-        geom_point(stat="identity", position = "jitter") +
-        xlab("retention time [min]") +
-        ylab("highest N [median per RT bin]") +
-        #stat_smooth(method = "loess", formula = y ~ x, se = FALSE, span = 0.1) +
-        guides(color=guide_legend(title="")) +
-        ggtitle("MSMSscans: TopN over RT")
-    )
-    return (1)
-  }
-  byXflex(DFmse, DFmse$fc.raw.file, 9, plotMaxSEinRT, sort_indices=F)
-  
-  ## QC measure for smoothness of TopN over RT
-  qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame(X012X.MSMSScans.TopN_over_RT = qualUniform(x$medSE)))
-  QCM[["MSMSscans.TopN_over_RT"]] = qc_TopNRT
-  
-  
+  #colnames(d_msmsScan_h)
+  #head(d_msmsScan_h)
+  d_msmsScan = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", col_subset = c("^retention.time$", "^Identified", "Scan.event.number", "Raw.file"), check_invalid_lines = F)
   ##
-  ## scan event counts
+  ## MQ version 1.0.13 has very rudimentary MSMSscans.txt, with no header, so we need to skip the metrics of this file
   ##
-  DFc = ddply(d_msmsScan, c("scan.event.number", "fc.raw.file"), summarise, n = length(scan.event.number))
-  dfc.ratio = ddply(DFc, "fc.raw.file", function(x, maxn)
-  {
-    ## sort x by scan event
-    event_count = x$n
-    ## verify its monotonically increasing
-    if (is.unsorted(rev(event_count))) {
-      #print(x)
-      stop("Scan event distribution is not monotonically increasing!")
-    } 
-    ## verify that there are no gaps
-    if (max(x$scan.event.number) != nrow(x)) {
-      #print(x)
-      stop("Scan event distribution has unexpected holes...!")
-    }
-    
-    event_pre = c(event_count[-1], 0)
-    event_diff = event_count - event_pre
-    
-    ## build new DF of fixed length
-    sn = x$scan.event.number
-    if (max(sn) < maxn) 
+  if (ncol(d_msmsScan) > 3)
     {
-      event_diff = c(event_diff, rep(0, maxn-max(sn)))
-      sn = c(sn, (max(sn)+1):maxn)
-    }
-    DF.new = data.frame(scan.event.number = sn, n = event_diff)
-    return (DF.new)
-  }, maxn = max(DFc$scan.event.number))
-  head(dfc.ratio)
-  
-  plotScanEventDiff = function(dfc.ratio)
-  {
-    GPL$add(
-      ggplot(dfc.ratio, aes_string(x = "scan.event.number", y = "n")) +
-        geom_bar(stat="identity") +
-        xlab("highest scan event") +
-        ylab("count") +
-        facet_wrap(~ fc.raw.file, scales = "free_y") +
-        ggtitle(paste0("MSMSscans: TopN"))
-    )
-    return (1)
-  }
-  byXflex(dfc.ratio, dfc.ratio$fc.raw.file, 9, plotScanEventDiff, sort_indices=F)
-  
-  ## QC measure for always reaching the maximum TopN
-  maxTopN = max(dfc.ratio$scan.event.number)
-  qc_TopN = ddply(dfc.ratio, "fc.raw.file", function(x) data.frame(X035X.MSMSScans.TopN_high = qualHighest(x$n, maxTopN)))
-  QCM[["MSMSscans.TopN"]] = qc_TopN
-  
-
-  ##
-  ## Scan event: % identified
-  ##
-  #require(plyr)
-  DF = ddply(d_msmsScan, c("scan.event.number", "identified", "fc.raw.file"), summarise, n = length(scan.event.number))
-  
-  # try KS on underlying data instead of using qualUniform()
-#   DF2= ddply(d_msmsScan, "fc.raw.file", function(rf){
-#     cat(class(rf))
-#     cat(rf$fc.raw.file[1])
-#     idx_p = rf$identified=="+"
-#     cat(length(idx_p) %+% "\n")
-#     kk = ks.test(rf$scan.event.number[idx_p], rf$scan.event.number[-idx_p])
-#     cat(kk$p.value)
-#     kk$statistic  # = 'D' ,,  p.value is much smaller (~0)
-#   })
-#   --> fail, 'D' and p-values are too low
-  df.ratio = ddply(DF, c("scan.event.number", "fc.raw.file"), function(x)
-  {
-    xp = xm = 0
-    if ("+" %in% x$identified) xp = x$n[x$identified=="+"]
-    if ("-" %in% x$identified) xm = x$n[x$identified=="-"]
-    ratio = xp * 100 / sum(xp, xm)
-    return (data.frame(ratio = ratio, count = sum(x$n)))
-  })
-  head(df.ratio)
-
-  plotScanEvent = function(df.ratio)
-  {
+    #colnames(d_msmsScan)
+    #head(d_msmsScan)
+    #unique(d_msmsScan$Identified)
     
-    p = ggplot(df.ratio, aes_string(x = "scan.event.number", y = "ratio", alpha = "count")) +
-        geom_bar(stat="identity") +
-        xlab("scan event") +
-        ylab("percent identified") +
-        facet_wrap(~ fc.raw.file) +
-        ggtitle(paste0("MSMSscans: TopN % identified over N"))
-    return (p)
-  }
-  pl = byXflex(df.ratio, df.ratio$fc.raw.file, 9, plotScanEvent, sort_indices=F)
-  for (p in pl) GPL$add(p)
+    d_msmsScan = d_msmsScan[order(match(d_msmsScan$fc.raw.file, mq$raw_file_mapping$to)),]
+    ## sort fc.raw.file's factor values as well
+    d_msmsScan$fc.raw.file = factor(d_msmsScan$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
+    
+    
+    ## scan event number
+    scan.event.number = NULL ## make R check happy
+    
+    ## maximum scan event over time
+    # round RT to 2 min intervals
+    d_msmsScan$rRT = round(d_msmsScan$retention.time/2)*2
+    
+    DFmse = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
+      ## sort by RT
+      if (is.unsorted(x$retention.time))
+      { ## should not happen, but just to make sure
+        x = x[, order(x$retention.time)]
+      }
+      ## only take the highest scan event (SE) in a series
+      maxN = getMaxima(x$scan.event.number, thresh_rel = 0.0)
+      df.max = x[maxN,]
+      ## use median of that within one RT bin
+      meanN = ddply(df.max, c("rRT"), summarise, medSE = median(scan.event.number))
+      return (meanN)    
+    })
+    
+    head(DFmse)
+    plotMaxSEinRT = function(data)
+    { 
+      GPL$add(
+        ggplot(data, aes_string(x = "rRT", y = "medSE", col = "fc.raw.file")) +
+          geom_point(stat="identity", position = "jitter") +
+          xlab("retention time [min]") +
+          ylab("highest N [median per RT bin]") +
+          #stat_smooth(method = "loess", formula = y ~ x, se = FALSE, span = 0.1) +
+          guides(color=guide_legend(title="")) +
+          ggtitle("MSMSscans: TopN over RT")
+      )
+      return (1)
+    }
+    byXflex(DFmse, DFmse$fc.raw.file, 9, plotMaxSEinRT, sort_indices=F)
+    
+    ## QC measure for smoothness of TopN over RT
+    qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame(X012X.MSMSScans.TopN_over_RT = qualUniform(x$medSE)))
+    QCM[["MSMSscans.TopN_over_RT"]] = qc_TopNRT
+    
+    
+    ##
+    ## scan event counts
+    ##
+    DFc = ddply(d_msmsScan, c("scan.event.number", "fc.raw.file"), summarise, n = length(scan.event.number))
+    dfc.ratio = ddply(DFc, "fc.raw.file", function(x, maxn)
+    {
+      ## sort x by scan event
+      event_count = x$n
+      ## verify its monotonically increasing
+      if (is.unsorted(rev(event_count))) {
+        #print(x)
+        stop("Scan event distribution is not monotonically increasing!")
+      } 
+      ## verify that there are no gaps
+      if (max(x$scan.event.number) != nrow(x)) {
+        #print(x)
+        stop("Scan event distribution has unexpected holes...!")
+      }
+      
+      event_pre = c(event_count[-1], 0)
+      event_diff = event_count - event_pre
+      
+      ## build new DF of fixed length
+      sn = x$scan.event.number
+      if (max(sn) < maxn) 
+      {
+        event_diff = c(event_diff, rep(0, maxn-max(sn)))
+        sn = c(sn, (max(sn)+1):maxn)
+      }
+      DF.new = data.frame(scan.event.number = sn, n = event_diff)
+      return (DF.new)
+    }, maxn = max(DFc$scan.event.number))
+    head(dfc.ratio)
+    
+    plotScanEventDiff = function(dfc.ratio)
+    {
+      GPL$add(
+        ggplot(dfc.ratio, aes_string(x = "scan.event.number", y = "n")) +
+          geom_bar(stat="identity") +
+          xlab("highest scan event") +
+          ylab("count") +
+          facet_wrap(~ fc.raw.file, scales = "free_y") +
+          ggtitle(paste0("MSMSscans: TopN"))
+      )
+      return (1)
+    }
+    byXflex(dfc.ratio, dfc.ratio$fc.raw.file, 9, plotScanEventDiff, sort_indices=F)
+    
+    ## QC measure for always reaching the maximum TopN
+    maxTopN = max(dfc.ratio$scan.event.number)
+    qc_TopN = ddply(dfc.ratio, "fc.raw.file", function(x) data.frame(X035X.MSMSScans.TopN_high = qualHighest(x$n, maxTopN)))
+    QCM[["MSMSscans.TopN"]] = qc_TopN
+    
   
-  ## QC measure for constantly identifiying peptides, irrespective of scan event number
-  ## -- we weight scan events by their number of occurence
-  qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame(X038X.MSMSScans.TopN_ID_rate_over_N = qualUniform(x$ratio, x$count)))
-  QCM[["MSMSscans.TopN_ID_over_N"]] = qc_TopN_ID
+    ##
+    ## Scan event: % identified
+    ##
+    #require(plyr)
+    DF = ddply(d_msmsScan, c("scan.event.number", "identified", "fc.raw.file"), summarise, n = length(scan.event.number))
+    
+    # try KS on underlying data instead of using qualUniform()
+  #   DF2= ddply(d_msmsScan, "fc.raw.file", function(rf){
+  #     cat(class(rf))
+  #     cat(rf$fc.raw.file[1])
+  #     idx_p = rf$identified=="+"
+  #     cat(length(idx_p) %+% "\n")
+  #     kk = ks.test(rf$scan.event.number[idx_p], rf$scan.event.number[-idx_p])
+  #     cat(kk$p.value)
+  #     kk$statistic  # = 'D' ,,  p.value is much smaller (~0)
+  #   })
+  #   --> fail, 'D' and p-values are too low
+    df.ratio = ddply(DF, c("scan.event.number", "fc.raw.file"), function(x)
+    {
+      xp = xm = 0
+      if ("+" %in% x$identified) xp = x$n[x$identified=="+"]
+      if ("-" %in% x$identified) xm = x$n[x$identified=="-"]
+      ratio = xp * 100 / sum(xp, xm)
+      return (data.frame(ratio = ratio, count = sum(x$n)))
+    })
+    head(df.ratio)
   
+    plotScanEvent = function(df.ratio)
+    {
+      
+      p = ggplot(df.ratio, aes_string(x = "scan.event.number", y = "ratio", alpha = "count")) +
+          geom_bar(stat="identity") +
+          xlab("scan event") +
+          ylab("percent identified") +
+          facet_wrap(~ fc.raw.file) +
+          ggtitle(paste0("MSMSscans: TopN % identified over N"))
+      return (p)
+    }
+    pl = byXflex(df.ratio, df.ratio$fc.raw.file, 9, plotScanEvent, sort_indices=F)
+    for (p in pl) GPL$add(p)
+    
+    ## QC measure for constantly identifiying peptides, irrespective of scan event number
+    ## -- we weight scan events by their number of occurence
+    qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame(X038X.MSMSScans.TopN_ID_rate_over_N = qualUniform(x$ratio, x$count)))
+    QCM[["MSMSscans.TopN_ID_over_N"]] = qc_TopN_ID
+  } ## end MSMSscan from MQ > 1.0.13
 }
 
 hm = getQCHeatMap(QCM, mq$raw_file_mapping)
@@ -1668,6 +1716,7 @@ GPL$add(mq$plotNameMapping(), ".name_mapping")
 ##
 ## plot it to PDF!
 ##
+cat("Creating PDF ...")
 pdf(report_file, onefile=T)
 print(GPL$get(".pl_params"))    # parameters
 print(GPL$get(".name_mapping")) # short file mapping (if required)
@@ -1679,9 +1728,12 @@ for (idx in sort(names(GPL_lst)))
   print(GPL_lst[[idx]])
 }
 dev.off();
+cat(" done\n")
 
 ## save plot object (for easier access, in case someone wants high-res plots)
+cat("Dumping plot objects as Rdata file ...")
 save(file = R_plots_file, list = "GPL")
+cat(" done\n")
 
 ### write YAML config
 writeYAML(yaml_file, yaml_obj)

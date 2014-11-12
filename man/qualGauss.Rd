@@ -33,5 +33,7 @@ assess the prob of x_i in G. The best result is 1, i.e. x_i
 is in the center of all other values. The worst results is
 0 (for very far outliers), i.e. the value is very far from
 the median.
+
+Problem: magic constant in here...
 }
 

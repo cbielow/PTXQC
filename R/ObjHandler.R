@@ -31,7 +31,7 @@ ObjHandler$new = function(.)
 #' @param .      A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!
 #' @param obj   Value to be inserted
 #' @param name  String used as object name. Automatically generated if omitted.
-#' @return Always TRUE
+#' @return Always TRUE (invisible)
 #' 
 #' @name ObjHandler$add
 #' 
@@ -43,7 +43,7 @@ ObjHandler$add = function(., obj, name = NA)
     name = sprintf("v%04d", .$counter) ## pad with 0's, to ensure correct order when ordering by name
   }
   .$items[[name]] = obj
-  return (TRUE)
+  return (invisible(TRUE))
 }
 
 

@@ -15,13 +15,15 @@ column). Thus, affected cells will trigger a line break,
 effectively splitting one line into two (or more).
 }
 \details{
-We detect this by counting the number of NA's per row and
-finding outliers. The line break then must be in this line
-(plus the preceeding or following one). Depending on where
-the break happened we can also detect both lines right away
-(if both have more NA's than expected).
+If the table has an 'id' column, we can simply check the
+numbers are consecutive. If no 'id' column is available, we
+detect line-breaks by counting the number of NA's per row
+and finding outliers. The line break then must be in this
+line (plus the preceeding or following one). Depending on
+where the break happened we can also detect both lines
+right away (if both have more NA's than expected).
 
-Currently, we have no good strategy to fix this problem
+Currently, we have no good strategy to fix the problem
 since columns are not aligned any longer, which leads to
 columns not having the class (e.g. numeric) they should
 have. (thus one would need to un-do the linebreak and read

@@ -4,16 +4,17 @@
 #' 
 #' Ranges between 0 (worst score) and 1 (best score).
 #' Useful for performance measures where reaching a certain reference threshold 't'
-#' will be enough to reach 100%.
-#' The input range from [0, t] is scored from 0-100%.
+#' will be enough to reach 100\%.
+#' The input range from [0, t] is scored from 0-100\%.
 #' 
 #' @param x Numeric value(s) between [0, inf]
-#' @param t Threshold value, which indicates 100%
+#' @param t Threshold value, which indicates 100\%
 #' @return Value between [0, 1]
 #' 
 #' 
 qualLinThresh = function(x, t = 1)
 {
+  x[is.na(x)] = 0; ## replace NA with 0
   if (any(x < 0)) stop("qualLinThresh(): negative input 'x' not allowed!")
   if (t < 0) stop("qualLinThresh(): negative threshold 't' not allowed!")
   
@@ -26,7 +27,7 @@ qualLinThresh = function(x, t = 1)
 #' Quality metric for 'centeredness' of a distribution around zero.
 #' 
 #' Ranges between 0 (worst score) and 1 (best score).
-#' A median of zero gives the best score of 1. the most extreme value of the distribution.
+#' A median of zero gives the best score of 1.
 #' The closer the median is to the most extreme value of the distribution, the smaller the score (until reaching 0).
 #' Can be used for calibrated mass errors, as a measure of how well they are centered around 0.
 #' E.g. if the median is 0.1, while the range is [-0.5,0.5], the score will be 0.8 (punishing the 20% deviation).
@@ -44,7 +45,7 @@ qualCentered = function(x)
 }
 
 #'
-#' Quality metric for 'centeredness' of a distribution around zero with an external range.
+#' Quality metric for 'centeredness' of a distribution around zero with a user-supplied range threshold.
 #' 
 #' Ranges between 0 (worst score) and 1 (best score).
 #' The best score is achieved when the median of 'x' is close to the center of the interval (given by 'tol').
@@ -52,13 +53,15 @@ qualCentered = function(x)
 #' Can be used for uncalibrated mass errors, as a measure of how well they are centered around 0.
 #' 
 #' @param x  Vector of values (hopefully in interval [-tol, tol])
-#' @param tol Border of interval
+#' @param tol Border of interval (must be positive)
 #' @return Value between [0, 1]
 #' 
 #' 
 qualCenteredRef = function(x, tol)
 {
-  if (tol <=0) stop("qualCenteredRef(): negative or zero interval border not allowed!")
+  x = na.omit(x)
+  if (length(x) == 0) stop("qualCenteredRef(): input is empty or consists of NA only!")
+  if (tol <= 0) stop("qualCenteredRef(): negative or zero interval border not allowed!")
   m = median(x, na.rm=T)
   if (abs(m) > tol) warning("qualCenteredRef(): Median of x is outside of interval. Score will be set to 0.")
   q = 1 - (abs(m) / tol)
@@ -66,45 +69,17 @@ qualCenteredRef = function(x, tol)
   return (q)
 }
 
-#'
-#' Quality metric which increases as function of square root
-#' 
-#' Ranges between 0 (worst score) and 1 (best score).
-#' Can be used for input which ranges between [0,1], where
-#' Deviations from the best input start to deteriorate very quickly as a function of square root.
-#' q = 1 - sqrt(1-x)  ## (for highIsGood=TRUE)
-#' q = 1 - sqrt(x)    ## (for highIsGood=FALSE)
-#' See examples.
-#' 
-#' @param x A numeric value between [0,1]
-#' @return Value between [0, 1]
-#' 
-#' @examples
-#' qualSqrt(1)    ## 1
-#' qualSqrt(0.8)  ## 0.5527864
-#' qualSqrt(0.2)  ## 0.1055728
-#' qualSqrt(0)    ## 0
-#' 
-#' qualSqrt(1, highIsGood=F)    ## 0
-#' qualSqrt(0.8, highIsGood=F)  ## 0.1055728
-#' qualSqrt(0.2, highIsGood=F)  ## 0.5527864
-#' qualSqrt(0, highIsGood=F)    ## 1
-qualSqrt = function(x, highIsGood=T)
-{
-  if (highIsGood) q = 1 - sqrt(1-x) else q = 1 - sqrt(x)
-  return (q)
-}
 
 #'
-#' Quality metric which measures the absolute distance from median
+#' Quality metric which measures the absolute distance from median.
 #' 
 #' Ranges between 0 (worst score) and 1 (best score).
-#' Can be used for input which ranges between [0,1], where
-#' deviations from the median of the sample represent the score for each sample point.
+#' Input must be between [0,1].
+#' Deviations from the median of the sample represent the score for each sample point.
 #' 
 #' @param x A vector numeric values between [0,1]
 #' @return A vector of the same size as x, with quality values between [0, 1]
-
+#'
 qualMedianDist = function(x)
 {
   if (any(x < 0 | x > 1)) stop("qualMedianDist(): x values out of range [0,1]!")
@@ -117,8 +92,15 @@ qualMedianDist = function(x)
 #' Compute deviation from uniform distribution
 #' 
 #' Ranges between 0 (worst score) and 1 (best score).
+#' Input 'x' is a vector of counts (or probabilities) for equally spaced bins in a histogram.
 #' A uniform distribution (e.g. c(3,3,3) will get a score of 1. The worst possible case (e.g. c(4,0,0)), will get a score of 0,
-#' and a linear increasing function (e.g. c(1,2,3)) will get something in between (0.46 here)
+#' and a linear increasing function (e.g. c(1,2,3)) will get something in between (0.585 here)
+#' 
+#' In addition, bin values can be weighted (e.g. by their confidence). The total sum of weights is normalized to 1 internally.
+#' 
+#' The distance function used is the square root of the absolute difference between a uniform distribution and the input 'x'
+#' (summed for each element of 'x').
+#' This distance is normalized to the worst possible input (e.g. one bin with 100% counts, all other bins being empty).
 #' 
 #' @param x Vector of numeric intensity/count values (e.g. ID's per RT bin); bins are assumed to have equal widths
 #' @param weight Vector of weights for values in 'x' (same length as 'x').
@@ -242,6 +224,8 @@ qualUnifKS = function(x, y = NULL)
 #' The best result is 1, i.e. x_i is in the center of all other values.
 #' The worst results is 0 (for very far outliers), i.e. the value is very far from the median.
 #' 
+#' Problem: magic constant in here...
+#' 
 #' @param x Numeric vector of values (e.g. counts for charge state of 2)
 #' @return Numeric vector of qualities, same length of 'x', ranging from 0 (bad agreement) to 1 (perfect)
 #' 
@@ -262,7 +246,8 @@ qualGauss = function(x)
 
 
 #' 
-#' Compute probability of Gaussian (mu=m, sd=s) at a position 0, with reference to the max obtainable probablity.
+#' Compute probability of Gaussian (mu=m, sd=s) at a position 0, with reference 
+#' to the max obtainable probability of that Gaussian at its center.
 #' 
 #' Measure for centeredness around 0.
 #' Highest score is 1, worst score is 0.
@@ -278,7 +263,7 @@ qualGaussDev = function(mu, sd)
 }
 
 #'
-#' Score a distribution of values, where the best possible distribution is right-skewed.
+#' Score an empirical density distribution of values, where the best possible distribution is right-skewed.
 #' 
 #' The score is computed according to
 #' 
@@ -288,7 +273,7 @@ qualGaussDev = function(mu, sd)
 #' E.g. c(0,0,0,16) would yield a score of 1.
 #' c(16,0,0,0,0) gives a score of 0.
 #' 
-#' @param x Vector of numeric values (height of histogram bins)
+#' @param x Vector of numeric values (e.g. height of histogram bins)
 #' @param N Length of x (just a precaution currently)
 #' @return Quality score in the range of [0,1]
 #' 
@@ -319,6 +304,11 @@ qualHighest = function(x, N)
 #' Given a vector of values sampled from a mixture of two Gaussians, compute the area contribution
 #' of the higher/more abundant (=target) Gaussian.
 #' 
+#' Returns a score between 1 (Target only) and 0 (Decoy only). Higher scores are better.
+#' We assume that the target distribution is much more peaked and narrow, whereas the decoy (false matches) are 
+#' uniformly distributed across all bins (the Gaussian has a large SD).
+#' If there is not enough data, NA is returned.
+#' 
 #' @note This is pre-tuned for Match-time-differences
 #'
 #' @param x Vector of numeric values
@@ -330,7 +320,15 @@ qualHighest = function(x, N)
 qualGauss2Mix = function(x)
 {
   d = na.omit(x)
-  fit2 = normalmixEM2comp(d, c(0.3,0.6), c(0,0), c(1.5,0.1), eps= 1e-8, maxit = 1000, verb=FALSE)
+  f = file()
+  sink(file=f) ## silence output of 'normalmixEM2comp'
+  fit2 = try(normalmixEM2comp(d, c(0.3,0.6), c(0,0), c(1.5,0.1), eps= 1e-8, maxit = 1000, verb=FALSE), silent = T)
+  sink() ## undo silencing
+  close(f)
+  if (inherits(fit2, "try-error"))
+  { ## not enough data?!
+    return (NA);
+  }
   #   fit2$mu
   #   fit2$sigma
   #   fit2$lambda
@@ -348,7 +346,7 @@ qualGauss2Mix = function(x)
 
 
 #'
-#' From a list of vectors, compute all vs. all Kolmogorov-Smirnoff statistics (D)
+#' From a list of vectors, compute all vs. all Kolmogorov-Smirnoff distance statistics (D)
 #' 
 #' ... and report the row of the matrix which has maximum sum (i.e the best "reference" distribution).
 #' The returned data.frame has as many rows as distributions given and two columns.

@@ -19,7 +19,7 @@
   \item{name}{Name of list entry to return}
 }
 \value{
-Always TRUE
+Always TRUE (invisible)
 
 The object
 }

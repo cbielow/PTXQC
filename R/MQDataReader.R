@@ -100,6 +100,7 @@ MQDataReader$new <- function(.)
 #'                   a running ID of the form 'f<x>', where <x> is a number from 1 to N.
 #'                   If the function is called again and a mapping already exists, this mapping is used.
 #'                   Should some raw.files be unknown (ie the mapping from the previous file is incomplete), an error is thrown.
+#' @param check_invalid_lines After reading the data, check for unusual number of NA's to detect if file was corrupted by Excel or alike                 
 #' @param LFQ_action [For type=='pg' only] An additional custom LFQ column ('cLFQ...') is created where
 #'               zero values in LFQ columns are replaced by the following method IFF(!) the corresponding raw intensity is >0 (indicating that LFQ is erroneusly 0)
 #'               "toNA": replace by NA
@@ -110,9 +111,10 @@ MQDataReader$new <- function(.)
 #' @name MQDataReader$readMQ
 #' @import utils
 #' @import graphics
-#' 
+#' @import data.table
+#'
 # (not exported!)
-MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, add_fs_col=10, LFQ_action=FALSE, ...)
+MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, add_fs_col=10, check_invalid_lines = T, LFQ_action=FALSE, ...)
 {
   ## it's either present already or will be created
   .$mapping.created = FALSE
@@ -124,10 +126,12 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   msg_parse_error = paste0("\n\nParsing the file '", file, "' failed. See message above why. If the file is not usable but other files are ok, disable the corresponding section in the YAML config.")
   
   ## resolve set of columns which we want to keep
-  #col_subset = c("Multi.*", "^Peaks$")
+  #example: col_subset = c("Multi.*", "^Peaks$")
+  idx_keep = NULL
   if (sum(sapply(col_subset, function(x) !is.na(x))) > 0)
   { ## just read a tiny bit to get column names
-    data_header = try(read.delim(file, na.strings=c("NA", "n. def."), stringsAsFactors=F, comment.char="#", nrows=2))
+    ## do not use data.table::fread for this, since it will read the WHOLE file and takes ages...
+    data_header = try(read.delim(file, na.strings=c("NA", "n. def."), comment.char="", nrows=2))
     if (inherits(data_header, 'try-error')) stop(msg_parse_error, call.=F);
     
     colnames(data_header) = tolower(colnames(data_header))
@@ -139,25 +143,32 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       idx_keep = idx_keep | idx_new
     }
     #summary(idx_keep)
-    col_subset = colnames(data_header)
-    col_subset[ idx_keep] = NA     ## default action for selected columns
-    col_subset[!idx_keep] = "NULL" ## skip over unselected columns during reading
     ## keep the 'id' column if available (for checking data integrity: invalid line-breaks)
-    if ("id" %in% colnames(data_header)) col_subset[which("id"==colnames(data_header))] = NA
+    if ("id" %in% colnames(data_header) & check_invalid_lines == TRUE) idx_keep[which("id"==colnames(data_header))] = TRUE
     cat(paste("Keeping", sum(idx_keep),"of",length(idx_keep),"columns!\n"))
     #print (colnames(data_header))
+    col_subset = colnames(data_header)
+    col_subset[ idx_keep] = NA     ## default action for selected columns
+    col_subset[!idx_keep] = "NULL"
+    
+    idx_keep = which(idx_keep)
   }
   
+  ## higher memory consumption during load (due to memory mapped files) compared to read.delim... but about 5x faster
+  .$mq.data = try(
+    fread(file, header=T, sep='\t', na.strings=c("NA", "n. def."), verbose=T, select = idx_keep, data.table=F, ...)
+  )
   ## comment.char should be "", since lines will be TRUNCATED starting at the comment char.. and a protein identifier might contain just anything...
-  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def."), stringsAsFactors=F, comment.char="", colClasses = col_subset, ...))
+  #.$mq.data = try(read.delim(file, na.strings=c("NA", "n. def."), comment.char="", stringsAsFactors = F, colClasses = col_subset, ...))
   if (inherits(.$mq.data, 'try-error')) stop(msg_parse_error, call.=F);
+  colnames(.$mq.data) = make.names(colnames(.$mq.data), unique = T)
   
   #colnames(.$mq.data)
   
   cat(paste0("Read ", nrow(.$mq.data), " entries from ", file,".\n"))
 
   ### checking for invalid rows
-  if (type != "sm") ## summary.txt has irregular structure
+  if (check_invalid_lines == TRUE & type != "sm") ## summary.txt has irregular structure
   {
     inv_lines = .$getInvalidLines();
     if (length(inv_lines) > 0)
@@ -168,17 +179,23 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     }
   }
   
+  cat(paste0("Updating colnames\n"))
+  cn = colnames(.$mq.data)
   ### just make everything lower.case (MQ versions keep changing it and we want it to be reproducible)
-  colnames(.$mq.data) = tolower(colnames(.$mq.data))
+  cn = tolower(cn)
   ## rename some columns since MQ 1.2 vs. 1.3 differ....
-  colnames(.$mq.data)[colnames(.$mq.data)=="protease"] = "enzyme"
-  colnames(.$mq.data)[colnames(.$mq.data)=="protein.descriptions"] = "fasta.headers"
+  cn[cn=="protease"] = "enzyme"
+  cn[cn=="protein.descriptions"] = "fasta.headers"
+  ## MQ 1.0.13 has mass.deviations, later versions have mass.deviations..da.
+  cn[cn=="mass.deviations"] = "mass.deviations..da."
+  colnames(.$mq.data) = cn
   
-
   
   
   ## work in-place on 'contaminant' column
+  cat(paste0("Simplifying contaminants\n"))
   .$substitute("contaminant");
+  cat(paste0("Simplifying reverse\n"))
   .$substitute("reverse");
   if (grepl("C", filter) & ("contaminant" %in% colnames(.$mq.data))) .$mq.data = .$mq.data[!(.$mq.data$contaminant),]
   if (grepl("R", filter) & ("reverse" %in% colnames(.$mq.data))) .$mq.data = .$mq.data[!(.$mq.data$reverse),]
@@ -234,10 +251,17 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     
   } else if (type=="sm") {
     ## summary.txt special treatment
-    ## split by a column which has values for raw.files but not for groups (e.g. multiplicity, NOT instrument (missing in 1.2), NOT enzyme since it can be all NA if disabled)
-    idx_group = which(.$mq.data$multiplicity=="" | is.na(.$mq.data$multiplicity))[1]
+    ## find the first row, which lists Groups (after Raw files): it has two non-zero entries only
+    ##dx <<- .$mq.data;
+    idx_group = which(apply(.$mq.data, 1, function(x) sum(x!="", na.rm=T))==2)[1]
+    ## summary.txt will not contain groups, if none where specified during MQ-configuration
+    if (is.na(idx_group)) {
+      idx_group = nrow(.$mq.data)
+      groups= NA
+    } else {
+      groups = .$mq.data[idx_group:(nrow(.$mq.data)-1), ]
+    }
     raw.files = .$mq.data[1:(idx_group-1), ]
-    groups = .$mq.data[idx_group:(nrow(.$mq.data)-1), ]
     total = .$mq.data
     .$mq.data = raw.files ## temporary, until we have assigned the fc.raw.files
   }
@@ -245,6 +269,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   
   if (add_fs_col & "raw.file" %in% colnames(.$mq.data))
   {
+    cat(paste0("Adding fc.raw.file column ..."))
     ## check if we already have a mapping
     if (is.null(.$raw_file_mapping))
     {
@@ -287,6 +312,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       missing = unique(.$mq.data$raw.file[is.na(.$mq.data$fc.raw.file)])
       stop("Generation of short Raw file names failed due to missing mapping entries:" %+% paste(missing, collapse=", ", sep=""))
     }
+    cat(paste0(" done\n"))
   }
 
   if (type=="sm") { ## post processing for summary

@@ -41,6 +41,10 @@
   (ie the mapping from the previous file is incomplete), an
   error is thrown.}
 
+  \item{check_invalid_lines}{After reading the data, check
+  for unusual number of NA's to detect if file was
+  corrupted by Excel or alike}
+
   \item{LFQ_action}{[For type=='pg' only] An additional
   custom LFQ column ('cLFQ...') is created where zero
   values in LFQ columns are replaced by the following

@@ -17,7 +17,7 @@ createReport(txt_folder, yaml_obj = list())
 List with three strings: \itemize{ \item pdf_filename Path
 to PDF report \item yaml_filename Path to a YAML
 configuration file used during report generation.
-Parameters missing in yaml_obj (input param) were restored
+Parameters missing in yaml_obj (input param) are restored
 to default.  \item heatmap_filename Path to Heatmap table }
 }
 \description{

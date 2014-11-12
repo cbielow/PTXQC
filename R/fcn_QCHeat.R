@@ -84,12 +84,12 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   
   p = ggplot(QCM_final.m, aes_string(y="fc.raw.file", x="variable2")) +
             geom_tile(aes_string(fill = "value"), colour = "white") + 
-            scale_fill_gradient(low = "red", high = "green", limits=c(0, 1)) +
+            scale_fill_continuous(low = "red", high = "green", limits=c(0, 1)) +
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
             ggtitle("Performance overview") +
             xlab("") +
             ylab("Raw file") +
-            scale_y_discrete_reverse(QCM_final.m$fc.raw.file)
+            scale_y_discrete_reverse(QCM_final.m$fc.raw.file, breaks = ggAxisLabels)
   #print(p)
   return(list(plot = p, table = dcast(QCM_final.m, fc.raw.file ~ variable)))
 }  

@@ -3,11 +3,14 @@
 \alias{scale_x_discrete_reverse}
 \title{Inverse the order of items on the x-axis (for discrete scales)}
 \usage{
-scale_x_discrete_reverse(values)
+scale_x_discrete_reverse(values, ...)
 }
 \arguments{
   \item{values}{The vector of values as given to the x
-  aestetic.}
+  aestetic}
+
+  \item{...}{Other arguments forwarded to
+  'scale_y_discrete()'}
 }
 \value{
 ggplot object, concatenatable with '+'
