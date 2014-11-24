@@ -773,3 +773,71 @@ appendEnv = function(env_name, v, v_name = NULL)
   e[[sprintf("%04d",e$.counter)]] <- v ## pad with 0's, to ensure correct order when calling ls() on env_name
   return(TRUE)
 }
+
+#'
+#' Thin out a data.frame by removing rows with similar values in a certain column.
+#' 
+#' All values in the column 'filterColname' are assigned to bins if width 'binsize'.
+#' Only one value per bin is retained. All other rows are removed and the reduced
+#' data frame will all its columns is returned.
+#' 
+#' @param data The data.frame to be filtered
+#' @param filterColname Name of the filter column as string
+#' @param binsize Width of a bin
+#'
+#'
+thinOut = function(data, filterColname, binsize)
+{
+  nstart = nrow(data)
+  ## first remove duplicates (they cannot possibly pass the filter)
+  data = data[!duplicated(data[, filterColname]), ]
+  ##
+  data = data[order(data[, filterColname]), ]
+  local_deltas = c(0, diff(data[, filterColname]))
+  ld_cs = cumsum(local_deltas)
+  data = data[!duplicated(round(ld_cs / binsize)),]
+  #print("Saved " %+% round(100 - nrow(x)/nstart*100) %+% "% data")
+  return(data)
+}
+
+#'
+#' Apply 'thinOut' on all subsets of a data.frame, split by a batch column
+#' 
+#' The binsize is computed from the global data range of the filter column by dividing the range
+#' into binCount bins.
+#' 
+#' @param data The data.frame to be split and filtered(thinned)
+#' @param filterColname Name of the filter column as string
+#' @param batchColname Name of the split column as string
+#' @param binCount Number of bins in the 'filterColname' dimension.
+#'
+#' @importFrom plyr ddply
+thinOutBatch = function(data, filterColname, batchColname, binCount = 1000)
+{
+  binsize = (max(data[, filterColname], na.rm=T) - min(data[, filterColname], na.rm=T)) / binCount
+  r = ddply(data, batchColname, thinOut, filterColname, binsize)
+  return (r)  
+}
+
+#'
+#' Plot a text as graphic using ggplot2.
+#' 
+#' @param title The title of the plot
+#' @param text Centered text, can contain linebreaks
+#' @param col Colour of text (excluding the title)
+#' @return ggplot object
+#' 
+#' @import ggplot2
+#' @importFrom grid unit
+#'
+ggText = function(title, text, col = "black") {
+  pl = ggplot(data.frame(text = text, ypos=1, xpos=1), 
+         aes_string(x = "xpos", y = "ypos"))  +
+    geom_text(aes_string(label = "text"), colour = col, family="mono") +
+    theme_bw() +
+    theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
+          axis.text = element_blank(), strip.text = element_blank(), legend.position="none") +
+    ggtitle(title)
+  return(pl)
+}
+

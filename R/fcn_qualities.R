@@ -312,34 +312,39 @@ qualHighest = function(x, N)
 #' @note This is pre-tuned for Match-time-differences
 #'
 #' @param x Vector of numeric values
+#' @param debug Set to TRUE to generate a plot, showing the fitted Gaussians to the data
 #' @return Ratio of area of the target distribution vs. whole area under the two Gaussians
 #'
 #' @importFrom mixtools normalmixEM2comp
 #' 
 #' 
-qualGauss2Mix = function(x)
+qualGauss2Mix = function(x, debug = FALSE)
 {
   d = na.omit(x)
   f = file()
   sink(file=f) ## silence output of 'normalmixEM2comp'
-  fit2 = try(normalmixEM2comp(d, c(0.3,0.6), c(0,0), c(1.5,0.1), eps= 1e-8, maxit = 1000, verb=FALSE), silent = T)
+  fit2 = normalmixEM2comp(d, lambda = c(0.3,0.6), mu = c(mean(d),mean(d)), c(1.5,0.3), maxit = 10000)
   sink() ## undo silencing
   close(f)
   if (inherits(fit2, "try-error"))
   { ## not enough data?!
     return (NA);
   }
-  #   fit2$mu
-  #   fit2$sigma
-  #   fit2$lambda
-  #   h=hist(d, 100, plot=F)
-  #   x = seq(-4,4,by=0.1)
-  #   plot(h$mids, h$density)
-  #   lines(x, dnorm(x, fit2$mu[1], fit2$sigma[1]) *fit2$lambda[1], col="red")
-  #   lines(x, dnorm(x, fit2$mu[2], fit2$sigma[2]) *fit2$lambda[2], col="green")
-  #   lines(x, dnorm(x, fit2$mu[1], fit2$sigma[1]) *fit2$lambda[1] + dnorm(x, fit2$mu[2], fit2$sigma[2]) *fit2$lambda[2])
+  if (debug)
+  {
+    fit2$mu
+    fit2$sigma
+    fit2$lambda
+    h=hist(d, 100, plot=F)
+    x = seq(-4,4,by=0.1)
+    plot(h$mids, h$density)
+    lines(x, dnorm(x, fit2$mu[1], fit2$sigma[1]) *fit2$lambda[1], col="red")
+    lines(x, dnorm(x, fit2$mu[2], fit2$sigma[2]) *fit2$lambda[2], col="green")
+    lines(x, dnorm(x, fit2$mu[1], fit2$sigma[1]) *fit2$lambda[1] + dnorm(x, fit2$mu[2], fit2$sigma[2]) *fit2$lambda[2])
+  }
   ## look at scaling of the one with better SD (order defined above)
   q = fit2$lambda[2] / sum(fit2$lambda)
+  #q
   return (q)
 }
 
@@ -388,4 +393,43 @@ qualBestKS = function(x) {
 
 
 
+qualMBR = function(d_evd)
+{
+  d_evd$hasMTD = !is.na(d_evd$Match.time.difference)
+  wronglyInferred = ddply(d_evd[d_evd$Type!="MSMS",], c("Raw.file", "Modified.sequence", "Charge"), function(x)
+  {
+    ratio =  NA
+    if (nrow(x)==2 & sum(x$hasMTD)==1) ratio = x$Intensity[!x$hasMTD] / x$Intensity[x$hasMTD]
+    #r = rep(NA, nrow(x))
+    ## mixed state
+    #if (sum(x$hasMTD) >0 & sum(x$hasMTD)<nrow(x))  {
+    #  r[!x$hasMTD]
+    #} 
+    return(data.frame(nNative = sum(!x$hasMTD), nMatched = sum(x$hasMTD), ratio = ratio))
+  })
+  head(wronglyInferred)
+  mbr_score = ddply(wronglyInferred, "Raw.file", function(wronglyInferred)
+  {
+    ddt = table(wronglyInferred[,c("nMatched", "nNative")])
+    ## add nMatched=1 row, if not present
+    ddt = rbind(ddt, 0)
+    ## native split frequency:
+    n.perf = sum(ddt[,colnames(ddt)==1])
+    n.all = sum(ddt[,!colnames(ddt)==0])
+    corr.nat = n.perf/n.all ## 0.959
+    ## inferred splits:
+    i.perf = ddt[1,colnames(ddt)==1] + max(0,ddt[2,colnames(ddt)==0])
+    i.all = sum(ddt)
+    i.perf/i.all  ## 0.923
+    
+    ## correctly inferred %
+    corr.inf = max(0,ddt[2,colnames(ddt)==0]) / (sum(ddt[,colnames(ddt)==0]) + sum(ddt[-1,colnames(ddt)==1]))
+    ## 83%
+    wrong.inf = 1-corr.inf
+    ##
+    wrong.inf.ref = wrong.inf * corr.nat
+    data.frame(corr.nat = corr.nat, wrong.inf.ref = wrong.inf.ref)
+  })
+  return (list(mbr_score = mbr_score, ratio = wronglyInferred$ratio))
+}
 

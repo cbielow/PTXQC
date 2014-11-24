@@ -111,7 +111,7 @@ MQDataReader$new <- function(.)
 #' @name MQDataReader$readMQ
 #' @import utils
 #' @import graphics
-#' @import data.table
+#'
 #'
 # (not exported!)
 MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, add_fs_col=10, check_invalid_lines = T, LFQ_action=FALSE, ...)
@@ -155,13 +155,14 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   }
   
   ## higher memory consumption during load (due to memory mapped files) compared to read.delim... but about 5x faster
-  .$mq.data = try(
-    fread(file, header=T, sep='\t', na.strings=c("NA", "n. def."), verbose=T, select = idx_keep, data.table=F, ...)
-  )
+  ## , but also different numerical results when parsing numbers!!!
+  #.$mq.data = try(
+  #  fread(file, header=T, sep='\t', na.strings=c("NA", "n. def."), verbose=T, select = idx_keep, data.table=F, ...)
+  #)
+  #colnames(.$mq.data) = make.names(colnames(.$mq.data), unique = T)
   ## comment.char should be "", since lines will be TRUNCATED starting at the comment char.. and a protein identifier might contain just anything...
-  #.$mq.data = try(read.delim(file, na.strings=c("NA", "n. def."), comment.char="", stringsAsFactors = F, colClasses = col_subset, ...))
+  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def."), comment.char="", stringsAsFactors = F, colClasses = col_subset, ...))
   if (inherits(.$mq.data, 'try-error')) stop(msg_parse_error, call.=F);
-  colnames(.$mq.data) = make.names(colnames(.$mq.data), unique = T)
   
   #colnames(.$mq.data)
   
