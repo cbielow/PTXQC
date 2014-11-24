@@ -4,10 +4,13 @@
 \title{Given a vector of values sampled from a mixture of two Gaussians, compute the area contribution
 of the higher/more abundant (=target) Gaussian.}
 \usage{
-qualGauss2Mix(x)
+qualGauss2Mix(x, debug = FALSE)
 }
 \arguments{
   \item{x}{Vector of numeric values}
+
+  \item{debug}{Set to TRUE to generate a plot, showing the
+  fitted Gaussians to the data}
 }
 \value{
 Ratio of area of the target distribution vs. whole area

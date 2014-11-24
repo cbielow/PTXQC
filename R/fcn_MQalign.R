@@ -10,7 +10,7 @@
 #' 
 #' @param data The data.frame with columns 'retention.time.calibration' and 'raw.file'
 #' @param threshold Maximum range (min to max) of values required to be recognized as reference
-#' @return 
+#' @return List of reference raw files (usually just one)
 #' 
 #' @importFrom plyr ddply
 #'
