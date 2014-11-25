@@ -909,6 +909,34 @@ if (enabled_evidence)
         
         #rm("evd_RT_thin")
       }
+      
+      ## increase in split peaks by matching:
+      qMBR = qualMBR(d_evd)
+      qMBR$X025X.EVD.RT_Match_Unique = 1 - qMBR$wrong.inf.ref
+      QCM[["X025X.EVD.RT_Match_Unique"]] = qMBR[, c("raw.file", "X025X.EVD.RT_Match_Unique")]
+      
+      qMBR$fc.raw.file = renameFile(qMBR$raw.file, mq$raw_file_mapping) ## add fc.raw.file column
+      qMBR = qMBR[match(mq$raw_file_mapping$to, qMBR$fc.raw.file), ]    ## reorder
+      uniqueRMatchByRawFile = function(RTdata)
+      {
+        RTdata.m = melt(RTdata[,c("fc.raw.file", "corr.nat", "X025X.EVD.RT_Match_Unique")], id.vars="fc.raw.file")
+        pl = ggplot(RTdata.m) + 
+          geom_bar(aes_string(x="fc.raw.file", y="value", fill="variable"), stat="identity", position="dodge") + 
+          scale_fill_manual(values = c("corr.nat"="black", "X025X.EVD.RT_Match_Unique"="green"), labels=c("native", "matched")) +
+          ylim(0, 1) +
+          xlab("") +
+          ylab("Unique Features [%]") +
+          coord_flip() + 
+          scale_x_discrete_reverse(factor(RTdata$fc.raw.file)) +
+          theme(legend.title=element_blank()) +
+          ggtitle("EVD: Feature Segmentation due to Matching (ID Transfer)")
+        #print(pl)
+        GPL$add(pl)
+        return(1)
+      }
+      byX(qMBR, qMBR$fc.raw.file, 12, uniqueRMatchByRawFile, sort_indices = F)
+      
+      
     }
   }
   
@@ -1129,7 +1157,7 @@ if (enabled_evidence)
                         return (data.frame(med_rat = r))
                       })
                         
-  colnames(qc_MS1deCal) = c("fc.raw.file", "X025X.EVD.MS1_DeCalibration (" %+% param_EV_PrecursorTolPPM %+% ")")
+  colnames(qc_MS1deCal) = c("fc.raw.file", "X026X.EVD.MS1_DeCalibration (" %+% param_EV_PrecursorTolPPM %+% ")")
   QCM[["EVD.MS1_decalibration"]] = qc_MS1deCal
 
 
@@ -1158,7 +1186,7 @@ if (enabled_evidence)
   ## .. assume 0 centered and StdDev of observed data
   obs_par = ddply(d_evd[, c("mass.error..ppm.", "fc.raw.file")], "fc.raw.file", function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm=T), sd = sd(x$mass.error..ppm., na.rm=T)))
   qc_MS1Cal = data.frame(fc.raw.file = obs_par$fc.raw.file, 
-                         X026X.EVD.MS1_Calibration = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
+                         X027X.EVD.MS1_Calibration = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
   QCM[["EVD.MS1_calibration"]] = qc_MS1Cal
 
 

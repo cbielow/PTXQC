@@ -392,44 +392,89 @@ qualBestKS = function(x) {
 }
 
 
-
+#'
+#' Determine fraction of evidence which is wrongly inferred, i.e. was matched at different RT
+#' even though it was already confirmed locally by MS/MS.
+#'
+#' Sometimes, MQ split a feature into 2 or more if the chromatograpic conditions are not optimal and there
+#' is a drop in RT intensity.
+#' If both features contain successful MS/MS scans, we will find the same peptide twice (with slightly different RT)
+#' in the same charge state. This constitutes a natively split peak and is rare (95% of all peaks are unique).
+#' 
+#' If Match-between-runs is used and the RT alignment is not perfect, then a peptide might be inferred at a wrong
+#' RT position, even though this Raw file already contains MS/MS evidence of this peptide.
+#' Usually the number of peak duplicates rises drastically (e.g. only 75% of peaks are unique after MBR was used).
+#' In most cases, the RT is too far off to be a split peak. Its rather a lucky hit with accidentally the same mass-to-charge,
+#' and thus the intensity is random.
+#' 
+#' Required columns are 'match.time.difference', 'raw.file', 'modified.sequence', 'charge', 'type'.
+#' 
+#' @param d_evd A data.frame of evidences containing the above columns
+#' @return A data.frame with one row per Raw file and two columns: natively split peaks (%) and % of split peaks using matching.
+#'
+#' @importFrom plyr ddply
+#'
 qualMBR = function(d_evd)
 {
-  d_evd$hasMTD = !is.na(d_evd$Match.time.difference)
-  wronglyInferred = ddply(d_evd[d_evd$Type!="MSMS",], c("Raw.file", "Modified.sequence", "Charge"), function(x)
+  if (!all(c("match.time.difference", "raw.file", "modified.sequence", "charge", 'type') %in% colnames(d_evd)))
   {
-    ratio =  NA
-    if (nrow(x)==2 & sum(x$hasMTD)==1) ratio = x$Intensity[!x$hasMTD] / x$Intensity[x$hasMTD]
+    stop("qualMBR(): columns missing!")  
+  }
+  
+  d_evd$hasMTD = !is.na(d_evd$match.time.difference)
+  
+  cols = c("hasMTD", "raw.file", "modified.sequence", "charge")
+  splitInferred = ddply(d_evd[d_evd$type!="MSMS", cols], cols[-1], function(x)
+  {
+    #ratio =  NA
+    #if (nrow(x)==2 & sum(x$hasMTD)==1) ratio = x$Intensity[!x$hasMTD] / x$Intensity[x$hasMTD]
     #r = rep(NA, nrow(x))
     ## mixed state
     #if (sum(x$hasMTD) >0 & sum(x$hasMTD)<nrow(x))  {
     #  r[!x$hasMTD]
     #} 
-    return(data.frame(nNative = sum(!x$hasMTD), nMatched = sum(x$hasMTD), ratio = ratio))
+    return(data.frame(nNative = sum(!x$hasMTD), nMatched = sum(x$hasMTD)))#, ratio = ratio))
   })
-  head(wronglyInferred)
-  mbr_score = ddply(wronglyInferred, "Raw.file", function(wronglyInferred)
+  
+  mbr_score = ddply(splitInferred, "raw.file", function(splitInferred)
   {
-    ddt = table(wronglyInferred[,c("nMatched", "nNative")])
+    ddt = table(splitInferred[, c("nMatched", "nNative")])
+    ### ddt might look like this:
+    #                 nNative
+    #     nMatched    0    1   2  3  4 5 6 7 8 9 10 11 13 14 15 18 20 26 27 28 31 37 39
+    #            0    0 6249 230 41 16 4 1 4 2 0  0  0  1  1  0  0  0  1  1  0  0  0  0
+    #            1 1352  303  34 16  6 4 2 1 1 0  1  1  0  1  0  1  0  0  0  0  0  0  0
+    #            2   49   29   4  2  1 0 0 1 0 0  1  
+    
+    ### scale ddt matrix from counts of events to counts of peaks,
+    ### e.g. event: each 1native+2matched affects three peaks
+    d1 = dimnames(ddt)$nMatched
+    d2 = dimnames(ddt)$nNative
+    #ddt_b = ddt
+    for (i in 1:length(d1)) {
+      for (j in 1:length(d2)) {
+        ddt[i,j] = ddt[i,j] * (as.numeric(d1[i]) + as.numeric(d2[j]))
+      }
+    }
+    
     ## add nMatched=1 row, if not present
     ddt = rbind(ddt, 0)
-    ## native split frequency:
-    n.perf = sum(ddt[,colnames(ddt)==1])
-    n.all = sum(ddt[,!colnames(ddt)==0])
-    corr.nat = n.perf/n.all ## 0.959
-    ## inferred splits:
-    i.perf = ddt[1,colnames(ddt)==1] + max(0,ddt[2,colnames(ddt)==0])
-    i.all = sum(ddt)
-    i.perf/i.all  ## 0.923
+    ## native split frequency (ignore the nMatched, i.e. project everything onto first row)
+    n.perf = sum(ddt[,colnames(ddt)==1]) ## uniquely matched
+    n.all = sum(ddt[,!colnames(ddt)==0]) ## all natives (==0 is the only matched column)
+    corr.nat = n.perf/n.all ## e.g. 0.94
     
-    ## correctly inferred %
-    corr.inf = max(0,ddt[2,colnames(ddt)==0]) / (sum(ddt[,colnames(ddt)==0]) + sum(ddt[-1,colnames(ddt)==1]))
-    ## 83%
+    ## split frequency including matched
+    i.perf = ddt[rownames(ddt)==1, colnames(ddt)==0] ## nMatched=1,nNative=0
+    i.all = sum(ddt[rownames(ddt)!=0, ])   ## all except first row
+
+    corr.inf = max(0, i.perf) / i.all  ## e.g. 77%
     wrong.inf = 1-corr.inf
-    ##
+    
+    ## reduce estimate of 'wrongly matched' by the factor of natively wrongly matched, e.g. 23% * 94% = 21%
     wrong.inf.ref = wrong.inf * corr.nat
     data.frame(corr.nat = corr.nat, wrong.inf.ref = wrong.inf.ref)
   })
-  return (list(mbr_score = mbr_score, ratio = wronglyInferred$ratio))
+  return (mbr_score = mbr_score)
 }
 

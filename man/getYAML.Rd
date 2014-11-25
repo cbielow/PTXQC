@@ -23,7 +23,7 @@ present)
 \description{
 If the object has the param, then return it. If the param
 is unknown, create it with default value and return the
-default
+default.
 }
 \note{
 This function has a side-effect: it updates the variable
