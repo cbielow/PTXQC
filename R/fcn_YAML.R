@@ -34,6 +34,11 @@ writeYAML = function(filename, yaml_obj)
 # Parameters ending in 'wA' (== 'withAuto') offer a heuristic to decide if something should be plotted.
 # Finally, numerical parameters... well.. are numerical (usually integer).
 #
+# Parameters whose name contains 'MQ_' should be matched to the parameters set in MaxQuant.
+# E.g. 'File$Evidence$MQ_MatchingTolerance_num' is the matching (not alignment!) tolerance
+#      for Match-between-Runs, and has a default of 1 (minute).
+#      Older MQ version prior to MQ1.4 allowed 2 minutes.
+#
 # Furthermore, there is the SpecialContaminants section, where you can trigger the generation of a plot
 # which just shows the fraction of proteins containing a certain string.
 # By default we search for 'MYCOPLASMA' in the protein identifier, i.e. your txt should be derived from a 

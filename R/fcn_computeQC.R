@@ -848,15 +848,21 @@ if (enabled_evidence)
     } else
     {
       ## find reference
-      refRaw = ifelse(is.null(d_evd$fraction), findAlignReference(d_evd), NA)
+      if (is.null(d_evd$fraction)) {
+        refRaw = findAlignReference(d_evd)
+        colFraction = c()
+      } else {
+        refRaw = NA
+        colFraction = "fraction"
+      } 
       if (length(refRaw) != 1) {
-        ggText("EVD: Alignment check", paste0("Cannot find a reference Raw file (files: ",paste(refRaw, collapse=", "), ")"))
+        ggText("EVD: Alignment check", paste0("Cannot find a unique reference Raw file (files: ",paste(refRaw, collapse=", "), ")"))
       } else {
         
         ## find RT curve (should be flat)
         d_alignQ = alignmentCheck(d_evd[(d_evd$type %in% c("MULTI-MSMS")), 
                                         c("calibrated.retention.time", 
-                                          "id", "raw.file", "fraction", "modified.sequence", "charge")], 
+                                          "id", "raw.file", colFraction, "modified.sequence", "charge")], 
                                   refRaw)
         ## augment more columns
         d_alignQ$retention.time.calibration = d_evd$retention.time.calibration[match(d_alignQ$id, d_evd$id)]
@@ -887,6 +893,11 @@ if (enabled_evidence)
                                   "calibrated.retention.time",
                                   "raw.file")
           
+          ## param
+          param_name_EV_MatchingTolerance = "File$Evidence$MQ_MatchingTolerance_num"
+          param_def_EV_MatchingTolerance = 1
+          param_EV_MatchingTolerance = getYAML(yaml_obj, param_name_EV_MatchingTolerance, param_def_EV_MatchingTolerance)
+
           ## prepare projection in rtdiff as culmulative function
           global_RT_range = diff(range(d_alignQ$calibrated.retention.time, na.rm=T))
           proj_align_h = ddply(d_alignQ, "raw.file", function(x) {
@@ -897,10 +908,6 @@ if (enabled_evidence)
           proj_align_h$fc.raw.file = renameFile(proj_align_h$raw.file, mq$raw_file_mapping)
           proj_align_h$matching = c("outlier", "matchable")[(abs(proj_align_h$mid)<param_EV_MatchingTolerance) + 1]
             
-          param_name_EV_MatchingTolerance = "File$Evidence$MatchingTolerance"
-          param_def_EV_MatchingTolerance = 1
-          param_EV_MatchingTolerance = getYAML(yaml_obj, param_name_EV_MatchingTolerance, param_def_EV_MatchingTolerance)
-          
           ## plot alignment result
           evd_RT_t$RTdiff_in = c("green", "red")[(abs(evd_RT_t$rtdiff) > param_EV_MatchingTolerance)+1]
           evd_RT_t$fc.raw.file = renameFile(evd_RT_t$raw.file, mq$raw_file_mapping)
@@ -1179,7 +1186,7 @@ if (enabled_evidence)
   ylim_g = boxplot.stats(d_evd$uncalibrated.mass.error..ppm.)$stats[c(1, 5)]
   byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiff, sort_indices=F, affected_raw_files=affected_raw_files, ylim_g)
 
-  param_name_EV_PrecursorTolPPM = "File$Evidence$PrecursorTolPPM"
+  param_name_EV_PrecursorTolPPM = "File$Evidence$MQ_PrecursorTolPPM"
   param_def_EV_PrecursorTolPPM = 20
   param_EV_PrecursorTolPPM = getYAML(yaml_obj, param_name_EV_PrecursorTolPPM, param_def_EV_PrecursorTolPPM)
   qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
