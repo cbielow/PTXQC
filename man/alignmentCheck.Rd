@@ -8,10 +8,11 @@ alignmentCheck(data, referenceFile)
 \arguments{
   \item{data}{A data.frame with columns
   'calibrated.retention.time', 'id', 'modified.sequence',
-  'charge' and 'raw.file'}
+  'charge', 'raw.file' and 'fraction' (if present)}
 
   \item{referenceFile}{A raw file name as occuring in
-  data$raw.file, serving as alignment reference}
+  data$raw.file, serving as alignment reference (when no
+  fractions are used).}
 }
 \value{
 A data.frame containing the RT diff for each feature found
@@ -34,10 +35,15 @@ files. For every comparison made, we report the RT
 difference. If alignment worked perfectly, the differences
 are very small (<1 min).
 
-An 'id' column must be present, to enable matching the
+An 'id' column must be present, to enable mapping the
 result of this function to the original data frame.
 
 A reference Raw file can be identified using
-'findAlignReference()'.
+'findAlignReference()'. If Maxquants experimental design
+included pre-fractionation, a column named 'fraction'
+should be given and 'referenceFile' should be empty. This
+function will pick the one Raw file for each fraction (the
+first in order) to use as reference. Only the immediately
+neighbouring fractions will be matched to this reference.
 }
 

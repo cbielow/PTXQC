@@ -66,9 +66,10 @@ just reads a txt file and returns unified column names,
 irrespective of the MQ version. So, it unifies access to
 columns (e.g. by using lower case for ALL columns) and
 ensures columns are identically named across MQ versions:
-\preformatted{ old term new term
+\preformatted{ alternative term new term
 ----------------------------------------- protease enzyme
-protein.descriptions fasta.headers }
+protein.descriptions fasta.headers potential.contaminant
+contaminant }
 }
 \details{
 Example of usage: \preformatted{ mq = MQDataReader$new()

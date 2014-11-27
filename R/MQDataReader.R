@@ -66,10 +66,11 @@ MQDataReader$new <- function(.)
 #' So, it unifies access to columns (e.g. by using lower case for ALL columns) and ensures columns are
 #' identically named across MQ versions:
 #' \preformatted{
-#'  old term                  new term
+#'  alternative term          new term
 #'  -----------------------------------------
 #'  protease                  enzyme
 #'  protein.descriptions      fasta.headers
+#'  potential.contaminant     contaminant
 #' }
 #' 
 #' 
@@ -189,6 +190,8 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   cn[cn=="protein.descriptions"] = "fasta.headers"
   ## MQ 1.0.13 has mass.deviations, later versions have mass.deviations..da.
   cn[cn=="mass.deviations"] = "mass.deviations..da."
+  ## MQ 1.5 uses 'potential.contaminant' instead of 'contaminant'
+  cn[cn=="potential.contaminant"] = "contaminant"
   colnames(.$mq.data) = cn
   
   

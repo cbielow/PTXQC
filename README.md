@@ -20,18 +20,21 @@ PTXQC
 
 ### Installation
 
-**If you want to generate QC reports:**
+**If you want to generate QC reports without actually getting involved in R:**
 
 See ['inst' subfolder] [1] .
 It takes 10 minutes and you are done!
 
-**If you just want the package:**
+**If you are a developer and just want the package:**
 
-Direct installation from GitHub requires the 'devtools' package. The following lines will install PTXQC on a fresh R system
+Direct installation from GitHub requires the 'devtools' package. The following lines will add PTXQC on a fresh R installation:
 
     install.packages("devtools")
-    library("devtools")
-    install_github("cbielow/PTXQC")
+    library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
+    source("http://bioconductor.org/biocLite.R")
+    biocLite("Biobase)
+    install_github("cbielow/PTXQC") 
+    help(package="PTXQC")           ## all done; check out the documentation
 
 
 ### Platform support

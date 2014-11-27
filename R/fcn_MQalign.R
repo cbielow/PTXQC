@@ -44,12 +44,15 @@ findAlignReference = function(data, threshold = 1e-4)
 #' already calibrated retention time difference of the same feature in all other files. For every comparison made,
 #' we report the RT difference. If alignment worked perfectly, the differences are very small (<1 min).
 #' 
-#' An 'id' column must be present, to enable matching the result of this function to the original data frame.
+#' An 'id' column must be present, to enable mapping the result of this function to the original data frame.
 #' 
-#' A reference Raw file can be identified using 'findAlignReference()'.
+#' A reference Raw file can be identified using 'findAlignReference()'. If Maxquants experimental design included
+#' pre-fractionation, a column named 'fraction' should be given and 'referenceFile' should be empty. This function will
+#' pick the one Raw file for each fraction (the first in order) to use as reference. Only the immediately neighbouring
+#' fractions will be matched to this reference.
 #' 
-#' @param data A data.frame with columns 'calibrated.retention.time', 'id', 'modified.sequence', 'charge' and 'raw.file'
-#' @param referenceFile A raw file name as occuring in data$raw.file, serving as alignment reference
+#' @param data A data.frame with columns 'calibrated.retention.time', 'id', 'modified.sequence', 'charge', 'raw.file' and 'fraction' (if present)
+#' @param referenceFile A raw file name as occuring in data$raw.file, serving as alignment reference (when no fractions are used).
 #' @return A data.frame containing the RT diff for each feature found in a Raw file and the reference.
 #'
 alignmentCheck = function(data, referenceFile) {
@@ -59,27 +62,71 @@ alignmentCheck = function(data, referenceFile) {
   {
     stop("alignmentCheck(): columns missing!")  
   }
-  print(dim(data))
-  ## prefilter data: only peptides which occur in reference
-  data = data[data$modified.sequence %in% data$modified.sequence[data$raw.file==referenceFile],]
-  
-  alignQ = ddply(data, c("modified.sequence", "charge"), function(x)
+  if (is.na(referenceFile) & !('fraction' %in% colnames(data)))
   {
-    ## reference must be present
-    if ((nrow(x)==1) | (sum(x$raw.file==referenceFile)==0) | (sum(duplicated(x$raw.file))>0)) {
-      return(data.frame())
+    stop("alignmentCheck(): Either a referenceFile or 'fraction' column must be provided!")  
+  }
+  if (!is.na(referenceFile) & ('fraction' %in% colnames(data)))
+  {
+    stop("alignmentCheck(): referenceFile and 'fraction' cannot be provided at the same time!")
+  }
+  
+  if (!is.na(referenceFile)) {
+    RefRounds = list( list("file_ref" = referenceFile, "file_clients" = unique(data$raw.file)) )
+  } else {
+    RefRounds = list()
+    ## get Raw files and their fractions
+    df.f = data.frame(raws = unique(data$raw.file))
+    df.f$fraction = data$fraction[match(raws, data$raw.file)]
+    df.f
+    ## make a list of references:
+    df.ref = df.f[!duplicated(df.f$fraction),]
+    df.ref
+    ## for each fraction: get list of references and the files that are allowed to match against them
+    for (idx_ref in 1:nrow(df.ref))
+    { # idx_ref = 1
+      frac = df.ref$fraction[idx_ref]
+      referenceFile = df.ref$raws[idx_ref]
+      referenceFile
+      clients = df.f$raws[df.f$fraction %in% (frac-1):(frac+1)]
+      RefRounds[[idx_ref]] = list("file_ref" = referenceFile, "file_clients" = clients)
     }
+    RefRounds
+  }
+
+  alignQ = data.frame()
+
+  for (lRef in RefRounds)
+  {
+    file_ref = lRef[["file_ref"]]
+    file_clients = lRef[["file_clients"]]
     
-    ## we could rescue this case, but for performance reasons we don't
-    ## duplicates per raw file... ignore this raw file
-    #if (sum(duplicated(x$raw.file))>0) {
-    #  x$calibrated.retention.time[x$raw.file %in% x$raw.file[duplicated(x$raw.file)]] = NA
-    #}
+    ## prefilter data: only peptides which occur in reference
+    ##            and are part of client list
+    data_round = data[data$modified.sequence %in% data$modified.sequence[data$raw.file==file_ref] &
+                      data$raw.file %in% file_clients,]
     
-    m = x$calibrated.retention.time[x$raw.file == referenceFile]
-    x$rtdiff = x$calibrated.retention.time - m;
-    return(x[,c("raw.file", "id", "rtdiff", 'calibrated.retention.time')])
-  })
+    alignQ_round = ddply(data_round, c("modified.sequence", "charge"), function(x)
+    {
+      ## reference must be present
+      if ((nrow(x)==1) | (sum(x$raw.file == file_ref)==0) | (sum(duplicated(x$raw.file))>0)) {
+        return (data.frame())
+      }
+      
+      ## we could rescue this case, but for performance reasons we don't
+      ## duplicates per raw file... ignore this raw file
+      #if (sum(duplicated(x$raw.file))>0) {
+      #  x$calibrated.retention.time[x$raw.file %in% x$raw.file[duplicated(x$raw.file)]] = NA
+      #}
+      
+      ## RT of reference (we use 'mean' since there could be multiple ones when using fractions)
+      m = x$calibrated.retention.time[x$raw.file == file_ref]
+      
+      x$rtdiff = x$calibrated.retention.time - m;
+      return(x[,c("raw.file", "id", "rtdiff", 'calibrated.retention.time')])
+    })
+    alignQ = rbind(alignQ, alignQ_round)
+  }
   
   return(alignQ)
 }

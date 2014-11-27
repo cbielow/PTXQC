@@ -9,22 +9,26 @@ When you are done, provide the users with the [user_manual.pdf] from this folder
 This will show them how to invoke the QC (it's very easy - see 'Usage' below).
 
 ### Installation
- - create clean R installation (download R from [http://www.r-project.org])
- - install the `PTXQC` package (dependencies should be installed automatically):
+ - create clean R installation by downloading R from [http://www.r-project.org] and installing it. Make sure to install the x64 version for 64bit support.
+ - start the R GUI and execute the following commands to install the `PTXQC` package (dependencies should be installed automatically):
 
         install.packages("devtools")
-        library("devtools")
-        install_github("cbielow/PTXQC")
+        library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
+        source("http://bioconductor.org/biocLite.R")
+        biocLite("Biobase)
+        install_github("cbielow/PTXQC") 
+        help(package="PTXQC")           ## all done; check out the documentation
 
 
  - if R installed the new packages to a custom location (you can tell by the console output during package installation which would say something like: 'Installing package into ‘K:/R/win-library/3.1’')
-   , move them to the ./library subfolder within your new R installation folder (e.g., C:\Program Files\R\R-3.1.0\library - your path might differ a little)
- - copy the folder `QC-dragdrop` (from this directory) to your target location (e.g. Z:\proteomics\QC-dragdrop)
- - copy the whole R installation directory (e.g. c:\program files\R-3.1.0) into the `QC-dragdrop\\_internal` sub-folder
+   , move them to the .\library subfolder within your R installation folder (e.g., C:\Program Files\R\R-3.1.0\library - your path might differ a little)
+ - copy the folder `QC-dragdrop` (from <R-installation-dir>\library\PTXQC\inst\dragNdrop) to your target location, usually some network or local drive (e.g. <target-drive> is Z:\proteomics\QC-dragdrop)
+ - copy the whole R installation directory (e.g. c:\program files\R\R-3.1.0) into the `QC-dragdrop\\_internal` sub-folder
+ - rename your newly copied R installation directory to R-3.1.0 (or edit the createQC_dragNdrop.bat to match your directory name)
  
 Now, you should have the following structure
 
-    <network-drive>\QC-dragdrop\
+    <target-drive>\QC-dragdrop\
                                \createQC_dragNdrop.bat
                                \createQC_dragNdrop_withYAML.bat
                                \_internal\

@@ -299,54 +299,54 @@ qualHighest = function(x, N)
 }
 
 
-
-#'
-#' Given a vector of values sampled from a mixture of two Gaussians, compute the area contribution
-#' of the higher/more abundant (=target) Gaussian.
-#' 
-#' Returns a score between 1 (Target only) and 0 (Decoy only). Higher scores are better.
-#' We assume that the target distribution is much more peaked and narrow, whereas the decoy (false matches) are 
-#' uniformly distributed across all bins (the Gaussian has a large SD).
-#' If there is not enough data, NA is returned.
-#' 
-#' @note This is pre-tuned for Match-time-differences
-#'
-#' @param x Vector of numeric values
-#' @param debug Set to TRUE to generate a plot, showing the fitted Gaussians to the data
-#' @return Ratio of area of the target distribution vs. whole area under the two Gaussians
-#'
-#' @importFrom mixtools normalmixEM2comp
-#' 
-#' 
-qualGauss2Mix = function(x, debug = FALSE)
-{
-  d = na.omit(x)
-  f = file()
-  sink(file=f) ## silence output of 'normalmixEM2comp'
-  fit2 = normalmixEM2comp(d, lambda = c(0.3,0.6), mu = c(mean(d),mean(d)), c(1.5,0.3), maxit = 10000)
-  sink() ## undo silencing
-  close(f)
-  if (inherits(fit2, "try-error"))
-  { ## not enough data?!
-    return (NA);
-  }
-  if (debug)
-  {
-    fit2$mu
-    fit2$sigma
-    fit2$lambda
-    h=hist(d, 100, plot=F)
-    x = seq(-4,4,by=0.1)
-    plot(h$mids, h$density)
-    lines(x, dnorm(x, fit2$mu[1], fit2$sigma[1]) *fit2$lambda[1], col="red")
-    lines(x, dnorm(x, fit2$mu[2], fit2$sigma[2]) *fit2$lambda[2], col="green")
-    lines(x, dnorm(x, fit2$mu[1], fit2$sigma[1]) *fit2$lambda[1] + dnorm(x, fit2$mu[2], fit2$sigma[2]) *fit2$lambda[2])
-  }
-  ## look at scaling of the one with better SD (order defined above)
-  q = fit2$lambda[2] / sum(fit2$lambda)
-  #q
-  return (q)
-}
+# 
+# #'
+# #' Given a vector of values sampled from a mixture of two Gaussians, compute the area contribution
+# #' of the higher/more abundant (=target) Gaussian.
+# #' 
+# #' Returns a score between 1 (Target only) and 0 (Decoy only). Higher scores are better.
+# #' We assume that the target distribution is much more peaked and narrow, whereas the decoy (false matches) are 
+# #' uniformly distributed across all bins (the Gaussian has a large SD).
+# #' If there is not enough data, NA is returned.
+# #' 
+# #' note This is pre-tuned for Match-time-differences
+# #'
+# #' param x Vector of numeric values
+# #' param debug Set to TRUE to generate a plot, showing the fitted Gaussians to the data
+# #' return Ratio of area of the target distribution vs. whole area under the two Gaussians
+# #'
+# #' importFrom mixtools normalmixEM2comp
+# #' 
+# #' 
+# qualGauss2Mix = function(x, debug = FALSE)
+# {
+#   d = na.omit(x)
+#   f = file()
+#   sink(file=f) ## silence output of 'normalmixEM2comp'
+#   fit2 = normalmixEM2comp(d, lambda = c(0.3,0.6), mu = c(mean(d),mean(d)), c(1.5,0.3), maxit = 10000)
+#   sink() ## undo silencing
+#   close(f)
+#   if (inherits(fit2, "try-error"))
+#   { ## not enough data?!
+#     return (NA);
+#   }
+#   if (debug)
+#   {
+#     fit2$mu
+#     fit2$sigma
+#     fit2$lambda
+#     h=hist(d, 100, plot=F)
+#     x = seq(-4,4,by=0.1)
+#     plot(h$mids, h$density)
+#     lines(x, dnorm(x, fit2$mu[1], fit2$sigma[1]) *fit2$lambda[1], col="red")
+#     lines(x, dnorm(x, fit2$mu[2], fit2$sigma[2]) *fit2$lambda[2], col="green")
+#     lines(x, dnorm(x, fit2$mu[1], fit2$sigma[1]) *fit2$lambda[1] + dnorm(x, fit2$mu[2], fit2$sigma[2]) *fit2$lambda[2])
+#   }
+#   ## look at scaling of the one with better SD (order defined above)
+#   q = fit2$lambda[2] / sum(fit2$lambda)
+#   #q
+#   return (q)
+# }
 
 
 

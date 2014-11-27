@@ -648,7 +648,7 @@ mosaicPlot = function(var1, var2)
 #' 
 #' @param f_names Vector of filenames
 #' @param mapping A data.frame with from,to columns
-#' @return A vector of translated file names
+#' @return A vector of translated file names as factor (ordered by mapping!)
 #'
 #' @export
 #'
@@ -656,8 +656,10 @@ renameFile = function(f_names, mapping)
 {
   if (all(f_names %in% mapping$from)) {      ## from -> to
     f_new = mapping$to[match(f_names, mapping$from)]
+    f_new = factor(f_new, levels=mapping$to)
   } else if (all(f_names %in% mapping$to)) { ## to -> from
     f_new = mapping$from[match(f_names, mapping$to)]
+    f_new = factor(f_new, levels=mapping$from)
   } else {
     stop("Error in renameFile: filenames cannot be found in mapping!")
   }
