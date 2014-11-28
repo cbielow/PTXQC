@@ -43,7 +43,7 @@ ObjHandler$add = function(., obj, name = NA)
     name = sprintf("v%04d", .$counter) ## pad with 0's, to ensure correct order when ordering by name
   }
   .$items[[name]] = obj
-  print(obj)
+  #print(obj)
   return (invisible(TRUE))
 }
 
