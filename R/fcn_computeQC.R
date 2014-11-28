@@ -35,7 +35,7 @@
 #'  
 #' @export
 #'           
-createReport <- function(txt_folder, yaml_obj = list())
+createReport = function(txt_folder, yaml_obj = list())
 {
   
 ### script starts...
@@ -191,7 +191,7 @@ if (enabled_summary)
       geom_point(aes_string(colour = "color")) +
       xlab("raw file (ordered as in SM.txt)") + ylab("MS/MS identified [%]") +
       scale_colour_manual(values=cols_IDs_active) + 
-      ggtitle("SM: MS/MS identified per RAW file") + 
+      ggtitle("SM: MS/MS identified per Raw file") + 
       ylim(0, max(dms)*1.1) + 
       guides(color=guide_legend(title="ID class"))
     )
@@ -295,7 +295,7 @@ if (enabled_proteingroups)
   param_PG_intThresh = getYAML(yaml_obj, param_name_PG_intThresh, param_def_PG_intThresh)
   if (!is.numeric(param_PG_intThresh) || !(param_PG_intThresh %in% 1:100))
   { ## reset if value is weird
-    print("YAML value for '" %+% param_name_PG_intThresh %+% "' is invalid ('" %+% param_PG_intThresh %+% "'). Using default of " %+% param_def_PG_intThresh %+% ".")
+    cat("YAML value for '" %+% param_name_PG_intThresh %+% "' is invalid ('" %+% param_PG_intThresh %+% "'). Using default of " %+% param_def_PG_intThresh %+% ".")
     param_PG_intThresh = param_def_PG_intThresh
   }
   
@@ -670,7 +670,7 @@ if (enabled_evidence)
   param_EV_intThresh = getYAML(yaml_obj, param_name_EV_intThresh, param_def_EV_intThresh)
   if (!is.numeric(param_EV_intThresh) || !(param_EV_intThresh %in% 1:100))
   { ## reset if value is weird
-    print("YAML value for '" %+% param_name_EV_intThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_intThresh %+% ".")
+    cat("YAML value for '" %+% param_name_EV_intThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_intThresh %+% ".")
     param_EV_intThresh = param_def_EV_intThresh
   }
   
@@ -692,17 +692,10 @@ if (enabled_evidence)
   qc_pepint[,cname] = qualLinThresh(2^qc_pepint$med, 2^param_def_EV_intThresh) ## use non-log space 
   QCM[["EVD.PepIntensity"]] = qc_pepint[, c("fc.raw.file", cname)]
   
-  
-  # use only if it contains information (all NA if disabled)
-  has_mtd = !is.na(d_evd$match.time.difference)
-  head(has_mtd)
-  # if ALL na's, just fill it with "true"
-  #length(na.omit(d_evd$match.time.difference))==0
-  #if (length(na.omit(d_evd$match.time.difference))==0) has_mtd = rep(T,length(mtd))
-  
   ## only count protein groups from non-inferred evidence
   # get only the column without MTDs
-  d_evd$hasMTD = has_mtd
+  #   contains NA if 'genuine' ID
+  d_evd$hasMTD = !is.na(d_evd$match.time.difference)
   
   protGroupCount_pre = ddply(d_evd[, c("hasMTD", "protein.group.ids", "fc.raw.file")], "fc.raw.file", .fun = function(x){
     ## proteins
@@ -750,7 +743,7 @@ if (enabled_evidence)
   param_EV_protThresh = getYAML(yaml_obj, param_name_EV_protThresh, param_def_EV_protThresh)
   if (!is.numeric(param_EV_protThresh) || !(param_EV_protThresh %in% 1:1e5))
   { ## reset if value is weird
-    print("YAML value for '" %+% param_name_EV_protThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_protThresh %+% ".")
+    cat("YAML value for '" %+% param_name_EV_protThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_protThresh %+% ".")
     param_EV_protThresh = param_def_EV_protThresh
   }
     
@@ -796,7 +789,7 @@ if (enabled_evidence)
   param_EV_pepThresh = getYAML(yaml_obj, param_name_EV_pepThresh, param_def_EV_pepThresh)
   if (!is.numeric(param_EV_pepThresh) || !(param_EV_pepThresh %in% 1:1e6))
   { ## reset if value is weird
-    print("YAML value for '" %+% param_name_EV_pepThresh %+% "' is invalid ('" %+% param_EV_pepThresh %+% "'). Using default of " %+% param_def_EV_pepThresh %+% ".")
+    cat("YAML value for '" %+% param_name_EV_pepThresh %+% "' is invalid ('" %+% param_EV_pepThresh %+% "'). Using default of " %+% param_def_EV_pepThresh %+% ".")
     param_EV_pepThresh = param_def_EV_pepThresh
   }
 
@@ -921,19 +914,18 @@ if (enabled_evidence)
               ## PTXQC correction
               geom_point(aes_string(x="calibrated.retention.time", y="rtdiff", color="RTdiff_in")) + 
               scale_colour_manual(name = 'Metric', values = c("blue"="blue", "green"="green", "red"="red"), labels=c("MQ\nRT delta", "PTXQC in", "PTXQC out")) +
-              geom_path(data = h_sub, aes_string(x="count", y="mid", linetype="matching"), color="grey", size=1) +
+              geom_path(data = h_sub, aes_string(x="count", y="mid", linetype="matching", alpha="0.6"), color="black", size=1) +
               #geom_hline(aes(yintercept = +param_EV_MatchingTolerance, linetype = "Ad", alpha=0.8), show_guide = T, col="grey") +
               #geom_hline(aes(yintercept = -param_EV_MatchingTolerance, linetype = "Ad", alpha=0.8), show_guide = T, col="grey") +
-              #scale_alpha(guide = 'none') +  ## using 'alpha' outside of aes() messes up the legend for linetype... for whatever reason
+              scale_alpha(guide = 'none') +  ## using 'alpha' outside of aes() messes up the legend for linetype... for whatever reason
               scale_linetype_manual("Match CDF", values=c("matchable" = 'solid', "outlier" = "dotted"), labels=c("matchable" = "in", "outlier" = "out")) +
               ylim(ylim_g) +
               xlab("corrected RT [min]") +
               ylab("RT difference to reference [min]") +
               facet_wrap(~ fc.raw.file) +
-              theme_bw() +
               guides(colour = guide_legend(override.aes = list(linetype=0, shape=16, size=3))) + ## color legend has a linetype... get rid of it
               ggtitle("EVD: RT distance of genuine peptides to reference after alignment")
-            #print(pl)
+            print(pl)
             GPL$add(pl)
             return(1)
           }
@@ -984,7 +976,7 @@ if (enabled_evidence)
   ## additional evidence by matching MS1 by AMT across files
   if (any(d_evd$match.time.difference, na.rm=T)) {
     ## scatter plot: for each raw file give median time diff and # peptides used for matching
-    r = (by(d_evd$match.time.difference, d_evd$raw.file, function(x) {
+    r = (by(d_evd$match.time.difference, d_evd$fc.raw.file, function(x) {
       match_count_abs = sum(!is.na(x));
       match_count_pc  = round(100*sum(!is.na(x))/length(x))
       c(match_count_abs, match_count_pc)
@@ -993,11 +985,6 @@ if (enabled_evidence)
     r = unlist(r)
     mtr.df = data.frame(abs = r[seq(1,length(r),by=2)], pc = r[seq(2,length(r),by=2)])
     mtr.df$lab = tmp_lab
-    ## shorten labels (if required)
-    if (max(nchar(mtr.df$lab)) > 10) {
-      mtr.df$lab = as.character(d_evd$fc.raw.file[match(mtr.df$lab, d_evd$raw.file)])
-    }
-    
     
     p_amt = ggplot(data=mtr.df, aes_string(x = "abs", y = "pc", col = "lab")) + 
       geom_point(size=2) + 
@@ -1017,13 +1004,14 @@ if (enabled_evidence)
   ##
   ## charge distribution
   ##
-  ## todo: this is using MBR peptides which changes the distribution (usually making bad samples better) -- remove MBR peptides??
-  ##       same for other plots down below
+  ##  (this uses genuine peptides only -- no MBR!)
+  ## 
   fcChargePlot = function(d_sub)
   {
-    GPL$add(
+    #GPL$add(
+    print(
       mosaicPlot(d_sub$fc.raw.file, d_sub$charge) +
-             xlab("RAW file") +
+             xlab("Raw file") +
              ylab("fraction [%]") +
              guides(fill=guide_legend(title="charge"), color=FALSE) + # avoid black line in legend
              scale_x_reverse() +
@@ -1033,15 +1021,18 @@ if (enabled_evidence)
     )
     return (1);
   }
-  byXflex(d_evd[, c("fc.raw.file", "charge")], d_evd$fc.raw.file, 30, fcChargePlot, sort_indices = FALSE)
+  byXflex(d_evd[!d_evd$hasMTD, c("fc.raw.file", "charge")], d_evd$fc.raw.file[!d_evd$hasMTD],
+          30, fcChargePlot, sort_indices = FALSE)
   
   ## QC measure for charge centeredness
-  qc_charge = ddply(d_evd[, c("charge",  "raw.file")], "raw.file", function(x) data.frame(raw.file = x$raw.file[1], X010X.EVD.charge = (sum(x$charge==2)/nrow(x))))
+  qc_charge = ddply(d_evd[!d_evd$hasMTD, c("charge",  "raw.file")], "raw.file", function(x) data.frame(raw.file = x$raw.file[1], X010X.EVD.charge = (sum(x$charge==2)/nrow(x))))
   qc_charge$X010X.EVD.charge = qualMedianDist(qc_charge$X010X.EVD.charge)
   QCM[["EVD.charge2"]] = qc_charge
   
-  
-  ## peptides per RT 
+  ##
+  ## peptides per RT
+  ##
+  cat("EVD: Peptides over RT ...\n")
   raws_perPlot = 8
   smr_evdRT = summary(d_evd$retention.time)
   max_y = max(by(d_evd$retention.time, d_evd$fc.raw.file,  function(d) max(hist(d, breaks=seq(from=min(d)-3, to=max(d)+3, by=3), plot=F)$counts)))
@@ -1068,9 +1059,11 @@ if (enabled_evidence)
                                  function(x) data.frame(raw.file = x$raw.file[1], X015X.EVD.ID_rate_over_RT = qualUniform(x$retention.time)))
   
   
-
+  ##
   ## histograms of mass error
-  
+  ##
+  cat("EVD: Precursor Mass Error ...\n")
+
   ## MQ seems to mess up mass recal on some (iTRAQ) samples, by reporting ppm errors which include modifications
   ## , thus one sees >1e5 ppm, e.g. 144.10 Da
   ##  this affects both 'uncalibrated.mass.error..ppm.'   and
@@ -1087,8 +1080,7 @@ if (enabled_evidence)
   if (any(de_cal[,2], na.rm=T))
   {
     ## for stats, show how many % of spectra suffer from this
-    de_cal_pc = ddply(d_evd, "raw.file", .fun = function(x) dc = sum((abs(x$uncalibrated.mass.error..ppm.)) > 1e3, na.rm=T) / nrow(x) * 100)
-    #colnames(de_cal_pc) = c("raw.file","dc")
+    de_cal_pc = ddply(d_evd, "raw.file", .fun = function(x) data.frame(dc = sum((abs(x$uncalibrated.mass.error..ppm.)) > 1e3, na.rm=T) / nrow(x) * 100))
     de_cal_pc_pl = de_cal_pc[de_cal_pc[,2]>0, ]
     de_cal_pc_pl$fc.raw.file = renameFile(de_cal_pc_pl$raw.file, mq$raw_file_mapping)
     byXflex(de_cal_pc_pl, 1:nrow(de_cal_pc_pl), 25, function(x) {
@@ -1096,7 +1088,7 @@ if (enabled_evidence)
         geom_bar(aes_string(x = "fc.raw.file", y = "dc"), stat="identity") + 
         coord_flip() + 
         scale_x_discrete_reverse(x$fc.raw.file) +
-        ggtitle("RAW files affected by wrong calibration numbers") +
+        ggtitle("Raw files affected by wrong calibration numbers") +
         ylab("% of ID's affected") +
         xlab("")
       GPL$add(p)
@@ -1205,6 +1197,8 @@ if (enabled_evidence)
   ##
   ## post calibration
   ##
+  cat("EVD: Precursor Mass Error (post calibration) ...\n")
+
   plotAlignDiffCal = function(d_sub, affected_raw_files, ylim_g)
   {
     col = c("black", "red")[(unique(d_sub$raw.file) %in% affected_raw_files) + 1]
@@ -1236,10 +1230,13 @@ if (enabled_evidence)
   cal_stats = quantile(cal_medians, probs=c(0,0.5,1))
   cat(pastet("medianCalibratedMassError(min,median,max) [ppm]", paste(cal_stats, collapse=",")), file=stats_file, append=T, sep="\n") 
 
-
+  ##
   ## elaborate contaminant fraction per Raw.file (this is not possible from PG, since raw files could be merged)
   ## find top 5 contaminants (globally)
-  
+  ##
+  cat("EVD: Contamiants per Raw file ...\n")
+
+
   ## if possible, work on protein names (since MQ1.4), else use proteinIDs
   if ("protein.names" %in% colnames(d_evd))
   {
@@ -1304,7 +1301,7 @@ if (enabled_evidence)
       geom_bar(aes_string(x = "factor(fc.raw.file)", y = "s.intensity", fill = "pname"), stat="identity") +
       xlab("")  +
       theme_bw() +
-      ggtitle("EVD: Contaminant per RAW file") +
+      ggtitle("EVD: Contaminant per Raw file") +
       ylab("contaminant (% intensity)") +
       scale_fill_manual(values = brewer.pal(6,"Accent")) + 
       scale_colour_manual(values = brewer.pal(6,"Accent")) +
@@ -1329,6 +1326,8 @@ if (enabled_evidence)
   ####
   #### peak length (not supported in MQ 1.0.13)
   ####
+  cat("EVD: RT peak width distribution ...\n")
+
   if ("retention.length" %in% colnames(d_evd))  
   {
     ### peak width (all raw.files --- too much for large experiments)
@@ -1393,9 +1392,11 @@ if (enabled_evidence)
     QCM[["EVD.PeakShape"]] = qc_evd_PeakShape
   } ## end retention length (aka peak width)
 }
-  ### barplot
+  ##
   ## Oversampling: determine peaks repeatedly sequenced
-  ###
+  ##
+  cat("EVD: MS2 oversampling ...\n")
+
   raws = as.factor(sort(as.character(unique(d_evd$fc.raw.file))))
 
   d_dups = ddply(d_evd, "fc.raw.file", function(x) {
@@ -1447,6 +1448,11 @@ if (enabled_msms)
   d_msms = d_msms[order(match(as.character(d_msms$fc.raw.file), mq$raw_file_mapping$to)),]
   ## sort fc.raw.file's factor values as well
   d_msms$fc.raw.file = factor(d_msms$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
+  
+  ##
+  ##  MS2 fragment decalibration
+  ##
+  cat("MSMS: MS2 fragment decalibration ...\n")
   
   
   ms2_decal = ddply(d_msms, "fc.raw.file", .fun = function(x) {
@@ -1516,6 +1522,8 @@ if (enabled_msms)
   ##
   ## missed cleavages per Raw file
   ##
+  cat("MSMS: missed cleavages per Raw file ...\n")
+  
   max_mc = max(-Inf, d_msms$missed.cleavages, na.rm=T) ## will be -Inf iff enzyme was not specified and columns is 100% NA
   if (!is.infinite(max_mc))
   { ## MC's require an enzyme to be set
@@ -1526,14 +1534,14 @@ if (enabled_msms)
       pl = 
         ggplot(data = st_bin.m, aes_string(x = "factor(fc.raw.file)", y = "value", fill = "variable")) + 
                   geom_bar(stat="identity") +
-                  xlab("RAW file") +  
+                  xlab("Raw file") +  
                   ylab("missed cleavages [%]") + 
                   theme(legend.title=element_blank()) +
                   scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000"), 10)) +
                   geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
                   coord_flip() +
                   scale_x_discrete_reverse(st_bin.m$fc.raw.file)
-      pl = addGGtitle(pl, "MSMS: Missed cleavages per RAW file", "(includes contaminants)")
+      pl = addGGtitle(pl, "MSMS: Missed cleavages per Raw file", "(includes contaminants)")
       GPL$add(pl)
       return(1)
     }
@@ -1590,6 +1598,10 @@ if (enabled_msmsscans)
     ## sort fc.raw.file's factor values as well
     d_msmsScan$fc.raw.file = factor(d_msmsScan$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
     
+    ##
+    ## TopN over RT
+    ##
+    cat("MSMS-Scans: TopN over RT ...\n")
     
     ## scan event number
     scan.event.number = NULL ## make R check happy
@@ -1634,8 +1646,10 @@ if (enabled_msmsscans)
     
     
     ##
-    ## scan event counts
+    ## TopN counts
     ##
+    cat("MSMS-Scans: scan event counts ...\n")
+    
     DFc = ddply(d_msmsScan, c("scan.event.number", "fc.raw.file"), summarise, n = length(scan.event.number))
     dfc.ratio = ddply(DFc, "fc.raw.file", function(x, maxn)
     {
@@ -1690,7 +1704,8 @@ if (enabled_msmsscans)
     ##
     ## Scan event: % identified
     ##
-    #require(plyr)
+    cat("MSMS-Scans: TopN % identified ...\n")
+
     DF = ddply(d_msmsScan, c("scan.event.number", "identified", "fc.raw.file"), summarise, n = length(scan.event.number))
     
     # try KS on underlying data instead of using qualUniform()

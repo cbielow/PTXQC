@@ -77,7 +77,7 @@ alignmentCheck = function(data, referenceFile) {
     RefRounds = list()
     ## get Raw files and their fractions
     df.f = data.frame(raws = unique(data$raw.file))
-    df.f$fraction = data$fraction[match(raws, data$raw.file)]
+    df.f$fraction = data$fraction[match(df.f$raws, data$raw.file)]
     df.f
     ## make a list of references:
     df.ref = df.f[!duplicated(df.f$fraction),]
