@@ -86,10 +86,10 @@ alignmentCheck = function(data, referenceFile) {
     for (idx_ref in 1:nrow(df.ref))
     { # idx_ref = 1
       frac = df.ref$fraction[idx_ref]
-      referenceFile = df.ref$raws[idx_ref]
-      referenceFile
+      rFile = df.ref$raws[idx_ref]
+      rFile
       clients = df.f$raws[df.f$fraction %in% (frac-1):(frac+1)]
-      RefRounds[[idx_ref]] = list("file_ref" = referenceFile, "file_clients" = clients)
+      RefRounds[[idx_ref]] = list("file_ref" = rFile, "file_clients" = clients)
     }
     RefRounds
   }
@@ -97,7 +97,7 @@ alignmentCheck = function(data, referenceFile) {
   alignQ = data.frame()
 
   for (lRef in RefRounds)
-  {
+  { ## lRef = RefRounds[[1]]
     file_ref = lRef[["file_ref"]]
     file_clients = lRef[["file_clients"]]
     
@@ -125,6 +125,9 @@ alignmentCheck = function(data, referenceFile) {
       x$rtdiff = x$calibrated.retention.time - m;
       return(x[,c("raw.file", "id", "rtdiff", 'calibrated.retention.time')])
     })
+    alignQ_round$refFile = file_ref
+    ## remove matches to self (i.e. with rtDiff==0)
+    alignQ_round = alignQ_round[ alignQ_round$raw.file != file_ref, ]
     alignQ = rbind(alignQ, alignQ_round)
   }
   

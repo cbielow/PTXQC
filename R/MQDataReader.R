@@ -246,12 +246,16 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       }
     }
     
-    ### add abundance index columns (for both, intensity and lfq.intensity)
-    int_cols = grepv("intensity", colnames(.$mq.data))
-    .$mq.data[, sub("intensity", "AbInd", int_cols)] = apply(.$mq.data[,int_cols, drop=F], 2, function(x)
-    {
-      x / .$mq.data[,"mol..weight..kda."]
-    })
+    if ("mol..weight..kda." %in% colnames(.$mq.data)){
+      ### add abundance index columns (for both, intensity and lfq.intensity)
+      int_cols = grepv("intensity", colnames(.$mq.data))
+      .$mq.data[, sub("intensity", "AbInd", int_cols)] = apply(.$mq.data[,int_cols, drop=F], 2, function(x)
+      {
+        x / .$mq.data[,"mol..weight..kda."]
+      })
+    } else {
+      stop("MQDataReader$readMQ(): Cannot add abundance index since 'mol..weight..kda.' was not loaded from file. Did you use the correct 'type' or forgot to add the column in 'col_subset'?")
+    }
     
   } else if (type=="sm") {
     ## summary.txt special treatment

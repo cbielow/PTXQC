@@ -197,7 +197,7 @@ if (enabled_summary)
     )
   ## QC measure for contamination
   qc_sm_id = d_smy[[1]][, c("raw.file", "ms.ms.identified....")]
-  cname = "X030X.SM.MS2_ID_rate (>" %+% id_rate_great %+% ")"
+  cname = "X030X.SM.MS/MS_ID_rate (>" %+% id_rate_great %+% ")"
   qc_sm_id[, cname] = qualLinThresh(qc_sm_id$ms.ms.identified.... , id_rate_great)
   QCM[["SM.MS2_ID_rate"]] = qc_sm_id[,c("raw.file", cname)]
   
@@ -351,7 +351,8 @@ if (enabled_proteingroups)
   ##
   ## iTRAQ/TMT, reporter ion intensity boxplot
   ##
-  colsITRAQ = grepv("^reporter.intensity.[0-9].", colnames(d_pg))
+  ## either "reporter.intensity.0.groupname" or "reporter.intensity.0" (no groups)    
+  colsITRAQ = grepv("^reporter.intensity.[0-9].|^reporter.intensity.[0-9]$", colnames(d_pg))
   if (length(colsITRAQ) > 0)
   {
     colsW = colsITRAQ
@@ -756,7 +757,7 @@ if (enabled_evidence)
             ylab("count") +
             scale_x_discrete_reverse(x$fc.raw.file) +
             ylim(0, max(param_EV_protThresh, max_prot)*1.1) +
-            scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400)) +
+            scale_fill_manual(values = c("green", "#BEAED4")) +
             ggtitle("EV: Protein ID count") + 
             geom_abline(alpha = 0.5, intercept = param_EV_protThresh, slope = 0, colour = "green", linetype = "dashed", size = 1.5) +
             coord_flip()
@@ -803,9 +804,10 @@ if (enabled_evidence)
             scale_x_discrete_reverse(x$fc.raw.file) +
             ylim(0, max(param_EV_pepThresh, max_pep)*1.1) +
             geom_abline(alpha = 0.5, intercept = param_EV_pepThresh, slope = 0, colour = "green", linetype = "dashed", size = 1.5) +
-            scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400)) +
+            scale_fill_manual(values = c("green", "#BEAED4")) +
             ggtitle("EV: Peptide ID count") + 
             coord_flip()
+    #print(p)
     GPL$add(p)
     return (1)
   })
@@ -844,15 +846,19 @@ if (enabled_evidence)
       if (is.null(d_evd$fraction)) {
         refRaw = findAlignReference(d_evd)
         colFraction = c()
+        txt_subtitle = ""
+        evd_has_fractions = FALSE
       } else {
         refRaw = NA
         colFraction = "fraction"
+        txt_subtitle = "fraction: neighbour comparison"
+        evd_has_fractions = TRUE
       } 
       if (length(refRaw) != 1) {
         ggText("EVD: Alignment check", paste0("Cannot find a unique reference Raw file (files: ",paste(refRaw, collapse=", "), ")"))
       } else {
         
-        ## find RT curve (should be flat)
+        ## find RT curve based on genuine 3D peaks (should be flat)
         d_alignQ = alignmentCheck(d_evd[(d_evd$type %in% c("MULTI-MSMS")), 
                                         c("calibrated.retention.time", 
                                           "id", "raw.file", colFraction, "modified.sequence", "charge")], 
@@ -866,21 +872,6 @@ if (enabled_evidence)
             ggText("EVD: RT Distance of peptides from reference after alignment", "Alignment cannot be verfied -- no data.")
           )
         } else {
-          ## maybe for later: show original MQ calibration curve and where the alignment worked 
-          ## d_evd$rtdiff = alignQ$rtdiff[match(d_evd$id, alignQ$id)]
-          ## (grey areas indicate failure)
-          ## DEBUG:
-  #         ggplot(d_evd[(d_evd$type %in% c("MULTI-MATCH")),], aes(retention.time, retention.time.calibration)) + geom_point() + facet_wrap(~fc.raw.file)
-  #         ggplot(d_evd[(d_evd$type %in% c("MULTI-MATCH")),], aes(calibrated.retention.time, retention.time.calibration)) + geom_point() + facet_wrap(~fc.raw.file)
-           #           ggplot(d_alignQ, aes(calibrated.retention.time, retention.time.calibration)) + geom_point() + facet_wrap(~raw.file)
-#          ggplot(evd_RT_t, aes(calibrated.retention.time, retention.time.calibration)) + geom_point() + facet_wrap(~raw.file)
-#           ggplot(d_evd[(d_evd$type %in% c("MULTI-MATCH")),], aes(retention.time, retention.time.calibration, col=match.q.value)) + scale_colour_gradientn(colours = c("green", "red")) + geom_point() + facet_wrap(~fc.raw.file)
-#           
-#           ddply(d_evd, "fc.raw.file", function(x) sum(!is.na(x$match.q.value)))
-#           ddply(d_evd, "fc.raw.file", function(x) max(x$retention.time.calibration))
-#           
-#           ddply(d_alignQ, "raw.file", function(x) nrow(x))
-#           
           ## filter data (reduce PDF file size)
           evd_RT_t = thinOutBatch(d_alignQ,
                                   "calibrated.retention.time",
@@ -892,14 +883,18 @@ if (enabled_evidence)
           param_EV_MatchingTolerance = getYAML(yaml_obj, param_name_EV_MatchingTolerance, param_def_EV_MatchingTolerance)
 
           ## prepare projection in rtdiff as culmulative function
-          global_RT_range = diff(range(d_alignQ$calibrated.retention.time, na.rm=T))
+          global_RT_range = range(d_alignQ$calibrated.retention.time, na.rm=T)
           proj_align_h = ddply(d_alignQ, "raw.file", function(x) {
             r = range(x$rtdiff, na.rm=T)
-            h = hist(x$rtdiff, seq(round(r[1]-1), round(r[2]+1), by=0.25)+1/8, plot=F)
-            return (data.frame(count = cumsum(h$counts * global_RT_range / (sum(h$counts))), mid = h$mids))
+            h = hist(x$rtdiff, 
+                     breaks = sort(c( rep(c(0.99,1.01),each=2)*c(-param_EV_MatchingTolerance,param_EV_MatchingTolerance),seq(round(r[1]-1), round(r[2]+1), by=0.25)+1/8)),
+                     plot = F)
+            return (data.frame(count = global_RT_range[1] + cumsum(h$counts * diff(global_RT_range) / (sum(h$counts))), mid = h$mids))
           })
           proj_align_h$fc.raw.file = renameFile(proj_align_h$raw.file, mq$raw_file_mapping)
-          proj_align_h$matching = c("outlier", "matchable")[(abs(proj_align_h$mid)<param_EV_MatchingTolerance) + 1]
+          proj_align_h$matching = "matchable"
+          proj_align_h$matching[proj_align_h$mid < -param_EV_MatchingTolerance] = "outlier1"
+          proj_align_h$matching[proj_align_h$mid >  param_EV_MatchingTolerance] = "outlier2"
             
           ## plot alignment result
           evd_RT_t$RTdiff_in = c("green", "red")[(abs(evd_RT_t$rtdiff) > param_EV_MatchingTolerance)+1]
@@ -907,61 +902,76 @@ if (enabled_evidence)
           splitRTAlignByRawFile = function(RTdata, ylim_g)
           {
             h_sub = proj_align_h [  proj_align_h$raw.file %in% RTdata$raw.file, ]
+            if (evd_has_fractions){
+              df_fraction = data.frame(fc.raw.file = unique(RTdata$fc.raw.file))
+              df_fraction$fraction = d_evd$fraction[match(df_fraction$fc.raw.file, d_evd$fc.raw.file)]
+              df_fraction$newlabel = paste(df_fraction$fc.raw.file, "  -  fr",df_fraction$fraction)
+              ## amend fc.raw.file with fraction number
+              levels(h_sub$fc.raw.file) = df_fraction$newlabel[match(levels(h_sub$fc.raw.file), df_fraction$fc.raw.file)]
+              levels(RTdata$fc.raw.file) = df_fraction$newlabel[match(levels(RTdata$fc.raw.file), df_fraction$fc.raw.file)]
+            }
             pl = ggplot(RTdata, aes_string(x="calibrated.retention.time", y="retention.time.calibration")) + 
               ## the MaxQuant correction (plot real data, no spline, since it can be very irregular)
               geom_point(aes(color = "blue"), alpha=0.5) +
               #scale_color_identity(name = 'MaxQuant calibration', guide = 'legend', labels = c('delta RT')) +
               ## PTXQC correction
-              geom_point(aes_string(x="calibrated.retention.time", y="rtdiff", color="RTdiff_in")) + 
-              scale_colour_manual(name = 'Metric', values = c("blue"="blue", "green"="green", "red"="red"), labels=c("MQ\nRT delta", "PTXQC in", "PTXQC out")) +
-              geom_path(data = h_sub, aes_string(x="count", y="mid", linetype="matching", alpha="0.6"), color="black", size=1) +
+              geom_point(aes_string(x="calibrated.retention.time", y="rtdiff", color="RTdiff_in"), alpha=0.5) + 
+              scale_colour_manual(name = 'Metric', values = c("blue"="blue", "green"="green", "red"="red"), labels=c("MQ RT corr", "pair in", "pair out")) +
+              ## three lines, since linetypes cannot be mixed in geom_path or geom_line
+              geom_path(data = h_sub[h_sub$matching=="matchable",], aes_string(x="count", y="mid", alpha="0.6", linetype="matching"), color="black", size=1) +
+              geom_path(data = h_sub[h_sub$matching=="outlier1",], aes_string(x="count", y="mid", alpha="0.6", linetype="matching"), color="black", size=1) +
+              ## linetype outside of aes() to avoid a third legend entry
+              geom_path(data = h_sub[h_sub$matching=="outlier2",], aes_string(x="count", y="mid", alpha="0.6"), linetype="dotted", color="black", size=1) +
               #geom_hline(aes(yintercept = +param_EV_MatchingTolerance, linetype = "Ad", alpha=0.8), show_guide = T, col="grey") +
               #geom_hline(aes(yintercept = -param_EV_MatchingTolerance, linetype = "Ad", alpha=0.8), show_guide = T, col="grey") +
               scale_alpha(guide = 'none') +  ## using 'alpha' outside of aes() messes up the legend for linetype... for whatever reason
-              scale_linetype_manual("Match CDF", values=c("matchable" = 'solid', "outlier" = "dotted"), labels=c("matchable" = "in", "outlier" = "out")) +
+              scale_linetype_manual("Match CDF", values=c("matchable"="solid","outlier1"="dotted"), labels=c("matchable" = "in", "outlier1" = "out")) +
               ylim(ylim_g) +
-              xlab("corrected RT [min]") +
-              ylab("RT difference to reference [min]") +
-              facet_wrap(~ fc.raw.file) +
-              guides(colour = guide_legend(override.aes = list(linetype=0, shape=16, size=3))) + ## color legend has a linetype... get rid of it
-              ggtitle("EVD: RT distance of genuine peptides to reference after alignment")
-            print(pl)
+              xlab("corrected RT [min]\nscaled CDF probability") +
+              ylab("RT distance to reference [min]") +
+              guides(colour = guide_legend(override.aes = list(linetype=0, shape=16, size=3))) ## color legend has a linetype... get rid of it
+            
+            pl = pl + facet_wrap(~ fc.raw.file)
+            pl = addGGtitle(pl, "EVD: RT distance of genuine peptides to reference after alignment", txt_subtitle)  
+            #print(pl)
             GPL$add(pl)
             return(1)
           }
-          ylim_g = range(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), na.rm=T)
+          ylim_g = quantile(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), probs=c(0.01,0.99), na.rm=T) * 1.1
           byX(evd_RT_t, evd_RT_t$fc.raw.file, 3*3, splitRTAlignByRawFile, sort_indices = F, ylim_g)
           
           ## QC measure for alignment quality
           ## compute % of matches within matching boundary (1 min by default)
           qcAlign = ScoreInAlignWindow(d_alignQ, param_EV_MatchingTolerance)
-          qcAlign$X024X.EVD.RT_Align = qcAlign$withinRT
-          QCM[["X024X.EVD.RT_Align"]] = qcAlign[, c("raw.file", "X024X.EVD.RT_Align")]
+          qcAlign$X024X.EVD.MBR_Align = qcAlign$withinRT
+          QCM[["X024X.EVD.MBR_Align"]] = qcAlign[, c("raw.file", "X024X.EVD.MBR_Align")]
           
           #rm("evd_RT_thin")
         } ## no data
       } ## ambigous reference file
       
-      ## increase in split peaks by matching:
+      ## increase of # split peaks by MBR:
       qMBR = qualMBR(d_evd)
-      qMBR$X025X.EVD.RT_Match_Unique = 1 - qMBR$wrong.inf.ref
-      QCM[["X025X.EVD.RT_Match_Unique"]] = qMBR[, c("raw.file", "X025X.EVD.RT_Match_Unique")]
+      colname_MBR_segmentation = "X025X.EVD.MBR_Segmentation"
+      qMBR[,colname_MBR_segmentation] = 1 - qMBR$wrong.inf.ref
+      QCM[[colname_MBR_segmentation]] = qMBR[, c("raw.file", colname_MBR_segmentation)]
       
       qMBR$fc.raw.file = renameFile(qMBR$raw.file, mq$raw_file_mapping) ## add fc.raw.file column
       qMBR = qMBR[match(mq$raw_file_mapping$to, qMBR$fc.raw.file), ]    ## reorder
       uniqueRMatchByRawFile = function(RTdata)
       {
-        RTdata.m = melt(RTdata[,c("fc.raw.file", "corr.nat", "X025X.EVD.RT_Match_Unique")], id.vars="fc.raw.file")
+        RTdata.m = melt(RTdata[,c("fc.raw.file", "corr.nat", colname_MBR_segmentation)], id.vars="fc.raw.file")
+        RTdata.m$value = RTdata.m$value * 100 ## used to be scores in [0-1]
         pl = ggplot(RTdata.m) + 
           geom_bar(aes_string(x="fc.raw.file", y="value", fill="variable"), stat="identity", position="dodge") + 
-          scale_fill_manual(values = c("corr.nat"="black", "X025X.EVD.RT_Match_Unique"="green"), labels=c("native", "matched")) +
-          ylim(0, 1) +
+          scale_fill_manual(values = c("corr.nat"="green", "X025X.EVD.MBR_Segmentation"="black"), labels=c("native", "native +\nmatched")) +
+          ylim(0, 100) +
           xlab("") +
-          ylab("Unique Features [%]") +
+          ylab("uniquely annotated peaks [%]") +
           coord_flip() + 
           scale_x_discrete_reverse(factor(RTdata$fc.raw.file)) +
           theme(legend.title=element_blank()) +
-          ggtitle("EVD: Feature Segmentation due to Matching (ID Transfer)")
+          ggtitle("EVD: 3D-peak segmentation by MBR (ID Transfer)")
         #print(pl)
         GPL$add(pl)
         return(1)
@@ -1008,8 +1018,8 @@ if (enabled_evidence)
   ## 
   fcChargePlot = function(d_sub)
   {
-    #GPL$add(
-    print(
+    GPL$add(
+    #print(
       mosaicPlot(d_sub$fc.raw.file, d_sub$charge) +
              xlab("Raw file") +
              ylab("fraction [%]") +
@@ -1189,8 +1199,8 @@ if (enabled_evidence)
                         return (data.frame(med_rat = r))
                       })
                         
-  colnames(qc_MS1deCal) = c("fc.raw.file", "X026X.EVD.MS1_DeCalibration (" %+% param_EV_PrecursorTolPPM %+% ")")
-  QCM[["EVD.MS1_decalibration"]] = qc_MS1deCal
+  colnames(qc_MS1deCal) = c("fc.raw.file", "X026X.EVD.MS_Calibration (" %+% param_EV_PrecursorTolPPM %+% ")")
+  QCM[["X026X.EVD.MS_Calibration"]] = qc_MS1deCal
 
 
   
@@ -1220,8 +1230,8 @@ if (enabled_evidence)
   ## .. assume 0 centered and StdDev of observed data
   obs_par = ddply(d_evd[, c("mass.error..ppm.", "fc.raw.file")], "fc.raw.file", function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm=T), sd = sd(x$mass.error..ppm., na.rm=T)))
   qc_MS1Cal = data.frame(fc.raw.file = obs_par$fc.raw.file, 
-                         X027X.EVD.MS1_Calibration = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
-  QCM[["EVD.MS1_calibration"]] = qc_MS1Cal
+                         X027X.EVD.MS_Calibration = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
+  QCM[["X027X.EVD.MS_Calibration"]] = qc_MS1Cal
 
 
 
@@ -1234,7 +1244,7 @@ if (enabled_evidence)
   ## elaborate contaminant fraction per Raw.file (this is not possible from PG, since raw files could be merged)
   ## find top 5 contaminants (globally)
   ##
-  cat("EVD: Contamiants per Raw file ...\n")
+  cat("EVD: Contaminants per Raw file ...\n")
 
 
   ## if possible, work on protein names (since MQ1.4), else use proteinIDs
@@ -1388,7 +1398,7 @@ if (enabled_evidence)
     ##.. create a list of distributions
     l_dists = dlply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", function(x) return(x$retention.length))
     qc_evd_PeakShape = qualBestKS(l_dists)
-    colnames(qc_evd_PeakShape) = c("fc.raw.file", "X017X.EVD.RT_Peak_Similarity")
+    colnames(qc_evd_PeakShape) = c("fc.raw.file", "X017X.EVD.RT_Peak_Width")
     QCM[["EVD.PeakShape"]] = qc_evd_PeakShape
   } ## end retention length (aka peak width)
 }
@@ -1397,10 +1407,8 @@ if (enabled_evidence)
   ##
   cat("EVD: MS2 oversampling ...\n")
 
-  raws = as.factor(sort(as.character(unique(d_evd$fc.raw.file))))
-
   d_dups = ddply(d_evd, "fc.raw.file", function(x) {
-    tt <<- as.data.frame(table(x$ms.ms.count))
+    tt = as.data.frame(table(x$ms.ms.count))
     ## remove "0", since this would be MBR-features
     tt = tt[tt$Var1!=0,]
     ## make counts relative
@@ -1410,10 +1418,12 @@ if (enabled_evidence)
 
   fcnPlotOversampling = function(d_dups)
   {
+    fp = colorRampPalette( brewer.pal( 6 , "Blues" ) )
     GPL$add(
-    #  print(
+    #print(
       ggplot(d_dups) + 
          geom_bar(stat="identity", position="stack", aes_string(x = "fc.raw.file", y = "count", fill="n")) +
+         scale_fill_manual(values =c("green", "lightGreen", rev(fp(length(unique(d_dups$n)))))) +
          xlab("") +
          ylab("MS/MS counts per feature [%]") +
          ggtitle(paste0("EVD: Oversampling (identical sequence & charge & rawfile)")) + 
@@ -1424,8 +1434,8 @@ if (enabled_evidence)
   byXflex(d_dups, d_dups$fc.raw.file, 30, fcnPlotOversampling, sort_indices = F)
   ## QC measure for centered-ness of MS2-calibration
   qc_evd_twin = d_dups[d_dups$n==1,]
-  qc_evd_twin$X020X.EVD.MS2_Oversampling = qualLinThresh(qc_evd_twin$count/100)
-  QCM[["EVD.Oversampling"]] = qc_evd_twin[, c("fc.raw.file", "X020X.EVD.MS2_Oversampling")]
+  qc_evd_twin$"X020X.EVD.MS/MS_Oversampling" = qualLinThresh(qc_evd_twin$count/100)
+  QCM[["EVD.Oversampling"]] = qc_evd_twin[, c("fc.raw.file", "X020X.EVD.MS/MS_Oversampling")]
 
   #rm("d_evd")
 }  
@@ -1513,11 +1523,11 @@ if (enabled_msms)
                        function(x)
                        {
                          xx = na.omit(x$msErr);
-                         data.frame(X028X.MSMS.MS2_Calibration = qualCentered(xx))
+                         data.frame("X028X.MSMS.MS/MS_Calibration" = qualCentered(xx), check.names=F)
                        }) 
   rm("ms2_decal")
   qc_MS2_decal
-  QCM[["MSMS.MS2_Calibration"]] = qc_MS2_decal[, c("fc.raw.file", "X028X.MSMS.MS2_Calibration")]
+  QCM[["MSMS.MS2_Calibration"]] = qc_MS2_decal[, c("fc.raw.file", "X028X.MSMS.MS/MS_Calibration")]
   
   ##
   ## missed cleavages per Raw file
