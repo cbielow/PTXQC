@@ -255,16 +255,17 @@ if (enabled_proteingroups)
   { ##apparently no conditions were used, so there is just 'intensity'
     idx_int = "intensity"
   }
-  con_stats = t(sapply(idx_int, function(x) sum(as.numeric(d_pg[d_pg$contaminant, x]))/sum(as.numeric(d_pg[, x]))*100 ))
-  con_stats[is.na(con_stats)] = 0
+  con_stats_total_int = t(sapply(idx_int, function(x) log2(sum(as.numeric(d_pg[, x]), na.rm=T))))
+  con_stats_total_int = con_stats_total_int / max(con_stats_total_int)
+  con_stats = t(sapply(idx_int, function(x) sum(as.numeric(d_pg[d_pg$contaminant, x]), na.rm=T)/sum(as.numeric(d_pg[, x], na.rm=T))*100 ))
   colnames(con_stats) = simplifyNames(delLCP(idx_int))
   
   #barplot(con_stats, ylim=c(0,max(20, max(con_stats)*1.1)), main="PG: Contaminant per condition", xlab="", ylab="% intensity of contaminants", las=3,)
   #abline(a=5, b=0, col="red", lwd=4)
   plotContsPG = function(datav) {
-    datav$section = as.integer(seq(0, nrow(datav)/40, length.out=nrow(datav)))
+    datav$section = as.integer(seq(0, nrow(datav)/correctSetSize(nrow(datav),30)*0.999, length.out=nrow(datav)))
     pl = 
-      ggplot(data=datav, aes_string(x = "x", y = "y")) +
+      ggplot(data=datav, aes_string(x = "x", y = "y", alpha="LogAbd")) +
         geom_bar(stat="identity") +
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
         xlab("")  +
@@ -272,11 +273,12 @@ if (enabled_proteingroups)
         ylab("contaminant (% intensity)") +
         geom_hline(aes_string(yintercept = "5"), linetype = 'dashed') +
         facet_wrap(~ section, ncol = 1, scales="free_x")
+    #print(pl)
     return (pl)
   }
-  df.con_stats = data.frame(x=colnames(con_stats), y=as.vector(con_stats[1,]))
+  df.con_stats = data.frame(x=colnames(con_stats), y=as.vector(con_stats[1,]), LogAbd = as.vector(con_stats_total_int[1,]))
   # plot list (for later plotting)
-  pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 120, plotContsPG, sort_indices=F)
+  pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 90, plotContsPG, sort_indices=F)
   for (p in pg_plots_cont) GPL$add(p);
   
   ##
@@ -925,7 +927,7 @@ if (enabled_evidence)
               #geom_hline(aes(yintercept = +param_EV_MatchingTolerance, linetype = "Ad", alpha=0.8), show_guide = T, col="grey") +
               #geom_hline(aes(yintercept = -param_EV_MatchingTolerance, linetype = "Ad", alpha=0.8), show_guide = T, col="grey") +
               scale_alpha(guide = 'none') +  ## using 'alpha' outside of aes() messes up the legend for linetype... for whatever reason
-              scale_linetype_manual("Match CDF", values=c("matchable"="solid","outlier1"="dotted"), labels=c("matchable" = "in", "outlier1" = "out")) +
+              scale_linetype_manual("Match CDF", values=c("matchable"="solid","outlier1"="dotted"), labels=c("matchable" = "pair in", "outlier1" = "pair out")) +
               ylim(ylim_g) +
               xlab("corrected RT [min]\nscaled CDF probability") +
               ylab("RT distance to reference [min]") +
@@ -943,14 +945,18 @@ if (enabled_evidence)
           ## QC measure for alignment quality
           ## compute % of matches within matching boundary (1 min by default)
           qcAlign = ScoreInAlignWindow(d_alignQ, param_EV_MatchingTolerance)
+          if (!is.na(refRaw)) { ## rescue reference file (it will not show up in fraction-less data, and would otherwise be scored 'red')
+            qcAlign = rbind(qcAlign, data.frame(raw.file=refRaw, withinRT=1))
+          }
           qcAlign$X024X.EVD.MBR_Align = qcAlign$withinRT
           QCM[["X024X.EVD.MBR_Align"]] = qcAlign[, c("raw.file", "X024X.EVD.MBR_Align")]
           
-          #rm("evd_RT_thin")
+          ## save some memory
+          if (!exists("DEBUG_PTXQC")) rm("evd_RT_thin")
         } ## no data
       } ## ambigous reference file
       
-      ## increase of # split peaks by MBR:
+      ## increase of segmentation by MBR:
       qMBR = qualMBR(d_evd)
       colname_MBR_segmentation = "X025X.EVD.MBR_Segmentation"
       qMBR[,colname_MBR_segmentation] = 1 - qMBR$wrong.inf.ref
@@ -1070,11 +1076,11 @@ if (enabled_evidence)
   
   
   ##
-  ## histograms of mass error
+  ## barplots of mass error
   ##
   cat("EVD: Precursor Mass Error ...\n")
 
-  ## MQ seems to mess up mass recal on some (iTRAQ) samples, by reporting ppm errors which include modifications
+  ## MQ seems to mess up mass recal on some (iTRAQ/TMT) samples, by reporting ppm errors which include modifications
   ## , thus one sees >1e5 ppm, e.g. 144.10 Da
   ##  this affects both 'uncalibrated.mass.error..ppm.'   and
   ##                    'mass.error..ppm.'
@@ -1085,6 +1091,7 @@ if (enabled_evidence)
   ## The MQ list reports one case with high ppm error (8000), where the KR.count was at fault. We cannot
   ## reconstruct this.
   recal_message = ""
+  recal_message_post = ""
   ## check each raw file individually (usually its just a few who are affected)
   de_cal = ddply(d_evd, "raw.file", .fun = function(x) (quantile(abs(x$uncalibrated.mass.error..ppm.), probs = 0.5, na.rm=T)) > 1e3)
   if (any(de_cal[,2], na.rm=T))
@@ -1118,14 +1125,8 @@ if (enabled_evidence)
     }
     
     { ## this MQ version has it...
-      
-#       counts =  d_evd$k.count + d_evd$r.count
-#       idx_decal = (abs(d_evd$uncalibrated.mass.error..ppm.) > 30)
-#       hist(d_evd$mass - d_evd$m.z * d_evd$charge, 1000)
-#       unique(d_evd$mass - d_evd$m.z * d_evd$charge)
-#       hist(counts[!idx_decal])
-      
-      recal_message = "m/z recalibration bugfix applied"
+      recal_message = "MQ bug: data rescued"
+      recal_message_post = 'MQ bug: data cannot be rescued'
       
       d_evd$theomz = d_evd$mass / d_evd$charge + 1.00726
       
@@ -1143,43 +1144,35 @@ if (enabled_evidence)
         ## fix did not work
         recal_message = "m/z recalibration bugfix applied but failed\n(there are still large numbers)"
       }
-      
     }
-#      else {
-#       recal_message = "m/z recalibration bugfix cannot be applied\n(uncalibrated values not recoverable)\naffected samples are set to 0")
-#       d_evd$uncalibrated.mass.error..ppm.2[d_evd$raw.file %in% affected_raw_files ] = 0
-#     }
-    #hist(d_evd$uncalibrated.mass.error..ppm. - d_evd$uncalibrated.mass.error..ppm.2, 100000, xlim=c(-30,30))
     
     idx_overwrite = (d_evd$raw.file %in% affected_raw_files)
     ## overwrite original values
     d_evd$mass.error..ppm.[idx_overwrite] = d_evd$mass.error..ppm.2[idx_overwrite]
     d_evd$uncalibrated.mass.error..ppm.[idx_overwrite] = d_evd$uncalibrated.mass.error..ppm.2[idx_overwrite]
-
-    #max_ume = max(abs(d_evd$uncalibrated.mass.error..ppm.), na.rm=T)
-    #max_idx = which (abs(d_evd$uncalibrated.mass.error..ppm.) == max_ume)
-    #d_evd[max_idx,]
-    #iqr
     
   } else
   {
     affected_raw_files = c()
   }
   
-  
   ## some outliers have 5000ppm or so.. messing up the plot
   ## , so either remove outliers before (quantile estimation seems not robust enough) or don't plot them (default)
   plotAlignDiff = function(d_sub, affected_raw_files, ylim_g)
   {
-    d_sub$col = c("black", "red")[(d_sub$raw.file %in% affected_raw_files) + 1]
-    pl = ggplot(d_sub, col=d_sub$col) +
-        geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm."), varwidth=TRUE, outlier.shape = NA) +
-        coord_flip() +
-        ylab("ppm error") +
-        xlab("") +
-        ylim(ylim_g) +
-        scale_colour_manual(values = c("black", "red")) +
-        scale_x_discrete_reverse(d_sub$fc.raw.file)
+    if (length(affected_raw_files) > 0) d_sub$col = c("default", "bugfixed")[(d_sub$raw.file %in% affected_raw_files) + 1]
+    pl = ggplot(d_sub, col=d_sub$col)
+    if (length(affected_raw_files) > 0) {
+      pl = pl + geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
+                scale_colour_manual("", values = c("default"="black", "bugfixed"="red"))
+    } else {
+      pl = pl + geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm."), varwidth=TRUE, outlier.shape = NA)
+    }
+    pl = pl + coord_flip() +
+         ylab("ppm error") +
+         xlab("") +
+         ylim(ylim_g) +
+         scale_x_discrete_reverse(d_sub$fc.raw.file)
     pl = addGGtitle(pl, "EVD: Uncalibrated mass error", recal_message)
     #print(pl)
     GPL$add(pl)
@@ -1199,8 +1192,8 @@ if (enabled_evidence)
                         return (data.frame(med_rat = r))
                       })
                         
-  colnames(qc_MS1deCal) = c("fc.raw.file", "X026X.EVD.MS_Calibration (" %+% param_EV_PrecursorTolPPM %+% ")")
-  QCM[["X026X.EVD.MS_Calibration"]] = qc_MS1deCal
+  colnames(qc_MS1deCal) = c("fc.raw.file", "X026X.EVD.MS_PreCalibration (" %+% param_EV_PrecursorTolPPM %+% ")")
+  QCM[["X026X.EVD.MS_PreCalibration"]] = qc_MS1deCal
 
 
   
@@ -1211,27 +1204,39 @@ if (enabled_evidence)
 
   plotAlignDiffCal = function(d_sub, affected_raw_files, ylim_g)
   {
-    col = c("black", "red")[(unique(d_sub$raw.file) %in% affected_raw_files) + 1]
-    pl = ggplot(d_sub, col=d_sub$col) +
-      geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm."), varwidth=TRUE, outlier.shape = NA) +
-      coord_flip() +
+    if (length(affected_raw_files) > 0) {
+      d_sub$col = c("default", "MQ bug")[(d_sub$raw.file %in% affected_raw_files) + 1]
+      d_sub$mass.error..ppm.[d_sub$raw.file %in% affected_raw_files] = 0
+      if (all(d_sub$mass.error..ppm.==0)) d_sub$mass.error..ppm.=rnorm(nrow(d_sub),sd=0.0001, mean=mean(ylim_g))
+    }
+    pl = ggplot(d_sub, col=d_sub$col)
+    if (length(affected_raw_files) > 0) {
+      pl = pl + geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
+        scale_colour_manual("", values = c("default"="black", "MQ bug"="red"))
+    } else {
+      pl = pl + geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm."), varwidth=TRUE, outlier.shape = NA)
+    }
+    pl = pl + coord_flip() +
       ylab("ppm error") +
       xlab("") +
       ylim(ylim_g) +
-      scale_colour_manual(values = c("black", "red")) +
       scale_x_discrete_reverse(d_sub$fc.raw.file)
-    pl = addGGtitle(pl, "EVD: Calibrated mass error", recal_message)
+    pl = addGGtitle(pl, "EVD: Calibrated mass error", recal_message_post)
+    #print(pl)
     GPL$add(pl)
     return (1)
   }
   ylim_g = boxplot.stats(d_evd$mass.error..ppm.)$stats[c(1, 5)]
   byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiffCal, sort_indices=F, affected_raw_files=affected_raw_files, ylim_g=ylim_g)
+ 
   ## QC measure for post-calibration ppm error
   ## .. assume 0 centered and StdDev of observed data
-  obs_par = ddply(d_evd[, c("mass.error..ppm.", "fc.raw.file")], "fc.raw.file", function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm=T), sd = sd(x$mass.error..ppm., na.rm=T)))
-  qc_MS1Cal = data.frame(fc.raw.file = obs_par$fc.raw.file, 
-                         X027X.EVD.MS_Calibration = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
-  QCM[["X027X.EVD.MS_Calibration"]] = qc_MS1Cal
+  obs_par = ddply(d_evd[, c("mass.error..ppm.", "raw.file")], "raw.file", function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm=T), sd = sd(x$mass.error..ppm., na.rm=T)))
+  qc_MS1Cal = data.frame(raw.file = obs_par$raw.file, 
+                         X027X.EVD.MS_PostCalibration = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
+  ## bugfix will not work for postCalibration, since values are always too low
+  qc_MS1Cal$X027X.EVD.MS_PostCalibration[qc_MS1Cal$raw.file %in% affected_raw_files] = HEATMAP_NA_VALUE
+  QCM[["X027X.EVD.MS_PostCalibration"]] = qc_MS1Cal
 
 
 
@@ -1275,7 +1280,7 @@ if (enabled_evidence)
     #top5 = cont.top5.names
     #d_evd_sub = d_evd[, c("intensity", "pname", "fc.raw.file", "contaminant", "proteins", "protein.names")]
     #head(d_evd_sub)
-    
+    #dd <<- d_evd_sub
     intensity = NULL ## to make R CHECK happy...
     d_evd.cont.only_sub = d_evd_sub[d_evd_sub$contaminant,]
     ## rewrite prot names, and subsume 6th and below as 'other'
@@ -1286,15 +1291,17 @@ if (enabled_evidence)
                   function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm=T)))
     ## normalize by total intensity of raw file
     d_norm = ddply(d_evd_sub[, c("intensity", "fc.raw.file")],  "fc.raw.file", 
-                   function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm=T)))
-    d_sum$s.intensity = d_sum$s.intensity / d_norm$s.intensity[match(d_sum$fc.raw.file, d_norm$fc.raw.file)] * 100
+                   function(x) summarise(x, total.intensity=sum(as.numeric(intensity), na.rm=T)))
+    d_sum$total.intensity = d_norm$total.intensity[match(d_sum$fc.raw.file, d_norm$fc.raw.file)]
+    d_sum$LogAbd = log2(d_sum$total.intensity) / max(log2(d_sum$total.intensity))
+    d_sum$s.intensity = d_sum$s.intensity / d_sum$total.intensity * 100
     ## shorten protein-groups (at most two protein names)
     d_sum$pname = sapply(d_sum$pname, function(x) {
       p.split = unlist(strsplit(x, split=";"))
-      ## shorten entries as well (at most 20 characters)
-      p.split_s = sapply(p.split, function(x) ifelse(nchar(x)>20, paste0(substr(x, start=1, stop=18), ".."), x))
+      ## shorten entries as well (at most 15 characters)
+      p.split_s = sapply(p.split, function(x) ifelse(nchar(x)>15, paste0(substr(x, start=1, stop=13), ".."), x))
       r = ifelse(length(p.split_s)<=2, paste(p.split_s, sep="", collapse=";"),
-                                       paste0(paste(p.split_s[1:2], sep="", collapse=";"),";..."))
+                                       paste0(paste(p.split_s[1:2], sep="", collapse=";"),";.."))
       return(r)
     })
     ## order of pname determines order of bars    
@@ -1304,22 +1311,24 @@ if (enabled_evidence)
     ## value of factors determines order in the legend
     ## --> make proteins a factor, with 'other' being the first
     d_sum$pname = factor(d_sum$pname, levels=unique(c("other", d_sum$pname)))
-    as.numeric(d_sum$pname)
+    head(d_sum)
     
     ## plot
-    GPL$add(ggplot(d_sum) +
-      geom_bar(aes_string(x = "factor(fc.raw.file)", y = "s.intensity", fill = "pname"), stat="identity") +
-      xlab("")  +
-      theme_bw() +
-      ggtitle("EVD: Contaminant per Raw file") +
-      ylab("contaminant (% intensity)") +
-      scale_fill_manual(values = brewer.pal(6,"Accent")) + 
-      scale_colour_manual(values = brewer.pal(6,"Accent")) +
-      geom_hline(aes_string(yintercept = "5"), linetype='dashed') +
-      guides(fill = guide_legend(nrow = 2, ncol = 3, byrow = TRUE, reverse = T)) +
-      theme(legend.position="top", legend.title=element_blank()) +
-      coord_flip() +
-      scale_x_discrete_reverse(d_sum$fc.raw.file)
+    #GPL$add(
+    print(  
+      ggplot(d_sum, aes_string(x = "factor(fc.raw.file)", y = "s.intensity", fill = "pname")) +
+        geom_bar(aes_string(alpha = "LogAbd"), stat="identity") +
+        xlab("")  +
+        theme_bw() +
+        ggtitle("EVD: Contaminant per Raw file") +
+        ylab("contaminant (% intensity)") +
+        scale_fill_manual(values = brewer.pal(6,"Accent")) + 
+        scale_colour_manual(values = brewer.pal(6,"Accent")) +
+        geom_hline(aes_string(yintercept = "5"), linetype='dashed') +
+        guides(alpha=FALSE, fill = guide_legend(nrow = 2, ncol = 3, byrow = TRUE, reverse = T)) +
+        theme(legend.position="top", legend.title=element_blank()) +
+        coord_flip() +
+        scale_x_discrete_reverse(d_sum$fc.raw.file)
     )
     return (1)  
   }
@@ -1437,7 +1446,7 @@ if (enabled_evidence)
   qc_evd_twin$"X020X.EVD.MS/MS_Oversampling" = qualLinThresh(qc_evd_twin$count/100)
   QCM[["EVD.Oversampling"]] = qc_evd_twin[, c("fc.raw.file", "X020X.EVD.MS/MS_Oversampling")]
 
-  #rm("d_evd")
+  if (!exists("DEBUG_PTXQC")) rm("d_evd")
 }  
 
 
@@ -1525,7 +1534,7 @@ if (enabled_msms)
                          xx = na.omit(x$msErr);
                          data.frame("X028X.MSMS.MS/MS_Calibration" = qualCentered(xx), check.names=F)
                        }) 
-  rm("ms2_decal")
+  if (!exists("DEBUG_PTXQC")) rm("ms2_decal")
   qc_MS2_decal
   QCM[["MSMS.MS2_Calibration"]] = qc_MS2_decal[, c("fc.raw.file", "X028X.MSMS.MS/MS_Calibration")]
   
@@ -1560,8 +1569,6 @@ if (enabled_msms)
       t = table(x$missed.cleavages)/nrow(x)
       r = rep(0, max_mc + 1)
       names(r) = as.character(0:max_mc)
-      cat("r")
-      cat(r)
       r[names(t)] = t
       return (r)
     })
@@ -1581,7 +1588,7 @@ if (enabled_msms)
   } ## end MC check
   
  
-  rm("d_msms")
+  if (!exists("DEBUG_PTXQC")) rm("d_msms")
 }
 
 ######
@@ -1771,7 +1778,16 @@ GPL$add(mq$plotNameMapping(), ".name_mapping")
 ## plot it to PDF!
 ##
 cat("Creating PDF ...")
-pdf(report_file, onefile=T)
+PDF_writeable = F
+# we give the user a chance to make the PDF writeable to avoid having him run the whole program again
+while(!PDF_writeable){
+  pdf_open = try(pdf(report_file, onefile=T))
+  if (inherits(pdf_open, "try-error")) {
+    invisible(readline(prompt="Opening PDF for writing failed. Make sure it's NOT opened in another program (e.g. PDF Viewer). Press [enter] to try again."))
+  } else {
+    PDF_writeable=T
+  } 
+}
 print(GPL$get(".pl_params"))    # parameters
 print(GPL$get(".name_mapping")) # short file mapping (if required)
 print(GPL$get(".heatmap"))      # summary heatmap
