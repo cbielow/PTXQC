@@ -1,3 +1,6 @@
+## default value for NA's in heatmap
+HEATMAP_NA_VALUE = -Inf
+
 #'
 #' Generate a Heatmap from a list of QC measurements.
 #' 
@@ -46,8 +49,8 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   QCM_final = Reduce(function(a,b) merge(a,b,all = TRUE), QCM_shortNames)
   ## add summary column
   QCM_final$X999X.Summary = apply(QCM_final[,!grepl("fc.raw.file", colnames(QCM_final))], 1, function(row) {
-    row[is.na(row)] = 0  ## replace NA with 0, since it will bias the mean otherwise
-    return(mean(row))
+    row[is.infinite(row)] = NA  ## mask explicitly missing values, since it will bias the mean otherwise
+    return(mean(row, na.rm=T))
   })
   
   ## reorder file names
@@ -63,13 +66,15 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   
   ## some files might not be in the original list (will give NA in table)
   QCM_final.m$value[is.na(QCM_final.m$value)] = 0
+  ## some other files might be missing on purpose
+  QCM_final.m$value[is.infinite(QCM_final.m$value)] = NA
   
-  if (any(QCM_final.m$value > 1))
+  if (any(QCM_final.m$value > 1, na.rm=T))
   {
     warning("getQCHeatMap() received quality data values larger than one! This can be corrected here, but should be done upstream.")
     QCM_final.m$value[QCM_final.m$value > 1] = 1
   }
-  if (any(QCM_final.m$value < 0))
+  if (any(QCM_final.m$value < 0, na.rm=T))
   {
     warning("getQCHeatMap() received quality data values smaller than zero! This can be corrected here, but should be done upstream.")
     QCM_final.m$value[QCM_final.m$value < 0] = 0
@@ -77,23 +82,30 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   
   ## rename metrics (remove underscores and dots)
   QCM_final.m$variable = gsub("X[0-9]*X\\.", "", as.character(QCM_final.m$variable))  ## prefix sorting
-  QCM_final.m$variable = gsub("^\\s+|\\s+$", "", QCM_final.m$variable)             ## trim
+  QCM_final.m$variable = gsub("^\\s+|\\s+$", "", QCM_final.m$variable)                ## trim
   QCM_final.m$variable = gsub("_", " ", QCM_final.m$variable)
   QCM_final.m$variable = gsub("\\.", ": ", QCM_final.m$variable)
   QCM_final.m$variable2 = factor(QCM_final.m$variable, levels = unique(QCM_final.m$variable))
+  if (any(is.na(QCM_final.m$value))) QCM_final.m$dummy_col = "NA" ## use color legend for missing values
   
-  p = ggplot(QCM_final.m, aes_string(y="fc.raw.file", x="variable2")) +
-            geom_tile(aes_string(fill = "value"), colour = "white") + 
-            scale_y_discrete_reverse(QCM_final.m$fc.raw.file, breaks = ggAxisLabels) + 
-            scale_fill_gradientn(colours = c("red", "black", "green"), 
-                                 limits=c(0, 1), 
-                                 guide = guide_legend(title = "score"),
-                                 breaks=c(1,0.5,0),
-                                 labels=c("Best",0.5,"Fail")) +
-            theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-            ggtitle("Performance overview") +
-            xlab("") +
-            ylab("Raw file")
+  p = ggplot(QCM_final.m, aes_string(y="fc.raw.file", x="variable2"))
+  if (any(is.na(QCM_final.m$value))) {
+    p = p + geom_tile(aes_string(fill = "value", colour = "dummy_col")) +
+            scale_colour_manual(name="Missing", values=c("NA" = "grey50"))
+  } else {
+    p = p + geom_tile(aes_string(fill = "value"))
+  }  
+  p = p + scale_y_discrete_reverse(QCM_final.m$fc.raw.file, breaks = ggAxisLabels) + 
+          scale_fill_gradientn(colours = c("red", "black", "green"),
+                               na.value = "grey50",
+                               limits=c(0, 1), 
+                               guide = guide_legend(title = "score"),
+                               breaks=c(1,0.5,0),
+                               labels=c("best","under\nperforming","fail")) +
+          theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+          ggtitle("Performance overview") +
+          xlab("") +
+          ylab("Raw file")
   #print(p)
   return(list(plot = p, table = dcast(QCM_final.m, fc.raw.file ~ variable)))
 }  
