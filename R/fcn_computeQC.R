@@ -776,7 +776,7 @@ if (enabled_evidence)
             scale_x_discrete_reverse(x$fc.raw.file) +
             ylim(0, max(param_EV_protThresh, max_prot)*1.1) +
             scale_fill_manual(values = c("green", "#BEAED4")) +
-            ggtitle("EV: Protein ID count") + 
+            ggtitle("EVD: Protein ID count") + 
             geom_abline(alpha = 0.5, intercept = param_EV_protThresh, slope = 0, colour = "green", linetype = "dashed", size = 1.5) +
             coord_flip()
           )
@@ -823,7 +823,7 @@ if (enabled_evidence)
             ylim(0, max(param_EV_pepThresh, max_pep)*1.1) +
             geom_abline(alpha = 0.5, intercept = param_EV_pepThresh, slope = 0, colour = "green", linetype = "dashed", size = 1.5) +
             scale_fill_manual(values = c("green", "#BEAED4")) +
-            ggtitle("EV: Peptide ID count") + 
+            ggtitle("EVD: Peptide ID count") + 
             coord_flip()
     #print(p)
     GPL$add(p)
