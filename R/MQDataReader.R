@@ -153,6 +153,11 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     col_subset[!idx_keep] = "NULL"
     
     idx_keep = which(idx_keep)
+    if (sum(idx_keep) == 0) {
+      ## can happen for very old MQ files without header, or if the user just gave the wrong colClasses
+      .$mq.data = data.frame()
+      return (.$mq.data)
+    }
   }
   
   ## higher memory consumption during load (due to memory mapped files) compared to read.delim... but about 5x faster
