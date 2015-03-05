@@ -38,8 +38,7 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
   if (do_plot & show.Line)
   {
     scores$ord = connect_line_order / max(connect_line_order) * 10
-  }
-  else
+  } else
   {
     scores$ord = as.numeric(factor(rownames(data)))
   }
@@ -63,7 +62,8 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
       theme_bw()
   }
   
- 
+  correlations = NA
+  
   if (do_plot==2)
   {
     circle <- function(center=c(0,0), npoints=100)
@@ -94,7 +94,7 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
       ggtitle("Circle of correlations")
 
   }
-  return (list("PCA" = invisible(pc), "plots" = lpl))
+  return (list("PCA" = invisible(pc), "plots" = lpl, "correlations" = correlations))
 }
 
 

@@ -251,12 +251,37 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       }
     }
     
+    int_cols = grepv("intensity", colnames(.$mq.data))
+    
+    ##
+    ## apply potential fix (MQ 1.5 writes numbers in scientific notation with ',' -- which parses as String :( )
+    ##
+    int_cols_nn = (apply(.$mq.data[,int_cols, drop=F], 2, class) != "numeric")
+    if (any(int_cols_nn))
+    {
+      .$mq.data[, int_cols[int_cols_nn]] = sapply(int_cols[int_cols_nn], function(x_name)
+      {
+        x = .$mq.data[, x_name]
+        if (class(x) != "numeric")
+        {
+          warning(paste0("Warning: column '", x_name, "' in file '", file, "' is expected to contain numbers, but was classified as 'string'.",
+                         " A bug in MaxQuant 1.5.2.8 (and related?) versions causes usage of comma instead of dot for large numbers in scientific notation,",
+                         " e.g. '1,73E+011' instead of '1.73E+011'. We will try to fix this now ..."),
+                  call. = FALSE, immediate. = TRUE)
+          x = as.numeric(gsub(",",".", x))
+        }
+        return(x)
+      })
+    }
+    
+    ##
+    ## add Abundance index
+    ##
     if ("mol..weight..kda." %in% colnames(.$mq.data)){
       ### add abundance index columns (for both, intensity and lfq.intensity)
-      int_cols = grepv("intensity", colnames(.$mq.data))
       .$mq.data[, sub("intensity", "AbInd", int_cols)] = apply(.$mq.data[,int_cols, drop=F], 2, function(x)
       {
-        x / .$mq.data[,"mol..weight..kda."]
+        return (x / .$mq.data[,"mol..weight..kda."])
       })
     } else {
       stop("MQDataReader$readMQ(): Cannot add abundance index since 'mol..weight..kda.' was not loaded from file. Did you use the correct 'type' or forgot to add the column in 'col_subset'?")
