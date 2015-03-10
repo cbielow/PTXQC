@@ -79,7 +79,7 @@ report_version = paste0("v", pv)
 
 time_start = Sys.time()
 
-stats_file = paste(txt_folder, paste("report_", report_version, "_stats.txt", sep=""), sep=.Platform$file.sep)
+stats_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_stats.txt")
 unlink(stats_file)
 cat("Statistics summary:", file=stats_file, append=F, sep="\n")
 
@@ -97,10 +97,10 @@ if (extended_PDF_filename)
   }
 }
 
-report_file = paste(txt_folder, paste("report_", report_version, extra_folderRef, ".pdf", sep=""), sep=.Platform$file.sep)
-yaml_file = paste(txt_folder, paste("report_", report_version, ".yaml", sep=""), sep=.Platform$file.sep)
-heatmap_values_file = paste(txt_folder, paste("report_", report_version, "_heatmap.txt", sep=""), sep=.Platform$file.sep)
-R_plots_file = paste(txt_folder, paste("report_", report_version, "_plots.Rdata", sep=""), sep=.Platform$file.sep)
+report_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, extra_folderRef, ".pdf")
+yaml_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, ".yaml")
+heatmap_values_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_heatmap.txt")
+R_plots_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_plots.Rdata")
 
 ## prepare for readMQ()
 mq = MQDataReader$new()
