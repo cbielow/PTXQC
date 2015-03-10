@@ -66,7 +66,7 @@ txt_files$groups = "proteinGroups.txt"
 txt_files$evd = "evidence.txt"
 txt_files$msms = "msms.txt"
 txt_files$msmsScan = "msmsScans.txt"
-txt_files = lapply(txt_files, function(x) paste(txt_folder, x, sep="\\"))
+txt_files = lapply(txt_files, function(x) paste(txt_folder, x, sep=.Platform$file.sep))
 
 
 # ideas:
@@ -79,7 +79,7 @@ report_version = paste0("v", pv)
 
 time_start = Sys.time()
 
-stats_file = paste(txt_folder, "\\report_", report_version, "_stats.txt", sep="")
+stats_file = paste(txt_folder, paste("report_", report_version, "_stats.txt", sep=""), sep=.Platform$file.sep)
 unlink(stats_file)
 cat("Statistics summary:", file=stats_file, append=F, sep="\n")
 
@@ -97,10 +97,10 @@ if (extended_PDF_filename)
   }
 }
 
-report_file = paste(txt_folder, "\\report_", report_version, extra_folderRef, ".pdf", sep="")
-yaml_file = paste(txt_folder, "\\report_", report_version, ".yaml", sep="")
-heatmap_values_file = paste(txt_folder, "\\report_", report_version, "_heatmap.txt", sep="")
-R_plots_file = paste(txt_folder, "\\report_", report_version, "_plots.Rdata", sep="")
+report_file = paste(txt_folder, paste("report_", report_version, extra_folderRef, ".pdf", sep=""), sep=.Platform$file.sep)
+yaml_file = paste(txt_folder, paste("report_", report_version, ".yaml", sep=""), sep=.Platform$file.sep)
+heatmap_values_file = paste(txt_folder, paste("report_", report_version, "_heatmap.txt", sep=""), sep=.Platform$file.sep)
+R_plots_file = paste(txt_folder, paste("report_", report_version, "_plots.Rdata", sep=""), sep=.Platform$file.sep)
 
 ## prepare for readMQ()
 mq = MQDataReader$new()
@@ -121,7 +121,7 @@ if (enabled_parameters)
   ## seperate FASTA files (usually they destroy the layout)
   idx_fastafile = grepl("fasta file", d_parAll$parameter, ignore.case = T)
   d_par_file = d_parAll[idx_fastafile, ]
-  fasta_files = sapply(unlist(strsplit(d_par_file$value, "\n")), function(x) rev(strsplit(x,"\\", fixed=T)[[1]])[1])
+  fasta_files = sapply(unlist(strsplit(d_par_file$value, "\n")), function(x) rev(strsplit(x,.Platform$file.sep, fixed=T)[[1]])[1])
   d_par = d_parAll[!idx_fastafile, ]
   ## remove duplicates
   d_par = d_par[!duplicated(d_par$parameter),]
