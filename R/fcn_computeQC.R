@@ -121,7 +121,7 @@ if (enabled_parameters)
   ## seperate FASTA files (usually they destroy the layout)
   idx_fastafile = grepl("fasta file", d_parAll$parameter, ignore.case = T)
   d_par_file = d_parAll[idx_fastafile, ]
-  fasta_files = sapply(unlist(strsplit(d_par_file$value, "\n")), function(x) rev(strsplit(x,.Platform$file.sep, fixed=T)[[1]])[1])
+  fasta_files = sapply(unlist(strsplit(d_par_file$value, "\n")), function(x) rev(strsplit(x,"\\", fixed=T)[[1]])[1])
   d_par = d_parAll[!idx_fastafile, ]
   ## remove duplicates
   d_par = d_par[!duplicated(d_par$parameter),]
