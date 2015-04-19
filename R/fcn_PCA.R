@@ -48,18 +48,24 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
   # plot of observations
   if (do_plot)
   {
+    
+    var_PC1 = round(pc$sdev[1]^2 / sum(pc$sdev^2) * 100)
+    var_PC2 = round(pc$sdev[2]^2 / sum(pc$sdev^2) * 100)
+    
     pl = ggplot(data=scores, aes_string(x = "PC1", y = "PC2"));
     if (show.Line) pl = pl + geom_path(aes_string(x = "pathX", y = "pathY", color = "ord", alpha = "0.5"))
     pl = pl + scale_colour_gradient(low="red", high="darkgreen")
-    pl = pl + gg_layer
-    lpl[[1]] = 
-      pl +
-      geom_point(aes_string(colour = "ord"), size = 1) +
-      geom_text(size = 3, angle=0, aes_string(label = "class", colour = "ord", vjust = "1")) +
-      geom_hline(yintercept=0, colour="gray65") +
-      #theme(panel.background=element_rect("black")) +
-      geom_vline(xintercept=0, colour="gray65") +
-      theme_bw()
+    pl = pl + 
+              gg_layer + 
+              geom_point(aes_string(colour = "ord"), size = 1) +
+              geom_text(size = 3, angle=0, aes_string(label = "class", colour = "ord", vjust = "1")) +
+              geom_hline(yintercept=0, colour="gray65") +
+              #theme(panel.background=element_rect("black")) +
+              geom_vline(xintercept=0, colour="gray65") +
+              theme_bw() + 
+              xlab(paste0("PC #1 (", var_PC1, "%)")) +
+              ylab(paste0("PC #2 (", var_PC2, "%)"))
+    lpl[[1]] = pl
   }
   
   correlations = NA

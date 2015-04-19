@@ -408,6 +408,7 @@ if (enabled_proteingroups)
     data = data[, colSums(data, na.rm=T) > 0, drop=F]
     rownames(data) = simplifyNames(strings = rownames(data), infix_iterations = 2)
     lpl = try(getPCA(data = data, gg_layer = ggtitle(paste("PG: PCA\n", sub(".", " ", cond, fixed=T))))[["plots"]])
+    #print(lpl)
     if (!inherits(lpl, "try-error")) for (pl in lpl) GPL$add(pl);
   }
   
@@ -1055,6 +1056,7 @@ if (enabled_evidence)
       #head(qMBRSeg_Dist)
       #hist(qMBRSeg_Dist$rtdiff, 1000, xlim=c(0,10))
       #hist(qMBRSeg_Dist$rtdiff_bg, 1000, xlim=c(0,10), add=T, col="red")
+      ## the allowed RT delta is given in 'd_evd.m.d_med' (estimated from global peak width for each file)
       qMBRSeg_Dist_r = inMatchWindow(qMBRSeg_Dist, "rtdiff", df.allowed.deltaRT = d_evd.m.d_med)
       qMBRSeg_Dist_r_bg = inMatchWindow(qMBRSeg_Dist, "rtdiff_bg", df.allowed.deltaRT = d_evd.m.d_med)
       ## puzzle together final picture
