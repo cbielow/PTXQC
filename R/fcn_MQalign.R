@@ -185,6 +185,10 @@ ScoreInAlignWindow = function(data, allowed.deltaRT = 1)
 #' For every comparison made, we report the RT difference. If alignment worked perfectly, the differences are very small (<1 min),
 #' i.e. the pairs are accidentally split 3D peaks.
 #' 
+#' Note: We found early MaxQuant versions (e.g. 1.2.2.5) to have an empty 'modified.sequence' column for 'MULTI-MATCH' entries.
+#' The sequence which SHOULD be present is equal to the immediate upper row. This is what we use to guess the sequence.
+#' However, this relies on the data.frame not being subsetted before (we can sort using the 'id' column)!
+#' 
 #' @param data A data.frame with columns 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'raw.file'
 #' @return A data.frame containing the RT diff for each pair found in a Raw file.
 #'
@@ -193,7 +197,7 @@ ScoreInAlignWindow = function(data, allowed.deltaRT = 1)
 idTransferCheck = function(data) {
   colnames(data) = tolower(colnames(data))
   
-  if (!all(c('type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'fc.raw.file') %in% colnames(data)))
+  if (!all(c('id', 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'fc.raw.file') %in% colnames(data)))
   {
     stop("idTransferCheck(): columns missing!")  
   }
@@ -201,13 +205,28 @@ idTransferCheck = function(data) {
   {
     stop('idTransferCheck(): scan types missing! Required: "MULTI-MSMS" and "MULTI-MATCH".')  
   }
-  #data = d_evd
+  
+  ## check if data is missing
+  if (unique(data$modified.sequence[data$type=="MULTI-MATCH"])[1]=="")
+  {
+    warning(immediate.=T, "idTransferCheck(): Input data has empty cells for column 'modified.sequence' of type 'MULTI-MATCH'. Early MaxQuant versions (e.g. 1.2.2) have this problem. We will try to reconstruct the data.")
+    ## use the preceeding sequence (and hope that there are no missing rows in between)
+    data = data[order(data$id), ]
+    ## find blocks of MATCHed rows ...
+    idx_mm = which(data$type=="MULTI-MATCH") ## row index
+    head(idx_mm)
+    idx_block_start = idx_mm[ c(1, which(diff(idx_mm)>1) + 1) ] ## index to block of MATCHES
+    head(idx_block_start)
+    idx_block_end = c(idx_mm[match(idx_block_start, idx_mm)[-1]-1], idx_mm[length(idx_mm)])
+    head(idx_block_end)
+    data$modified.sequence[idx_mm] = rep(data$modified.sequence[idx_block_start-1],
+                                         idx_block_end-idx_block_start+1)
+  }
+  
   data$seq_charge = paste(factor(data$modified.sequence), data$charge, sep="_")
   alignQ = ddply(data[,c("fc.raw.file", "type", "calibrated.retention.time", "seq_charge")], "fc.raw.file", function(x) {
     ## retain only stuff which has the potential to be a pair
     seqs = intersect(x$seq_charge[x$type=="MULTI-MSMS"], x$seq_charge[x$type=="MULTI-MATCH"])
-    #seqs = x$seq_charge[x$type=="MULTI-MSMS"]
-    #seqs = x$seq_charge[x$type=="MULTI-MATCH"]
     x_sub = x[x$seq_charge %in% seqs,]
     if (nrow(x_sub)==0) return(data.frame())
     ## for all pairs...
