@@ -1288,31 +1288,33 @@ if (enabled_evidence)
     }
   }
   
-  ## some outliers have 5000ppm or so.. messing up the plot
-  ## , so either remove outliers before (quantile estimation seems not robust enough) or don't plot them (default)
-  plotAlignDiff = function(d_sub, affected_raw_files, ylim_g)
+  plotPCUnCal = function(d_sub, affected_raw_files, ylim_g)
   {
     if (length(affected_raw_files) > 0) d_sub$col = c("default", "bugfixed")[(d_sub$raw.file %in% affected_raw_files) + 1]
     pl = ggplot(d_sub, col=d_sub$col)
     if (length(affected_raw_files) > 0) {
       pl = pl + geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
-                scale_colour_manual("", values = c("default"="black", "bugfixed"="red"))
+        scale_colour_manual("", values = c("default"="black", "bugfixed"="red"))
     } else {
       pl = pl + geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm."), varwidth=TRUE, outlier.shape = NA)
     }
-    pl = pl + coord_flip() +
-         ylab("ppm error") +
-         xlab("") +
-         ylim(ylim_g) +
-         scale_x_discrete_reverse(d_sub$fc.raw.file)
+    pl = pl +
+      ylab("ppm error") +
+      xlab("") +
+      ylim(ylim_g) +
+      scale_x_discrete_reverse(d_sub$fc.raw.file) +
+      geom_hline(yintercept = c(-param_EV_PrecursorTolPPM, param_EV_PrecursorTolPPM), colour="red", linetype = "longdash") +  ## == vline for coord_flip
+      coord_flip()
     pl = addGGtitle(pl, "EVD: Uncalibrated mass error", recal_message)
     #print(pl)
     GPL$add(pl)
     return(1)
   }
-  ylim_g = boxplot.stats(d_evd$uncalibrated.mass.error..ppm.)$stats[c(1, 5)]
-  byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiff, sort_indices=F, affected_raw_files=affected_raw_files, ylim_g)
-
+  ## some outliers can have ~5000ppm, blowing up the plot margins
+  ## --> remove outliers 
+  ylim_g = range(boxplot.stats(d_evd$uncalibrated.mass.error..ppm.)$stats[c(1, 5)], c(-param_EV_PrecursorTolPPM, param_EV_PrecursorTolPPM) * 1.05)
+  byXflex(d_evd, d_evd$fc.raw.file, 20, plotPCUnCal, sort_indices=F, affected_raw_files=affected_raw_files, ylim_g)
+  
   
   qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
                       function(x) {
@@ -1332,7 +1334,21 @@ if (enabled_evidence)
   ##
   cat("EVD: Precursor Mass Error (post calibration) ...\n")
 
-  plotAlignDiffCal = function(d_sub, affected_raw_files, ylim_g)
+  param_name_EV_PrecursorTolPPMmainSearch = "File$Evidence$MQpar_mainSearchTol_num"
+  param_def_EV_PrecursorTolPPMmainSearch = NA  ## we do not dare to have a default, since it ranges from 6 - 4.5 ppm across MQ versions
+  param_EV_PrecursorTolPPMmainSearch = getYAML(yaml_obj, param_name_EV_PrecursorTolPPMmainSearch, param_def_EV_PrecursorTolPPMmainSearch)
+  if (param_useMQPAR) {
+    v = getMQPARValue(txt_files$mqpar, "mainSearchTol") ## will also warn() if file is missing
+    if (!is.null(v)) {
+      param_EV_PrecursorTolPPMmainSearch = setYAML(yaml_obj, param_name_EV_PrecursorTolPPMmainSearch, as.numeric(v))
+    }
+  }
+  if (is.na(param_EV_PrecursorTolPPMmainSearch))
+  {
+    warning("PTXQC: Cannot draw borders for calibrated mass error, since neither 'File$Evidence$MQpar_mainSearchTol_num' is set nor a mqpar.xml file is present!", immediate.=T)
+  }
+  
+  plotPCCal = function(d_sub, affected_raw_files, ylim_g)
   {
     if (length(affected_raw_files) > 0) {
       d_sub$col = c("default", "MQ bug")[(d_sub$raw.file %in% affected_raw_files) + 1]
@@ -1346,19 +1362,23 @@ if (enabled_evidence)
     } else {
       pl = pl + geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm."), varwidth=TRUE, outlier.shape = NA)
     }
-    pl = pl + coord_flip() +
+    if (!is.na(param_EV_PrecursorTolPPMmainSearch)) {
+      pl = pl + geom_hline(yintercept = c(-param_EV_PrecursorTolPPMmainSearch, param_EV_PrecursorTolPPMmainSearch), colour="red", linetype = "longdash")  ## == vline for coord_flip
+    } 
+    pl = pl +
       ylab("ppm error") +
       xlab("") +
       ylim(ylim_g) +
-      scale_x_discrete_reverse(d_sub$fc.raw.file)
+      scale_x_discrete_reverse(d_sub$fc.raw.file) +
+      coord_flip()
     pl = addGGtitle(pl, "EVD: Calibrated mass error", recal_message_post)
     #print(pl)
     GPL$add(pl)
     return (1)
   }
-  ylim_g = boxplot.stats(d_evd$mass.error..ppm.)$stats[c(1, 5)]
-  byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiffCal, sort_indices=F, affected_raw_files=affected_raw_files, ylim_g=ylim_g)
- 
+  ylim_g = range(na.rm=T, boxplot.stats(d_evd$mass.error..ppm.)$stats[c(1, 5)], c(-param_EV_PrecursorTolPPMmainSearch, param_EV_PrecursorTolPPMmainSearch) * 1.05)
+  byXflex(d_evd, d_evd$fc.raw.file, 20, plotPCCal, sort_indices=F, affected_raw_files=affected_raw_files, ylim_g=ylim_g)
+  
   ## QC measure for post-calibration ppm error
   ## .. assume 0 centered and StdDev of observed data
   obs_par = ddply(d_evd[, c("mass.error..ppm.", "raw.file")], "raw.file", function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm=T), sd = sd(x$mass.error..ppm., na.rm=T)))
