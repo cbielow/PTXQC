@@ -2,46 +2,6 @@
 #source("http://bioconductor.org/biocLite.R")
 #biocLite("Biobase")
 
-#yamlConfig = "foo:\n bar: 456 \n"
-#yamlObj = yaml.load(yamlConfig)
-#eval(parse(text="yamlObj$bla$foo = 2"))
-#yamlObj
-#useP = getYAML(yamlObj, "SEC_Parameters$use", TRUE)
-
-#' Query a YAML object for a certain parameter.
-#' 
-#' If the object has the param, then return it.
-#' If the param is unknown, create it with default value and return the default.
-#' 
-#' @note This function has a side-effect: it updates the variable 'config' in the calling environment!!!
-#' 
-#' @param config     A Yaml object as created by \code{\link[yaml]{yaml.load}}
-#' @param param_name A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"
-#' @param default    If seeked value is unknown, this will be used as new value
-#' 
-#' @return The stored value (might be the default, if no value was present)
-#'
-#' @export
-#'
-getYAML = function(config, param_name, default)
-{
-  orig_var = deparse(substitute(config)) ## do this BEFORE accessing 'config'
-  #print(orig_var)
-  pval = eval(parse(text=paste0("config$", param_name))) 
-  if (is.null(pval))
-  { ## param not known yet --> add
-    expr = paste0("config$", param_name, " = ", quote(default))
-    #cat("parsing expr: ", expr)
-    eval(parse(text=expr)) 
-    #print("new obj:");  #print(config)
-    assign(x=orig_var, value=config, pos=parent.frame(1))
-    return (default)
-  } else
-  {
-    return (pval)
-  }
-}
-
 
 #' Removes the longest common prefix (LCP) from a vector of strings.
 #' 

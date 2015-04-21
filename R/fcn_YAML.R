@@ -1,3 +1,71 @@
+
+#yamlConfig = "foo:\n bar: 456 \n"
+#yamlObj = yaml.load(yamlConfig)
+#eval(parse(text="yamlObj$bla$foo = 2"))
+#yamlObj
+#useP = getYAML(yamlObj, "SEC_Parameters$use", TRUE)
+
+#' Query a YAML object for a certain parameter.
+#' 
+#' If the object has the param, then return it.
+#' If the param is unknown, create it with the given default value and return the default.
+#' 
+#' @note This function has a side-effect: it updates the parameter passed as 'config' in the calling environment!!!
+#' 
+#' @param config     A Yaml object as created by \code{\link[yaml]{yaml.load}}
+#' @param param_name A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"
+#' @param default    If seeked value is unknown, this will be used as new value
+#' 
+#' @return The stored value (might be the default, if no value was present)
+#'
+#' @export
+#'
+getYAML = function(config, param_name, default)
+{
+  orig_var = deparse(substitute(config)) ## do this BEFORE accessing 'config'
+  #print(orig_var)
+  pval = eval(parse(text=paste0("config$", param_name))) 
+  if (is.null(pval))
+  { ## param not known yet --> add
+    expr = paste0("config$", param_name, " = ", quote(default))
+    #cat("parsing expr: ", expr)
+    eval(parse(text=expr)) 
+    #print("new obj:");  #print(config)
+    assign(x=orig_var, value=config, pos=parent.frame(1))
+    return (default)
+  } else
+  {
+    return (pval)
+  }
+}
+
+
+#' Set a YAML parameter to a certain value.
+#' 
+#' @note This function has a side-effect: it updates the parameter passed as 'config' in the calling environment!!!
+#' 
+#' @param config     A Yaml object as created by \code{\link[yaml]{yaml.load}}
+#' @param param_name A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"
+#' @param value      New value to set
+#' 
+#' @return The value
+#'
+#' @export
+#'
+setYAML = function(config, param_name, value)
+{
+  orig_var = deparse(substitute(config)) ## do this BEFORE accessing 'config'
+  #print(orig_var)
+  expr = paste0("config$", param_name, " = ", quote(value))
+  #cat("parsing expr: ", expr)
+  eval(parse(text=expr)) 
+  #print("new obj:");  #print(config)
+  assign(x=orig_var, value=config, pos=parent.frame(1))
+  cat("Setting parameter '", param_name, "' using external data to '", value, "'.\n", sep="")
+  return (value)
+}
+
+
 #'
 #' Write YAML config (including some documentation) to a YAML file
 #' 
@@ -32,12 +100,16 @@ writeYAML = function(filename, yaml_obj)
 #
 # By default (no special ending) parameters are BINARY (yes or no).
 # Parameters ending in 'wA' (== 'withAuto') offer a heuristic to decide if something should be plotted.
-# Finally, numerical parameters... well.. are numerical (usually integer).
+# Finally, numerical parameters... well... are numerical (usually integer).
 #
-# Parameters whose name contains 'MQ_' should be matched to the parameters set in MaxQuant.
-# E.g. 'File$Evidence$MQ_MatchingTolerance_num' is the matching (not alignment!) tolerance
+# Parameters whose name starts with 'MQpar_' should be matched to the parameters set in MaxQuant.
+# E.g. 'File$Evidence$MQpar_MatchingTimeWindow_num' is the matching (not alignment!) tolerance
 #      for Match-between-Runs, and has a default of 1 (minute).
-#      Older MQ version prior to MQ1.4 allowed 2 minutes.
+#      Older MQ version prior to MaxQuant 1.4 allowed 2 minutes, very recent ones use 0.7 minutes.
+# The parameter 'PTXQC$UseLocalMQPar' controls if the mqpar.xml file will be looked up or not. 
+# It needs to be present within this txt folder (i.e. you need to copy it here!).
+# If the mqpar.xml file is not found, a warning will be issued and the internal PTXQC default will
+# be used (bearing the risk of being inaccurate).
 #
 # Furthermore, there is the SpecialContaminants section, where you can trigger the generation of a plot
 # which just shows the fraction of proteins containing a certain string.

@@ -58,6 +58,13 @@ GPL = ObjHandler$new()
 ## used for heat map later on
 QCM = list()
 
+## determines if a local mqpar.xml should be used to grep all YAML parameters whose name starts with "MQpar_" from the
+## original mqpar.xml instead of the yaml.config. The "MQpar_..." param from the config
+## will be ignored and the newly written yaml.config will contain the values from mqpar.xml.
+param_name_PTXQC_UseLocalMQPar = "PTXQC$UseLocalMQPar"
+param_def_PTXQC_UseLocalMQPar = TRUE
+param_useMQPAR = getYAML(yaml_obj, param_name_PTXQC_UseLocalMQPar, param_def_PTXQC_UseLocalMQPar)
+
 
 txt_files = list()
 txt_files$param = "parameters.txt"
@@ -66,6 +73,7 @@ txt_files$groups = "proteinGroups.txt"
 txt_files$evd = "evidence.txt"
 txt_files$msms = "msms.txt"
 txt_files$msmsScan = "msmsScans.txt"
+txt_files$mqpar = "mqpar.xml"
 txt_files = lapply(txt_files, function(x) paste(txt_folder, x, sep=.Platform$file.sep))
 
 
@@ -967,10 +975,17 @@ if (enabled_evidence)
                                   "raw.file")
           
           ## param
-          param_name_EV_MatchingTolerance = "File$Evidence$MQ_MatchingTolerance_num"
+          param_name_EV_MatchingTolerance = "File$Evidence$MQpar_MatchingTimeWindow_num"
           param_def_EV_MatchingTolerance = 1
           param_EV_MatchingTolerance = getYAML(yaml_obj, param_name_EV_MatchingTolerance, param_def_EV_MatchingTolerance)
-
+          if (param_useMQPAR) {
+            v = getMQPARValue(txt_files$mqpar, "matchingTimeWindow") ## will also warn() if file is missing
+            if (!is.null(v)) {
+              param_EV_MatchingTolerance = setYAML(yaml_obj, param_name_EV_MatchingTolerance, as.numeric(v))
+            }
+          }
+          
+          
           ## prepare projection in rtdiff as culmulative function
           global_RT_range = range(d_alignQ$calibrated.retention.time, na.rm=T)
           proj_align_h = ddply(d_alignQ, "raw.file", function(x) {
@@ -1262,6 +1277,17 @@ if (enabled_evidence)
     affected_raw_files = c()
   }
   
+  
+  param_name_EV_PrecursorTolPPM = "File$Evidence$MQpar_firstSearchTol_num"
+  param_def_EV_PrecursorTolPPM = 20
+  param_EV_PrecursorTolPPM = getYAML(yaml_obj, param_name_EV_PrecursorTolPPM, param_def_EV_PrecursorTolPPM)
+  if (param_useMQPAR) {
+    v = getMQPARValue(txt_files$mqpar, "firstSearchTol") ## will also warn() if file is missing
+    if (!is.null(v)) {
+      param_EV_PrecursorTolPPM = setYAML(yaml_obj, param_name_EV_PrecursorTolPPM, as.numeric(v))
+    }
+  }
+  
   ## some outliers have 5000ppm or so.. messing up the plot
   ## , so either remove outliers before (quantile estimation seems not robust enough) or don't plot them (default)
   plotAlignDiff = function(d_sub, affected_raw_files, ylim_g)
@@ -1287,9 +1313,7 @@ if (enabled_evidence)
   ylim_g = boxplot.stats(d_evd$uncalibrated.mass.error..ppm.)$stats[c(1, 5)]
   byXflex(d_evd, d_evd$fc.raw.file, 20, plotAlignDiff, sort_indices=F, affected_raw_files=affected_raw_files, ylim_g)
 
-  param_name_EV_PrecursorTolPPM = "File$Evidence$MQ_PrecursorTolPPM"
-  param_def_EV_PrecursorTolPPM = 20
-  param_EV_PrecursorTolPPM = getYAML(yaml_obj, param_name_EV_PrecursorTolPPM, param_def_EV_PrecursorTolPPM)
+  
   qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
                       function(x) {
                         x = na.omit(x$uncalibrated.mass.error..ppm.)
