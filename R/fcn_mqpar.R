@@ -3,7 +3,9 @@
 #' 
 #' If the file has the param, then return it as string.
 #' If the file is missing, warning is shown and NULL is returned.
-#' If the param (i.e. XML tag) is unknown, ambiguous or cannot be extracted, the program will quit (since this is a hard error)
+#' If the param (i.e. XML tag) is unknown or cannot be extracted, the program will quit (since this is a hard error).
+#' When multiple occurrences of the param are found (usually due to parameter groups), we test if the values are all identical.
+#' If so, the value is returned. If the values are different, a warning is emitted and NULL is returned.
 #' 
 #' E.g. calling getMQPARValue("mqpar.xml", "firstSearchTol")
 #' will look up the line
@@ -21,7 +23,7 @@
 getMQPARValue = function(mqpar_filename, param_name)
 {
   #param_name = "firstSearchTol"
-  #mqpar_filename = "mqpar_MQ15_MBRon.xml"
+  #mqpar_filename = txt_files$mqpar
   ## TODO: at some point we might use a real XML parser, but for now, this would be overkill and
   ##       also add another dependency library
   if (!file.exists(pattern=mqpar_filename)) {
@@ -33,14 +35,23 @@ getMQPARValue = function(mqpar_filename, param_name)
   
   lines = readLines(con = mqpar_filename, warn = F)
   idx = grep(param_name, lines)
-  if (length(idx) != 1) {
-    stop("getMQPARValue(): The parameter '", param_name, "' was found more than once in the file '", mqpar_filename, "'. Cannot resolve ambiguity. Please contact the package support.", immediate. = T)
-  }
-  result = gsub(paste0("[ ]*<", param_name, ">(.*)</", param_name, ">[ ]*"), "\\1", lines[idx])
-  if (length(grep(param_name, result)) > 0)
+  ## is the tag present multiple times? (if yes, we found parameter groups)
+  results = gsub(paste0("[ ]*<", param_name, ">(.*)</", param_name, ">[ ]*"), "\\1", lines[idx])
+  
+  ## if regex did not work, the whole line will be returned, including the tag
+  if (length(grep(param_name, results)) > 0)
   {
-    stop("getMQPARValue(): The parameter '", param_name, "' was found but could not be extracted from the line '", lines[idx], "'. Please contact the package support.", immediate. = T)
+    stop("getMQPARValue(): The parameter '", param_name, "' was found but could not be extracted from the line(s)\n  ", paste(lines[idx], collapse="\n  "), "\n  Please contact the package support.", call.=F)
   }
   
-  return (result)
+  if (length(unique(results)) > 1) {
+    warning("getMQPARValue(): The parameter '", param_name, "' was found more than once in the file '", mqpar_filename, "' with different values (probably due to usage of parameter groups).",
+            " PTXQC currently cannot deal with that -- the YAML param is going to be used. Sorry.", immediate. = T);
+    return (NULL);
+  } else if (length(results) == 0) {
+    stop("getMQPARValue(): The parameter '", param_name, "' was not found in the file '", mqpar_filename, "'. Please contact the package support.", call.=F);
+  }
+  
+  ## all tests passed, return the unique result
+  return (results[1])
 }
