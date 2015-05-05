@@ -109,4 +109,56 @@ boxplotCompare <- function(data,
 }
 
 
+#'
+#' Extract fragment mass deviation errors from a data.frame from msms.txt
+#' 
+#' Given a data.frame as obtainable from a msms.txt with 
+#'  - a 'mass.analyzer' column which contains only a single value for the whole column
+#'  - a 'mass.deviations..da.' and (if available) 'mass.deviations..ppm.'
+#'  - a 'masses' column (only required if 'mass.deviations..ppm.' is unavailable and the mass.analyzer
+#'    indicates hig-res data)
+#' 
+#' Mass deviations are extracted from the columns, e.g. each cell containing values separated by
+#' semicolons is split into single values. The appropriate unit is chosen (Da or ppm, depending on
+#' ITMS or FTMS data). Also the fragmentation type can be used: CID indicates ITMS, HCD to FTMS.
+#' This is not 100% safe, but older MQ versions do not report the mass analyzer properly.
+#' 
+#' If ppm mass deviations are not available, errors in Da will be converted to ppm using the corresponding mass values.
+#' 
+#' @param x Data frame in long format with numerical expression data
+#' @return  Data frame with mass errors ('msErr') and their 'unit' (Da or ppm)
+#' 
+#' @export
+#' 
+getFragmentErrors = function(x)
+{
+  ## require only one mass analyzer type:
+  stopifnot(length(unique(x$mass.analyzer))==1)
+  stopifnot(all(c("mass.analyzer", "mass.deviations..da.") %in% colnames(x)))
+  
+  convert_Da2PPM = FALSE
+  if (grepl("ITMS|TOF|CID", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x)))
+  {
+    ms2_unit = "[Da]"; ms2_col = "mass.deviations..da."
+  } else
+    if (grepl("FTMS|HCD", x$mass.analyzer[1]) & ("mass.deviations..ppm." %in% colnames(x)))
+    {
+      ms2_unit = "[ppm]"; ms2_col = "mass.deviations..ppm."
+    } else
+      if (grepl("FTMS|HCD", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x)))
+      {
+        ## we know its high resolution, but this MQ version only gave us Dalton mass deviations
+        ## --> convert back to ppm
+        ms2_unit = "[ppm]"; ms2_col = "mass.deviations..da."
+        convert_Da2PPM = TRUE
+      }
+  err = unlist(strsplit(paste(x[, ms2_col], sep="", collapse=";"), split=";", fixed=T))
+  if (convert_Da2PPM) {
+    stopifnot("masses" %in% colnames(x))
+    mass = unlist(strsplit(paste(x$masses, sep="", collapse=";"), split=";", fixed=T))
+    err = as.numeric(err) / as.numeric(mass) * 1e6
+  }
+  ## return as character, otherwise it will get converted to factor by ddply?
+  return(data.frame(msErr = as.character(err), unit = ms2_unit))
+}
 

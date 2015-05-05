@@ -1561,7 +1561,7 @@ if (enabled_msms)
   #d_msms_s = mq$readMQ(txt_files$msms, type="msms", filter = "", nrows=10)
   #colnames(d_msms_s)
   #head(d_msms)
-  d_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c("Missed\\.cleavages", "^Raw.file$", "^mass.deviations", "reverse", "^evidence.id$"), check_invalid_lines = F)
+  d_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c("Missed\\.cleavages", "^Raw.file$", "^mass.deviations", "^masses$", "^mass.analyzer$", "fragmentation", "reverse", "^evidence.id$"), check_invalid_lines = F)
   
   d_msms = d_msms[order(match(as.character(d_msms$fc.raw.file), mq$raw_file_mapping$to)),]
   ## sort fc.raw.file's factor values as well
@@ -1571,71 +1571,83 @@ if (enabled_msms)
   ##  MS2 fragment decalibration
   ##
   cat("MSMS: MS2 fragment decalibration ...\n")
+  ## older MQ versions do not have 'mass.analyzer' or 'mass.deviations..ppm.'
+  ## , so we use fragmentation instead (this is a little risky, since you could to CID fragmentation and forward to Orbi, but hey...)
+  if (!("mass.analyzer" %in% colnames(d_msms))) d_msms$mass.analyzer = d_msms$fragmentation
+
   
-  
-  ms2_decal = ddply(d_msms, "fc.raw.file", .fun = function(x) {
-    #system.time((ms = unlist(sapply(x$mass.deviations..da., function(xs) strsplit(xs, split=";", fixed=T)))))
-    # much faster:
-    #system.time((ms = unlist(strsplit(paste(x$mass.deviations..da., sep="", collapse=";"), split=";", fixed=T))))
+  ms2_decal = ddply(d_msms, c("fc.raw.file", "mass.analyzer"), .fun = function(x) {
     idx_nr = which(!x$reverse)
     ## select a representative subset, otherwise the number of datapoints is just too large
-    step = ceiling(length(idx_nr)/1000)
-    idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=step)]
-    
-    x_nr = paste(x$mass.deviations..da.[idx_nr_subset], sep="", collapse=";")
-    ms = unlist(strsplit(x_nr, split=";", fixed=T))
-    df.ms = data.frame(msErr = ms, type="forward")
+    idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=ceiling(length(idx_nr)/1000))]
+    df.ms = getFragmentErrors(x[idx_nr_subset,])
+    df.ms$type="forward"
     
     if (any(x$reverse))
     {
       idx_nr = which(x$reverse)
       ## select a representative subset, otherwise the number of datapoints is just too large
-      step = ceiling(length(idx_nr)/1000)
-      idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=step)]
+      idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=ceiling(length(idx_nr)/1000))]
+      df.ms_r = getFragmentErrors(x[idx_nr_subset,])
+      df.ms_r$type="decoy"
       
-      x_nr = paste(x$mass.deviations..da.[idx_nr_subset], sep="", collapse=";")
-      ms = unlist(strsplit(x_nr, split=";", fixed=T))
       ## only merge if we have hits (reverse hits might be few and $mass.deviations..da. might be empty)
-      if (length(ms)) df.ms = rbind(df.ms, data.frame(msErr = ms, type="decoy"))
+      if (nrow(df.ms_r)) df.ms = rbind(df.ms, df.ms_r)
     }
     
     return (df.ms)
   })
-  head(ms2_decal)
-  ms2_decal$msErr = as.numeric(as.character(ms2_decal$msErr))
-  ms2_binwidth = (max(ms2_decal$msErr, na.rm=T) - min(ms2_decal$msErr, na.rm=T))/20
-  ## precision (plotting is just so much quicker, despite using a fixed binwidth)
-  ms2_decal$msErr = round(ms2_decal$msErr, digits=ceiling(-log10(ms2_binwidth)+1))
-  head(ms2_decal)
   
+  head(ms2_decal)
+  class(ms2_decal$msErr)
+  ms2_decal$msErr = as.numeric(as.character(ms2_decal$msErr))
+  #ms2_range = diff(range(ms2_decal$msErr, na.rm=T))
+  #ms2_binwidth = ms2_range/20
+  ## precision (plotting is just so much quicker, despite using a fixed binwidth)
+  #ms2_decal$msErr = round(ms2_decal$msErr, digits=ceiling(-log10(ms2_binwidth)+1))
+  tail(ms2_decal)
+  ms2_decal$facet = paste(ms2_decal$fc.raw.file, paste(ms2_decal$mass.analyzer, ms2_decal$unit), sep="\n")
   fcPlotMS2Dec <- function(d_sub)
   {
     pl = 
       ggplot(data = d_sub, aes_string(x = "msErr", fill="type")) + 
-      geom_histogram(binwidth = ms2_binwidth) +
-      xlab("fragment mass delta [Da]") +  
+      geom_histogram() +
+      #geom_histogram(binwidth = ms2_binwidth) +
+      xlab("fragment mass delta") +  
       ylab("count") + 
-      scale_fill_manual(values = c("#99d594",  "#ff0000")) +
+      scale_fill_manual(values = c(forward = "#99d594", decoy = "#ff0000")) +
       ggtitle("MSMS: Fragment mass errors per Raw file") +
-      facet_wrap(~fc.raw.file)
+      facet_wrap(~facet)
     GPL$add(pl)
+    #print(pl)
     return(1)
   }
-  byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, fcPlotMS2Dec, sort_indices=F)
+  ## separate plots for each mass analyzer, since we want to keep 'fixed' scales for all raw.files (comparability)
+  ddply(ms2_decal, "mass.analyzer", function(ms2_decal) {
+    byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, fcPlotMS2Dec, sort_indices=F); 
+    return(1) })
   
   ##
   ## QC measure for centered-ness of MS2-calibration
   ##
   head(ms2_decal)
-  qc_MS2_decal = ddply(ms2_decal, "fc.raw.file", 
-                       function(x)
-                       {
-                         xx = na.omit(x$msErr);
-                         data.frame("X028X.MSMS.MS/MS_Calibration" = qualCentered(xx), check.names=F)
-                       }) 
+  for (analyzer in unique(ms2_decal$mass.analyzer)) {
+    qc_name = paste0("X028X.", "MSMS.MS2_Calibration_(", analyzer, ")")
+    qc_MS2_decal = ddply(ms2_decal[ms2_decal$mass.analyzer==analyzer, ], "fc.raw.file", 
+                         function(x)
+                         {
+                           xx = na.omit(x$msErr);
+                           data.frame(X1 = qualCentered(xx), check.names=F)
+                         })
+    ## augment fragmentation methods with -Inf for missing raw files (otherwise they would become 'red'=fail)
+    if (length( setdiff(mq$raw_file_mapping$to, qc_MS2_decal$fc.raw.file) )) {
+      frag_missing = data.frame(fc.raw.file = setdiff(mq$raw_file_mapping$to, qc_MS2_decal$fc.raw.file), X1=-Inf)
+      qc_MS2_decal = rbind(qc_MS2_decal, frag_missing)
+    }
+    colnames(qc_MS2_decal)[colnames(qc_MS2_decal)=="X1"] = qc_name
+    QCM[[qc_name]] = qc_MS2_decal[, c("fc.raw.file", qc_name)]
+  }
   if (!exists("DEBUG_PTXQC")) rm("ms2_decal")
-  qc_MS2_decal
-  QCM[["MSMS.MS2_Calibration"]] = qc_MS2_decal[, c("fc.raw.file", "X028X.MSMS.MS/MS_Calibration")]
   
   ##
   ## missed cleavages per Raw file
@@ -1875,6 +1887,7 @@ if (enabled_msmsscans)
 }
 
 hm = getQCHeatMap(QCM, mq$raw_file_mapping)
+#print(hm[["plot"]])
 write.table(hm[["table"]], file = heatmap_values_file, quote= T, sep = "\t", row.names=F)
 GPL$add(hm[["plot"]], ".heatmap")
 
