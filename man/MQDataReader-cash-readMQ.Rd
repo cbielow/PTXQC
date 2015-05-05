@@ -70,7 +70,7 @@ ensures columns are identically named across MQ versions:
 \preformatted{ alternative term new term
 ----------------------------------------- protease enzyme
 protein.descriptions fasta.headers potential.contaminant
-contaminant }
+contaminant mass.deviations mass.deviations..da. }
 }
 \details{
 Example of usage: \preformatted{ mq = MQDataReader$new()

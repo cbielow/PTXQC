@@ -71,8 +71,8 @@ MQDataReader$new <- function(.)
 #'  protease                  enzyme
 #'  protein.descriptions      fasta.headers
 #'  potential.contaminant     contaminant
+#'  mass.deviations           mass.deviations..da.
 #' }
-#' 
 #' 
 #' Example of usage:
 #' \preformatted{
@@ -193,7 +193,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   ## rename some columns since MQ 1.2 vs. 1.3 differ....
   cn[cn=="protease"] = "enzyme"
   cn[cn=="protein.descriptions"] = "fasta.headers"
-  ## MQ 1.0.13 has mass.deviations, later versions have mass.deviations..da.
+  ## MQ 1.0.13 and 1.1.x have 'mass.deviations', later versions have 'mass.deviations..da.'
   cn[cn=="mass.deviations"] = "mass.deviations..da."
   ## MQ 1.5 uses 'potential.contaminant' instead of 'contaminant'
   cn[cn=="potential.contaminant"] = "contaminant"

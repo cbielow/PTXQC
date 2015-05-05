@@ -29,7 +29,7 @@ getMQPARValue = function(mqpar_filename, param_name)
   if (!file.exists(pattern=mqpar_filename)) {
     warning("The file '", mqpar_filename, "' was not found. MaxQuant parameters could not be extracted. Will fall back to default value, which however is only an approximation.",
             " Please either: a) copy the mqpar.xml which was used for this MQ analysis into your TXT folder or,",
-            " b) make sure that you configure all YAML parameters whose name contains '_mqpar' correctly.", immediate. = T)
+            " b) make sure that you configure all YAML parameters whose name starts with 'MQpar_' correctly.", immediate. = T)
     return (NULL)
   }
   

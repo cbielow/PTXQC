@@ -19,9 +19,12 @@ The stored value as string(!)
 \description{
 If the file has the param, then return it as string. If the
 file is missing, warning is shown and NULL is returned. If
-the param (i.e. XML tag) is unknown, ambiguous or cannot be
-extracted, the program will quit (since this is a hard
-error)
+the param (i.e. XML tag) is unknown or cannot be extracted,
+the program will quit (since this is a hard error). When
+multiple occurrences of the param are found (usually due to
+parameter groups), we test if the values are all identical.
+If so, the value is returned. If the values are different,
+a warning is emitted and NULL is returned.
 }
 \details{
 E.g. calling getMQPARValue("mqpar.xml", "firstSearchTol")
