@@ -425,13 +425,16 @@ if (enabled_proteingroups)
   ## ratio plots
   ##################################
   ## get ratio column
-  ratio_cols = grepv("^ratio\\.[hm]\\.l", colnames(d_pg))
+  ratio_cols = grepv("^ratio\\.[hm]\\.l", colnames(d_pg))  ## e.g. "ratio.m.l.ARK5exp" or "ratio.m.l.variability.ARK5exp"
   ## remove everything else
+  ## e.g. we do not want ratio.h.l.variability.ARK5exp, i.e. the 'variability' property
   ratio_cols = grepv("^ratio.[hm].l.normalized", ratio_cols, invert=T)
   ratio_cols = grepv("^ratio.[hm].l.count", ratio_cols, invert=T)
   ratio_cols = grepv("^ratio.[hm].l.variability", ratio_cols, invert=T)
   ratio_cols = grepv("^ratio.[hm].l.significance.a", ratio_cols, invert=T) ## from MQ 1.0.1x
   ratio_cols = grepv("^ratio.[hm].l.significance.b", ratio_cols, invert=T)
+  ratio_cols = grepv("^ratio.[hm].l.iso.count", ratio_cols, invert=T) ## from MQ 1.5.1.2
+  ratio_cols = grepv("^ratio.[hm].l.type", ratio_cols, invert=T)
   ratio_cols
   
   if (length(ratio_cols) > 0)
