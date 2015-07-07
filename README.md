@@ -12,7 +12,7 @@ PTXQC
     - contaminant visualizations
     - identification performance
   - easy usage (`drag'n'drop` your `txt output folder` onto a `batch file`)
-    - 10 min installation, see ['inst' subfolder] [1] 
+    - 10 min installation, see ['inst' subfolder] [1]
   - PDF report will be generated within your txt folder
   - optional configuration file *in YAML format* for generation of shorter/customized reports
 
@@ -40,9 +40,19 @@ Direct installation from GitHub requires the 'devtools' package. The following l
 
 
 ### Platform support
+
   - Windows (recommended for convenience to make use of the drag'n'drop batch file provided)
   - Linux
   - MacOSX
 
+### Examples
+
+An overview chart at the beginning of the report will give you a first impression.
+<img src="./inst/examples/example_heatmap.png?raw=true" width="500" /><br>
+Detailed plots can be found in the remainder of each report.
+
+For more, see the ['inst/examples' subfolder] [2].
+
   
   [1]: https://github.com/cbielow/PTXQC/tree/master/inst/dragNdrop
+  [2]: https://github.com/cbielow/PTXQC/tree/master/inst/examples
