@@ -107,3 +107,33 @@ addGGtitle <- function(pl, main, sub=""){
   return (pl)
 }
 
+
+#' 
+#' Distribute a set of points with fixed y-values on a stretch of the x-axis.
+#' 
+#' 
+#' 
+#' @param pl ggplot object to add a geom_point layer
+#' @param x_range [min,max] valid range of x-values
+#' @param x_section [min,max] fraction in which to distribute the values (in [0,1] for min,max, e.g. c(0.03,0.08) for 3-8\%)
+#' @param y Y-values
+#' @param col Colour of the points (used as argument to aes(colour=))
+#' @return ggplot object with new geom_point 
+#' 
+#' @import ggplot2
+#' 
+#' @export
+#' 
+pointsPutX <- function(pl, x_range, x_section, y, col = NA){
+  #require(ggplot2)
+  x_dist = dist(x_range)
+  x_pos = x_range[1] + x_section*x_dist
+  d = data.frame(x_ = seq(x_pos[1], x_pos[2], length.out=length(y)), y_ = y, col_= col)
+  
+  if (is.na(d$col_[1])) pl = pl + geom_point(data=d, aes_string(x="x_", y="y_"))
+  else pl = pl + geom_point(data=d, aes_string(x="x_", y="y_", col="col_"))
+  
+  return (pl)
+}
+
+

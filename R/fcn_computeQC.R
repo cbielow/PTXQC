@@ -341,7 +341,7 @@ if (enabled_proteingroups)
   lpl = boxplotCompare(data = melt(d_pg[, colsW, drop=F], id.vars=c()), log2 = T, 
                  mainlab="PG: intensity distribution",
                  ylab = "log2 intensity",
-                 sublab=paste0("RSD ", round(int_dev_no0, 1),"% (should be < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
+                 sublab=paste0("RSD ", round(int_dev_no0, 1),"% (expected < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
                  abline = param_PG_intThresh)
   for (pl in lpl) GPL$add(pl);
   rm("lpl")          
@@ -366,7 +366,7 @@ if (enabled_proteingroups)
     lpl = boxplotCompare(data = melt(d_pg[, colsW, drop=F], id.vars=c()), log2 = T, 
                          mainlab="PG: LFQ intensity distribution", 
                          ylab = "log2 LFQ intensity",
-                         sublab= paste0("RSD ", round(lfq_dev_no0, 1),"% (should be < 5%)\nRSD ", round(lfq_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
+                         sublab= paste0("RSD ", round(lfq_dev_no0, 1),"% (expected < 5%)\nRSD ", round(lfq_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
                          abline = param_PG_intThresh)
     for (pl in lpl) GPL$add(pl);
     cat(lfq_dev.s, file=stats_file, append=T, sep="\n")
@@ -390,7 +390,7 @@ if (enabled_proteingroups)
     reprt_dev.s = pastet("Reporter RSD [%]", round(reprt_dev, 3))
     lpl = boxplotCompare(melt(d_pg[, colsW, drop=F], id.vars=c()), log2 = T, ylab="log2 intensity", 
                    mainlab="PG: reporter intensity distribution", 
-                   sublab= paste0("RSD ", round(reprt_dev_no0, 1),"% (should be < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
+                   sublab= paste0("RSD ", round(reprt_dev_no0, 1),"% (expected < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
                    abline = param_PG_intThresh)
     for (pl in lpl) GPL$add(pl);
     cat(reprt_dev.s, file=stats_file, append = T, sep="\n")
@@ -714,7 +714,7 @@ if (enabled_evidence)
   lpl = boxplotCompare(data = d_evd[, c("fc.raw.file", "intensity")], log2 = T, 
                        mainlab="EVD: peptide intensity distribution",
                        ylab = "log2 intensity",
-                       sublab=paste0("RSD ", round(int_dev_pep, 1),"% (should be < 5%)\n"),
+                       sublab=paste0("RSD ", round(int_dev_pep, 1),"% (expected < 5%)\n"),
                        abline = param_EV_intThresh)
   for (pl in lpl) GPL$add(pl);
   ## QC measure for peptide intensity
@@ -885,16 +885,28 @@ if (enabled_evidence)
     d_evd.ylim = quantile(d_evd.m.d$retlengthAvg, c(0,1), na.rm=T)
     for (bl in unique(d_evd.m.d$block))
     {
-      p = ggplot(d_evd.m.d[d_evd.m.d$block==bl,]) +
-        geom_line(aes_string(x = "mid", y = "retlengthAvg", colour = "fc.raw.file"), size=1, alpha=0.7) +
-        geom_hline(data=d_evd.m.d_med, aes_string(colour="fc.raw.file", yintercept="median"), linetype="dashed") +
-        xlab("retention time [min]") +
-        ylab("peak width [min]") +
-        ylim(d_evd.ylim) +
-        ggtitle("EVD: Peak width over RT") +
-        theme(legend.title=element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5))
-      #print(p)
-      GPL$add(p)
+      data = d_evd.m.d[d_evd.m.d$block==bl,]
+      d_evd.m.d_med_sub = d_evd.m.d_med[ d_evd.m.d_med$fc.raw.file %in% data$fc.raw.file, ]
+      ## augment legend with average peak width[m]
+      data$fc.raw.file = paste0(data$fc.raw.file, " (~", 
+                                round(d_evd.m.d_med_sub$median[match(data$fc.raw.file, d_evd.m.d_med_sub$fc.raw.file)], 1),
+                                " min)")
+      d_evd.m.d_med_sub$fc.raw.file = paste0(d_evd.m.d_med_sub$fc.raw.file, " (~", 
+                                round(d_evd.m.d_med_sub$median[match(d_evd.m.d_med_sub$fc.raw.file, d_evd.m.d_med_sub$fc.raw.file)], 1),
+                                " min)")
+      nrOfRaws = length(unique(data$fc.raw.file))
+      pl = ggplot(data) +
+              geom_line(aes_string(x = "mid", y = "retlengthAvg", colour = "fc.raw.file"), size=1, alpha=0.7) +
+              scale_color_manual(values = brewer.pal(nrOfRaws, "Set1")) +
+              guides(color = guide_legend(title = "Raw file with\naverage peak width")) +
+              xlab("retention time [min]") +
+              ylab("peak width [min]") +
+              ylim(d_evd.ylim) +
+              ggtitle("EVD: Peak width over RT") +
+              theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+      pl = pointsPutX(pl, x_range=range(data$mid), x_section=c(0.03,0.08), y=d_evd.m.d_med_sub$median, col=d_evd.m.d_med_sub$fc.raw.file[,drop=T])
+      #print(pl)
+      GPL$add(pl)
     }
     ## QC measure for reproducibility of peak shape
     ##.. create a list of distributions
@@ -1787,39 +1799,47 @@ if (enabled_msmsscans)
     
     ## average injection time over RT
     DFmIIT = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
-      meanN = ddply(x, c("rRT"), summarise, medIIT = median(ion.injection.time))
-      return (meanN)    
+      meanN = ddply(x, c("rRT"), function(x) data.frame(medIIT = median(x$ion.injection.time)))
+      return (meanN) 
     })
     head(DFmIIT)
     ## average injection time overall
     DFmIITglob = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
-      return (data.frame(globalIIT = median(x$ion.injection.time), x = min(x$ion.injection.time)))
+      return (data.frame(globalIITmedian = mean(x$ion.injection.time), x = min(x$ion.injection.time)))
     })
     head(DFmIITglob)
      
     
     plotIITinRT = function(data)
     {
+      data$fc.raw.file = data$fc.raw.file[,drop=T]
       nrOfRaws = length(unique(data$fc.raw.file))
       DFmIITglob_sub = DFmIITglob[DFmIITglob$fc.raw.file %in% data$fc.raw.file,]
       DFmIITglob_sub$x = min(DFmIITglob_sub$x) ## same X for every raw file
+      ## augment legend with average II-time[ms]
+      data$fc.raw.file = paste0(data$fc.raw.file, " (~", 
+                                round(DFmIITglob_sub$globalIITmedian[match(data$fc.raw.file, DFmIITglob_sub$fc.raw.file)]),
+                                " ms)")
+      DFmIITglob_sub$fc.raw.file = paste0(DFmIITglob_sub$fc.raw.file, " (~", 
+                                round(DFmIITglob_sub$globalIITmedian[match(DFmIITglob_sub$fc.raw.file, DFmIITglob_sub$fc.raw.file)]),
+                                " ms)")
       pl = ggplot(data) +
               geom_line(aes_string(x = "rRT", y = "medIIT", col = "fc.raw.file")) +
-              geom_point(data=DFmIITglob_sub,
-                         aes_string(x = "x", y = "globalIIT", col = "fc.raw.file"),
-                         linetype="dashed",
-                         position = position_jitter(w = 5, h = 0.0)) +
-              geom_hline(yintercept = param_MSMSScans_ionInjThresh, linetype = 'dashed') +
               scale_color_manual(values = brewer.pal(nrOfRaws, "Set1")) +
               xlab("retention time [min]") +
-              ylab("ion injection time [median per RT bin in milliseconds]") +
-              guides(color=guide_legend(title="")) +
+              ylab("ion injection time [ms]") +
+              geom_hline(yintercept = param_MSMSScans_ionInjThresh, linetype = 'dashed') +
+              guides(color=guide_legend(title="Raw file with\naverage inj. time")) +
               ggtitle("MSMSscans: Ion Injection Time over RT")
+              
+      pl = pointsPutX(pl, x_range=range(data$rRT), x_section=c(0.03,0.08), y=DFmIITglob_sub$globalIITmedian, col=DFmIITglob_sub$fc.raw.file[,drop=T])
+        
       #print(pl)
       GPL$add(pl)
       return (1)
     }
     byXflex(DFmIIT, DFmIIT$fc.raw.file, 8, plotIITinRT, sort_indices=F)
+    
     
     ## QC measure for injection times below expected threshold
     DFmIIT_belowThresh = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
