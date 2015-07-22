@@ -855,57 +855,44 @@ if (enabled_evidence)
   
   if ("retention.length" %in% colnames(d_evd))  
   {
-    ### peak width (all raw.files --- too much for large experiments)
-    #   GPL$add(ggplot(d_evd, aes_string(x="retention.length", colour="fc.raw.file")) +
-    #           geom_density() +
-    #           scale_x_log10() + xlab("retention length") + ggtitle("EVD: Peak width histogram")
-    #         )
-    ## compute density manually
-    fcn_peakWidth = function(x) 
+    ## compute some summary stats before passing data to ggplot (performance issue for large experiments) 
+    fcn_peakWidthOverTime = function(x, bin_width = 60) 
     {      
-      tmp = try(density(x$retention.length, na.rm=T), TRUE)
-      if (inherits(tmp, "try-error")) return (data.frame(retention.length = 0, dens = 0, fc.raw.file = x$fc.raw.file[1]))
-      x1 = tmp$x
-      y1 = tmp$y
-      data.frame(retention.length = x1, dens = y1, fc.raw.file = x$fc.raw.file[1])
+      r = range(x$retention.time)
+      brs = seq(from=r[1], to=r[2]+bin_width/60, by=bin_width/60)
+      x$bin = cut(x$retention.time, breaks=brs, include.lowest=T)
+      retLStats = ddply(x, "bin", .fun = function(xb) {
+        data.frame(mid = brs[as.numeric(xb$bin[1])], retlengthAvg = median(xb$retention.length, na.rm=T))
+      })
+      return(retLStats)
     }
-    d_evd.m.d_l = dlply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = fcn_peakWidth)
-    d_evd.m.d = Reduce(rbind, d_evd.m.d_l)
-    ## the merged (=average peak)  
-    #d_evd.m.d = rbind(d_evd.m.d, fcn_peakWidth(data.frame(retention.length = d_evd$retention.length, fc.raw.file="merge")))  
+    
+    d_evd.m.d = ddply(d_evd[,c("retention.time", "retention.length", "fc.raw.file")], "fc.raw.file", .fun = fcn_peakWidthOverTime)
     head(d_evd.m.d)
     tail(d_evd.m.d)
-    ## median and position in density
+    ## median peak width
     d_evd.m.d_med = ddply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = function(x) {
       fcr = as.character(x$fc.raw.file[1])
       #cat(fcr)
       m = median(x$retention.length, na.rm=T);
-      ## closest point in density
-      idx = which.min(abs(m - d_evd.m.d_l[[fcr]]$retention.length))
-      y = d_evd.m.d_l[[fcr]]$dens[idx]
-      return(data.frame(m = m, y = y))
+      return(data.frame(median = m))
     })
     
     
     d_evd.m.d$block = factor(assignBlocks(d_evd.m.d$fc.raw.file, 8))
     ## identical limits for all plots
-    d_evd.xlim = quantile(d_evd.m.d$retention.length, c(0,1))
-    d_evd.xlim = c(max(1e-1,d_evd.xlim[1]), d_evd.xlim[2]) ## could give negative numbers and we plan to plot on log scale
-    d_evd.ylim = quantile(d_evd.m.d$dens, c(0,1))
+    d_evd.xlim = quantile(d_evd.m.d$mid, c(0,1), na.rm=T)
+    d_evd.ylim = quantile(d_evd.m.d$retlengthAvg, c(0,1), na.rm=T)
     for (bl in unique(d_evd.m.d$block))
     {
-      p = ggplot(d_evd.m.d[d_evd.m.d$block==bl,], aes_string(x = "retention.length", y = "dens", colour = "fc.raw.file")) +
-        #scale_fill_manual(values = brewer.pal(8,"Accent")) + 
-        #scale_colour_manual(values = brewer.pal(8,"Accent")) +
-        xlab("retention length [min]") +
-        ylab("density") +
+      p = ggplot(d_evd.m.d[d_evd.m.d$block==bl,]) +
+        geom_line(aes_string(x = "mid", y = "retlengthAvg", colour = "fc.raw.file"), size=1, alpha=0.7) +
+        geom_hline(data=d_evd.m.d_med, aes_string(colour="fc.raw.file", yintercept="median"), linetype="dashed") +
+        xlab("retention time [min]") +
+        ylab("peak width [min]") +
         ylim(d_evd.ylim) +
-        scale_x_continuous(limits=d_evd.xlim, trans = "log10", breaks = c(0.01, 0.1, 0.25, 0.5, 1, 3, 10, 30)) +
-        ggtitle("EVD: Peak width distribution") +
-        theme(legend.title=element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-        geom_line(stat="identity", size=2, alpha=0.7) +
-        geom_point(data = d_evd.m.d_med[d_evd.m.d_med$fc.raw.file %in% d_evd.m.d$fc.raw.file[d_evd.m.d$block==bl],],
-                   aes_string(x="m", y="y", colour = "fc.raw.file"), size=2) ## currently not visible (confusing)
+        ggtitle("EVD: Peak width over RT") +
+        theme(legend.title=element_blank(), axis.text.x = element_text(angle = 90, vjust = 0.5))
       #print(p)
       GPL$add(p)
     }
@@ -1178,7 +1165,8 @@ if (enabled_evidence)
   max_y = max(by(d_evd$retention.time, d_evd$fc.raw.file,  function(d) max(hist(d, breaks=seq(from=min(d)-3, to=max(d)+3, by=3), plot=F)$counts)))
   fcRTSubset <- function(d_sub, smr_evdRT)
   {
-    qp = ggplot(data = d_sub, aes_string(x = "retention.time", colour = "fc.raw.file")) +
+    nrOfRaws = length(unique(d_sub$fc.raw.file))
+    qp = ggplot(data = d_sub, aes_string(x = "retention.time", colour = "fc.raw.file", linetype = "fc.raw.file")) +
                 geom_freqpoly(binwidth = 3) +
                 xlim(from = smr_evdRT["Min."] - 1, to = smr_evdRT["Max."] + 2) +
                 xlab("RT [min]") + 
@@ -1186,9 +1174,9 @@ if (enabled_evidence)
                 ylab("ID count") +
                 ggtitle("EVD: IDs over RT") +
                 theme(legend.title=element_blank()) +
-                scale_fill_manual(values = rep(c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", 
-                                                 "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00",
-                                                 "#cab2d6", "#6a3d9a", "#ffff99"), 10))
+                scale_linetype_manual(values = rep_len(c("solid", "dashed"), nrOfRaws)) +
+                scale_color_manual(values = brewer.pal(nrOfRaws, "Set1")) 
+    #print(qp)
     GPL$add(qp)
     return (1)
   }
@@ -1723,7 +1711,7 @@ if (enabled_msmsscans)
   #d_msmsScan_h = mq$readMQ(txt_files$msmsScan, type="msms", filter = "", nrows=2)
   #colnames(d_msmsScan_h)
   #head(d_msmsScan_h)
-  d_msmsScan = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", col_subset = c("^retention.time$", "^Identified", "Scan.event.number", "Raw.file"), check_invalid_lines = F)
+  d_msmsScan = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", col_subset = c("^ion.injection.time", "^retention.time$", "^Identified", "Scan.event.number", "Raw.file"), check_invalid_lines = F)
   ##
   ## MQ version 1.0.13 has very rudimentary MSMSscans.txt, with no header, so we need to skip the metrics of this file
   ##
@@ -1737,6 +1725,9 @@ if (enabled_msmsscans)
     ## sort fc.raw.file's factor values as well
     d_msmsScan$fc.raw.file = factor(d_msmsScan$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
     
+    # round RT to 2 min intervals
+    d_msmsScan$rRT = round(d_msmsScan$retention.time/2)*2
+    
     ##
     ## TopN over RT
     ##
@@ -1746,9 +1737,6 @@ if (enabled_msmsscans)
     scan.event.number = NULL ## make R check happy
     
     ## maximum scan event over time
-    # round RT to 2 min intervals
-    d_msmsScan$rRT = round(d_msmsScan$retention.time/2)*2
-    
     DFmse = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
       ## sort by RT
       if (is.unsorted(x$retention.time))
@@ -1765,7 +1753,7 @@ if (enabled_msmsscans)
     
     head(DFmse)
     plotMaxSEinRT = function(data)
-    { 
+    {
       GPL$add(
         ggplot(data, aes_string(x = "rRT", y = "medSE", col = "fc.raw.file")) +
           geom_point(stat="identity", position = "jitter") +
@@ -1777,11 +1765,69 @@ if (enabled_msmsscans)
       )
       return (1)
     }
-    byXflex(DFmse, DFmse$fc.raw.file, 9, plotMaxSEinRT, sort_indices=F)
+    byXflex(DFmse, DFmse$fc.raw.file, 8, plotMaxSEinRT, sort_indices=F)
     
     ## QC measure for smoothness of TopN over RT
     qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame(X012X.MSMSScans.TopN_over_RT = qualUniform(x$medSE)))
     QCM[["MSMSscans.TopN_over_RT"]] = qc_TopNRT
+    
+    ##
+    ## Injection time over RT
+    ##
+    cat("MSMS-Scans: Injection time over RT ...\n")
+
+    param_name_MSMSScans_ionInjThresh = "File$MsMsScans$IonInjectionThresh_num"
+    param_def_MSMSScans_ionInjThresh = 10 ## default ion injection threshold in milliseconds
+    param_MSMSScans_ionInjThresh = getYAML(yaml_obj, param_name_MSMSScans_ionInjThresh, param_def_MSMSScans_ionInjThresh)
+    if (!is.numeric(param_MSMSScans_ionInjThresh))
+    { ## reset if value is weird
+      cat("YAML value for '" %+% param_name_MSMSScans_ionInjThresh %+% "' is invalid ('" %+% param_MSMSScans_ionInjThresh %+% "'). Using default of " %+% param_def_MSMSScans_ionInjThresh %+% ".")
+      param_MSMSScans_ionInjThresh = param_def_MSMSScans_ionInjThresh
+    }
+    
+    ## average injection time over RT
+    DFmIIT = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
+      meanN = ddply(x, c("rRT"), summarise, medIIT = median(ion.injection.time))
+      return (meanN)    
+    })
+    head(DFmIIT)
+    ## average injection time overall
+    DFmIITglob = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
+      return (data.frame(globalIIT = median(x$ion.injection.time), x = min(x$ion.injection.time)))
+    })
+    head(DFmIITglob)
+     
+    
+    plotIITinRT = function(data)
+    {
+      nrOfRaws = length(unique(data$fc.raw.file))
+      DFmIITglob_sub = DFmIITglob[DFmIITglob$fc.raw.file %in% data$fc.raw.file,]
+      DFmIITglob_sub$x = min(DFmIITglob_sub$x) ## same X for every raw file
+      pl = ggplot(data) +
+              geom_line(aes_string(x = "rRT", y = "medIIT", col = "fc.raw.file")) +
+              geom_point(data=DFmIITglob_sub,
+                         aes_string(x = "x", y = "globalIIT", col = "fc.raw.file"),
+                         linetype="dashed",
+                         position = position_jitter(w = 5, h = 0.0)) +
+              geom_hline(yintercept = param_MSMSScans_ionInjThresh, linetype = 'dashed') +
+              scale_color_manual(values = brewer.pal(nrOfRaws, "Set1")) +
+              xlab("retention time [min]") +
+              ylab("ion injection time [median per RT bin in milliseconds]") +
+              guides(color=guide_legend(title="")) +
+              ggtitle("MSMSscans: Ion Injection Time over RT")
+      #print(pl)
+      GPL$add(pl)
+      return (1)
+    }
+    byXflex(DFmIIT, DFmIIT$fc.raw.file, 8, plotIITinRT, sort_indices=F)
+    
+    ## QC measure for injection times below expected threshold
+    DFmIIT_belowThresh = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
+      return (data.frame(belowThresh_IIT = sum(x$ion.injection.time < param_MSMSScans_ionInjThresh, na.rm=T) / nrow(x)))
+    })
+    head(DFmIIT_belowThresh)
+    qc_IIT = ddply(DFmIIT_belowThresh, "fc.raw.file", function(x) data.frame(X020X.MSMSScans.Ion_Injection_Time = qualLinThresh(x$belowThresh_IIT, t = 1)))
+    QCM[["MSMSscans.Ion_Injection_Time"]] = qc_IIT
     
     
     ##
