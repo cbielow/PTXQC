@@ -12,8 +12,9 @@
 
 #' Boxplots - one for each condition (=column) in a data frame.
 #' 
-#' Given a data.frame with two columns in long format (name, value; in that order), each group (given from 1st column)
+#' Given a data.frame with two/three columns in long format (name, value, [contaminant]; in that order), each group (given from 1st column)
 #' is plotted as a bar.
+#' Contaminants (if given) are seperated and plotted as yellow bars.
 #' 
 #' Boxes are shaded: many NA or Inf lead to more transparency. Allows to easily spot sparse groups
 #' 
@@ -42,40 +43,43 @@ boxplotCompare <- function(data,
                            abline = NA)
 {
  
-  colnames(data) = c("group", "value")
+  if (ncol(data) == 2) {
+    data$contaminant = FALSE ## add a third column, if missing
+  }
+  colnames(data) = c("group", "value", "contaminant")
+  
   if (log2) {
     data$value = log2(data$value)
   }
   
-
   ## actual number of entries in each column (e.g. LFQ often has 0)
   ncol.stat = ddply(data, colnames(data)[1], function(x){ notNA = sum(!is.infinite(x$value) & !is.na(x$value));
                                                           data.frame(n = nrow(x), 
-                                                                    notNA = notNA, 
-                                                                    newname = paste0(x$group[1], " (n=", notNA, ")"))})
-  ## compute alpha value for plotting
-  ncol.stat$alpha = ncol.stat$notNA / max(ncol.stat$n)
+                                                                     notNA = notNA, 
+                                                                     newname = paste0(x$group[1], " (n=", notNA, ")"))})
   
-  ## rename (augment with 'n')
+  ## rename (augment with '#n')
   data$group = ncol.stat$newname[match(data$group, ncol.stat$group)]
   
-  ## remote -inf and NA's
+  ## remove -inf and NA's
   data = data[!is.infinite(data$value) & !is.na(data$value), ]
 
   groups = unique(data$group);
   ## add color for H vs L (if SILAC)
-  cat = factor(c("light", "medium", "heavy"), levels=c("light", "medium", "heavy"))
+  cols = c("sample" = "black", 
+           "sample (light)" = "black", 
+           "sample (medium)" = "blue", 
+           "sample (heavy)" = "green",
+           "contaminant" = "yellow")
+  cat_names = names(cols)
+  cat = factor(cat_names, levels=cat_names)
   data$cat = cat[1]
-  if (sum(grepl("^[^HLM]", groups )) == 0) { ## all start with either L, M or H
-    data$cat[grep("^M", data$group)] = cat[2]
-    data$cat[grep("^H", data$group)] = cat[3]
+  if (sum(grepl("^[^HLM]", groups )) == 0 || sum(grepl("^intensity\\.[hlm]", groups )) > 0) { ## all start with either L, M or H
+    data$cat = cat[2]
+    data$cat[grepl("^M", data$group) | grepl("^intensity\\.m", data$group)] = cat[3]
+    data$cat[grepl("^H", data$group) | grepl("^intensity\\.h", data$group)] = cat[4]
   }
-  cols = c("black", "blue", "red")[unique(data$cat)]
-  
-  ## augment with alpha values
-  data$alphav = ncol.stat$alpha[match(data$group, ncol.stat$group)] 
-  
-  #ex: datar$section = as.integer(as.numeric(datar$section)/boxes_per_page)
+  data$cat[data$contaminant] = cat[5]
   
   ## compute global y-limits (so we can fix it across plots)
   ylims = boxplot.stats(data$value)$stats[c(1, 5)]
@@ -84,23 +88,27 @@ boxplotCompare <- function(data,
   {
     ylims = c(ylims[1], max(ylims[2], abline))
   }
+  
   fcn_boxplot_internal = function(data, abline = NA) 
   {
     #require(ggplot2)
-    pl = ggplot(data=data, aes_string(x = "group", y = "value")) +
-      geom_boxplot(aes_string(fill = "cat", alpha = "alphav")) + 
-      xlab("data set") + 
-      ylab(ylab) +
-      ylim(ylims) +
-      scale_fill_manual(values=cols) + 
-      theme(axis.text.x = element_text(angle=90, vjust = 0.5)) +
-      theme(legend.position=ifelse(length(cols)==1, "none", "right")) +
-      scale_alpha(range=c(min(ncol.stat$alpha), max(ncol.stat$alpha)))
-    pl = addGGtitle(pl, mainlab, sublab)
+    pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat", col = "cat")) +
+          geom_boxplot(varwidth=T) +
+          xlab("") + 
+          ylab(ylab) +
+          ylim(ylims) +
+          scale_alpha(guide=FALSE) +
+          scale_fill_manual(values=cols, name = "Category") + 
+          scale_color_manual(values=cols, name = "Category") + 
+          theme(axis.text.x = element_text(angle=90, vjust = 0.5)) +
+          theme(legend.position=ifelse(length(cols)==1, "none", "right")) +
+          addGGtitle(mainlab, sublab)
+    
     if (!is.na(abline))
     {
       pl = pl + geom_abline(alpha = 0.5, intercept = abline, slope = 0, colour = "green")
     }
+    #print(pl)
     return(pl)
   }
   #ex: fcn_boxplot_internal(datar[datar$section<2,])

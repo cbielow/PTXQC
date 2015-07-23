@@ -4,11 +4,9 @@
 \alias{addGGtitle}
 \title{Add title and subtitle to a ggplot}
 \usage{
-addGGtitle(pl, main, sub = "")
+addGGtitle(main, sub = "")
 }
 \arguments{
-  \item{pl}{GGplot object}
-
   \item{main}{String for main title}
 
   \item{sub}{String for sub title}
@@ -19,5 +17,8 @@ A ggplot object
 \description{
 Found in http://www.antoni.fr/blog/?p=39 .. whewww...
 modified a little
+}
+\details{
+Usage: ggplot(...) + geom_X(...) + addGGtitle(...)
 }
 

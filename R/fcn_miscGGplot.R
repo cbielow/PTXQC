@@ -88,7 +88,9 @@ ggAxisLabels = function(x, n = 20)
 #' 
 #' Found in http://www.antoni.fr/blog/?p=39 .. whewww... modified a little
 #' 
-#' @param pl GGplot object
+#' Usage: 
+#'   ggplot(...) + geom_X(...) + addGGtitle(...)
+#'   
 #' @param main String for main title
 #' @param sub String for sub title
 #' @return A ggplot object
@@ -97,12 +99,12 @@ ggAxisLabels = function(x, n = 20)
 #' 
 #' @export
 #' 
-addGGtitle <- function(pl, main, sub=""){
+addGGtitle = function(main, sub=""){
   #require(ggplot2)
   if(sub==""){
-    pl <- pl + ggtitle(eval(parse(text=paste("expression(atop(\"",main,"\",","))", sep=""))))
+    pl = ggtitle(eval(parse(text=paste("expression(atop(\"",main,"\",","))", sep=""))))
   }else{
-    pl <- pl + ggtitle(eval(parse(text=paste("expression(atop(\"",main, "\",", " atop(\"", sub , "\",\"\")))", sep=""))))
+    pl = ggtitle(eval(parse(text=paste("expression(atop(\"",main, "\",", " atop(\"", sub , "\",\"\")))", sep=""))))
   }
   return (pl)
 }

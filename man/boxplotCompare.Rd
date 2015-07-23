@@ -30,9 +30,10 @@ boxplotCompare(data, log2 = T, ylab = "intensity", mainlab = ylab,
 List of ggplot objects
 }
 \description{
-Given a data.frame with two columns in long format (name,
-value; in that order), each group (given from 1st column)
-is plotted as a bar.
+Given a data.frame with two/three columns in long format
+(name, value, [contaminant]; in that order), each group
+(given from 1st column) is plotted as a bar. Contaminants
+(if given) are seperated and plotted as yellow bars.
 }
 \details{
 Boxes are shaded: many NA or Inf lead to more transparency.

@@ -338,11 +338,12 @@ if (enabled_proteingroups)
   medians = sort(apply(log2(d_pg[, colsW, drop=F]+1), 2, quantile, na.rm=T, probs=0.5)) # + c(0,0,0,0,0,0))
   int_dev = RSD(medians)
   int_dev.s = pastet("INT RSD [%]", round(int_dev, 3))
-  lpl = boxplotCompare(data = melt(d_pg[, colsW, drop=F], id.vars=c()), log2 = T, 
-                 mainlab="PG: intensity distribution",
-                 ylab = "log2 intensity",
-                 sublab=paste0("RSD ", round(int_dev_no0, 1),"% (expected < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
-                 abline = param_PG_intThresh)
+  lpl = boxplotCompare(data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
+                       log2 = T, 
+                       mainlab = "PG: intensity distribution",
+                       ylab = "log2 intensity",
+                       sublab = paste0("RSD ", round(int_dev_no0, 1),"% (expected < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
+                       abline = param_PG_intThresh)
   for (pl in lpl) GPL$add(pl);
   rm("lpl")          
   cat(int_dev.s, file=stats_file, append=T, sep="\n")
@@ -363,7 +364,8 @@ if (enabled_proteingroups)
     medians = sort(apply(log2(d_pg[, colsW, drop=F]+1), 2, quantile, probs=0.5, na.rm=T)) # + c(0,0,0,0,0,0))
     lfq_dev = RSD(medians)
     lfq_dev.s = pastet("LFQ RSD [%]", round(lfq_dev, 3))
-    lpl = boxplotCompare(data = melt(d_pg[, colsW, drop=F], id.vars=c()), log2 = T, 
+    lpl = boxplotCompare(data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
+                         log2 = T, 
                          mainlab="PG: LFQ intensity distribution", 
                          ylab = "log2 LFQ intensity",
                          sublab= paste0("RSD ", round(lfq_dev_no0, 1),"% (expected < 5%)\nRSD ", round(lfq_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
@@ -388,10 +390,12 @@ if (enabled_proteingroups)
     medians = sort(apply(log2(d_pg[, colsW, drop=F]+1), 2, quantile, probs=0.5, na.rm=T)) # + c(0,0,0,0,0,0))
     reprt_dev = RSD(medians)
     reprt_dev.s = pastet("Reporter RSD [%]", round(reprt_dev, 3))
-    lpl = boxplotCompare(melt(d_pg[, colsW, drop=F], id.vars=c()), log2 = T, ylab="log2 intensity", 
-                   mainlab="PG: reporter intensity distribution", 
-                   sublab= paste0("RSD ", round(reprt_dev_no0, 1),"% (expected < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
-                   abline = param_PG_intThresh)
+    lpl = boxplotCompare(data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
+                         log2 = T, 
+                         ylab="log2 intensity", 
+                         mainlab="PG: reporter intensity distribution", 
+                         sublab= paste0("RSD ", round(reprt_dev_no0, 1),"% (expected < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
+                         abline = param_PG_intThresh)
     for (pl in lpl) GPL$add(pl);
     cat(reprt_dev.s, file=stats_file, append = T, sep="\n")
   }
@@ -415,7 +419,10 @@ if (enabled_proteingroups)
     ## remove constant/zero columns (== dimensions == proteins)
     data = data[, colSums(data, na.rm=T) > 0, drop=F]
     rownames(data) = simplifyNames(strings = rownames(data), infix_iterations = 2)
-    lpl = try(getPCA(data = data, gg_layer = ggtitle(paste("PG: PCA\n", sub(".", " ", cond, fixed=T))))[["plots"]])
+    lpl = try(getPCA(data = data,
+                     gg_layer = addGGtitle(paste0("PG: PCA of '", sub(".", " ", cond, fixed=T), "'"), "(excludes contaminants)")
+                     )[["plots"]]
+              )
     #print(lpl)
     if (!inherits(lpl, "try-error")) for (pl in lpl) GPL$add(pl);
   }
@@ -711,7 +718,8 @@ if (enabled_evidence)
   
   int_dev_pep = RSD((medians_pep$med))
   int_dev.s = pastet("INT RSD [%]", round(int_dev_pep, 3))
-  lpl = boxplotCompare(data = d_evd[, c("fc.raw.file", "intensity")], log2 = T, 
+  lpl = boxplotCompare(data = d_evd[, c("fc.raw.file", "intensity", "contaminant")],
+                       log2 = T, 
                        mainlab="EVD: peptide intensity distribution",
                        ylab = "log2 intensity",
                        sublab=paste0("RSD ", round(int_dev_pep, 1),"% (expected < 5%)\n"),
@@ -1040,8 +1048,9 @@ if (enabled_evidence)
               ylab("RT distance to reference [min]") +
               guides(colour = guide_legend(override.aes = list(linetype=0, shape=16, size=3))) ## color legend has a linetype... get rid of it
             
-            pl = pl + facet_wrap(~ fc.raw.file)
-            pl = addGGtitle(pl, "EVD: RT distance of genuine peptides to reference after alignment", txt_subtitle)  
+            pl = pl + 
+                facet_wrap(~ fc.raw.file) +
+                addGGtitle("EVD: RT distance of genuine peptides to reference after alignment", txt_subtitle)  
             #print(pl)
             GPL$add(pl)
             return(1)
@@ -1307,8 +1316,8 @@ if (enabled_evidence)
       ylim(ylim_g) +
       scale_x_discrete_reverse(d_sub$fc.raw.file) +
       geom_hline(yintercept = c(-param_EV_PrecursorTolPPM, param_EV_PrecursorTolPPM), colour="red", linetype = "longdash") +  ## == vline for coord_flip
-      coord_flip()
-    pl = addGGtitle(pl, "EVD: Uncalibrated mass error", recal_message)
+      coord_flip() +
+      addGGtitle("EVD: Uncalibrated mass error", recal_message)
     #print(pl)
     GPL$add(pl)
     return(1)
@@ -1373,8 +1382,8 @@ if (enabled_evidence)
       xlab("") +
       ylim(ylim_g) +
       scale_x_discrete_reverse(d_sub$fc.raw.file) +
-      coord_flip()
-    pl = addGGtitle(pl, "EVD: Calibrated mass error", recal_message_post)
+      coord_flip() +
+      addGGtitle("EVD: Calibrated mass error", recal_message_post)
     #print(pl)
     GPL$add(pl)
     return (1)
@@ -1688,8 +1697,8 @@ if (enabled_msms)
         scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000"), 10)) +
         geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
         coord_flip() +
-        scale_x_discrete_reverse(st_bin.m$fc.raw.file)
-      pl = addGGtitle(pl, "MSMS: Missed cleavages per Raw file", msg_cont_removed)
+        scale_x_discrete_reverse(st_bin.m$fc.raw.file) +
+        addGGtitle("MSMS: Missed cleavages per Raw file", msg_cont_removed)
       #print(pl)
       GPL$add(pl)
       return(1)
@@ -1766,15 +1775,17 @@ if (enabled_msmsscans)
     head(DFmse)
     plotMaxSEinRT = function(data)
     {
-      GPL$add(
-        ggplot(data, aes_string(x = "rRT", y = "medSE", col = "fc.raw.file")) +
-          geom_point(stat="identity", position = "jitter") +
-          xlab("retention time [min]") +
-          ylab("highest N [median per RT bin]") +
-          #stat_smooth(method = "loess", formula = y ~ x, se = FALSE, span = 0.1) +
-          guides(color=guide_legend(title="")) +
-          ggtitle("MSMSscans: TopN over RT")
-      )
+      nrOfRaws = length(unique(data$fc.raw.file))
+      pl = ggplot(data, aes_string(x = "rRT", y = "medSE", col = "fc.raw.file")) +
+            geom_line() +
+            scale_color_manual(values = brewer.pal(nrOfRaws, "Set1")) +
+            xlab("retention time [min]") +
+            ylab("highest N [median per RT bin]") +
+            #stat_smooth(method = "loess", formula = y ~ x, se = FALSE, span = 0.1) +
+            guides(color=guide_legend(title="")) +
+            ggtitle("MSMSscans: TopN over RT")
+      #print(pl)
+      GPL$add(pl)
       return (1)
     }
     byXflex(DFmse, DFmse$fc.raw.file, 8, plotMaxSEinRT, sort_indices=F)
