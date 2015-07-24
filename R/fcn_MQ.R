@@ -74,10 +74,10 @@ boxplotCompare <- function(data,
   cat_names = names(cols)
   cat = factor(cat_names, levels=cat_names)
   data$cat = cat[1]
-  if (sum(grepl("^[^HLM]", groups )) == 0 || sum(grepl("^intensity\\.[hlm]", groups )) > 0) { ## all start with either L, M or H
+  if (sum(grepl("^[^HLM]", groups )) == 0 || sum(grepl("^intensity\\.[hlm]\\.", groups )) > 0) { ## all start with either L, M or H
     data$cat = cat[2]
-    data$cat[grepl("^M", data$group) | grepl("^intensity\\.m", data$group)] = cat[3]
-    data$cat[grepl("^H", data$group) | grepl("^intensity\\.h", data$group)] = cat[4]
+    data$cat[grepl("^M", data$group) | grepl("^intensity\\.m\\.", data$group)] = cat[3]
+    data$cat[grepl("^H", data$group) | grepl("^intensity\\.h\\.", data$group)] = cat[4]
   }
   data$cat[data$contaminant] = cat[5]
   
@@ -92,7 +92,7 @@ boxplotCompare <- function(data,
   fcn_boxplot_internal = function(data, abline = NA) 
   {
     #require(ggplot2)
-    pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat", col = "cat")) +
+    pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat")) + ## do not use col="cat", since this will dodge bars and loose scaling
           geom_boxplot(varwidth=T) +
           xlab("") + 
           ylab(ylab) +

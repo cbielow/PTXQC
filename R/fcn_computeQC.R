@@ -13,7 +13,7 @@
 #' 
 #' @note You need write access to the txt folder!
 #' 
-#' For updates, bug fixes and feedback please visit \url{http://github.com/cbielow/R-PTXQC}.
+#' For updates, bug fixes and feedback please visit \url{http://github.com/cbielow/PTXQC}.
 #'
 #' @param txt_folder Path to txt output folder of MaxQuant (e.g. "c:/data/Hek293/txt")
 #' @param yaml_obj   A nested list object with configuration parameters for the report.
@@ -75,10 +75,6 @@ txt_files$msms = "msms.txt"
 txt_files$msmsScan = "msmsScans.txt"
 txt_files$mqpar = "mqpar.xml"
 txt_files = lapply(txt_files, function(x) paste(txt_folder, x, sep=.Platform$file.sep))
-
-
-# ideas:
-## automatic flagging of suspicious results
   
 ## increase package number if required. Added to output filename
 if (!require("PTXQC", quietly=T)) pv = "_unknown" else pv = packageVersion("PTXQC")
@@ -760,9 +756,9 @@ if (enabled_evidence)
   })
   protGroupCount_pre
   ## manually melt
-  pgc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, protCount = protGroupCount_pre$proteinCount_noMBR, match = "no")
+  pgc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, protCount = protGroupCount_pre$proteinCount_noMBR, category = "genuine")
   pgc = rbind(pgc,
-              data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, protCount = protGroupCount_pre$proteinCount_MBRgain, match = "yes"))
+              data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, protCount = protGroupCount_pre$proteinCount_MBRgain, category = "matched"))
   pgc
   ## re-order (ddply somehow reorders, even if we use ordered factors...)
   pgc$fc.raw.file = factor(pgc$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
@@ -789,7 +785,7 @@ if (enabled_evidence)
   #require(RColorBrewer)
   ddply(pgc, "block", .fun = function(x) {
     #x$s.raw.file = simplifyNames((as.character(x$raw.file)))
-    GPL$add(ggplot(x, aes_string(x = "fc.raw.file", y = "protCount", fill = "match")) +
+    GPL$add(ggplot(x, aes_string(x = "fc.raw.file", y = "protCount", fill = "category")) +
             geom_bar(stat = "identity", position = "stack") +
             xlab("") +
             ylab("count") +
@@ -797,7 +793,7 @@ if (enabled_evidence)
             ylim(0, max(param_EV_protThresh, max_prot)*1.1) +
             scale_fill_manual(values = c("green", "#BEAED4")) +
             ggtitle("EVD: Protein ID count") + 
-            geom_abline(alpha = 0.5, intercept = param_EV_protThresh, slope = 0, colour = "green", linetype = "dashed", size = 1.5) +
+            geom_abline(alpha = 0.5, intercept = param_EV_protThresh, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
             coord_flip()
           )
     return (1)
@@ -812,9 +808,9 @@ if (enabled_evidence)
   ##
   ## EVD: peptide count
   ##
-  pepc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, pepCount = protGroupCount_pre$pep_count_noMBR, match = "no")
+  pepc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, pepCount = protGroupCount_pre$pep_count_noMBR, category = "genuine")
   pepc = rbind(pepc,
-               data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, pepCount = protGroupCount_pre$pep_count_MBRgain, match = "yes"))
+               data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, pepCount = protGroupCount_pre$pep_count_MBRgain, category = "matched"))
   pepc
   ## re-order (ddply somehow reorders, even if we use ordered factors...)
   pepc$fc.raw.file = factor(pepc$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
@@ -835,13 +831,13 @@ if (enabled_evidence)
   #require(RColorBrewer)
   ddply(pepc, "block", .fun = function(x) {
     #x$s.raw.file = simplifyNames((as.character(x$raw.file)))
-    p = ggplot(x, aes_string(x = "factor(fc.raw.file)", y = "pepCount", fill = "match")) +
+    p = ggplot(x, aes_string(x = "factor(fc.raw.file)", y = "pepCount", fill = "category")) +
             geom_bar(stat = "identity", position = "stack") +
             xlab("") +
             ylab("count") +
             scale_x_discrete_reverse(x$fc.raw.file) +
             ylim(0, max(param_EV_pepThresh, max_pep)*1.1) +
-            geom_abline(alpha = 0.5, intercept = param_EV_pepThresh, slope = 0, colour = "green", linetype = "dashed", size = 1.5) +
+            geom_abline(alpha = 0.5, intercept = param_EV_pepThresh, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
             scale_fill_manual(values = c("green", "#BEAED4")) +
             ggtitle("EVD: Peptide ID count") + 
             coord_flip()

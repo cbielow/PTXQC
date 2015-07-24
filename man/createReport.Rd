@@ -43,6 +43,6 @@ folder.
 You need write access to the txt folder!
 
 For updates, bug fixes and feedback please visit
-\url{http://github.com/cbielow/R-PTXQC}.
+\url{http://github.com/cbielow/PTXQC}.
 }
 
