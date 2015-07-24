@@ -40,7 +40,8 @@ boxplotCompare <- function(data,
                            mainlab = ylab,
                            sublab = "",
                            boxes_per_page = 30,
-                           abline = NA)
+                           abline = NA,
+                           coord_flip =T)
 {
  
   if (ncol(data) == 2) {
@@ -107,6 +108,10 @@ boxplotCompare <- function(data,
     if (!is.na(abline))
     {
       pl = pl + geom_abline(alpha = 0.5, intercept = abline, slope = 0, colour = "green")
+    }
+    if (coord_flip == T)
+    {
+      pl = pl + coord_flip()
     }
     #print(pl)
     return(pl)

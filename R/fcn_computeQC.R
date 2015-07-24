@@ -196,22 +196,31 @@ if (enabled_summary)
   ### MS/MS identified [%]
   dms = d_smy[[1]][,"ms.ms.identified...."]
   dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was aquired
-  lab_IDd = c("bad (<" %+% id_rate_bad %+% "%)", "ok (" %+% id_rate_bad %+% "-" %+% id_rate_great %+% "%)", "great (>" %+% id_rate_great %+% "%)")
-  d_smy[[1]]$color = factor(cut(dms, breaks=c(-1, id_rate_bad, id_rate_great, 100), labels=lab_IDd))
-  #unique(d_smy[[1]]$color)
-  cols_IDd = c("red", "blue", "green")
-  cols_IDs_active = cols_IDd[lab_IDd %in% unique(d_smy[[1]]$color)]
-  #cols_IDs_active
+  lab_IDd = c("red", 
+              "blue", 
+              "green")
+  names(lab_IDd) = c("bad (<" %+% id_rate_bad %+% "%)", 
+                     "ok (" %+% id_rate_bad %+% "-" %+% id_rate_great %+% "%)",
+                     "great (>" %+% id_rate_great %+% "%)")
+  d_smy[[1]]$color = factor(cut(dms, breaks=c(-1, id_rate_bad, id_rate_great, 100), labels=names(lab_IDd)))
+
+  
+  d_smy[[1]]$fc.raw.file = mq$raw_file_mapping$to[match(d_smy[[1]]$raw.file, mq$raw_file_mapping$from)]
+  d_smy[[1]]$fc.raw.file = factor(d_smy[[1]]$fc.raw.file, levels=d_smy[[1]]$fc.raw.file)
   
   d_smy[[1]]$x = 1:nrow(d_smy[[1]])
   GPL$add( 
-    ggplot(d_smy[[1]], aes_string(x = "x", y = "ms.ms.identified....")) +
+    ggplot(d_smy[[1]], aes_string(y = "fc.raw.file", x = "ms.ms.identified....")) +
       geom_point(aes_string(colour = "color")) +
-      xlab("raw file (ordered as in SM.txt)") + ylab("MS/MS identified [%]") +
-      scale_colour_manual(values=cols_IDs_active) + 
+      geom_vline(xintercept = id_rate_bad, color=(lab_IDd)[1]) +
+      geom_vline(xintercept = id_rate_great, color=(lab_IDd)[3]) +
+      ylab("") + 
+      xlab("MS/MS identified [%]") +
+      scale_colour_manual(values=lab_IDd) + 
       ggtitle("SM: MS/MS identified per Raw file") + 
-      ylim(0, max(dms)*1.1) + 
-      guides(color=guide_legend(title="ID class"))
+      xlim(0, max(dms, id_rate_great)*1.1) + 
+      guides(color=guide_legend(title="ID class")) +
+      scale_y_discrete_reverse(d_smy[[1]]$fc.raw.file, breaks = ggAxisLabels)
     )
   ## QC measure for contamination
   qc_sm_id = d_smy[[1]][, c("raw.file", "ms.ms.identified....")]
