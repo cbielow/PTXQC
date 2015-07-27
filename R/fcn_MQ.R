@@ -26,6 +26,7 @@
 #' @param sublab  Sub title
 #' @param boxes_per_page  Maximum number of boxplots per plot. Yields multiple plots if more groups are given.
 #' @param abline          Draw a horziontal green line at the specified y-position (e.g. to indicate target median values)
+#' @param coord_flip      Exchange Y and X-axis for better readability
 #' 
 #' @return List of ggplot objects
 #' 

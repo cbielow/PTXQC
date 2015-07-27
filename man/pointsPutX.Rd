@@ -4,11 +4,9 @@
 \alias{pointsPutX}
 \title{Distribute a set of points with fixed y-values on a stretch of the x-axis.}
 \usage{
-pointsPutX(pl, x_range, x_section, y, col = NA)
+pointsPutX(x_range, x_section, y, col = NA)
 }
 \arguments{
-  \item{pl}{ggplot object to add a geom_point layer}
-
   \item{x_range}{[min,max] valid range of x-values}
 
   \item{x_section}{[min,max] fraction in which to
@@ -24,7 +22,6 @@ pointsPutX(pl, x_range, x_section, y, col = NA)
 ggplot object with new geom_point
 }
 \description{
-Distribute a set of points with fixed y-values on a stretch
-of the x-axis.
+#' Usage: ggplot(...) + geom_X(...) + pointsPutX(...)
 }
 

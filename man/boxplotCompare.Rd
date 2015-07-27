@@ -5,7 +5,7 @@
 \title{Boxplots - one for each condition (=column) in a data frame.}
 \usage{
 boxplotCompare(data, log2 = T, ylab = "intensity", mainlab = ylab,
-  sublab = "", boxes_per_page = 30, abline = NA)
+  sublab = "", boxes_per_page = 30, abline = NA, coord_flip = T)
 }
 \arguments{
   \item{data}{Data frame in long format with numerical
