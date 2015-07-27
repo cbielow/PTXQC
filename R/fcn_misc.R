@@ -695,3 +695,40 @@ thinOutBatch = function(data, filterColname, batchColname, binCount = 1000)
   return (r)  
 }
 
+
+#'
+#' Assign a relative abundance class to a set of (log10) abundance values
+#' 
+#' Abundances (should be logged already) are grouped into different levels,
+#' starting from the smallest values ("low") to the highest values ("high").
+#' Intermediate abundances are either assigned as "mid", or "low-mid".
+#' If the range is too large, only "low" and "high" are assigned, the intermediate values
+#' are just numbers.
+#' 
+#' Example:
+#'  getAbundanceClass(c(12.4, 17.1, 14.9, 12.3)) ## --> factor(c("low", "high", "mid", "low"))
+#' 
+#' 
+#' @param x Vector of numeric values (in log10)
+#' @return Vector of factors corresponding to input with abundance class names (e.g. low, high)
+#'
+getAbundanceClass = function(x) {
+  r = data.frame(x = x)
+  r$x_diff = round(r$x - min(r$x))
+  r$x_diff_fac = as.numeric(factor(r$x_diff)) ## make a factor, to get ordering (lowAbd=1, ...)
+  ## assign names to abundance classes
+  cc = length(unique(r$x_diff))
+  if (cc==1) lvls = "mid"
+  if (cc==2) lvls = c("low", "high")
+  if (cc==3) lvls = c("low", "mid", "high")
+  if (cc==4) lvls = c("low", "low-mid", "mid-high", "high")
+  if (cc>4) {
+    lvls = 1:max(r$x_diff_fac)
+    lvls[1] = "low"
+    lvls[length(lvls)] = "high"
+  }
+  r$x_cl = lvls[r$x_diff_fac]
+  r$x_cl = factor(r$x_cl, levels=lvls, ordered=T)
+  r
+  return(r$x_cl)
+}

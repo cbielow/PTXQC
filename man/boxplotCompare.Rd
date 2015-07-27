@@ -25,6 +25,9 @@ boxplotCompare(data, log2 = T, ylab = "intensity", mainlab = ylab,
   \item{abline}{Draw a horziontal green line at the
   specified y-position (e.g. to indicate target median
   values)}
+
+  \item{coord_flip}{Exchange Y and X-axis for better
+  readability}
 }
 \value{
 List of ggplot objects

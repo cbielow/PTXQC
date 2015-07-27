@@ -28,7 +28,7 @@
 #'          
 #' @import ggplot2
 #' @import directlabels
-#' @importFrom plyr ddply dlply summarise
+#' @importFrom plyr ddply dlply adply summarise
 #' @importFrom grid unit
 #' @importFrom reshape2 melt
 #' @importFrom RColorBrewer brewer.pal
@@ -282,18 +282,25 @@ createReport = function(txt_folder, yaml_obj = list())
     { ##apparently no conditions were used, so there is just 'intensity'
       idx_int = "intensity"
     }
-    con_stats_total_int = t(sapply(idx_int, function(x) log10(sum(as.numeric(d_pg[, x]), na.rm=T))))
-    con_stats_LogAbd = round(con_stats_total_int - min(con_stats_total_int))
-    con_stats = t(sapply(idx_int, function(x) sum(as.numeric(d_pg[d_pg$contaminant, x]), na.rm=T)/sum(as.numeric(d_pg[, x], na.rm=T))*100 ))
-    colnames(con_stats) = simplifyNames(delLCP(idx_int))
     
-    #barplot(con_stats, ylim=c(0,max(20, max(con_stats)*1.1)), main="PG: Contaminant per condition", xlab="", ylab="% intensity of contaminants", las=3,)
-    #abline(a=5, b=0, col="red", lwd=4)
+    df.con_stats = adply(idx_int, .margins=1, function(group) {
+      #cat(group)
+      return(data.frame(group_long = group, 
+                        log10_int  = log10(sum(as.numeric(d_pg[, group]), na.rm=T)),
+                        cont_pc    = sum(as.numeric(d_pg[d_pg$contaminant, group]), na.rm=T) /
+                                     sum(as.numeric(d_pg[, group], na.rm=T))*100
+                        ))
+    })
+    df.con_stats$group = simplifyNames(delLCP(df.con_stats$group_long))
+    df.con_stats$logAbdClass = getAbundanceClass(df.con_stats$log10_int)
+    df.con_stats
+    
     plotContsPG = function(datav) {
       datav$section = as.integer(seq(0, nrow(datav)/correctSetSize(nrow(datav),30)*0.999, length.out=nrow(datav)))
       pl = 
-        ggplot(data=datav, aes_string(x = "x", y = "y", alpha="Log10Diff")) +
-        scale_alpha_discrete(range = c(c(0.1, 1)[(length(unique(datav$Log10Diff))==1) + 1], 1.0)) +
+        ggplot(data=datav, aes_string(x = "group", y = "cont_pc", alpha="logAbdClass")) +
+        scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(datav$logAbdClass))==1) + 1], 1.0), ## ordering of range is critical!
+                             name = "Abundance\nclass") +
         geom_bar(stat="identity") +
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
         xlab("")  +
@@ -304,14 +311,13 @@ createReport = function(txt_folder, yaml_obj = list())
       #print(pl)
       return (pl)
     }
-    df.con_stats = data.frame(x=colnames(con_stats), y=as.vector(con_stats[1,]), Log10Diff = factor(as.vector(con_stats_LogAbd[1,])))
     pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 90, plotContsPG, sort_indices=F)
     for (p in pg_plots_cont) GPL$add(p);
     
     ##
     ## stats file
     ##
-    con_stats_smry = quantile(con_stats[,1], probs=c(0,0.5,1))
+    con_stats_smry = quantile(df.con_stats$cont_pc, probs=c(0,0.5,1))
     cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=stats_file, append=T, sep="\n")  
     
     
@@ -808,7 +814,7 @@ createReport = function(txt_folder, yaml_obj = list())
         return (1)
       })
       ## QC measure for protein ID performance
-      qc_protc = pgc[pgc$match=="no", c("fc.raw.file", "protCount")]
+      qc_protc = pgc[pgc$category=="genuine", c("fc.raw.file", "protCount")]
       cname = "X045X.EVD.Protein_Count (>" %+% param_EV_protThresh %+% ")"
       qc_protc[,cname] = qualLinThresh(qc_protc$protCount, param_EV_protThresh)
       QCM[["EVD.ProtCount"]] = qc_protc[, c("fc.raw.file", cname)]
@@ -856,7 +862,7 @@ createReport = function(txt_folder, yaml_obj = list())
       })
       
       ## QC measure for peptide ID performance
-      qc_pepc = pepc[pepc$match=="no", c("fc.raw.file", "pepCount")]
+      qc_pepc = pepc[pepc$category=="genuine", c("fc.raw.file", "pepCount")]
       cname = "X040X.EVD.Peptide_Count (>" %+% param_EV_pepThresh %+% ")"
       qc_pepc[,cname] = qualLinThresh(qc_pepc$pepCount, param_EV_pepThresh)
       QCM[["EVD.PepCount"]] = qc_pepc[, c("fc.raw.file", cname)]
@@ -1466,7 +1472,7 @@ plotCont = function(d_evd_sub, top5)
   d_norm = ddply(d_evd_sub[, c("intensity", "fc.raw.file")],  "fc.raw.file", 
                  function(x) summarise(x, total.intensity=sum(as.numeric(intensity), na.rm=T)))
   d_sum$total.intensity = d_norm$total.intensity[match(d_sum$fc.raw.file, d_norm$fc.raw.file)]
-  d_sum$Log10Diff = factor(round(log10(d_sum$total.intensity) - min(log10(d_sum$total.intensity))))
+  d_sum$Log10Diff = getAbundanceClass(log10(d_sum$total.intensity))
   d_sum$s.intensity = d_sum$s.intensity / d_sum$total.intensity * 100
   ## shorten protein-groups (at most two protein names)
   d_sum$pname = sapply(d_sum$pname, function(x) {
@@ -1488,10 +1494,11 @@ plotCont = function(d_evd_sub, top5)
   
   ## plot
   GPL$add(
-    #print(  
+  #print(  
     ggplot(d_sum, aes_string(x = "factor(fc.raw.file)", y = "s.intensity", fill = "Protein")) +
       geom_bar(aes_string(alpha = "Log10Diff"), stat="identity") +
-      scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(d_sum$Log10Diff))==1) + 1], 1.0)) +
+      scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(d_sum$Log10Diff))==1) + 1], 1.0),
+                           name = "Abundance\nclass") +
       xlab("")  +
       theme_bw() +
       ggtitle("EVD: Contaminant per Raw file") +
