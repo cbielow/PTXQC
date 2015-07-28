@@ -285,7 +285,7 @@ createReport = function(txt_folder, yaml_obj = list())
     
     df.con_stats = adply(idx_int, .margins=1, function(group) {
       #cat(group)
-      return(data.frame(group_long = group, 
+      return(data.frame(group_long = as.character(group),
                         log10_int  = log10(sum(as.numeric(d_pg[, group]), na.rm=T)),
                         cont_pc    = sum(as.numeric(d_pg[d_pg$contaminant, group]), na.rm=T) /
                                      sum(as.numeric(d_pg[, group], na.rm=T))*100
@@ -349,12 +349,12 @@ createReport = function(txt_folder, yaml_obj = list())
     medians = sort(apply(log2(d_pg[, colsW, drop=F]+1), 2, quantile, na.rm=T, probs=0.5)) # + c(0,0,0,0,0,0))
     int_dev = RSD(medians)
     int_dev.s = pastet("INT RSD [%]", round(int_dev, 3))
-    lpl = boxplotCompare(data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
-                         log2 = T, 
+    lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
+                            log2 = T, 
                          mainlab = "PG: intensity distribution",
-                         ylab = "log2 intensity",
-                         sublab = paste0("RSD ", round(int_dev_no0, 1),"% (expected < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
-                         abline = param_PG_intThresh)
+                            ylab = expression(log[2]*" intensity"),
+                          sublab = paste0("RSD ", round(int_dev_no0, 1),"% (expected < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
+                          abline = param_PG_intThresh)
     for (pl in lpl) GPL$add(pl);
     rm("lpl")          
     cat(int_dev.s, file=stats_file, append=T, sep="\n")
@@ -375,12 +375,12 @@ createReport = function(txt_folder, yaml_obj = list())
       medians = sort(apply(log2(d_pg[, colsW, drop=F]+1), 2, quantile, probs=0.5, na.rm=T)) # + c(0,0,0,0,0,0))
       lfq_dev = RSD(medians)
       lfq_dev.s = pastet("LFQ RSD [%]", round(lfq_dev, 3))
-      lpl = boxplotCompare(data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
-                           log2 = T, 
-                           mainlab="PG: LFQ intensity distribution", 
-                           ylab = "log2 LFQ intensity",
-                           sublab= paste0("RSD ", round(lfq_dev_no0, 1),"% (expected < 5%)\nRSD ", round(lfq_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
-                           abline = param_PG_intThresh)
+      lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
+                              log2 = T, 
+                           mainlab = "PG: LFQ intensity distribution", 
+                              ylab = expression(log[2]*" LFQ intensity"),
+                            sublab = paste0("RSD ", round(lfq_dev_no0, 1),"% (expected < 5%)\nRSD ", round(lfq_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
+                            abline = param_PG_intThresh)
       for (pl in lpl) GPL$add(pl);
       cat(lfq_dev.s, file=stats_file, append=T, sep="\n")
     }
@@ -401,12 +401,12 @@ createReport = function(txt_folder, yaml_obj = list())
       medians = sort(apply(log2(d_pg[, colsW, drop=F]+1), 2, quantile, probs=0.5, na.rm=T)) # + c(0,0,0,0,0,0))
       reprt_dev = RSD(medians)
       reprt_dev.s = pastet("Reporter RSD [%]", round(reprt_dev, 3))
-      lpl = boxplotCompare(data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
-                           log2 = T, 
-                           ylab="log2 intensity", 
-                           mainlab="PG: reporter intensity distribution", 
-                           sublab= paste0("RSD ", round(reprt_dev_no0, 1),"% (expected < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
-                           abline = param_PG_intThresh)
+      lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
+                              log2 = T, 
+                              ylab = expression(log[2]*" reporter intensity"),
+                           mainlab = "PG: reporter intensity distribution", 
+                            sublab = paste0("RSD ", round(reprt_dev_no0, 1),"% (expected < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
+                            abline = param_PG_intThresh)
       for (pl in lpl) GPL$add(pl);
       cat(reprt_dev.s, file=stats_file, append = T, sep="\n")
     }
@@ -732,7 +732,7 @@ createReport = function(txt_folder, yaml_obj = list())
       lpl = boxplotCompare(data = d_evd[, c("fc.raw.file", "intensity", "contaminant")],
                            log2 = T, 
                            mainlab="EVD: peptide intensity distribution",
-                           ylab = "log2 intensity",
+                           ylab = expression(log[2]*" intensity"),
                            sublab=paste0("RSD ", round(int_dev_pep, 1),"% (expected < 5%)\n"),
                            abline = param_EV_intThresh)
       for (pl in lpl) GPL$add(pl);
@@ -1495,10 +1495,13 @@ plotCont = function(d_evd_sub, top5)
   ## plot
   GPL$add(
   #print(  
-    ggplot(d_sum, aes_string(x = "factor(fc.raw.file)", y = "s.intensity", fill = "Protein")) +
-      geom_bar(aes_string(alpha = "Log10Diff"), stat="identity") +
+    ggplot(d_sum, aes_string(   x = "factor(fc.raw.file)",
+                                y = "s.intensity", 
+                             fill = "Protein")) +
+      geom_bar(aes_string(alpha = "Log10Diff"), 
+                           stat = "identity") +
       scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(d_sum$Log10Diff))==1) + 1], 1.0),
-                           name = "Abundance\nclass") +
+                            name = "Abundance\nclass") +
       xlab("")  +
       theme_bw() +
       ggtitle("EVD: Contaminant per Raw file") +

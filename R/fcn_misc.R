@@ -15,6 +15,7 @@
 #' @export
 delLCP <- function(x)
 {
+  x = as.character(x)
   #require(Biobase)
   if (length(x) <= 1) return(x)
   

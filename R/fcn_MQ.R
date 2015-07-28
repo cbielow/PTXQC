@@ -104,7 +104,8 @@ boxplotCompare <- function(data,
           scale_color_manual(values=cols, name = "Category") + 
           theme(axis.text.x = element_text(angle=90, vjust = 0.5)) +
           theme(legend.position=ifelse(length(cols)==1, "none", "right")) +
-          addGGtitle(mainlab, sublab)
+          addGGtitle(mainlab, sublab) + 
+          scale_x_discrete_reverse(unique(data$group))
     
     if (!is.na(abline))
     {
@@ -117,7 +118,6 @@ boxplotCompare <- function(data,
     #print(pl)
     return(pl)
   }
-  #ex: fcn_boxplot_internal(datar[datar$section<2,])
   lpl = byXflex(data = data, indices = data$group, subset_size = boxes_per_page, sort_indices = F, FUN = fcn_boxplot_internal, abline)
   return (lpl)
 }
