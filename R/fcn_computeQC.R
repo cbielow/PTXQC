@@ -1000,6 +1000,7 @@ createReport = function(txt_folder, yaml_obj = list())
               evd_RT_t = thinOutBatch(d_alignQ,
                                       "calibrated.retention.time",
                                       "raw.file")
+              evd_RT_t$fc.raw.file = renameFile(evd_RT_t$raw.file, mq$raw_file_mapping)
               
               ## param
               param_name_EV_MatchingTolerance = "File$Evidence$MQpar_MatchingTimeWindow_num"
@@ -1011,70 +1012,7 @@ createReport = function(txt_folder, yaml_obj = list())
                   param_EV_MatchingTolerance = setYAML(yaml_obj, param_name_EV_MatchingTolerance, as.numeric(v))
                 }
               }
-              
-              
-              ## prepare projection in rtdiff as culmulative function
-              global_RT_range = range(d_alignQ$calibrated.retention.time, na.rm=T)
-              proj_align_h = ddply(d_alignQ, "raw.file", function(x) {
-                r = range(x$rtdiff, na.rm=T)
-                h = hist(x$rtdiff, 
-                         breaks = sort(c( rep(c(0.99,1.01),each=2)*c(-param_EV_MatchingTolerance,param_EV_MatchingTolerance),seq(round(r[1]-1), round(r[2]+1), by=0.25)+1/8)),
-                         plot = F)
-                return (data.frame(count = global_RT_range[1] + cumsum(h$counts * diff(global_RT_range) / (sum(h$counts))), mid = h$mids))
-              })
-              proj_align_h$fc.raw.file = renameFile(proj_align_h$raw.file, mq$raw_file_mapping)
-              proj_align_h$matching = "matchable"
-              proj_align_h$matching[proj_align_h$mid < -param_EV_MatchingTolerance] = "outlier1"
-              proj_align_h$matching[proj_align_h$mid >  param_EV_MatchingTolerance] = "outlier2"
-              
-              ## plot alignment result
-              evd_RT_t$RTdiff_in = c("green", "red")[(abs(evd_RT_t$rtdiff) > param_EV_MatchingTolerance)+1]
-              evd_RT_t$fc.raw.file = renameFile(evd_RT_t$raw.file, mq$raw_file_mapping)
-              splitRTAlignByRawFile = function(RTdata, ylim_g)
-              {
-                h_sub = proj_align_h [  proj_align_h$raw.file %in% RTdata$raw.file, ]
-                if (evd_has_fractions){
-                  df_fraction = data.frame(fc.raw.file = unique(RTdata$fc.raw.file))
-                  df_fraction$fraction = d_evd$fraction[match(df_fraction$fc.raw.file, d_evd$fc.raw.file)]
-                  df_fraction$newlabel = paste(df_fraction$fc.raw.file, "  -  fr",df_fraction$fraction)
-                  ## amend fc.raw.file with fraction number
-                  levels(h_sub$fc.raw.file) = df_fraction$newlabel[match(levels(h_sub$fc.raw.file), df_fraction$fc.raw.file)]
-                  levels(RTdata$fc.raw.file) = df_fraction$newlabel[match(levels(RTdata$fc.raw.file), df_fraction$fc.raw.file)]
-                }
-                h_sub_m = h_sub[h_sub$matching=="matchable",]
-                h_sub_o1 = h_sub[h_sub$matching=="outlier1",]
-                h_sub_o2 = h_sub[h_sub$matching=="outlier2",]
-                pl = ggplot(RTdata, aes_string(x="calibrated.retention.time", y="retention.time.calibration")) + 
-                  ## the MaxQuant correction (plot real data, no spline, since it can be very irregular)
-                  geom_point(aes(color = "blue"), alpha=0.5) +
-                  ## PTXQC correction
-                  geom_point(aes_string(x="calibrated.retention.time", y="rtdiff", color="RTdiff_in"), alpha=0.5) + 
-                  scale_colour_manual(name = 'Metric', values = c("blue"="blue", "green"="green", "red"="red"), labels=c("MQ RT corr", paste0("pair (in ",param_EV_MatchingTolerance,"min)"), paste0("pair (out ",param_EV_MatchingTolerance,"min)"))) +
-                  ## three lines, since linetypes cannot be mixed in geom_path or geom_line
-                  c(geom_path(data = h_sub_m, aes_string(x="count", y="mid", alpha="0.6", linetype="matching"), color="black", size=1))[nrow(h_sub_m)>0] +
-                  c(geom_path(data = h_sub_o1, aes_string(x="count", y="mid", alpha="0.6", linetype="matching"), color="black", size=1))[nrow(h_sub_o1)>0] +
-                  ## linetype outside of aes() to avoid a third legend entry
-                  c(geom_path(data = h_sub_o2, aes_string(x="count", y="mid", alpha="0.6"), linetype="dotted", color="black", size=1))[nrow(h_sub_o2)>0] +
-                  #NULL +
-                  #geom_hline(aes(yintercept = +param_EV_MatchingTolerance, linetype = "Ad", alpha=0.8), show_guide = T, col="grey") +
-                  #geom_hline(aes(yintercept = -param_EV_MatchingTolerance, linetype = "Ad", alpha=0.8), show_guide = T, col="grey") +
-                  scale_alpha(guide = 'none') +  ## using 'alpha' outside of aes() messes up the legend for linetype... for whatever reason
-                  scale_linetype_manual("Match CDF", values=c("matchable"="solid","outlier1"="dotted"), labels=c("matchable" = paste0("pair (in ",param_EV_MatchingTolerance,"min)"), "outlier1" = paste0("pair (out ",param_EV_MatchingTolerance,"min)"))) +
-                  ylim(ylim_g) +
-                  xlab("corrected RT [min]\nscaled CDF probability") +
-                  ylab("RT distance to reference [min]") +
-                  guides(colour = guide_legend(override.aes = list(linetype=0, shape=16, size=3))) ## color legend has a linetype... get rid of it
-                
-                pl = pl + 
-                  facet_wrap(~ fc.raw.file) +
-                  addGGtitle("EVD: RT distance of genuine peptides to reference after alignment", txt_subtitle)  
-                #print(pl)
-                GPL$add(pl)
-                return(1)
-              }
-              ylim_g = quantile(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), probs=c(0.01,0.99), na.rm=T) * 1.1
-              byX(evd_RT_t, evd_RT_t$fc.raw.file, 3*3, splitRTAlignByRawFile, sort_indices = F, ylim_g)
-              
+                         
               ## QC measure for alignment quality
               ## compute % of matches within matching boundary (1 min by default)
               qcAlign = ScoreInAlignWindow(d_alignQ, param_EV_MatchingTolerance)
@@ -1084,6 +1022,50 @@ createReport = function(txt_folder, yaml_obj = list())
               qcAlign$X024X.EVD.MBR_Align = qcAlign$withinRT
               QCM[["X024X.EVD.MBR_Align"]] = qcAlign[, c("raw.file", "X024X.EVD.MBR_Align")]
               
+              qcAlign$fc.raw.file = renameFile(qcAlign$raw.file, mq$raw_file_mapping)
+              qcAlign$newlabel = qcAlign$fc.raw.file
+              if (evd_has_fractions)
+              { ## amend fc.raw.file with fraction number
+                qcAlign$fraction = d_evd$fraction[match(qcAlign$fc.raw.file, d_evd$fc.raw.file)]
+                qcAlign$newlabel = paste(qcAlign$fc.raw.file, "  -  frc", qcAlign$fraction)
+              }
+              ## amend fc.raw.file with % good ID pairs
+              qcAlign$newlabel = paste0(qcAlign$newlabel, " (", round(qcAlign$withinRT*100), "%)")
+              evd_RT_t$fc.raw.file_augment = evd_RT_t$fc.raw.file
+              levels(evd_RT_t$fc.raw.file_augment) = qcAlign$newlabel[match(levels(evd_RT_t$fc.raw.file_augment), qcAlign$fc.raw.file)]
+
+              evd_RT_t$RTdiff_in = c("green", "red")[(abs(evd_RT_t$rtdiff) > param_EV_MatchingTolerance)+1]
+              
+              ## plot alignment result
+  
+              splitRTAlignByRawFile = function(RTdata, ylim_g)
+              {
+                pl = ggplot(RTdata, aes_string(x="calibrated.retention.time", y="retention.time.calibration")) + 
+                  ## the MaxQuant correction (plot real data, no spline, since it can be very irregular)
+                  geom_point(aes(alpha=0.7), color = "blue") +
+                  ## PTXQC correction
+                  geom_point(aes_string(x="calibrated.retention.time", y="rtdiff", color="RTdiff_in"), alpha=0.5) + 
+                  scale_alpha(name = 'Alignment function', 
+                              labels = list(expression("MaxQuant" ~ Delta*"RT")),
+                              range=c(1,1)) + 
+                  scale_colour_manual(name = expression(bold("ID pairs ("*Delta*"RT to Ref)")), 
+                                      values = c("green"="green", "red"="red"),
+                                      labels=c(paste0("good (<",param_EV_MatchingTolerance,"min)"), 
+                                               paste0("bad (>",param_EV_MatchingTolerance,"min)"))) +
+                  guides(colour = guide_legend(order = 2), 
+                          alpha = guide_legend(order = 1)) +   ## alpha-legend on top, color below
+                  ylim(ylim_g) +
+                  xlab("corrected RT [min]") +
+                  ylab(expression(Delta*"RT [min]")) +
+                  facet_wrap(~ fc.raw.file_augment) +
+                  addGGtitle("EVD: MBR - alignment", txt_subtitle)  
+                #print(pl)
+                GPL$add(pl)
+                return(1)
+              }
+              ylim_g = quantile(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), probs=c(0.01,0.99), na.rm=T) * 1.1
+              byX(evd_RT_t, evd_RT_t$fc.raw.file, 3*3, splitRTAlignByRawFile, sort_indices = F, ylim_g)
+
               ## save some memory
               if (!exists("DEBUG_PTXQC")) {
                 rm("evd_RT_t")
