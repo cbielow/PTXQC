@@ -289,9 +289,10 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     
   } else if (type=="sm") {
     ## summary.txt special treatment
-    ## find the first row, which lists Groups (after Raw files): it has two non-zero entries only
+    ## find the first row, which lists Groups (after Raw files): it has two non-zero entries only 
+    ##                                                           (or even less if the group name is empty)
     ##dx <<- .$mq.data;
-    idx_group = which(apply(.$mq.data, 1, function(x) sum(x!="", na.rm=T))==2)[1]
+    idx_group = which(apply(.$mq.data, 1, function(x) sum(x!="", na.rm=T))<=2)[1]
     ## summary.txt will not contain groups, if none where specified during MQ-configuration
     if (is.na(idx_group)) {
       idx_group = nrow(.$mq.data)
