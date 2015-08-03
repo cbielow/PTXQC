@@ -276,13 +276,16 @@ createReport = function(txt_folder, yaml_obj = list())
     
     d_pg = mq$readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")
     
-    ## Contaminants stats
     idx_int = grepv("^intensity\\.", colnames(d_pg))
     if (length(idx_int) == 0)
     { ##apparently no conditions were used, so there is just 'intensity'
       idx_int = "intensity"
     }
-    
+    ## a global PG name mapping
+    MAP_pg_groups = data.frame(long = idx_int)
+    MAP_pg_groups$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups$long)))
+                             
+    ## Contaminants stats
     df.con_stats = adply(idx_int, .margins=1, function(group) {
       #cat(group)
       return(data.frame(group_long = as.character(group),
@@ -291,7 +294,7 @@ createReport = function(txt_folder, yaml_obj = list())
                                      sum(as.numeric(d_pg[, group], na.rm=T))*100
                         ))
     })
-    df.con_stats$group = simplifyNames(delLCP(df.con_stats$group_long))
+    df.con_stats$group = MAP_pg_groups$short[match(df.con_stats$group_long, MAP_pg_groups$long)]
     df.con_stats$logAbdClass = getAbundanceClass(df.con_stats$log10_int)
     df.con_stats
     
@@ -354,7 +357,8 @@ createReport = function(txt_folder, yaml_obj = list())
                          mainlab = "PG: intensity distribution",
                             ylab = expression(log[2]*" intensity"),
                           sublab = paste0("RSD ", round(int_dev_no0, 1),"% (expected < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
-                          abline = param_PG_intThresh)
+                          abline = param_PG_intThresh,
+                           names = MAP_pg_groups)
     for (pl in lpl) GPL$add(pl);
     rm("lpl")          
     cat(int_dev.s, file=stats_file, append=T, sep="\n")
@@ -380,7 +384,8 @@ createReport = function(txt_folder, yaml_obj = list())
                            mainlab = "PG: LFQ intensity distribution", 
                               ylab = expression(log[2]*" LFQ intensity"),
                             sublab = paste0("RSD ", round(lfq_dev_no0, 1),"% (expected < 5%)\nRSD ", round(lfq_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
-                            abline = param_PG_intThresh)
+                            abline = param_PG_intThresh,
+                             names = MAP_pg_groups)
       for (pl in lpl) GPL$add(pl);
       cat(lfq_dev.s, file=stats_file, append=T, sep="\n")
     }
@@ -406,7 +411,8 @@ createReport = function(txt_folder, yaml_obj = list())
                               ylab = expression(log[2]*" reporter intensity"),
                            mainlab = "PG: reporter intensity distribution", 
                             sublab = paste0("RSD ", round(reprt_dev_no0, 1),"% (expected < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
-                            abline = param_PG_intThresh)
+                            abline = param_PG_intThresh,
+                             names = MAP_pg_groups)
       for (pl in lpl) GPL$add(pl);
       cat(reprt_dev.s, file=stats_file, append = T, sep="\n")
     }
@@ -429,7 +435,7 @@ createReport = function(txt_folder, yaml_obj = list())
       data = t(d_pg[!d_pg$contaminant, unlist(clusterCols[cond]), drop=F])
       ## remove constant/zero columns (== dimensions == proteins)
       data = data[, colSums(data, na.rm=T) > 0, drop=F]
-      rownames(data) = simplifyNames(strings = rownames(data), infix_iterations = 2)
+      rownames(data) = MAP_pg_groups$short[match(rownames(data), MAP_pg_groups$long)]
       lpl = try(getPCA(data = data,
                        gg_layer = addGGtitle(paste0("PG: PCA of '", sub(".", " ", cond, fixed=T), "'"), "(excludes contaminants)")
       )[["plots"]]
@@ -469,7 +475,7 @@ createReport = function(txt_folder, yaml_obj = list())
       if (ncol(d_sub) > length(idx_globalRatio))
       {
         idx_other = setdiff(1:ncol(d_sub), idx_globalRatio)
-        colnames(d_sub)[idx_other] = simplifyNames(strings = delLCP(colnames(d_sub)[idx_other]))
+        colnames(d_sub)[idx_other] = shortenStrings(simplifyNames(strings = delLCP(colnames(d_sub)[idx_other])))
       }
       #summary(d_sub)
       # 

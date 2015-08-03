@@ -27,7 +27,7 @@
 #' @param boxes_per_page  Maximum number of boxplots per plot. Yields multiple plots if more groups are given.
 #' @param abline          Draw a horziontal green line at the specified y-position (e.g. to indicate target median values)
 #' @param coord_flip      Exchange Y and X-axis for better readability
-#' 
+#' @param names           An optional data.frame(long=.., short=..), giving a renaming scheme for the 'group' column
 #' @return List of ggplot objects
 #' 
 #' @import ggplot2
@@ -42,7 +42,8 @@ boxplotCompare <- function(data,
                            sublab = "",
                            boxes_per_page = 30,
                            abline = NA,
-                           coord_flip =T)
+                           coord_flip = T,
+                           names = NA)
 {
  
   if (ncol(data) == 2) {
@@ -52,6 +53,18 @@ boxplotCompare <- function(data,
   
   if (log2) {
     data$value = log2(data$value)
+  }
+  
+  ## shorten group names
+  if (class(names)=='data.frame')
+  {
+    stopifnot(sort(colnames(names)) == c("long", "short"))
+    data$group = names$short[match(data$group, names$long)]
+    if (any(is.na(data$group))) 
+    {
+      print(names)
+      stop("Group renaming is incomplete! Aborting...")
+    }
   }
   
   ## actual number of entries in each column (e.g. LFQ often has 0)

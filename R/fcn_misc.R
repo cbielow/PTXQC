@@ -193,9 +193,10 @@ simplifyNames = function(strings, infix_iterations=2, min_LCS_length=7)
 #' squeeze the actual plot (ggplot) or make the labels disappear beyond the margins (graphics::plot)
 #' One ad-hoc way of avoiding this is to shorten the names, hoping they are still meaningful to the viewer.
 #' 
-#' @param x             Vector of input strings
-#' @param max_len       Maximum length allowed
-#' @param print_warning Issue a warning which strings were shortened
+#' @param x                Vector of input strings
+#' @param max_len          Maximum length allowed
+#' @param verbose          Print which strings were shortened
+#' @param allow_duplicates If shortened strings are not discernible any longer, consider the short version valid (not the default), otherwise (default) return the full string (--> no-op)
 #' @return  A vector of shortened strings
 #' 
 #' @examples
@@ -204,17 +205,32 @@ simplifyNames = function(strings, infix_iterations=2, min_LCS_length=7)
 #' 
 #' @export
 #' 
-shortenStrings = function(x, max_len = 12, print_warning = TRUE)
+shortenStrings = function(x, max_len = 20, verbose = TRUE, allow_duplicates = FALSE)
 {
   idx = nchar(x) > max_len
-  if (print_warning & any(idx))
+  if (any(duplicated(x))) stop("Duplicated input given to 'shortenStrings'!\n  ", paste(x, collapse="\n  "))
+  
+  xr = x
+  xr[idx] = paste0(substr(x[idx], 1, max_len-2), "..")
+  
+  if (!allow_duplicates & any(duplicated(xr)))
+  {
+    ## try cutting the prefix instead of the suffix...
+    xr[idx] = paste0("..", sapply(x[idx], function(s) substr(s, nchar(s)-max_len+2, nchar(s))))
+    if (any(duplicated(xr)))
+    {
+      stop("Duplicated output produced by 'shortenStrings'!\n  ", paste(xr, collapse="\n  "), "\nPlease rename your items (make them shorter and less similar)")
+    }
+  }
+  
+  if (verbose & any(idx))
   {
     cat("The following labels will be shortened to ease plotting:\n")
     cat(paste0("  ", paste(x[idx], collapse="\n  ")))
     cat("\n")
   }
-  x[idx] = paste0(substr(x[idx], 1, max_len-2), "..")
-  return (x)
+
+  return (xr)
 }
 
 #' Compute shortest prefix length which makes all strings in a vector uniquely identifyable.

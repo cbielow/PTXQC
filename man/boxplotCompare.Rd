@@ -5,7 +5,8 @@
 \title{Boxplots - one for each condition (=column) in a data frame.}
 \usage{
 boxplotCompare(data, log2 = T, ylab = "intensity", mainlab = ylab,
-  sublab = "", boxes_per_page = 30, abline = NA, coord_flip = T)
+  sublab = "", boxes_per_page = 30, abline = NA, coord_flip = T,
+  names = NA)
 }
 \arguments{
   \item{data}{Data frame in long format with numerical
@@ -28,6 +29,9 @@ boxplotCompare(data, log2 = T, ylab = "intensity", mainlab = ylab,
 
   \item{coord_flip}{Exchange Y and X-axis for better
   readability}
+
+  \item{names}{An optional data.frame(long=.., short=..),
+  giving a renaming scheme for the 'group' column}
 }
 \value{
 List of ggplot objects

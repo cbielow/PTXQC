@@ -4,15 +4,19 @@
 \alias{shortenStrings}
 \title{Shorten a string to a maximum length and indicate shorting by appending '..'}
 \usage{
-shortenStrings(x, max_len = 12, print_warning = TRUE)
+shortenStrings(x, max_len = 20, verbose = TRUE, allow_duplicates = FALSE)
 }
 \arguments{
   \item{x}{Vector of input strings}
 
   \item{max_len}{Maximum length allowed}
 
-  \item{print_warning}{Issue a warning which strings were
-  shortened}
+  \item{verbose}{Print which strings were shortened}
+
+  \item{allow_duplicates}{If shortened strings are not
+  discernible any longer, consider the short version valid
+  (not the default), otherwise (default) return the full
+  string (--> no-op)}
 }
 \value{
 A vector of shortened strings
