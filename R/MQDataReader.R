@@ -335,9 +335,9 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       if (max(nchar(.$raw_file_mapping$to)) > add_fs_col)
       { ## resort to short naming convention
         .$raw_file_mapping[, "best effort"] = .$raw_file_mapping$to
-        cat("Filenames are longer than the maximal allowed size of '" %+% add_fs_col %+% "'. Resorting to short versions 'f...'.\n\n")
+        cat("Filenames are longer than the maximal allowed size of '" %+% add_fs_col %+% "'. Resorting to short versions 'file X'.\n\n")
         maxl = length(unique(.$mq.data$raw.file))
-        .$raw_file_mapping$to = paste("f", sprintf(paste0("%0", nchar(maxl), "d"), 1:maxl)) ## with leading 0's if required
+        .$raw_file_mapping$to = paste("file", sprintf(paste0("%0", nchar(maxl), "d"), 1:maxl)) ## with leading 0's if required
       }
       ## indicate to outside that a new table is ready
       .$mapping.created = FALSE
