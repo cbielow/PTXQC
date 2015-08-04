@@ -60,7 +60,10 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   
   ## reorder columns
   QCM_final = QCM_final[, order(colnames(QCM_final))]
-    
+  ## add column numbering (ignore first column, which is 'fc.raw.file')
+  idx = 2:(ncol(QCM_final)-1)
+  colnames(QCM_final)[idx] = paste0(colnames(QCM_final)[idx], " [", idx-1, "]")
+  
   QCM_final.m = melt(QCM_final, id.vars="fc.raw.file")
   QCM_final.m$variable = factor(QCM_final.m$variable, ordered = TRUE)
   
@@ -102,7 +105,7 @@ getQCHeatMap = function(QCM, raw_file_mapping)
                                guide = guide_legend(title = "score"),
                                breaks=c(1,0.5,0),
                                labels=c("best","under\nperforming","fail")) +
-          theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+          theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
           ggtitle("Performance overview") +
           xlab("") +
           ylab("Raw file")
