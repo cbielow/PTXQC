@@ -579,22 +579,22 @@ createReport = function(txt_folder, yaml_obj = list())
       {
         br = c(2, 5, 10, 20);
         GPL$add(
-          #print(
+        #print(
           ggplot(data = df_ratios, aes_string(x = "x", y = "y", colour = "col")) + 
             facet_grid(col ~ ., scales = "free_y") +
-            geom_line(aes_string(linetype="ltype", alpha = "alpha"), size = 1.2) +
-            geom_area(aes_string(fill = "col"), alpha=0.5) +
+            geom_line(size = 1.2) +
+            geom_area(aes_string(alpha = "ltype", fill = "col")) +
             xlab("ratio")  +
             ylab("density")  +
             #facet_grid(col ~ ) +
-            scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=400), guide_legend(legend_title)) + 
-            scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=400), guide_legend(legend_title)) +
-            scale_linetype_manual(values = c("dotted"="dotted", "solid"="solid"), 
+            scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide_legend(legend_title)) + 
+            scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=40)) +
+            scale_alpha_discrete(range = c(1, 0.2), 
                                   labels=c("dotted"="unimodal", "solid"="multimodal"),
-                                  guide_legend("mode")
+                                  guide_legend("shape")
             ) +
             scale_x_continuous(limits = c(d_min, d_max), trans = "identity", breaks = c(-br, 0, br), labels=c(paste0("1/",2^(br)), 1, 2^br)) +
-            guides(alpha=FALSE, colour=FALSE) +
+            guides(colour=FALSE) +
             theme(plot.title = element_text(colour = title_col)) +
             theme_bw() +
             geom_vline(alpha = 0.5, xintercept = 0, colour = "green", linetype = "dashed", size = 1.5) +
