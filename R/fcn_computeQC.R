@@ -277,29 +277,49 @@ createReport = function(txt_folder, yaml_obj = list())
   {
     
     d_pg = mq$readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")
-    
-    idx_int = grepv("^intensity\\.", colnames(d_pg))
-    if (length(idx_int) == 0)
-    { ##apparently no conditions were used, so there is just 'intensity'
-      idx_int = "intensity"
+      
+    clusterCols = list()
+    ##
+    ## intensity boxplots
+    ##
+    param_name_PG_intThresh = "File$ProteinGroups$IntensityThreshLog2_num"
+    param_def_PG_intThresh = 25 ## default median intensity in log2 scale
+    param_PG_intThresh = getYAML(yaml_obj, param_name_PG_intThresh, param_def_PG_intThresh)
+    if (!is.numeric(param_PG_intThresh) || !(param_PG_intThresh %in% 1:100))
+    { ## reset if value is weird
+      cat("YAML value for '" %+% param_name_PG_intThresh %+% "' is invalid ('" %+% param_PG_intThresh %+% "'). Using default of " %+% param_def_PG_intThresh %+% ".")
+      param_PG_intThresh = param_def_PG_intThresh
     }
+    
+    
+    colsSIL = grepv("^intensity\\.[hlm](\\.|$)", colnames(d_pg))
+    colsLF = grepv("^intensity\\.[^hlm]", colnames(d_pg))
+    colsOneCond = "intensity" ## just one group -- we still want to know what the overall intensity is
+    if (length(colsSIL)) {
+      ## ignore intensity.l and alike if real groups are present
+      plain_channel = grepv("^intensity\\.[hlm]$", colnames(d_pg))
+      if (all(plain_channel == colsSIL)) colsW = colsSIL else colsW = setdiff(colsSIL, plain_channel)
+    } else if (length(colsLF)) {
+      colsW = colsLF
+    }  else {
+      colsW = colsOneCond
+    }
+    
     ## a global PG name mapping
-    MAP_pg_groups = data.frame(long = idx_int)
+    MAP_pg_groups = data.frame(long = colsW)
     MAP_pg_groups$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups$long, 
                                                               min_out_length = GL_name_min_length, 
                                                               add_dots = T), 
                                                        min_out_length = GL_name_min_length))
-    ## amend 'intensity'
-    MAP_pg_groups = rbind(MAP_pg_groups, data.frame(long="intensity", short="intensity"))
-                             
+    
     ## Contaminants stats
-    df.con_stats = adply(idx_int, .margins=1, function(group) {
+    df.con_stats = adply(colsW, .margins=1, function(group) {
       #cat(group)
       return(data.frame(group_long = as.character(group),
                         log10_int  = log10(sum(as.numeric(d_pg[, group]), na.rm=T)),
                         cont_pc    = sum(as.numeric(d_pg[d_pg$contaminant, group]), na.rm=T) /
-                                     sum(as.numeric(d_pg[, group], na.rm=T))*100
-                        ))
+                          sum(as.numeric(d_pg[, group], na.rm=T))*100
+      ))
     })
     df.con_stats$group = MAP_pg_groups$short[match(df.con_stats$group_long, MAP_pg_groups$long)]
     df.con_stats$logAbdClass = getAbundanceClass(df.con_stats$log10_int)
@@ -330,25 +350,10 @@ createReport = function(txt_folder, yaml_obj = list())
     con_stats_smry = quantile(df.con_stats$cont_pc, probs=c(0,0.5,1))
     cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=stats_file, append=T, sep="\n")  
     
+    ###
+    ### intensity boxplot
+    ###
     
-    clusterCols = list()
-    ##
-    ## intensity boxplots
-    ##
-    param_name_PG_intThresh = "File$ProteinGroups$IntensityThreshLog2_num"
-    param_def_PG_intThresh = 25 ## default median intensity in log2 scale
-    param_PG_intThresh = getYAML(yaml_obj, param_name_PG_intThresh, param_def_PG_intThresh)
-    if (!is.numeric(param_PG_intThresh) || !(param_PG_intThresh %in% 1:100))
-    { ## reset if value is weird
-      cat("YAML value for '" %+% param_name_PG_intThresh %+% "' is invalid ('" %+% param_PG_intThresh %+% "'). Using default of " %+% param_def_PG_intThresh %+% ".")
-      param_PG_intThresh = param_def_PG_intThresh
-    }
-    
-    
-    colsSIL = grepv("^intensity.[HLM].", colnames(d_pg), ignore.case = T)
-    colsLF = grepv("^intensity.[^HLM].", colnames(d_pg), ignore.case = T)
-    colsOneCond = "intensity" ## just one group -- we still want to know what the overall intensity is
-    if (length(colsSIL)) colsW = colsSIL else if (length(colsLF)) colsW = colsLF else colsW = colsOneCond
     clusterCols$raw.intensity = colsW ## cluster using intensity
     #cat("colsW:\n")
     #cat(paste0(colsW, collapse=","))
@@ -373,14 +378,18 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     ## LFQ boxplots
     ##
-    colsSIL = grepv("^lfq.intensity.[HLM].", colnames(d_pg), ignore.case = T)
-    colsLF = grepv("^lfq.intensity.[^HLM].", colnames(d_pg), ignore.case = T)
+    colsSIL = grepv("^lfq.intensity\\.[hlm](\\.|$)", colnames(d_pg))
+    colsLF = grepv("^lfq.intensity\\.[^hlm]", colnames(d_pg))
     
     ## a global PG name mapping
     MAP_pg_groups_LFQ = NA
     if (length(c(colsSIL, colsLF)) > 0)
     {
-      if (length(colsSIL)) colsW = colsSIL else colsW = colsLF
+      if (length(colsSIL)) {
+        ## ignore lfq.intensity.l and alike if real groups are present
+        plain_channel = grepv("^lfq.intensity\\.[hlm]$", colnames(d_pg))
+        if (plain_channel == colsSIL) colsW = colsSIL else colsW = setdiff(colsSIL, plain_channel)
+      } else colsW = colsLF
       MAP_pg_groups_LFQ = data.frame(long = colsW)
       MAP_pg_groups_LFQ$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups_LFQ$long, 
                                                                     min_out_length = GL_name_min_length, 
@@ -540,7 +549,7 @@ createReport = function(txt_folder, yaml_obj = list())
       ## on more than ratio 1:8 or 8:1 ratio, report label incorporation
       # enabled_pg_ratioLabIncThresh == 8 by default
       if (max(abs(ratio.mode$mode)) > abs(log2(enabled_pg_ratioLabIncThresh))) {
-        cat(paste0("Maximum ratio (log2) was ", max(abs(ratio.mode$mode)), ", reaching the threshold of ", abs(log2(enabled_pg_ratioLabIncThresh)), " for label-incorporation computation.\nComputing ratios ...\n"))
+        cat(paste0("Maximum ratio (log2) was ", round(max(abs(ratio.mode$mode)),1) , ", reaching the threshold of ", abs(log2(enabled_pg_ratioLabIncThresh)), " for label-incorporation computation.\nComputing ratios ...\n"))
         ## back to normal scale
         ratio.norm = 2^ratio.mode$mode
         ## compute incorporation
