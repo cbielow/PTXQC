@@ -5,22 +5,47 @@
 
 #' Removes the longest common prefix (LCP) from a vector of strings.
 #' 
-#' If only a single string is given, no shortening will be done.
+#' You should provide only unique strings (to increase speed).
+#' If only a single string is given, the empty string will be returned unless \code{minOutputLength} is set.
 #' 
 #' @param x Vector of strings with common prefix
+#' @param min_out_length Minimal length of the shortest element of x after LCP removal [default: 0, i.e. empty string is allowed] . If the output would be shorter, the last part of the LCP is kept.
+#' @param add_dots Prepend output with '..' if shortening was done.
 #' @return Shortened vector of strings
+#' 
+#' @examples
+#' delLCP(c("TK12345_H1"), min_out_length=0)                                 ## ""
+#' delLCP(c("TK12345_H1"), min_out_length=4)                                 ## "5_H1"
+#' delLCP(c("TK12345_H1"), min_out_length=4, add_dots = TRUE)                ## "..5_H1"
+#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=4)                   ## "5_H1" "5_H2"
+#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=4, add_dots = TRUE)  ## "..5_H1" "..5_H2"
+#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=8)                   ## "12345_H1", "12345_H2"
+#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=8, add_dots = TRUE)  ## "TK12345_H1", "TK12345_H2" (unchanged, even though its 10 chars, since '..' would add another two)
+#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=60)                  ## "TK12345_H1", "TK12345_H2" (unchanged)
+#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=60, add_dots = TRUE) ## "TK12345_H1", "TK12345_H2" (unchanged)
 #' 
 #' @importFrom Biobase lcPrefix
 #' 
+#' 
 #' @export
-delLCP <- function(x)
+delLCP <- function(x, min_out_length = 0, add_dots = F)
 {
   x = as.character(x)
   #require(Biobase)
-  if (length(x) <= 1) return(x)
-  
   lcp = nchar(lcPrefix( x ))   # shorten string (remove common prefix)
+  
+  if (min_out_length > 0)
+  {
+    minLen = min(nchar(x))
+    if (lcp >= minLen - min_out_length) ## removing lcp would shorten the string too much
+    {
+      lcp = max(minLen - min_out_length, 0)
+      if (lcp <= 2 & add_dots) return(x) ## we can shorten by at most 2 chars .. don't do it
+    }
+  }
+    
   x = sapply(x, substring, lcp+1)
+  if (add_dots) x = paste0("..", x)
   return (x)
 }
 
@@ -161,6 +186,7 @@ LCSn = function(strings, min_LCS_length=7)
 #' @param strings          A vector of strings which are to be shortened
 #' @param infix_iterations Number of successive rounds of substring removal
 #' @param min_LCS_length   Minimum length of the longest common substring (default:7, minimum: 6)
+#' @param min_out_length   Minimum length of shortest element of output (no shortening will be done which causes output to be shorter than this threshold)
 #' @return A list of shortened strings, with the same length as the input                       
 #'
 #' @examples
@@ -173,7 +199,7 @@ LCSn = function(strings, min_LCS_length=7)
 #' 
 #' @export
 #' 
-simplifyNames = function(strings, infix_iterations=2, min_LCS_length=7)
+simplifyNames = function(strings, infix_iterations=2, min_LCS_length=7, min_out_length = 7)
 {
   if (min_LCS_length<6) stop( "simplifyNames(): param 'min_LCS_length' must be 6 at least.")
   
@@ -181,8 +207,12 @@ simplifyNames = function(strings, infix_iterations=2, min_LCS_length=7)
   {
     lcs = LCSn(strings, min_LCS_length=min_LCS_length)
     if (nchar(lcs)==0) return (strings)
-    ## replace infix with '..'
-    strings = sub(paste0("(.*)", lcs, "(.*)"), paste0("\\1", substring(lcs,1,2), "..", substring(lcs, nchar(lcs)-1), "\\2"), strings)
+    ## replace infix with 'ab..yz'
+    strings_i = sub(paste0("(.*)", lcs, "(.*)"), 
+                    paste0("\\1", substring(lcs,1,2), "..", substring(lcs, nchar(lcs)-1), "\\2"), 
+                    strings)
+    if (min(nchar(strings_i)) < min_out_length) return(strings) ## result got too short...
+    strings = strings_i
   }
   return (strings)
 }
@@ -219,7 +249,9 @@ shortenStrings = function(x, max_len = 20, verbose = TRUE, allow_duplicates = FA
     xr[idx] = paste0("..", sapply(x[idx], function(s) substr(s, nchar(s)-max_len+2, nchar(s))))
     if (any(duplicated(xr)))
     {
-      stop("Duplicated output produced by 'shortenStrings'!\n  ", paste(xr, collapse="\n  "), "\nPlease rename your items (make them shorter and less similar)")
+      warning("Duplicated output produced by 'shortenStrings'!\n  ", paste(xr, collapse="\n  "), "\nPlease rename your items (make them shorter and less similar)")
+      ## fail generously and return the original input
+      return(x)
     }
   }
   

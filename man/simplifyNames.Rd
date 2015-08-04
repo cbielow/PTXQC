@@ -4,7 +4,8 @@
 \alias{simplifyNames}
 \title{Removes common substrings in a set of strings.}
 \usage{
-simplifyNames(strings, infix_iterations = 2, min_LCS_length = 7)
+simplifyNames(strings, infix_iterations = 2, min_LCS_length = 7,
+  min_out_length = 7)
 }
 \arguments{
   \item{strings}{A vector of strings which are to be
@@ -15,6 +16,10 @@ simplifyNames(strings, infix_iterations = 2, min_LCS_length = 7)
 
   \item{min_LCS_length}{Minimum length of the longest
   common substring (default:7, minimum: 6)}
+
+  \item{min_out_length}{Minimum length of shortest element
+  of output (no shortening will be done which causes output
+  to be shorter than this threshold)}
 }
 \value{
 A list of shortened strings, with the same length as the

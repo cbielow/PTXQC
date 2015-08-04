@@ -63,8 +63,8 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
               #theme(panel.background=element_rect("black")) +
               geom_vline(xintercept=0, colour="gray65") +
               theme_bw() + 
-              xlab(paste0("PC #1 (", var_PC1, "%)")) +
-              ylab(paste0("PC #2 (", var_PC2, "%)"))
+              xlab(paste0("PC #1 (", var_PC1, "% var)")) +
+              ylab(paste0("PC #2 (", var_PC2, "% var)"))
     lpl[[1]] = pl
   }
   

@@ -4,16 +4,36 @@
 \alias{delLCP}
 \title{Removes the longest common prefix (LCP) from a vector of strings.}
 \usage{
-delLCP(x)
+delLCP(x, min_out_length = 0, add_dots = F)
 }
 \arguments{
   \item{x}{Vector of strings with common prefix}
+
+  \item{min_out_length}{Minimal length of the shortest
+  element of x after LCP removal [default: 0, i.e. empty
+  string is allowed] . If the output would be shorter, the
+  last part of the LCP is kept.}
+
+  \item{add_dots}{Prepend output with '..' if shortening
+  was done.}
 }
 \value{
 Shortened vector of strings
 }
 \description{
-If only a single string is given, no shortening will be
-done.
+You should provide only unique strings (to increase speed).
+If only a single string is given, the empty string will be
+returned unless \code{minOutputLength} is set.
+}
+\examples{
+delLCP(c("TK12345_H1"), min_out_length=0)                                 ## ""
+delLCP(c("TK12345_H1"), min_out_length=4)                                 ## "5_H1"
+delLCP(c("TK12345_H1"), min_out_length=4, add_dots = TRUE)                ## "..5_H1"
+delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=4)                   ## "5_H1" "5_H2"
+delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=4, add_dots = TRUE)  ## "..5_H1" "..5_H2"
+delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=8)                   ## "12345_H1", "12345_H2"
+delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=8, add_dots = TRUE)  ## "TK12345_H1", "TK12345_H2" (unchanged, even though its 10 chars, since '..' would add another two)
+delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=60)                  ## "TK12345_H1", "TK12345_H2" (unchanged)
+delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=60, add_dots = TRUE) ## "TK12345_H1", "TK12345_H2" (unchanged)
 }
 

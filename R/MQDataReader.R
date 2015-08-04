@@ -317,9 +317,14 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       ##
       rf_name = unique(.$mq.data$raw.file)
       ## remove prefix
-      rf_name_s = delLCP(rf_name)
+      rf_name_s = delLCP(rf_name, 
+                         min = 8, 
+                         add_dots = T)
       ## remove infix (2 iterations)
-      rf_name_s = simplifyNames(rf_name_s, 2, min_LCS_length=7)
+      rf_name_s = simplifyNames(rf_name_s, 
+                                2, 
+                                min_LCS_length = 7,
+                                min_out_length = 8)
       
       ## check if shorter filenames are still unique (they should be.. if not we have a problem!!)
       if (length(rf_name) != length(unique(rf_name_s)))
@@ -328,7 +333,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
         cat(rf_name)
         cat("Short names:\n")
         cat(rf_name_s)
-        stop("While loading MQ data: shortened raw filenames are not unique! This should not happen. Please contact chris.bielow@mdc-berlin.de and provide the above names!")
+        stop("While loading MQ data: shortened raw filenames are not unique! This should not happen. Please contact the developers and provide the above names!")
       }
       .$raw_file_mapping = data.frame(from = rf_name, to = rf_name_s, stringsAsFactors = FALSE)
       ## check if the minimal length was reached

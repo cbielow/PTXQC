@@ -269,6 +269,8 @@ createReport = function(txt_folder, yaml_obj = list())
   ######  proteinGroups.txt ...
   ######
   
+  GL_name_min_length = 8
+  
   enabled_proteingroups = getYAML(yaml_obj, "File$ProteinGroups$enabled", TRUE)
   enabled_pg_ratioLabIncThresh = getYAML(yaml_obj, "File$ProteinGroups$RatioPlot$LabelIncThresh_num", 4)
   if (enabled_proteingroups)
@@ -283,7 +285,12 @@ createReport = function(txt_folder, yaml_obj = list())
     }
     ## a global PG name mapping
     MAP_pg_groups = data.frame(long = idx_int)
-    MAP_pg_groups$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups$long)))
+    MAP_pg_groups$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups$long, 
+                                                              min_out_length = GL_name_min_length, 
+                                                              add_dots = T), 
+                                                       min_out_length = GL_name_min_length))
+    ## amend 'intensity'
+    MAP_pg_groups = rbind(MAP_pg_groups, data.frame(long="intensity", short="intensity"))
                              
     ## Contaminants stats
     df.con_stats = adply(idx_int, .margins=1, function(group) {
@@ -338,9 +345,9 @@ createReport = function(txt_folder, yaml_obj = list())
     }
     
     
-    colsSIL = grepv("^intensity.[HLM].", colnames(d_pg))
-    colsLF = grepv("^intensity.[^HLM].", colnames(d_pg))
-    colsOneCond = "intensity"
+    colsSIL = grepv("^intensity.[HLM].", colnames(d_pg), ignore.case = T)
+    colsLF = grepv("^intensity.[^HLM].", colnames(d_pg), ignore.case = T)
+    colsOneCond = "intensity" ## just one group -- we still want to know what the overall intensity is
     if (length(colsSIL)) colsW = colsSIL else if (length(colsLF)) colsW = colsLF else colsW = colsOneCond
     clusterCols$raw.intensity = colsW ## cluster using intensity
     #cat("colsW:\n")
@@ -366,11 +373,20 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     ## LFQ boxplots
     ##
-    colsSIL = grepv("^lfq.intensity.[HLM].", colnames(d_pg))
-    colsLF = grepv("^lfq.intensity.[^HLM].", colnames(d_pg))
+    colsSIL = grepv("^lfq.intensity.[HLM].", colnames(d_pg), ignore.case = T)
+    colsLF = grepv("^lfq.intensity.[^HLM].", colnames(d_pg), ignore.case = T)
+    
+    ## a global PG name mapping
+    MAP_pg_groups_LFQ = NA
     if (length(c(colsSIL, colsLF)) > 0)
     {
       if (length(colsSIL)) colsW = colsSIL else colsW = colsLF
+      MAP_pg_groups_LFQ = data.frame(long = colsW)
+      MAP_pg_groups_LFQ$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups_LFQ$long, 
+                                                                    min_out_length = GL_name_min_length, 
+                                                                    add_dots = T), 
+                                                             min_out_length = GL_name_min_length))
+
       clusterCols$lfq.intensity = colsW ## cluster using LFQ
       ## some stats (for plot title)
       medians_no0 = sort(apply(log2(d_pg[, colsW, drop=F]), 2, function(x) quantile(x[x>0], probs=0.5, na.rm=T))) # + c(0,0,0,0,0,0))
@@ -385,7 +401,7 @@ createReport = function(txt_folder, yaml_obj = list())
                               ylab = expression(log[2]*" LFQ intensity"),
                             sublab = paste0("RSD ", round(lfq_dev_no0, 1),"% (expected < 5%)\nRSD ", round(lfq_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
                             abline = param_PG_intThresh,
-                             names = MAP_pg_groups)
+                             names = MAP_pg_groups_LFQ)
       for (pl in lpl) GPL$add(pl);
       cat(lfq_dev.s, file=stats_file, append=T, sep="\n")
     }
@@ -395,8 +411,16 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     ## either "reporter.intensity.0.groupname" or "reporter.intensity.0" (no groups)    
     colsITRAQ = grepv("^reporter.intensity.[0-9].|^reporter.intensity.[0-9]$", colnames(d_pg))
+    ## a global PG name mapping
+    MAP_pg_groups_ITRAQ = NA
     if (length(colsITRAQ) > 0)
     {
+      MAP_pg_groups_ITRAQ = data.frame(long = c(colsITRAQ))
+      MAP_pg_groups_ITRAQ$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups_ITRAQ$long, 
+                                                                      min_out_length = GL_name_min_length, 
+                                                                      add_dots = T), 
+                                                               min_out_length = GL_name_min_length))
+
       colsW = colsITRAQ
       clusterCols$reporter.intensity = colsW ## cluster using reporters
       ## some stats (for plot title)
@@ -412,7 +436,7 @@ createReport = function(txt_folder, yaml_obj = list())
                            mainlab = "PG: reporter intensity distribution", 
                             sublab = paste0("RSD ", round(reprt_dev_no0, 1),"% (expected < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
                             abline = param_PG_intThresh,
-                             names = MAP_pg_groups)
+                             names = MAP_pg_groups_ITRAQ)
       for (pl in lpl) GPL$add(pl);
       cat(reprt_dev.s, file=stats_file, append = T, sep="\n")
     }
@@ -423,6 +447,7 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     ## some clustering (its based on intensity / lfq.intensity columns..)
     ## todo: maybe add ratios -- requires loading from txt though..
+    MAP_pg_groups_ALL = rbind(MAP_pg_groups, MAP_pg_groups_LFQ, MAP_pg_groups_ITRAQ)
     for (cond in names(clusterCols))
     {
       #cond = names(clusterCols)[3]
@@ -435,7 +460,7 @@ createReport = function(txt_folder, yaml_obj = list())
       data = t(d_pg[!d_pg$contaminant, unlist(clusterCols[cond]), drop=F])
       ## remove constant/zero columns (== dimensions == proteins)
       data = data[, colSums(data, na.rm=T) > 0, drop=F]
-      rownames(data) = MAP_pg_groups$short[match(rownames(data), MAP_pg_groups$long)]
+      rownames(data) = MAP_pg_groups_ALL$short[match(rownames(data), MAP_pg_groups_ALL$long)]
       lpl = try(getPCA(data = data,
                        gg_layer = addGGtitle(paste0("PG: PCA of '", sub(".", " ", cond, fixed=T), "'"), "(excludes contaminants)")
       )[["plots"]]
@@ -475,7 +500,10 @@ createReport = function(txt_folder, yaml_obj = list())
       if (ncol(d_sub) > length(idx_globalRatio))
       {
         idx_other = setdiff(1:ncol(d_sub), idx_globalRatio)
-        colnames(d_sub)[idx_other] = shortenStrings(simplifyNames(strings = delLCP(colnames(d_sub)[idx_other])))
+        colnames(d_sub)[idx_other] = shortenStrings(simplifyNames(delLCP(colnames(d_sub)[idx_other], 
+                                                                         min_out_length = GL_name_min_length, 
+                                                                         add_dots = T), 
+                                                                  min_out_length = GL_name_min_length))
       }
       #summary(d_sub)
       # 
@@ -1036,7 +1064,7 @@ createReport = function(txt_folder, yaml_obj = list())
                 qcAlign$newlabel = paste(qcAlign$fc.raw.file, "  -  frc", qcAlign$fraction)
               }
               ## amend fc.raw.file with % good ID pairs
-              qcAlign$newlabel = paste0(qcAlign$newlabel, " (", round(qcAlign$withinRT*100), "%)")
+              qcAlign$newlabel = paste0(qcAlign$newlabel, " (", round(qcAlign$withinRT*100), "% good)")
               evd_RT_t$fc.raw.file_augment = evd_RT_t$fc.raw.file
               levels(evd_RT_t$fc.raw.file_augment) = qcAlign$newlabel[match(levels(evd_RT_t$fc.raw.file_augment), qcAlign$fc.raw.file)]
 
@@ -1048,7 +1076,7 @@ createReport = function(txt_folder, yaml_obj = list())
               {
                 pl = ggplot(RTdata, aes_string(x="calibrated.retention.time", y="retention.time.calibration")) + 
                   ## the MaxQuant correction (plot real data, no spline, since it can be very irregular)
-                  geom_point(aes(alpha=0.7), color = "blue") +
+                  geom_line(aes(alpha=0.7), color = "blue") +
                   ## PTXQC correction
                   geom_point(aes_string(x="calibrated.retention.time", y="rtdiff", color="RTdiff_in"), alpha=0.5) + 
                   scale_alpha(name = 'Alignment function', 
@@ -1126,20 +1154,17 @@ createReport = function(txt_folder, yaml_obj = list())
       }
       
       ##
-      ## additional evidence by matching MS1 by AMT across files
+      ## MBR: additional evidence by matching MS1 by AMT across files
+      ##
       if (any(d_evd$match.time.difference, na.rm=T)) {
         ## scatter plot: for each raw file give median time diff and # peptides used for matching
-        r = (by(d_evd$match.time.difference, d_evd$fc.raw.file, function(x) {
-          match_count_abs = sum(!is.na(x));
-          match_count_pc  = round(100*sum(!is.na(x))/length(x))
-          c(match_count_abs, match_count_pc)
-        }))
-        tmp_lab = names(r)
-        r = unlist(r)
-        mtr.df = data.frame(abs = r[seq(1,length(r),by=2)], pc = r[seq(2,length(r),by=2)])
-        mtr.df$lab = tmp_lab
+        mtr.df = ddply(d_evd, "fc.raw.file", function(x) {
+          match_count_abs = sum(!is.na(x$match.time.difference))
+          match_count_pc  = round(100*sum(!is.na(x$match.time.difference))/nrow(x))
+          return (data.frame(abs = match_count_abs, pc = match_count_pc))
+        })
         
-        p_amt = ggplot(data=mtr.df, aes_string(x = "abs", y = "pc", col = "lab")) + 
+        p_amt = ggplot(data=mtr.df, aes_string(x = "abs", y = "pc", col = "fc.raw.file")) + 
           geom_point(size=2) + 
           #geom_text(size=2, vjust=1, aes_string(alpha=0.5)) + 
           ggtitle(paste0("EVD: Peptides inferred by AMT-matching\n", round(100*sum(!is.na(d_evd$match.time.difference))/nrow(d_evd)) ,"% average" )) +
@@ -1151,7 +1176,6 @@ createReport = function(txt_folder, yaml_obj = list())
         #require(directlabels)
         GPL$add(direct.label(p_amt, list(cex=0.5, "smart.grid")))
         #print(p_amt)
-        
       } 
       
       ##
