@@ -1783,7 +1783,13 @@ if (enabled_msmsscans)
   #d_msmsScan_h = mq$readMQ(txt_files$msmsScan, type="msms", filter = "", nrows=2)
   #colnames(d_msmsScan_h)
   #head(d_msmsScan_h)
-  d_msmsScan = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", col_subset = c("^ion.injection.time", "^retention.time$", "^Identified", "Scan.event.number", "Raw.file"), check_invalid_lines = F)
+  d_msmsScan = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", 
+                         col_subset = c("^ion.injection.time", 
+                                        "^retention.time$", 
+                                        "^Identified", 
+                                        "^Scan.event.number", 
+                                        "^Raw.file"),
+                         check_invalid_lines = F)
   ##
   ## MQ version 1.0.13 has very rudimentary MSMSscans.txt, with no header, so we need to skip the metrics of this file
   ##
