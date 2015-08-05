@@ -7,7 +7,7 @@
 #' optionally a YAML configuration object, which allows to (de)activate certain plots and holds other parameters.
 #' The yaml_obj is complex and best obtained by running this function once using the default (empty list).
 #' A full YAML configuration object will be written in the 'txt' folder you provide and can be loaded using
-#' \code{\link[yaml]{yaml.load}}. 
+#' \code{\link[yaml]{yaml.load}}.
 #' 
 #' The PDF and the config file will be stored in the given txt folder.
 #' 
@@ -371,7 +371,8 @@ createReport = function(txt_folder, yaml_obj = list())
                           sublab = paste0("RSD ", round(int_dev_no0, 1),"% (expected < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
                           abline = param_PG_intThresh,
                            names = MAP_pg_groups)
-    for (pl in lpl) GPL$add(pl);
+    #for (pl in lpl) print(pl)
+    for (pl in lpl) GPL$add(pl)
     rm("lpl")          
     cat(int_dev.s, file=stats_file, append=T, sep="\n")
     
@@ -411,7 +412,8 @@ createReport = function(txt_folder, yaml_obj = list())
                             sublab = paste0("RSD ", round(lfq_dev_no0, 1),"% (expected < 5%)\nRSD ", round(lfq_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
                             abline = param_PG_intThresh,
                              names = MAP_pg_groups_LFQ)
-      for (pl in lpl) GPL$add(pl);
+      #for (pl in lpl) print(pl)
+      for (pl in lpl) GPL$add(pl)
       cat(lfq_dev.s, file=stats_file, append=T, sep="\n")
     }
     
@@ -446,7 +448,8 @@ createReport = function(txt_folder, yaml_obj = list())
                             sublab = paste0("RSD ", round(reprt_dev_no0, 1),"% (expected < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
                             abline = param_PG_intThresh,
                              names = MAP_pg_groups_ITRAQ)
-      for (pl in lpl) GPL$add(pl);
+      #for (pl in lpl) print(pl)
+      for (pl in lpl) GPL$add(pl)
       cat(reprt_dev.s, file=stats_file, append = T, sep="\n")
     }
     
@@ -778,7 +781,8 @@ createReport = function(txt_folder, yaml_obj = list())
                            ylab = expression(log[2]*" intensity"),
                            sublab=paste0("RSD ", round(int_dev_pep, 1),"% (expected < 5%)\n"),
                            abline = param_EV_intThresh)
-      for (pl in lpl) GPL$add(pl);
+      #for (pl in lpl) print(pl)
+      for (pl in lpl) GPL$add(pl)
       ## QC measure for peptide intensity
       qc_pepint = medians_pep
       cname = "X003X.EVD.Pep_Intensity (>" %+% param_def_EV_intThresh %+% ")"
