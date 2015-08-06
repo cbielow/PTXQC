@@ -194,7 +194,7 @@ createReport = function(txt_folder, yaml_obj = list())
     id_rate_great = getYAML(yaml_obj, "File$Summary$IDRate$Thresh_great_num", 35)
     
     ### MS/MS identified [%]
-    dms = d_smy[[1]][,"ms.ms.identified...."]
+    dms = d_smy$raw$"ms.ms.identified...."
     dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was aquired
     lab_IDd = c("red", 
                 "blue", 
@@ -206,7 +206,7 @@ createReport = function(txt_folder, yaml_obj = list())
     
     
     d_smy[[1]]$fc.raw.file = mq$raw_file_mapping$to[match(d_smy[[1]]$raw.file, mq$raw_file_mapping$from)]
-    d_smy[[1]]$fc.raw.file = factor(d_smy[[1]]$fc.raw.file, levels=d_smy[[1]]$fc.raw.file)
+    d_smy[[1]]$fc.raw.file = factor(d_smy[[1]]$fc.raw.file, levels=d_smy[[1]]$fc.raw.file, ordered=T)
     
     d_smy[[1]]$x = 1:nrow(d_smy[[1]])
     GPL$add( 
@@ -1356,24 +1356,58 @@ if (param_useMQPAR) {
   }
 }
 
+##
+## check for MS1-out-of-calibration (i.e. the tol-window being too small)
+##
+## heuristic to determine if the instrument is completely out of calibration, 
+## i.e. all ID's are false positives, since the Precursor mass is wrong
+## -- we use the SD; if larger than 2ppm, 
+## then ID's are supposedly random
+## -- alt: we use the 1%-to-99% quantile range: if > 10ppm
+## -- uninformative for detection is the distribution (it's still Gaussian for a strange reason)
+MS1_decal_smr = ddply(d_evd, "raw.file", function(x) 
+  data.frame(n = nrow(x), 
+             sd = round(sd(x$mass.error..ppm., na.rm=T), 1), 
+             range = diff(quantile(x$mass.error..ppm., c(0.01, 0.99), na.rm=T))))
+## additionally use MS2-ID rate (should be below 1%)
+if (enabled_summary) {
+  MS1_decal_smr = merge(MS1_decal_smr, d_smy$raw[, c("raw.file", "ms.ms.identified....")])
+} else {
+  MS1_decal_smr$ms.ms.identified.... = 0 ## upon no info: assume low IDrate
+}
+MS1_decal_smr$lowIDRate = MS1_decal_smr$ms.ms.identified.... < 1
+param_name_EV_PrecursorOutOfCalSD = "File$Evidence$firstSearch_outOfCalWarnSD_num"
+param_def_EV_PrecursorOutOfCalSD = 2
+param_EV_PrecursorOutOfCalSD = getYAML(yaml_obj, param_name_EV_PrecursorOutOfCalSD, param_def_EV_PrecursorOutOfCalSD)
+MS1_decal_smr$outOfCal = (MS1_decal_smr$sd > param_EV_PrecursorOutOfCalSD) & MS1_decal_smr$lowIDRate
+
+
 plotPCUnCal = function(d_sub, affected_raw_files, ylim_g)
 {
-  if (length(affected_raw_files) > 0) d_sub$col = c("default", "bugfixed")[(d_sub$raw.file %in% affected_raw_files) + 1]
-  pl = ggplot(d_sub, col=d_sub$col)
-  if (length(affected_raw_files) > 0) {
-    pl = pl + geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
-      scale_colour_manual("", values = c("default"="black", "bugfixed"="red"))
-  } else {
-    pl = pl + geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm."), varwidth=TRUE, outlier.shape = NA)
-  }
-  pl = pl +
-    ylab("ppm error") +
-    xlab("") +
-    ylim(ylim_g) +
-    scale_x_discrete_reverse(d_sub$fc.raw.file) +
-    geom_hline(yintercept = c(-param_EV_PrecursorTolPPM, param_EV_PrecursorTolPPM), colour="red", linetype = "longdash") +  ## == vline for coord_flip
-    coord_flip() +
-    addGGtitle("EVD: Uncalibrated mass error", recal_message)
+  d_sub$col = "default"
+  if (length(affected_raw_files) > 0) d_sub$col = c("default", "MQ bug")[(d_sub$raw.file %in% affected_raw_files) + 1]
+  ## out-of-calibration Raw files:
+  ooc_raw = MS1_decal_smr$raw.file[MS1_decal_smr$outOfCal]
+  d_sub$col[d_sub$raw.file %in% ooc_raw] = "out-of-search-tol"
+  ## only show legend if special things happen  
+  showColLegend = ifelse(length(setdiff(d_sub$col, "default")) > 0, "waiver", "none")
+  
+  ## amend SD to fc.raw.file
+  d_sub$fc.raw.file = paste0(d_sub$fc.raw.file, "\n(sd = ", MS1_decal_smr$sd[match(d_sub$raw.file, MS1_decal_smr$raw.file)], "ppm)")
+  d_sub$fc.raw.file = factor(d_sub$fc.raw.file, levels=unique(d_sub$fc.raw.file), ordered=T)
+  
+  pl = ggplot(d_sub, col=d_sub$col) +
+      geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
+      scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide=showColLegend) +
+      ylab(expression(Delta~"mass [ppm]")) +
+      xlab("") +
+      ylim(ylim_g) +
+      scale_x_discrete_reverse(d_sub$fc.raw.file) +
+      geom_hline(yintercept = c(-param_EV_PrecursorTolPPM, param_EV_PrecursorTolPPM), 
+                 colour="red",
+                 linetype = "longdash") +  ## == vline for coord_flip
+      coord_flip() +
+      addGGtitle("EVD: Uncalibrated mass error", recal_message)
   #print(pl)
   GPL$add(pl)
   return(1)
@@ -1383,12 +1417,15 @@ plotPCUnCal = function(d_sub, affected_raw_files, ylim_g)
 ylim_g = range(boxplot.stats(d_evd$uncalibrated.mass.error..ppm.)$stats[c(1, 5)], c(-param_EV_PrecursorTolPPM, param_EV_PrecursorTolPPM) * 1.05)
 byXflex(d_evd, d_evd$fc.raw.file, 20, plotPCUnCal, sort_indices=F, affected_raw_files=affected_raw_files, ylim_g)
 
-
-qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
+## scores
+qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "raw.file")], "raw.file", 
                     function(x) {
-                      x = na.omit(x$uncalibrated.mass.error..ppm.)
-                      ## if empty, give the Raw file highest score...
-                      if (length(x)==0) r = 1 else r = qualCenteredRef(x, param_EV_PrecursorTolPPM)
+                      xd = na.omit(x$uncalibrated.mass.error..ppm.)
+                      if (length(xd)==0) {
+                        r = 1 ## if empty, give the Raw file highest score...
+                      } else if (MS1_decal_smr$outOfCal[MS1_decal_smr$raw.file == x$raw.file[1]]) {
+                        r = 0 ## if we suspect out-of-calibration, give lowest score
+                      } else r = qualCenteredRef(xd, param_EV_PrecursorTolPPM)
                       return (data.frame(med_rat = r))
                     })
 
@@ -1418,28 +1455,31 @@ if (is.na(param_EV_PrecursorTolPPMmainSearch))
 
 plotPCCal = function(d_sub, affected_raw_files, ylim_g)
 {
+  d_sub$col = "default"
   if (length(affected_raw_files) > 0) {
     d_sub$col = c("default", "MQ bug")[(d_sub$raw.file %in% affected_raw_files) + 1]
     d_sub$mass.error..ppm.[d_sub$raw.file %in% affected_raw_files] = 0
     if (all(d_sub$mass.error..ppm.==0)) d_sub$mass.error..ppm.=rnorm(nrow(d_sub),sd=0.0001, mean=mean(ylim_g))
   }
-  pl = ggplot(d_sub, col=d_sub$col)
-  if (length(affected_raw_files) > 0) {
-    pl = pl + geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
-      scale_colour_manual("", values = c("default"="black", "MQ bug"="red"))
-  } else {
-    pl = pl + geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm."), varwidth=TRUE, outlier.shape = NA)
-  }
-  if (!is.na(param_EV_PrecursorTolPPMmainSearch)) {
-    pl = pl + geom_hline(yintercept = c(-param_EV_PrecursorTolPPMmainSearch, param_EV_PrecursorTolPPMmainSearch), colour="red", linetype = "longdash")  ## == vline for coord_flip
-  } 
-  pl = pl +
-    ylab("ppm error") +
+  ## out-of-calibration Raw files:
+  ooc_raw = MS1_decal_smr$raw.file[MS1_decal_smr$outOfCal]
+  d_sub$col[d_sub$raw.file %in% ooc_raw] = "out-of-search-tol"
+  ## only show legend if special things happen  
+  showColLegend = ifelse(length(setdiff(d_sub$col, "default")) > 0, "waiver", "none")
+  
+  ## plot
+  pl = ggplot(d_sub, col=d_sub$col) +
+    geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
+    scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide=showColLegend) +
+    ylab(expression(Delta~"mass [ppm]")) +
     xlab("") +
     ylim(ylim_g) +
     scale_x_discrete_reverse(d_sub$fc.raw.file) +
     coord_flip() +
     addGGtitle("EVD: Calibrated mass error", recal_message_post)
+  if (!is.na(param_EV_PrecursorTolPPMmainSearch)) {
+    pl = pl + geom_hline(yintercept = c(-param_EV_PrecursorTolPPMmainSearch, param_EV_PrecursorTolPPMmainSearch), colour="red", linetype = "longdash")  ## == vline for coord_flip
+  } 
   #print(pl)
   GPL$add(pl)
   return (1)
@@ -1449,9 +1489,12 @@ byXflex(d_evd, d_evd$fc.raw.file, 20, plotPCCal, sort_indices=F, affected_raw_fi
 
 ## QC measure for post-calibration ppm error
 ## .. assume 0 centered and StdDev of observed data
-obs_par = ddply(d_evd[, c("mass.error..ppm.", "raw.file")], "raw.file", function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm=T), sd = sd(x$mass.error..ppm., na.rm=T)))
+obs_par = ddply(d_evd[, c("mass.error..ppm.", "raw.file")], "raw.file", 
+                function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm=T), sd = sd(x$mass.error..ppm., na.rm=T)))
 qc_MS1Cal = data.frame(raw.file = obs_par$raw.file, 
                        val = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
+## if we suspect out-of-calibration, give lowest score
+qc_MS1Cal$val[qc_MS1Cal$raw.file %in% MS1_decal_smr$raw.file[MS1_decal_smr$outOfCal]] = 0 
 ## bugfix will not work for postCalibration, since values are always too low
 qc_MS1Cal$val[qc_MS1Cal$raw.file %in% affected_raw_files] = HEATMAP_NA_VALUE
 cname = "X027X.EVD.MS_Cal-Post"
@@ -1530,7 +1573,7 @@ plotCont = function(d_evd_sub, top5)
   d_sum = rbind(d_sum1, d_sum2)
   ## value of factors determines order in the legend
   ## --> make proteins a factor, with 'other' being the first
-  d_sum$Protein = factor(d_sum$pname, levels=unique(c("other", d_sum$pname)))
+  d_sum$Protein = factor(d_sum$pname, levels=unique(c("other", d_sum$pname)), ordered=T)
   head(d_sum)
   
   ## plot
@@ -1594,7 +1637,7 @@ fcnPlotOversampling = function(d_dups)
   ## reorder factor, such that '10+' is last
   d_dups$n = as.character(d_dups$n)
   n_unique = sort(unique(d_dups$n)) ## sort as character vector!
-  d_dups$n = factor(d_dups$n, levels=n_unique[order(nchar(n_unique))])
+  d_dups$n = factor(d_dups$n, levels=n_unique[order(nchar(n_unique))], ordered=T)
   
   #fp = colorRampPalette( brewer.pal( 6 , "Blues" ) )
   #rev(fp(length(n_unique))
