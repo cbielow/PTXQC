@@ -13,7 +13,8 @@ HEATMAP_NA_VALUE = -Inf
 #' Columns are ordered by name. Then characters in the column name are modified as follows: 
 #'   "." --> ": "
 #'   "_" --> " "
-#'   "<br"> --> "\n"
+#'   "<br"> --> "\\n"
+#'   
 #' All substrings enclosed by 'X[0-9]*X.' will be removed (can be used for sorting columns).
 #' 
 #' To judge the quality of each raw file a summary column is added, values being the mean of all other columns per row.

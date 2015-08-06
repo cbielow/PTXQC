@@ -27,10 +27,12 @@ range, a warning is issued and values are cut to the
 nearest allowed value (e.g. '1.2' becomes '1'). Columns are
 ordered by name. Then characters in the column name are
 modified as follows: "." --> ": " "_" --> " " "<br"> -->
-"\n" All substrings enclosed by 'X[0-9]*X.' will be removed
-(can be used for sorting columns).
+"\\n"
 }
 \details{
+All substrings enclosed by 'X[0-9]*X.' will be removed (can
+be used for sorting columns).
+
 To judge the quality of each raw file a summary column is
 added, values being the mean of all other columns per row.
 }
