@@ -1109,8 +1109,8 @@ createReport = function(txt_folder, yaml_obj = list())
                               range=c(1,1)) + 
                   scale_colour_manual(name = expression(bold("ID pairs ("*Delta*"RT to Ref)")), 
                                       values = c("green"="green", "red"="red"),
-                                      labels=c(paste0("good (<",param_EV_MatchingTolerance,"min)"), 
-                                               paste0("bad (>",param_EV_MatchingTolerance,"min)"))) +
+                                      labels=c("green" = paste0("good (<",param_EV_MatchingTolerance,"min)"), 
+                                                 "red" = paste0("bad (>",param_EV_MatchingTolerance,"min)"))) +
                   guides(colour = guide_legend(order = 2), 
                           alpha = guide_legend(order = 1)) +   ## alpha-legend on top, color below
                   ylim(ylim_g) +
@@ -1390,7 +1390,7 @@ plotPCUnCal = function(d_sub, affected_raw_files, ylim_g)
   ooc_raw = MS1_decal_smr$raw.file[MS1_decal_smr$outOfCal]
   d_sub$col[d_sub$raw.file %in% ooc_raw] = "out-of-search-tol"
   ## only show legend if special things happen  
-  showColLegend = ifelse(length(setdiff(d_sub$col, "default")) > 0, "waiver", "none")
+  showColLegend = ifelse(length(setdiff(d_sub$col, "default")) > 0, "legend", "none")
   
   ## amend SD to fc.raw.file
   d_sub$fc.raw.file = paste0(d_sub$fc.raw.file, "\n(sd = ", MS1_decal_smr$sd[match(d_sub$raw.file, MS1_decal_smr$raw.file)], "ppm)")
@@ -1465,7 +1465,7 @@ plotPCCal = function(d_sub, affected_raw_files, ylim_g)
   ooc_raw = MS1_decal_smr$raw.file[MS1_decal_smr$outOfCal]
   d_sub$col[d_sub$raw.file %in% ooc_raw] = "out-of-search-tol"
   ## only show legend if special things happen  
-  showColLegend = ifelse(length(setdiff(d_sub$col, "default")) > 0, "waiver", "none")
+  showColLegend = ifelse(length(setdiff(d_sub$col, "default")) > 0, "legend", "none")
   
   ## plot
   pl = ggplot(d_sub, col=d_sub$col) +
