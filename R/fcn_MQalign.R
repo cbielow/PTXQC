@@ -418,7 +418,7 @@ computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_r, qMBRSeg_Dist_r_bg)
                    single=c(x$corr.nat, x$corr.matched, x$corr.combined),
                    multi.inRT = c(x$corr.nat.inRT, x$corr.matched.inRT, x$corr.combined.inRT),
                    multi.outRT = c(x$corr.nat.outRT, x$corr.matched.outRT, x$corr.combined.outRT),
-                   sample = factor(c("genuine", "matched", "all"), levels=c("genuine", "matched", "all")))
+                   sample = factor(c("genuine", "transferred", "all"), levels=c("genuine", "transferred", "all")))
     return(r)    
   })
   return(f)

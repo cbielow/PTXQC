@@ -10,7 +10,10 @@ HEATMAP_NA_VALUE = -Inf
 #' The second column can have an arbitrary name
 #' and contains quality values in the range [0,1]. If values are outside this range, 
 #' a warning is issued and values are cut to the nearest allowed value (e.g. '1.2' becomes '1').
-#' Columns are ordered by name. Then characters in the column name are modified as follows: "." --> ": " and "_" --> " ".
+#' Columns are ordered by name. Then characters in the column name are modified as follows: 
+#'   "." --> ": "
+#'   "_" --> " "
+#'   "<br"> --> "\n"
 #' All substrings enclosed by 'X[0-9]*X.' will be removed (can be used for sorting columns).
 #' 
 #' To judge the quality of each raw file a summary column is added, values being the mean of all other columns per row.
@@ -88,6 +91,7 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   QCM_final.m$variable = gsub("^\\s+|\\s+$", "", QCM_final.m$variable)                ## trim
   QCM_final.m$variable = gsub("_", " ", QCM_final.m$variable)
   QCM_final.m$variable = gsub("\\.", ": ", QCM_final.m$variable)
+  QCM_final.m$variable = gsub("<br>", "\n", QCM_final.m$variable)
   QCM_final.m$variable2 = factor(QCM_final.m$variable, levels = unique(QCM_final.m$variable))
   if (any(is.na(QCM_final.m$value))) QCM_final.m$dummy_col = "NA" ## use color legend for missing values
   

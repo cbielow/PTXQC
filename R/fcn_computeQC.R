@@ -368,7 +368,8 @@ createReport = function(txt_folder, yaml_obj = list())
                             log2 = T, 
                          mainlab = "PG: intensity distribution",
                             ylab = expression(log[2]*" intensity"),
-                          sublab = paste0("RSD ", round(int_dev_no0, 1),"% (expected < 5%)\nRSD ", round(int_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
+                          sublab = paste0("RSD ", round(int_dev_no0, 1),"% (w/o zero int.; expected < 5%)\n",
+                                          "RSD ", round(int_dev, 1),"% [high RSD --> few peptides])"),
                           abline = param_PG_intThresh,
                            names = MAP_pg_groups)
     #for (pl in lpl) print(pl)
@@ -409,7 +410,8 @@ createReport = function(txt_folder, yaml_obj = list())
                               log2 = T, 
                            mainlab = "PG: LFQ intensity distribution", 
                               ylab = expression(log[2]*" LFQ intensity"),
-                            sublab = paste0("RSD ", round(lfq_dev_no0, 1),"% (expected < 5%)\nRSD ", round(lfq_dev, 1),"% (with 0's remaining) [high RSD indicates few peptides])"),
+                            sublab = paste0("RSD ", round(lfq_dev_no0, 1),"% (w/o zero int.; expected < 5%)\n",
+                                            "RSD ", round(lfq_dev, 1),"% [high RSD --> few peptides])"),
                             abline = param_PG_intThresh,
                              names = MAP_pg_groups_LFQ)
       #for (pl in lpl) print(pl)
@@ -444,8 +446,9 @@ createReport = function(txt_folder, yaml_obj = list())
       lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
                               log2 = T, 
                               ylab = expression(log[2]*" reporter intensity"),
-                           mainlab = "PG: reporter intensity distribution", 
-                            sublab = paste0("RSD ", round(reprt_dev_no0, 1),"% (expected < 5%)\nRSD ", round(reprt_dev, 1),"% (with 0's remaining) [high RSD indicates low reporter intensity])"),
+                           mainlab = "PG: reporter intensity distribution",
+                            sublab = paste0("RSD ", round(reprt_dev_no0, 1),"% (w/o zero int.; expected < 5%)\n",
+                                            "RSD ", round(reprt_dev, 1),"% [high RSD --> few peptides])"),
                             abline = param_PG_intThresh,
                              names = MAP_pg_groups_ITRAQ)
       #for (pl in lpl) print(pl)
@@ -818,9 +821,13 @@ createReport = function(txt_folder, yaml_obj = list())
       })
       protGroupCount_pre
       ## manually melt
-      pgc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, protCount = protGroupCount_pre$proteinCount_noMBR, category = "genuine")
+      pgc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, 
+                             protCount = protGroupCount_pre$proteinCount_noMBR, 
+                             category = "genuine")
       pgc = rbind(pgc,
-                  data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, protCount = protGroupCount_pre$proteinCount_MBRgain, category = "matched"))
+                  data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, 
+                             protCount = protGroupCount_pre$proteinCount_MBRgain,
+                             category = "transferred"))
       pgc
       ## re-order (ddply somehow reorders, even if we use ordered factors...)
       pgc$fc.raw.file = factor(pgc$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
@@ -828,7 +835,7 @@ createReport = function(txt_folder, yaml_obj = list())
       
       # combine Prot & Pep stats
       ## Warn: this is still different from summary.txt...
-      #colnames(ppg) = c("# protein groups", "# peptides", "# peptides\n(incl. matched)", "file")
+      #colnames(ppg) = c("# protein groups", "# peptides", "# peptides\n(incl. transferred)", "file")
       #mdat = melt(ppg, id.vars="file")
       
       head(pgc)
@@ -870,9 +877,13 @@ createReport = function(txt_folder, yaml_obj = list())
       ##
       ## EVD: peptide count
       ##
-      pepc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, pepCount = protGroupCount_pre$pep_count_noMBR, category = "genuine")
+      pepc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, 
+                              pepCount = protGroupCount_pre$pep_count_noMBR, 
+                              category = "genuine")
       pepc = rbind(pepc,
-                   data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, pepCount = protGroupCount_pre$pep_count_MBRgain, category = "matched"))
+                   data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, 
+                              pepCount = protGroupCount_pre$pep_count_MBRgain,
+                              category = "transferred"))
       pepc
       ## re-order (ddply somehow reorders, even if we use ordered factors...)
       pepc$fc.raw.file = factor(pepc$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
@@ -1137,7 +1148,7 @@ createReport = function(txt_folder, yaml_obj = list())
           #head(scoreMBRMatch)
           
           qualMBR.m = merge(scoreMBRMatch[scoreMBRMatch$sample=="genuine",], 
-                            scoreMBRMatch[scoreMBRMatch$sample=="matched",], by="fc.raw.file")
+                            scoreMBRMatch[scoreMBRMatch$sample=="transferred",], by="fc.raw.file")
           qualMBR.m = merge(qualMBR.m, scoreMBRMatch[scoreMBRMatch$sample=="all",], by="fc.raw.file")
           cname = "X025X.EVD.MBR_ID-Transfer"
           qualMBR.m[, cname] = 1 - (qualMBR.m$multi.outRT.y - qualMBR.m$multi.outRT.x)
@@ -1695,7 +1706,7 @@ if (enabled_msms)
   ##
   head(ms2_decal)
   for (analyzer in unique(ms2_decal$mass.analyzer)) {
-    qc_name = paste0("X028X.", "MSMS.MS2_Calibration_(", analyzer, ")")
+    qc_name = paste0("X028X.", "MSMS.MS2_Cal_(", analyzer, ")")
     qc_MS2_decal = ddply(ms2_decal[ms2_decal$mass.analyzer==analyzer, ], "fc.raw.file", 
                          function(x)
                          {

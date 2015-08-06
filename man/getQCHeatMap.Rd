@@ -26,9 +26,9 @@ values in the range [0,1]. If values are outside this
 range, a warning is issued and values are cut to the
 nearest allowed value (e.g. '1.2' becomes '1'). Columns are
 ordered by name. Then characters in the column name are
-modified as follows: "." --> ": " and "_" --> " ". All
-substrings enclosed by 'X[0-9]*X.' will be removed (can be
-used for sorting columns).
+modified as follows: "." --> ": " "_" --> " " "<br"> -->
+"\n" All substrings enclosed by 'X[0-9]*X.' will be removed
+(can be used for sorting columns).
 }
 \details{
 To judge the quality of each raw file a summary column is
