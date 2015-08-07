@@ -4,18 +4,14 @@
 \alias{computeMatchRTFractions}
 \title{Combine several data structs into a final picture for segmentation incurred by 'Match-between-runs'.}
 \usage{
-computeMatchRTFractions(qMBR, qMBRSeg_Dist_r, qMBRSeg_Dist_r_bg)
+computeMatchRTFractions(qMBR, qMBRSeg_Dist_inGroup)
 }
 \arguments{
   \item{qMBR}{A data.frame as computed by
   peakSegmentation()}
 
-  \item{qMBRSeg_Dist_r}{A data.frame as computed by
-  inMatchWindow() for using the 'rtdiff' (=all) column}
-
-  \item{qMBRSeg_Dist_r_bg}{A data.frame as computed by
-  inMatchWindow() for using the 'rtdiff_bg' (=genuine only)
-  column}
+  \item{qMBRSeg_Dist_inGroup}{A data.frame as computed by
+  inMatchWindow()}
 }
 \value{
 A data.frame which details the distribution of singlets and

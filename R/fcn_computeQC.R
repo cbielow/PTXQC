@@ -1136,25 +1136,32 @@ createReport = function(txt_folder, yaml_obj = list())
           } ## ambigous reference file
           
           ## increase of segmentation by MBR:
+          ## three values returned: single peaks(%) in genuine, transferred and all(combined)
           qMBR = peakSegmentation(d_evd)
-          ## check the double-pairs (from genuine and combined pairs)
+          head(qMBR)
+          ## for groups: get their RT-spans
+          ## ... genuine ID's only (as 'rtdiff_genuine') 
+          ##  or genuine+transferred (as 'rtdiff_mixed'))
           qMBRSeg_Dist = idTransferCheck(d_evd)
           #head(qMBRSeg_Dist)
-          #hist(qMBRSeg_Dist$rtdiff, 1000, xlim=c(0,10))
-          #hist(qMBRSeg_Dist$rtdiff_bg, 1000, xlim=c(0,10), add=T, col="red")
+          #head(qMBRSeg_Dist[qMBRSeg_Dist$fc.raw.file=="file 13",])
+          
+          ## check which fraction of ID-pairs belong to the 'in-width' group
           ## the allowed RT delta is given in 'd_evd.m.d_med' (estimated from global peak width for each file)
-          qMBRSeg_Dist_r = inMatchWindow(qMBRSeg_Dist, "rtdiff", df.allowed.deltaRT = d_evd.m.d_med)
-          qMBRSeg_Dist_r_bg = inMatchWindow(qMBRSeg_Dist, "rtdiff_bg", df.allowed.deltaRT = d_evd.m.d_med)
+          qMBRSeg_Dist_inGroup = inMatchWindow(qMBRSeg_Dist, df.allowed.deltaRT = d_evd.m.d_med)
           ## puzzle together final picture
-          scoreMBRMatch = computeMatchRTFractions(qMBR, qMBRSeg_Dist_r, qMBRSeg_Dist_r_bg)
+          scoreMBRMatch = computeMatchRTFractions(qMBR, qMBRSeg_Dist_inGroup)
           #head(scoreMBRMatch)
           
           qualMBR.m = merge(scoreMBRMatch[scoreMBRMatch$sample=="genuine",], 
                             scoreMBRMatch[scoreMBRMatch$sample=="transferred",], by="fc.raw.file")
           qualMBR.m = merge(qualMBR.m, scoreMBRMatch[scoreMBRMatch$sample=="all",], by="fc.raw.file")
           cname = "X025X.EVD:~MBR~ID-Transfer"
-          qualMBR.m[, cname] = 1 - (qualMBR.m$multi.outRT.y - qualMBR.m$multi.outRT.x)
+          qualMBR.m[, cname] = 1 - qualMBR.m$multi.outRT.y # could be NaN if: no-transfer at all, or: no groups but only singlets transferred
+          qualMBR.m[is.na(qualMBR.m$multi.outRT.y) & !is.na(qualMBR.m$single.y), cname] = 1 ## only singlets transferred, wow...
+          qualMBR.m[is.na(qualMBR.m[, cname]), cname] = HEATMAP_NA_VALUE
           QCM[["X025X.EVD.MBR_IDTransfer"]] = qualMBR.m[, c("fc.raw.file", cname)]
+          QCM[["X025X.EVD.MBR_IDTransfer"]]
           
           uniqueRMatchByRawFile = function(RTdata)
           {
@@ -1176,7 +1183,7 @@ createReport = function(txt_folder, yaml_obj = list())
             GPL$add(pl)
             return(1)
           }
-          byX(scoreMBRMatch, qMBR$fc.raw.file, 12, uniqueRMatchByRawFile, sort_indices = F)
+          byX(scoreMBRMatch, scoreMBRMatch$fc.raw.file, 12, uniqueRMatchByRawFile, sort_indices = F)
           
         }
       }

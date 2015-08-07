@@ -181,16 +181,17 @@ ScoreInAlignWindow = function(data, allowed.deltaRT = 1)
 #' Note that this function must be given all MS/MS identifications only (type "MULTI-MSMS" and "MSMS-MATCH")
 #' in order to work correctly!
 #' 
-#' We compare for each peptide sequence (and charge) the RT difference between genuine vs. tranferred pairs.
+#' We compare for each peptide sequence (and charge) the RT difference within groups of genuine and mixed pairs.
 #' For every comparison made, we report the RT difference. If alignment worked perfectly, the differences are very small (<1 min),
-#' i.e. the pairs are accidentally split 3D peaks.
+#' for the mixed group, i.e. the pairs are accidentally split 3D peaks. Alignment performance has no influence on the
+#' genuine-only groups.
 #' 
 #' Note: We found early MaxQuant versions (e.g. 1.2.2.5) to have an empty 'modified.sequence' column for 'MULTI-MATCH' entries.
 #' The sequence which SHOULD be present is equal to the immediate upper row. This is what we use to guess the sequence.
 #' However, this relies on the data.frame not being subsetted before (we can sort using the 'id' column)!
 #' 
 #' @param data A data.frame with columns 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'raw.file'
-#' @return A data.frame containing the RT diff for each pair found in a Raw file.
+#' @return A data.frame containing the RT diff for each ID-group found in a Raw file (bg = genuine).
 #'
 #' @importFrom plyr ddply
 #' 
@@ -225,19 +226,34 @@ idTransferCheck = function(data) {
   
   data$seq_charge = paste(factor(data$modified.sequence), data$charge, sep="_")
   alignQ = ddply(data[,c("fc.raw.file", "type", "calibrated.retention.time", "seq_charge")], "fc.raw.file", function(x) {
-    ## retain only stuff which has the potential to be a pair
-    seqs = intersect(x$seq_charge[x$type=="MULTI-MSMS"], x$seq_charge[x$type=="MULTI-MATCH"])
-    x_sub = x[x$seq_charge %in% seqs,]
-    if (nrow(x_sub)==0) return(data.frame())
-    ## for all pairs...
-    align = ddply(x_sub, "seq_charge", function(x2) {
-      d = diff(range(x2$calibrated.retention.time))
-      d_bg = diff(range(x2$calibrated.retention.time[x2$type=='MULTI-MSMS']))  ## track background from genuine 3D peaks as well
-      return (data.frame(rtdiff = d, rtdiff_bg = d_bg))
-    })  
-    return (align)    
+    # x = data[ data$fc.raw.file == "file 13", ]
+    
+    ## genuine groups only:
+    x_genuine = x[x$type=="MULTI-MSMS",]
+    rt_diffs_genuine = ddply(x_genuine, "seq_charge", 
+                             function(x2) {
+                               if (nrow(x2)==1) return(NULL) ## we do not want singlets
+                               return (data.frame(rtdiff_genuine = diff(range(x2$calibrated.retention.time))))
+                             })
+    
+    ## mixed class:
+    ## retain only IDs which have at least one transferred ID
+    x_mixed = x[x$seq_charge %in% x$seq_charge[x$type=="MULTI-MATCH"], ]
+    if (nrow(x_mixed)>0) {    
+      rt_diffs_mixed = ddply(x_mixed, "seq_charge", 
+                             function(x2) {
+                               if (nrow(x2)==1) return(NULL) ## we do not want singlets
+                               return (data.frame(rtdiff_mixed = diff(range(x2$calibrated.retention.time))))
+                             })
+      ## rtdiff_mixed might be empty, if only singlets where transferred
+      if (nrow(rt_diffs_mixed) > 0) {
+        ## only merge if non-empty (otherwise the whole merge is empty)
+        rt_diffs_genuine = merge(rt_diffs_genuine, rt_diffs_mixed, all = T)
+      }
+    }
+  
+    return (rt_diffs_genuine)    
   })
-  alignQ$rtdiff_bg[alignQ$rtdiff_bg==0] = NA ## there was only one genuine feature
   #head(alignQ)
   #hist(log(1+alignQ$rtdiff), 100)
   #hist(log(1+alignQ$rtdiff_bg), 100, add=T, col="red")
@@ -254,24 +270,33 @@ idTransferCheck = function(data) {
 #' Returned value is between 0 (bad) and 1 (all within tolerance).
 #' 
 #' @param data A data.frame with columns 'fc.raw.file' and !colname (param)
-#' @param colname Name of column which contains the RT difference of a pair
 #' @param df.allowed.deltaRT The allowed matching difference for each Raw file (as data.frame(fc.rawfile, m))
 #' @return A data.frame with one row for each raw.file and columns 'raw.file' and score 'withinRT' (0-1)
 #' 
 #' @importFrom plyr ddply
 #' 
-inMatchWindow = function(data, colname, df.allowed.deltaRT)
+inMatchWindow = function(data, df.allowed.deltaRT)
 {
+  ## 'data' columns of interest : 
+  cols_diffs = c("rtdiff_mixed", "rtdiff_genuine")
+  
   colnames(data) = tolower(colnames(data))
   
-  if (!all(c(colname, 'fc.raw.file') %in% colnames(data)))
+  if (!all(c(cols_diffs, 'fc.raw.file') %in% colnames(data)))
   {
     stop("ScoreInMatchWindow(): 'data' has missing columns!")  
   }
   alignQC = ddply(data, "fc.raw.file", function(x) {
+    # x=data[ data$fc.raw.file=="file 01",]
     allowed.deltaRT = df.allowed.deltaRT$m[match(x$fc.raw.file[1], df.allowed.deltaRT$fc.raw.file)]
-    withinRT = sum(abs(x[,colname]) < allowed.deltaRT, na.rm=T) / sum(!is.na(x[,colname]))
-    return(data.frame(withinRT = withinRT))
+    
+    withinRT_genuine = sum(abs(x$rtdiff_genuine) < allowed.deltaRT, na.rm=T) / sum(!is.na(x$rtdiff_genuine))
+    withinRT_mixed   = sum(abs(x$rtdiff_mixed) < allowed.deltaRT, na.rm=T) / sum(!is.na(x$rtdiff_mixed))
+    ## compute the RT-span if all evidence is considered 
+    ##  --> simply the max of mixed and genuine, since each evidence must be in either of these two
+    x$rtdiff_all = pmax(x$rtdiff_mixed, x$rtdiff_genuine, na.rm=T)
+    withinRT_all = sum(abs(x$rtdiff_all) < allowed.deltaRT, na.rm=T) / sum(!is.na(x$rtdiff_all))
+    return(data.frame(withinRT_genuine, withinRT_mixed, withinRT_all))
   })
   
   return(alignQC)
@@ -297,7 +322,11 @@ inMatchWindow = function(data, colname, df.allowed.deltaRT)
 #' Required columns are 'match.time.difference', 'fc.raw.file', 'modified.sequence', 'charge', 'type'.
 #' 
 #' @param d_evd A data.frame of evidences containing the above columns
-#' @return A data.frame with one row per Raw file and two columns: natively split peaks (%) and % of split peaks using matching.
+#' @return A data.frame with one row per Raw file and 
+#'         three columns: 
+#'           1) % of native single peaks (ignoring transferred IDs)
+#'           2) % of single peaks (group of size=1) using only groups which have at at one transferred evidence
+#'           3) % of single peaks using all groups
 #'
 #' @importFrom plyr ddply
 #'
@@ -305,10 +334,10 @@ peakSegmentation = function(d_evd)
 {
   if (!all(c("match.time.difference", "fc.raw.file", "modified.sequence", "charge", 'type') %in% colnames(d_evd)))
   {
-    stop("qualMBR(): columns missing!")  
+    stop("peakSegmentation(): columns missing!")  
   }
   
-  d_evd$hasMTD = !is.na(d_evd$match.time.difference)
+  d_evd$hasMTD = !is.na(d_evd$match.time.difference) ## all the MULTI-MATCH hits, i.e. transferred IDs
   
   cols = c("hasMTD", "fc.raw.file", "modified.sequence", "charge")
   splitInferred = ddply(d_evd[d_evd$type!="MSMS", cols], cols[-1], function(x)
@@ -323,9 +352,11 @@ peakSegmentation = function(d_evd)
     return(data.frame(nNative = sum(!x$hasMTD), nMatched = sum(x$hasMTD)))#, ratio = ratio))
   })
   
-  mbr_score = ddply(splitInferred, "fc.raw.file", function(splitInferred)
+  mbr_score = ddply(splitInferred, "fc.raw.file", function(splitInferred_sub)
   {
-    ddt = table(splitInferred[, c("nMatched", "nNative")])
+    #splitInferred_sub = splitInferred[splitInferred$fc.raw.file == "file 01", ]
+    
+    ddt = table(splitInferred_sub[, c("nMatched", "nNative")])
     ### ddt might look like this:
     #                 nNative
     #     nMatched    0    1   2  3  4 5 6 7 8 9 10 11 13 14 15 18 20 26 27 28 31 37 39
@@ -343,27 +374,28 @@ peakSegmentation = function(d_evd)
         ddt[i,j] = ddt[i,j] * (as.numeric(d1[i]) + as.numeric(d2[j]))
       }
     }
-    ## add nMatched=1 row, if not present
+    ## add nMatched=1 row -- if already present, we just insert an empty row at the end (no harm done)
     ddt = rbind(ddt, 0)
 
     ## segmentation genuine (ignore the nMatched, i.e. project everything onto first row)
     n.perf = sum(ddt[,colnames(ddt)==1]) ## uniquely matched
     n.all = sum(ddt[,!colnames(ddt)==0]) ## all natives (==0 is the matched-only column)
-    corr.nat = n.perf/n.all ## e.g. 94%
+    single.nat = n.perf/n.all ## e.g. 94%
     
     ## segmentation of matched-only
-    i.perf = ddt[rownames(ddt)==1, colnames(ddt)==0] ## matched singlets (nMatched=1,nNative=0)
+    i.perf = ddt[rownames(ddt)==1, colnames(ddt)==0] ## transferred singlets (nMatched=1,nNative=0)
     i.all = sum(ddt[rownames(ddt)!=0, ])             ## all groups which contain a match (==without first row)
-    corr.matched = max(0, i.perf) / i.all  ## e.g. 50%
+    single.matched = max(0, i.perf) / i.all  ## e.g. 50%
+    ## no ID's were transferred (div/0) -- this remains NaN
     
     ## segmentation of all evidence (weighed average of above)
-    comb.perf = ddt[rownames(ddt)==1, colnames(ddt)==0] + ## matched singlets (nMatched=1,nNative=0)
+    comb.perf = max(0, ddt[rownames(ddt)==1, colnames(ddt)==0]) + ## transferred singlets (nMatched=1,nNative=0) -- could be empty
                 ddt[rownames(ddt)==0, colnames(ddt)==1]
     comb.all = sum(ddt)             ## all groups
-    corr.combined = max(0, comb.perf) / comb.all       ## e.g. 87%
+    single.all = max(0, comb.perf) / comb.all       ## e.g. 87%
     
     ## final result
-    data.frame(corr.nat = corr.nat, corr.matched = corr.matched, corr.combined = corr.combined)
+    data.frame(single.nat = single.nat, single.matched = single.matched, single.all = single.all)
   })
   return (mbr_score = mbr_score)
 }
@@ -372,53 +404,54 @@ peakSegmentation = function(d_evd)
 #' 
 #' ...
 #'
-#' @param qMBR              A data.frame as computed by peakSegmentation()
-#' @param qMBRSeg_Dist_r    A data.frame as computed by inMatchWindow() for using the 'rtdiff' (=all) column
-#' @param qMBRSeg_Dist_r_bg A data.frame as computed by inMatchWindow() for using the 'rtdiff_bg' (=genuine only) column
+#' @param qMBR                 A data.frame as computed by peakSegmentation()
+#' @param qMBRSeg_Dist_inGroup A data.frame as computed by inMatchWindow()
 #' @return A data.frame which details the distribution of singlets and pairs (inRT and outRT) for each Raw file and genuine vs. all
 #' 
 #' @importFrom plyr ddply
 #' 
-computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_r, qMBRSeg_Dist_r_bg)
+computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_inGroup)
 {
   ## data might look like this:
-#     fc.raw.file  corr.nat corr.matched corr.combined
-#   1  323_G.._01 0.9740162    0.3393057     0.9517918
-#   2  521_G.._02 0.9813251    0.7689088     0.9433782
-#   3  522_G.._01 0.9671893    0.6986601     0.9121866
+#     fc.raw.file single.nat  single.matched   single.all
+#   1  file 01     0.9740162       0.3393057    0.9517918
+#   2  file 02     0.9813251       0.7689088    0.9433782
+#   3  file 03     0.9671893       0.6986601    0.9121866
 # 
-# qMBRSeg_Dist_r
-#                      fc.raw.file   withinRT
-# 1 20100730_Velos1_TaGe_SA_K562_1 0.17647059
-# 2 20100730_Velos1_TaGe_SA_K562_2 0.28368794
-# 3 20100730_Velos1_TaGe_SA_K564_3 0.38181818
-# 4 20100730_Velos1_TaGe_SA_K565_4 0.37730871
-# 5 20100730_Velos1_TaGe_SA_K565_5 0.33333333
-# .. same for qMBRSeg_Dist_r_bg...
+# qMBRSeg_Dist_inGroup
+#      fc.raw.file withinRT_genuine withinRT_mixed withinRT_all
+#   1      file 01        0.5000000            NaN    0.5000000
+#   2      file 02        0.3589744      0.3076923    0.3750000
+#   3      file 03        0.2068966      0.1764706    0.1851852
+#   4      file 04        0.2500000      0.1034483    0.1818182
+#   5      file 05        0.3125000      0.3333333    0.3333333
+#   6      file 06        0.2500000      0.4090909    0.3529412
   
-  ## compute percentage of outside dRT peaks in genuine. Same for matched evidence. And combined(=all)
+  ## compute percentage of outside dRT peaks in genuine, matched and combined(=all)
   ## then calc the drop.
   f = ddply(qMBR, "fc.raw.file", function(x) {
-    nat.inRT = qMBRSeg_Dist_r_bg$withinRT[qMBRSeg_Dist_r_bg$fc.raw.file==x$fc.raw.file]
-    if (length(nat.inRT) == 0) nat.inRT=NA
-    x$corr.nat.inRT = (1-x$corr.nat)*nat.inRT
-    x$corr.nat.outRT = (1-x$corr.nat)*(1-nat.inRT)
-
-    matched.inRT = qMBRSeg_Dist_r$withinRT[qMBRSeg_Dist_r$fc.raw.file==x$fc.raw.file]
-    if (length(matched.inRT) == 0) matched.inRT=NA
-    x$corr.matched.inRT = (1-x$corr.matched)*matched.inRT
-    x$corr.matched.outRT = (1-x$corr.matched)*(1-matched.inRT)
+    rr = qMBRSeg_Dist_inGroup$fc.raw.file==x$fc.raw.file
     
-    combined.inRT = matched.inRT ## same as matched (takes all groups)
-    if (length(combined.inRT) == 0) combined.inRT=NA
-    x$corr.combined.inRT = (1-x$corr.combined)*combined.inRT
-    x$corr.combined.outRT = (1-x$corr.combined)*(1-combined.inRT)
+    nat.inRT = qMBRSeg_Dist_inGroup$withinRT_genuine[rr] ## e.g. 0.87
+    if (length(nat.inRT) == 0) nat.inRT = NA
+    x$single.nat.inRT = (1-x$single.nat)*nat.inRT
+    x$single.nat.outRT = (1-x$single.nat)*(1-nat.inRT)
+
+    matched.inRT = qMBRSeg_Dist_inGroup$withinRT_mixed[rr]
+    if (length(matched.inRT) == 0) matched.inRT = NA
+    x$single.matched.inRT = (1-x$single.matched)*matched.inRT
+    x$single.matched.outRT = (1-x$single.matched)*(1-matched.inRT)
+    
+    combined.inRT = qMBRSeg_Dist_inGroup$withinRT_all[rr]
+    if (length(combined.inRT) == 0) combined.inRT = NA
+    x$single.all.inRT = (1-x$single.all)*combined.inRT
+    x$single.all.outRT = (1-x$single.all)*(1-combined.inRT)
     
     r = data.frame(fc.raw.file=x$fc.raw.file, 
-                   single=c(x$corr.nat, x$corr.matched, x$corr.combined),
-                   multi.inRT = c(x$corr.nat.inRT, x$corr.matched.inRT, x$corr.combined.inRT),
-                   multi.outRT = c(x$corr.nat.outRT, x$corr.matched.outRT, x$corr.combined.outRT),
-                   sample = factor(c("genuine", "transferred", "all"), levels=c("genuine", "transferred", "all")))
+                   single=c(x$single.nat, x$single.matched, x$single.all),
+                   multi.inRT = c(x$single.nat.inRT, x$single.matched.inRT, x$single.all.inRT),
+                   multi.outRT = c(x$single.nat.outRT, x$single.matched.outRT, x$single.all.outRT),
+                   sample = factor(c("genuine", "transferred", "all"), levels=c("genuine", "transferred", "all", ordered = T)))
     return(r)    
   })
   return(f)

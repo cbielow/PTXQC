@@ -4,14 +4,11 @@
 \alias{inMatchWindow}
 \title{Compute the fraction of 3D-peak pairs per Raw file which have an acceptable RT difference after alignment}
 \usage{
-inMatchWindow(data, colname, df.allowed.deltaRT)
+inMatchWindow(data, df.allowed.deltaRT)
 }
 \arguments{
   \item{data}{A data.frame with columns 'fc.raw.file' and
   !colname (param)}
-
-  \item{colname}{Name of column which contains the RT
-  difference of a pair}
 
   \item{df.allowed.deltaRT}{The allowed matching difference
   for each Raw file (as data.frame(fc.rawfile, m))}

@@ -12,9 +12,11 @@ peakSegmentation(d_evd)
   above columns}
 }
 \value{
-A data.frame with one row per Raw file and two columns:
-natively split peaks (%) and % of split peaks using
-matching.
+A data.frame with one row per Raw file and three columns:
+1) % of native single peaks (ignoring transferred IDs) 2) %
+of single peaks (group of size=1) using only groups which
+have at at one transferred evidence 3) % of single peaks
+using all groups
 }
 \description{
 Sometimes, MQ split a feature into 2 or more if the
