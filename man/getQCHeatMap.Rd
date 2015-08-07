@@ -8,7 +8,8 @@ getQCHeatMap(QCM, raw_file_mapping)
 }
 \arguments{
   \item{QCM}{List of data.frames, each having a 'raw.file'
-  column and a metric column of arbitrary name}
+  or 'fc.raw.file' column and a metric column with numeric
+  values}
 
   \item{raw_file_mapping}{Data.frame with 'from' and 'to'
   columns for name mapping to unify names from list
@@ -21,26 +22,26 @@ A ggplot object for printing
 Each list entry is a data.frame with two columns. The first
 one contains the Raw file name (or the short version). and
 should be named 'raw.file' (or 'fc.raw.file'). The second
-column can have an arbitrary name and contains quality
-values in the range [0,1]. If values are outside this
-range, a warning is issued and values are cut to the
-nearest allowed value (e.g. '1.2' becomes '1'). Columns are
-ordered by name. Then characters in the column name are
-modified as follows: "." --> ": " "_" --> " " "<br"> -->
-"\\n"
+column's name must be an expression (see ?plotmath) and
+contains quality values in the range [0,1]. If values are
+outside this range, a warning is issued and values are cut
+to the nearest allowed value (e.g. '1.2' becomes '1'). List
+entries are merged and columns are ordered by name.
 }
 \details{
 All substrings enclosed by 'X[0-9]*X.' will be removed (can
-be used for sorting columns).
+be used for sorting columns). The resulting string is
+evaluated as an expression. E.g. parse(text = <colname>)
 
-To judge the quality of each raw file a summary column is
-added, values being the mean of all other columns per row.
+To judge the overall quality of each raw file a summary
+column is added, values being the mean of all other columns
+per row.
 }
 \examples{
 mapping = data.frame(from=c("A.raw","B.raw"), to=c("A","B"))
-  QC_data = list(somedata  = data.frame(raw.file=c("A.raw", "B.raw"), "X005X.EVD.Some_later" = 1:2),
-             someother = data.frame(raw.file=c("A.raw", "B.raw"), "X002X.EVD.First_col" = 5:6),
-             middle = data.frame(raw.file=c("A.raw", "B.raw"), "X003X.EVD.Middle_col" = 3:4))
+  QC_data = list(somedata  = data.frame(raw.file=c("A.raw", "B.raw"), "X005X.EVD:~Some~later~MS^2" = 1:2),
+             someother = data.frame(raw.file=c("A.raw", "B.raw"), "X002X.EVD:~First~col" = 5:6),
+             middle = data.frame(raw.file=c("A.raw", "B.raw"), "X003X.EVD:~Middle_col" = 3:4))
   getQCHeatMap(QC_data, mapping)
 }
 

@@ -226,7 +226,7 @@ createReport = function(txt_folder, yaml_obj = list())
     )
     ## QC measure for contamination
     qc_sm_id = d_smy[[1]][, c("raw.file", "ms.ms.identified....")]
-    cname = "X030X.SM.MS2_ID_rate (>" %+% id_rate_great %+% ")"
+    cname = "X030X.SM:~MS^2~ID~rate (\">" %+% id_rate_great %+% "\")"
     qc_sm_id[, cname] = qualLinThresh(qc_sm_id$ms.ms.identified.... , id_rate_great)
     QCM[["SM.MS2_ID_rate"]] = qc_sm_id[,c("raw.file", cname)]
     
@@ -742,7 +742,7 @@ createReport = function(txt_folder, yaml_obj = list())
           byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, FUN = plotContUser, sort_indices=F, extra_limit = ca_thresh)
           
           ## add heatmap column
-          cname = paste0("X002X.EVD.Contaminant (", ca, ")")
+          cname = paste0("X002X.EVD:Contaminant~(", ca, ")")
           cont_data[,cname] = as.numeric(!cont_data$above.thresh) ## inverse (0 is 'bad')
           QCM[[paste0("EVD.Contaminant_",ca)]] = cont_data[, c("fc.raw.file", cname)]
           
@@ -790,7 +790,7 @@ createReport = function(txt_folder, yaml_obj = list())
       for (pl in lpl) GPL$add(pl)
       ## QC measure for peptide intensity
       qc_pepint = medians_pep
-      cname = "X003X.EVD.Pep_Intensity (>" %+% param_def_EV_intThresh %+% ")"
+      cname = "X003X.EVD:~Pep~Intensity~(\">" %+% param_def_EV_intThresh %+% "\")"
       qc_pepint[,cname] = qualLinThresh(2^qc_pepint$med, 2^param_def_EV_intThresh) ## use non-log space 
       QCM[["EVD.PepIntensity"]] = qc_pepint[, c("fc.raw.file", cname)]
       
@@ -871,7 +871,7 @@ createReport = function(txt_folder, yaml_obj = list())
       })
       ## QC measure for protein ID performance
       qc_protc = pgc[pgc$category=="genuine", c("fc.raw.file", "protCount")]
-      cname = "X045X.EVD.Prot_Count (>" %+% param_EV_protThresh %+% ")"
+      cname = "X045X.EVD:~Prot~Count~(\">" %+% param_EV_protThresh %+% "\")"
       qc_protc[,cname] = qualLinThresh(qc_protc$protCount, param_EV_protThresh)
       QCM[["EVD.ProtCount"]] = qc_protc[, c("fc.raw.file", cname)]
       
@@ -923,7 +923,7 @@ createReport = function(txt_folder, yaml_obj = list())
       
       ## QC measure for peptide ID performance
       qc_pepc = pepc[pepc$category=="genuine", c("fc.raw.file", "pepCount")]
-      cname = "X040X.EVD.Pep_Count (>" %+% param_EV_pepThresh %+% ")"
+      cname = "X040X.EVD:~Pep~Count~(\">" %+% param_EV_pepThresh %+% "\")"
       qc_pepc[,cname] = qualLinThresh(qc_pepc$pepCount, param_EV_pepThresh)
       QCM[["EVD.PepCount"]] = qc_pepc[, c("fc.raw.file", cname)]
       
@@ -997,7 +997,7 @@ createReport = function(txt_folder, yaml_obj = list())
         ##.. create a list of distributions
         l_dists = dlply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", function(x) return(x$retention.length))
         qc_evd_PeakShape = qualBestKS(l_dists)
-        colnames(qc_evd_PeakShape) = c("fc.raw.file", "X017X.EVD.RT_Peak_Width")
+        colnames(qc_evd_PeakShape) = c("fc.raw.file", "X017X.EVD:~RT~Peak~Width")
         QCM[["EVD.PeakShape"]] = qc_evd_PeakShape
       } ## end retention length (aka peak width)
       
@@ -1079,7 +1079,7 @@ createReport = function(txt_folder, yaml_obj = list())
               if (!is.na(refRaw)) { ## rescue reference file (it will not show up in fraction-less data, and would otherwise be scored 'red')
                 qcAlign = rbind(qcAlign, data.frame(raw.file=refRaw, withinRT=1))
               }
-              cname = "X024X.EVD.MBR_Align"
+              cname = "X024X.EVD:~MBR~Align"
               qcAlign[, cname] = qcAlign$withinRT
               QCM[["X024X.EVD.MBR_Align"]] = qcAlign[, c("raw.file", cname)]
               
@@ -1152,7 +1152,7 @@ createReport = function(txt_folder, yaml_obj = list())
           qualMBR.m = merge(scoreMBRMatch[scoreMBRMatch$sample=="genuine",], 
                             scoreMBRMatch[scoreMBRMatch$sample=="transferred",], by="fc.raw.file")
           qualMBR.m = merge(qualMBR.m, scoreMBRMatch[scoreMBRMatch$sample=="all",], by="fc.raw.file")
-          cname = "X025X.EVD.MBR_ID-Transfer"
+          cname = "X025X.EVD:~MBR~ID-Transfer"
           qualMBR.m[, cname] = 1 - (qualMBR.m$multi.outRT.y - qualMBR.m$multi.outRT.x)
           QCM[["X025X.EVD.MBR_IDTransfer"]] = qualMBR.m[, c("fc.raw.file", cname)]
           
@@ -1170,7 +1170,7 @@ createReport = function(txt_folder, yaml_obj = list())
               ylab("fraction of 3D-peaks [%]") +
               coord_flip() + 
               scale_x_discrete_reverse(factor(RTdata$fc.raw.file)) +
-              ggtitle("EVD: 3D-peak segmentation by MBR (ID Transfer)") + 
+              ggtitle("EVD: MBR - ID Transfer") + 
               facet_wrap(~sample)
             #print(pl)
             GPL$add(pl)
@@ -1231,7 +1231,7 @@ createReport = function(txt_folder, yaml_obj = list())
       
       ## QC measure for charge centeredness
       qc_charge = ddply(d_evd[!d_evd$hasMTD, c("charge",  "raw.file")], "raw.file", function(x) data.frame(c = (sum(x$charge==2)/nrow(x))))
-      cname = "X010X.EVD.Charge"
+      cname = "X010X.EVD:~Charge"
       qc_charge[, cname] = qualMedianDist(qc_charge$c)
       QCM[["EVD.charge2"]] = qc_charge[, c("raw.file", cname)]
       
@@ -1263,7 +1263,8 @@ createReport = function(txt_folder, yaml_obj = list())
       
       ## QC measure for uniform-ness
       QCM[["ID_rate_over_RT"]] = ddply(d_evd[, c("retention.time",  "raw.file")], "raw.file", 
-                                       function(x) data.frame(X015X.EVD.ID_rate_over_RT = qualUniform(x$retention.time)))
+                                       function(x) data.frame("X015X.EVD:~ID~rate~over~RT" = qualUniform(x$retention.time), 
+                                                              check.names = F))
       
       
       ##
@@ -1431,7 +1432,7 @@ qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "raw.file")], "ra
                       return (data.frame(med_rat = r))
                     })
 
-colnames(qc_MS1deCal) = c("raw.file", "X026X.EVD.MS_Cal-Pre (" %+% param_EV_PrecursorTolPPM %+% ")")
+colnames(qc_MS1deCal) = c("raw.file", "X026X.EVD:~MS~Cal-Pre~(" %+% param_EV_PrecursorTolPPM %+% ")")
 QCM[["X026X.EVD.MS_Cal-Pre"]] = qc_MS1deCal
 
 
@@ -1499,7 +1500,7 @@ qc_MS1Cal = data.frame(raw.file = obs_par$raw.file,
 qc_MS1Cal$val[qc_MS1Cal$raw.file %in% MS1_decal_smr$raw.file[MS1_decal_smr$outOfCal]] = 0 
 ## bugfix will not work for postCalibration, since values are always too low
 qc_MS1Cal$val[qc_MS1Cal$raw.file %in% affected_raw_files] = HEATMAP_NA_VALUE
-cname = "X027X.EVD.MS_Cal-Post"
+cname = "X027X.EVD:~MS~Cal-Post"
 colnames(qc_MS1Cal)[colnames(qc_MS1Cal) == "val"] = cname
 QCM[["X027X.EVD.MS_Cal-Post"]] = qc_MS1Cal
 
@@ -1607,13 +1608,16 @@ byXflex(d_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], d_evd$fc
 
 ## QC measure for contamination
 qc_contaminants = ddply(d_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
-                        function(x) data.frame(X001X.EVD.Contaminants =
+                        function(x) data.frame("X001X.EVD:~Contaminants" =
                                                  1-qualLinThresh(sum(as.numeric(x$intensity[x$contaminant]), na.rm=T)/
-                                                                   sum(as.numeric(x$intensity), na.rm=T))))
+                                                                   sum(as.numeric(x$intensity), na.rm=T)), 
+                                               check.names = F))
 QCM[["EVD.Contaminants"]] = qc_contaminants
 
+}
 
-    }
+
+
 ##
 ## Oversampling: determine peaks repeatedly sequenced
 ##
@@ -1660,8 +1664,9 @@ fcnPlotOversampling = function(d_dups)
 byXflex(d_dups, d_dups$fc.raw.file, 30, fcnPlotOversampling, sort_indices = F)
 ## QC measure for centered-ness of MS2-calibration
 qc_evd_twin = d_dups[d_dups$n==1,]
-qc_evd_twin$"X020X.EVD.MS2_Oversampling" = qualLinThresh(qc_evd_twin$fraction/100)
-QCM[["EVD.Oversampling"]] = qc_evd_twin[, c("fc.raw.file", "X020X.EVD.MS2_Oversampling")]
+cname = "X020X.EVD:~MS^2~Oversampling"
+qc_evd_twin[, cname] = qualLinThresh(qc_evd_twin$fraction/100)
+QCM[["EVD.Oversampling"]] = qc_evd_twin[, c("fc.raw.file", cname)]
 
 ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
 if (!exists("DEBUG_PTXQC")) d_evd = d_evd[, c("id", "contaminant")]
@@ -1751,7 +1756,7 @@ if (enabled_msms)
   ##
   head(ms2_decal)
   for (analyzer in unique(ms2_decal$mass.analyzer)) {
-    qc_name = paste0("X028X.", "MSMS.MS2_Cal_(", analyzer, ")")
+    qc_name = paste0("X028X.", "MSMS:~MS^2~Cal~(", analyzer, ")")
     qc_MS2_decal = ddply(ms2_decal[ms2_decal$mass.analyzer==analyzer, ], "fc.raw.file", 
                          function(x)
                          {
@@ -1817,9 +1822,11 @@ if (enabled_msms)
     cat(pastet("missedCleavages>0 (min,median,max) [%]", paste0(mcZero_stat, collapse=",")), file=stats_file, append=T, sep="\n")
     
     ## QC measure for missed-cleavages variation
-    qc_mc = data.frame(fc.raw.file = st_bin$fc.raw.file, X004X.MSMS.MC = st_bin[, "0"])
+    qc_mc = data.frame(fc.raw.file = st_bin$fc.raw.file, XXX = st_bin[, "0"], check.names = F)
+    cname = "X004X.MSMS:~MC"
+    colnames(qc_mc)[grep("XXX", colnames(qc_mc))] = cname
     QCM[["MSMS.MC"]] = qc_mc
-    qc_mc$X007X.MSMS.MC_Var = qualMedianDist(qc_mc$X004X.MSMS.MC)
+    qc_mc$"X007X.MSMS:~MC~Var" = qualMedianDist(qc_mc[, cname])
     QCM[["MSMS.MC_Var"]] = qc_mc
     
     
@@ -1904,7 +1911,7 @@ if (enabled_msmsscans)
     byXflex(DFmse, DFmse$fc.raw.file, 8, plotMaxSEinRT, sort_indices=F)
     
     ## QC measure for smoothness of TopN over RT
-    qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame(X012X.MSMSScans.TopN_over_RT = qualUniform(x$medSE)))
+    qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame("X012X.MS^2*Scans:~TopN~over~RT" = qualUniform(x$medSE), check.names=F))
     QCM[["MSMSscans.TopN_over_RT"]] = qc_TopNRT
     
     ##
@@ -1969,7 +1976,8 @@ if (enabled_msmsscans)
       return (data.frame(belowThresh_IIT = sum(x$ion.injection.time < param_MSMSScans_ionInjThresh, na.rm=T) / nrow(x)))
     })
     head(DFmIIT_belowThresh)
-    qc_IIT = ddply(DFmIIT_belowThresh, "fc.raw.file", function(x) data.frame(X020X.MSMSScans.Ion_Inj_Time = qualLinThresh(x$belowThresh_IIT, t = 1)))
+    qc_IIT = ddply(DFmIIT_belowThresh, "fc.raw.file", function(x) data.frame("X020X.MS^2*Scans:~Ion~Inj~Time" = qualLinThresh(x$belowThresh_IIT, t = 1),
+                                                                             check.names = F))
     QCM[["MSMSscans.Ion_Inj_Time"]] = qc_IIT
     
     
@@ -2025,7 +2033,8 @@ if (enabled_msmsscans)
     
     ## QC measure for always reaching the maximum TopN
     maxTopN = max(dfc.ratio$scan.event.number)
-    qc_TopN = ddply(dfc.ratio, "fc.raw.file", function(x) data.frame(X035X.MSMSScans.TopN_high = qualHighest(x$n, maxTopN)))
+    qc_TopN = ddply(dfc.ratio, "fc.raw.file", function(x) data.frame("X035X.MS^2*Scans:~TopN~high" = qualHighest(x$n, maxTopN),
+                                                                     check.names = F))
     QCM[["MSMSscans.TopN"]] = qc_TopN
     
     
@@ -2073,7 +2082,8 @@ if (enabled_msmsscans)
     
     ## QC measure for constantly identifiying peptides, irrespective of scan event number
     ## -- we weight scan events by their number of occurence
-    qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame(X038X.MSMSScans.TopN_ID_over_N = qualUniform(x$ratio, x$count)))
+    qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame("X038X.MS^2*Scans:~TopN~ID~over~N" = qualUniform(x$ratio, x$count),
+                                                                       check.names = F))
     QCM[["MSMSscans.TopN_ID_over_N"]] = qc_TopN_ID
   } ## end MSMSscan from MQ > 1.0.13
 }

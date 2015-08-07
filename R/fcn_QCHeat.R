@@ -7,19 +7,19 @@ HEATMAP_NA_VALUE = -Inf
 #' Each list entry is a data.frame with two columns. 
 #' The first one contains the Raw file name (or the short version).
 #' and should be named 'raw.file' (or 'fc.raw.file'). 
-#' The second column can have an arbitrary name
+#' The second column's name must be an expression (see ?plotmath)
 #' and contains quality values in the range [0,1]. If values are outside this range, 
 #' a warning is issued and values are cut to the nearest allowed value (e.g. '1.2' becomes '1').
-#' Columns are ordered by name. Then characters in the column name are modified as follows: 
-#'   "." --> ": "
-#'   "_" --> " "
-#'   "<br"> --> "\\n"
+#' List entries are merged and columns are ordered by name.
 #'   
 #' All substrings enclosed by 'X[0-9]*X.' will be removed (can be used for sorting columns).
+#' The resulting string is evaluated as an expression. 
+#' E.g. parse(text = <colname>)
 #' 
-#' To judge the quality of each raw file a summary column is added, values being the mean of all other columns per row.
+#' To judge the overall quality of each raw file a summary column is added, 
+#' values being the mean of all other columns per row.
 #'        
-#' @param QCM List of data.frames, each having a 'raw.file' column and a metric column of arbitrary name
+#' @param QCM List of data.frames, each having a 'raw.file' or 'fc.raw.file' column and a metric column with numeric values
 #' @param raw_file_mapping Data.frame with 'from' and 'to' columns for name mapping to unify names from list entries
 #' @return A ggplot object for printing
 #'
@@ -30,16 +30,15 @@ HEATMAP_NA_VALUE = -Inf
 #'
 #' @examples
 #'   mapping = data.frame(from=c("A.raw","B.raw"), to=c("A","B"))
-#'   QC_data = list(somedata  = data.frame(raw.file=c("A.raw", "B.raw"), "X005X.EVD.Some_later" = 1:2),
-#'              someother = data.frame(raw.file=c("A.raw", "B.raw"), "X002X.EVD.First_col" = 5:6),
-#'              middle = data.frame(raw.file=c("A.raw", "B.raw"), "X003X.EVD.Middle_col" = 3:4))
+#'   QC_data = list(somedata  = data.frame(raw.file=c("A.raw", "B.raw"), "X005X.EVD:~Some~later~MS^2" = 1:2),
+#'              someother = data.frame(raw.file=c("A.raw", "B.raw"), "X002X.EVD:~First~col" = 5:6),
+#'              middle = data.frame(raw.file=c("A.raw", "B.raw"), "X003X.EVD:~Middle_col" = 3:4))
 #'   getQCHeatMap(QC_data, mapping)
 #' 
 #' 
 #' 
 getQCHeatMap = function(QCM, raw_file_mapping)
 {
-  
   QCM_shortNames = lapply(QCM, function(x) {
     if ("raw.file" %in% colnames(x)) {
       x$fc.raw.file = renameFile(x$raw.file, raw_file_mapping)  ## create short name column
@@ -73,7 +72,7 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   QCM_final = QCM_final[, order(colnames(QCM_final))]
   ## add column numbering (ignore first column, which is 'fc.raw.file')
   idx = 2:(ncol(QCM_final)-1)
-  colnames(QCM_final)[idx] = paste0(colnames(QCM_final)[idx], " [", idx-1, "]")
+  colnames(QCM_final)[idx] = paste0(colnames(QCM_final)[idx], "~\"[", idx-1, "]\"")
   
   QCM_final.m = melt(QCM_final, id.vars="fc.raw.file")
   QCM_final.m$variable = factor(QCM_final.m$variable, ordered = TRUE)
@@ -97,14 +96,12 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   ## rename metrics (remove underscores and dots)
   QCM_final.m$variable = gsub("X[0-9]*X\\.", "", as.character(QCM_final.m$variable))  ## prefix sorting
   QCM_final.m$variable = gsub("^\\s+|\\s+$", "", QCM_final.m$variable)                ## trim
-  QCM_final.m$variable = gsub("_", " ", QCM_final.m$variable)
-  QCM_final.m$variable = gsub("\\.", ": ", QCM_final.m$variable)
-  QCM_final.m$variable = gsub("<br>", "\n", QCM_final.m$variable)
+
   QCM_final.m$variable2 = factor(QCM_final.m$variable, levels = unique(QCM_final.m$variable))
   if (any(is.na(QCM_final.m$value))) QCM_final.m$dummy_col = "NA" ## use color legend for missing values
   
   ## replace the x-axis labels by expressions
-  QCM_final.m$variable3 = sapply(QCM_final.m$variable2, function(x) {
+  QCM_final.m$variable3 = sapply(as.character(QCM_final.m$variable2), function(x) {
     parse(text=x)
   })
   
@@ -117,6 +114,7 @@ getQCHeatMap = function(QCM, raw_file_mapping)
     p = p + geom_tile(aes_string(fill = "value"))
   }  
   p = p + scale_y_discrete_reverse(QCM_final.m$fc.raw.file, breaks = ggAxisLabels) + 
+          scale_x_discrete(labels = QCM_final.m$variable3) +
           scale_fill_gradientn(colours = c("red", "black", "green"),
                                na.value = "grey50",
                                limits=c(0, 1), 
