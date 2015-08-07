@@ -337,7 +337,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       }
       .$raw_file_mapping = data.frame(from = rf_name, to = rf_name_s, stringsAsFactors = FALSE)
       ## check if the minimal length was reached
-      add_fs_col = 10
+      #add_fs_col = 10
       if (max(nchar(.$raw_file_mapping$to)) > add_fs_col)
       { ## resort to short naming convention
         .$raw_file_mapping[, "best effort"] = .$raw_file_mapping$to
