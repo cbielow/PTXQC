@@ -179,6 +179,8 @@ createReport = function(txt_folder, yaml_obj = list())
     ##todo: read in mqpar.xml to get group information and ppm tolerances for all groups (parameters.txt just gives Group1)
   }
   
+  add_fs_col = getYAML(yaml_obj, "PTXQC$NameLengthMax_num", 10)
+  
   ######
   ######  summary.txt ...
   ######
@@ -186,7 +188,7 @@ createReport = function(txt_folder, yaml_obj = list())
   enabled_summary = getYAML(yaml_obj, "File$Summary$enabled", TRUE)
   if (enabled_summary)
   {
-    d_smy = mq$readMQ(txt_files$summary, type="sm")
+    d_smy = mq$readMQ(txt_files$summary, type="sm", add_fs_col = add_fs_col)
     #colnames(d_smy)
     #colnames(d_smy[[1]])
     
@@ -1086,7 +1088,7 @@ createReport = function(txt_folder, yaml_obj = list())
               if (evd_has_fractions)
               { ## amend fc.raw.file with fraction number
                 qcAlign$fraction = d_evd$fraction[match(qcAlign$fc.raw.file, d_evd$fc.raw.file)]
-                qcAlign$newlabel = paste(qcAlign$fc.raw.file, "  -  frc", qcAlign$fraction)
+                qcAlign$newlabel = paste0(qcAlign$fc.raw.file, " - frc", qcAlign$fraction)
               }
               ## amend fc.raw.file with % good ID pairs
               qcAlign$newlabel = paste0(qcAlign$newlabel, " (", round(qcAlign$withinRT*100), "% good)")
@@ -1393,7 +1395,7 @@ plotPCUnCal = function(d_sub, affected_raw_files, ylim_g)
   showColLegend = ifelse(length(setdiff(d_sub$col, "default")) > 0, "legend", "none")
   
   ## amend SD to fc.raw.file
-  d_sub$fc.raw.file = paste0(d_sub$fc.raw.file, "\n(sd = ", MS1_decal_smr$sd[match(d_sub$raw.file, MS1_decal_smr$raw.file)], "ppm)")
+  d_sub$fc.raw.file = paste0(d_sub$fc.raw.file, " (sd = ", MS1_decal_smr$sd[match(d_sub$raw.file, MS1_decal_smr$raw.file)], "ppm)")
   d_sub$fc.raw.file = factor(d_sub$fc.raw.file, levels=unique(d_sub$fc.raw.file), ordered=T)
   
   pl = ggplot(d_sub, col=d_sub$col) +
@@ -1429,7 +1431,7 @@ qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "raw.file")], "ra
                       return (data.frame(med_rat = r))
                     })
 
-colnames(qc_MS1deCal) = c("fc.raw.file", "X026X.EVD.MS_Cal-Pre (" %+% param_EV_PrecursorTolPPM %+% ")")
+colnames(qc_MS1deCal) = c("raw.file", "X026X.EVD.MS_Cal-Pre (" %+% param_EV_PrecursorTolPPM %+% ")")
 QCM[["X026X.EVD.MS_Cal-Pre"]] = qc_MS1deCal
 
 

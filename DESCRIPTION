@@ -1,7 +1,7 @@
 Package: PTXQC
 Type: Package
 Title: Quality report generation for MaxQuant results
-Version: 0.66.0
+Version: 0.67.0
 Date: 2014-04-11
 Author: Chris Bielow
 Maintainer: Chris Bielow <chris.bielow@mdc-berlin.de>

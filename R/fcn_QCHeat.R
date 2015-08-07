@@ -45,14 +45,21 @@ getQCHeatMap = function(QCM, raw_file_mapping)
       x$fc.raw.file = renameFile(x$raw.file, raw_file_mapping)  ## create short name column
       x = x[, !(colnames(x) %in% "raw.file")]  ## remove raw.file column
     }
-    if (!("fc.raw.file" %in% colnames(x))) stop("Error in getQCHeatMap(): 'fc.raw.file' column missing from QC measure.")
+    if (!("fc.raw.file" %in% colnames(x))) {
+      stop("Internal error in getQCHeatMap(): 'fc.raw.file' column missing from QC measure.")
+    } 
+    ## check if fc.raw.filenames are known (e.g. when column was named fc.raw.file but values are from raw.file)
+    if (!(all(x$fc.raw.file %in% raw_file_mapping$to))) {
+      stop("Internal error in getQCHeatMap(): 'fc.raw.file' column has invalid entries for '", grepv("^X", colnames(x)), "'!")
+    }
+  
     return(x)
   })
   
   ## final heat map of QC metrics
   QCM_final = Reduce(function(a,b) merge(a,b,all = TRUE), QCM_shortNames)
   ## add summary column
-  QCM_final$X999X.Average_Overall_Quality = apply(QCM_final[,!grepl("fc.raw.file", colnames(QCM_final))], 1, function(row) {
+  QCM_final$X999X.Average_Overall_Quality = apply(QCM_final[,!grepl("fc.raw.file", colnames(QCM_final)), drop=F], 1, function(row) {
     row[is.infinite(row)] = NA  ## mask explicitly missing values, since it will bias the mean otherwise
     return(mean(row, na.rm=T))
   })
@@ -96,10 +103,16 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   QCM_final.m$variable2 = factor(QCM_final.m$variable, levels = unique(QCM_final.m$variable))
   if (any(is.na(QCM_final.m$value))) QCM_final.m$dummy_col = "NA" ## use color legend for missing values
   
+  ## replace the x-axis labels by expressions
+  QCM_final.m$variable3 = sapply(QCM_final.m$variable2, function(x) {
+    parse(text=x)
+  })
+  
   p = ggplot(QCM_final.m, aes_string(y="fc.raw.file", x="variable2"))
   if (any(is.na(QCM_final.m$value))) {
     p = p + geom_tile(aes_string(fill = "value", colour = "dummy_col")) +
-            scale_colour_manual(name="Missing", values=c("NA" = "grey50"))
+            scale_colour_manual(name="Missing", values=c("NA" = "grey50")) +
+            guides(colour = guide_legend(override.aes = list(fill = 'grey50')))
   } else {
     p = p + geom_tile(aes_string(fill = "value"))
   }  
