@@ -81,6 +81,7 @@ alignmentCheck = function(data, referenceFile) {
   if (!is.na(referenceFile)) {
     RefRounds = list( list("file_ref" = referenceFile, "file_clients" = unique(data$raw.file)) )
   } else {
+    ## Fractions ...
     RefRounds = list()
     ## get Raw files and their fractions
     df.f = data.frame(raws = unique(data$raw.file))
@@ -104,7 +105,7 @@ alignmentCheck = function(data, referenceFile) {
   alignQ = data.frame()
 
   for (lRef in RefRounds)
-  { ## lRef = RefRounds[[1]]
+  { ## lRef = RefRounds[[13]]
     file_ref = lRef[["file_ref"]]
     file_clients = lRef[["file_clients"]]
     
@@ -430,6 +431,7 @@ computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_inGroup)
   ## compute percentage of outside dRT peaks in genuine, matched and combined(=all)
   ## then calc the drop.
   f = ddply(qMBR, "fc.raw.file", function(x) {
+    #x = qMBR[3, , drop=F]
     rr = qMBRSeg_Dist_inGroup$fc.raw.file==x$fc.raw.file
     
     nat.inRT = qMBRSeg_Dist_inGroup$withinRT_genuine[rr] ## e.g. 0.87

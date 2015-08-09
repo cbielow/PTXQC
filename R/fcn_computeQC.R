@@ -390,9 +390,8 @@ createReport = function(txt_folder, yaml_obj = list())
     if (length(c(colsSIL, colsLF)) > 0)
     {
       if (length(colsSIL)) {
-        ## ignore lfq.intensity.l and alike if real groups are present
-        plain_channel = grepv("^lfq.intensity\\.[hlm]$", colnames(d_pg))
-        if (plain_channel == colsSIL) colsW = colsSIL else colsW = setdiff(colsSIL, plain_channel)
+        ## unlike intensity.l, there is no lfq.intensity.l which we could remove
+        colsW = colsSIL
       } else colsW = colsLF
       MAP_pg_groups_LFQ = data.frame(long = colsW)
       MAP_pg_groups_LFQ$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups_LFQ$long, 
@@ -1046,7 +1045,7 @@ createReport = function(txt_folder, yaml_obj = list())
             d_alignQ = alignmentCheck(d_evd[(d_evd$type %in% c("MULTI-MSMS")), 
                                             c("calibrated.retention.time", 
                                               "id", "raw.file", colFraction, "modified.sequence", "charge")], 
-                                      refRaw)
+                                      referenceFile = refRaw)
             ## augment more columns
             d_alignQ$retention.time.calibration = d_evd$retention.time.calibration[match(d_alignQ$id, d_evd$id)]
             
@@ -1101,6 +1100,7 @@ createReport = function(txt_folder, yaml_obj = list())
   
               splitRTAlignByRawFile = function(RTdata, ylim_g)
               {
+                #RTdata = evd_RT_t[ evd_RT_t$fc.raw.file == "file 13",]
                 pl = ggplot(RTdata, aes_string(x="calibrated.retention.time", y="retention.time.calibration")) + 
                   ## the MaxQuant correction (plot real data, no spline, since it can be very irregular)
                   geom_line(aes(alpha=0.7), color = "blue") +
@@ -1152,6 +1152,7 @@ createReport = function(txt_folder, yaml_obj = list())
           ## puzzle together final picture
           scoreMBRMatch = computeMatchRTFractions(qMBR, qMBRSeg_Dist_inGroup)
           #head(scoreMBRMatch)
+          #scoreMBRMatch[scoreMBRMatch$fc.raw.file=="file 3",]
           
           qualMBR.m = merge(scoreMBRMatch[scoreMBRMatch$sample=="genuine",], 
                             scoreMBRMatch[scoreMBRMatch$sample=="transferred",], by="fc.raw.file")
@@ -1172,7 +1173,7 @@ createReport = function(txt_folder, yaml_obj = list())
               scale_fill_manual("peak class", 
                                 values = c("single"="green", "multi.inRT"="lightgreen", "multi.outRT"="red"),
                                 labels=c("single", "group (in width)", "group (out width)")) +
-              ylim(0, 100) +
+              ylim(0, 100.1) + ## ggplot might not show the last (red) group upon 100.0
               xlab("") +
               ylab("fraction of 3D-peaks [%]") +
               coord_flip() + 
