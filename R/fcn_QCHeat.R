@@ -58,7 +58,7 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   ## final heat map of QC metrics
   QCM_final = Reduce(function(a,b) merge(a,b,all = TRUE), QCM_shortNames)
   ## add summary column
-  QCM_final$X999X.Average_Overall_Quality = apply(QCM_final[,!grepl("fc.raw.file", colnames(QCM_final)), drop=F], 1, function(row) {
+  QCM_final$"X999X.Average~Overall~Quality" = apply(QCM_final[,!grepl("fc.raw.file", colnames(QCM_final)), drop=F], 1, function(row) {
     row[is.infinite(row)] = NA  ## mask explicitly missing values, since it will bias the mean otherwise
     return(mean(row, na.rm=T))
   })
