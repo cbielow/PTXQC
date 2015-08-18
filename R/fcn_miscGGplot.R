@@ -35,6 +35,17 @@ ggText = function(title, text, col = "black") {
 printWithFooter = function(gg_obj, bottom_left = NULL, bottom_right = NULL) 
 {
   print(gg_obj)
+  if (!is.null(bottom_left))
+  {
+    label = textGrob(bottom_left,
+                     x = 0.02,  # left side
+                     y = 0.0,   # bottom
+                     just="left", 
+                     hjust = NULL,
+                     vjust = -.5,
+                     gp=gpar(fontsize=7, col="#333333"))  
+    grid.draw(label)
+  }
   if (!is.null(bottom_right))
   {
     label = textGrob(bottom_right,
@@ -44,17 +55,6 @@ printWithFooter = function(gg_obj, bottom_left = NULL, bottom_right = NULL)
                      hjust = NULL,
                      vjust = -.5,
                      gp=gpar(fontsize=7, col="#333333"))
-    grid.draw(label)
-  }
-  if (!is.null(bottom_left))
-  {
-    label = textGrob(bottom_left,
-                     x = 0.02,  # right side
-                     y = 0.0,   # bottom
-                     just="left", 
-                     hjust = NULL,
-                     vjust = -.5,
-                     gp=gpar(fontsize=7, col="#333333"))  
     grid.draw(label)
   }
 }
