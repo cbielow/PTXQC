@@ -105,9 +105,34 @@ createReport = function(txt_folder, yaml_obj = list())
   yaml_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, ".yaml")
   heatmap_values_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_heatmap.txt")
   R_plots_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_plots.Rdata")
+  filename_sorting = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_filename_sort.txt")
   
   ## prepare for readMQ()
   mq = MQDataReader$new()
+  
+  ## read manual filename shortening & sorting (if available)
+  if (file.exists(filename_sorting))
+  {
+    dfs = read.delim(filename_sorting, comment.char="#", stringsAsFactors = F)
+    req_cols = c(from = "orig.Name", to = "new.Name")
+    if (!all(req_cols %in% colnames(dfs)))
+    {
+      stop("Input file '", filename_sorting, "' does not contain the columns '", paste(req_cols, collapse="' and '"), "'.",
+           " Please fix and re-run PTXQC!")
+    }
+    colnames(dfs) = names(req_cols)[match(req_cols, colnames(dfs))]
+    if (any(duplicated(dfs$from)) | any(duplicated(dfs$to)))
+    {
+      dups = c(dfs$from[duplicated(dfs$from)], dfs$to[duplicated(dfs$to)])
+      stop("Input file '", filename_sorting, "' has duplicate entries ('", paste(dups, collapse=", "), ")'!",
+           " Please fix and re-run PTXQC!")
+    }
+    dfs
+    dfs$to = factor(dfs$to, levels = unique(dfs$to), ordered = T) ## keep the order
+    dfs$from = factor(dfs$from, levels = unique(dfs$from), ordered = T) ## keep the order
+    mq$raw_file_mapping = dfs
+  }
+
   
   ######
   ######  parameters.txt ...
@@ -208,7 +233,6 @@ createReport = function(txt_folder, yaml_obj = list())
     
     
     d_smy[[1]]$fc.raw.file = mq$raw_file_mapping$to[match(d_smy[[1]]$raw.file, mq$raw_file_mapping$from)]
-    d_smy[[1]]$fc.raw.file = factor(d_smy[[1]]$fc.raw.file, levels=d_smy[[1]]$fc.raw.file, ordered=T)
     
     d_smy[[1]]$x = 1:nrow(d_smy[[1]])
     GPL$add( 
@@ -975,6 +999,8 @@ createReport = function(txt_folder, yaml_obj = list())
           data$fc.raw.file = paste0(data$fc.raw.file, " (~", 
                                     round(d_evd.m.d_med_sub$median[match(data$fc.raw.file, d_evd.m.d_med_sub$fc.raw.file)], 1),
                                     " min)")
+          ## manually convert to factor to keep old ordering (otherwise ggplot will sort it, since its a string)
+          data$fc.raw.file = factor(data$fc.raw.file, levels = unique(data$fc.raw.file), ordered=T)
           d_evd.m.d_med_sub$fc.raw.file = paste0(d_evd.m.d_med_sub$fc.raw.file, " (~", 
                                                  round(d_evd.m.d_med_sub$median[match(d_evd.m.d_med_sub$fc.raw.file, d_evd.m.d_med_sub$fc.raw.file)], 1),
                                                  " min)")
@@ -1976,6 +2002,8 @@ if (enabled_msmsscans)
       data$fc.raw.file = paste0(data$fc.raw.file, " (~", 
                                 round(DFmIITglob_sub$globalIITmedian[match(data$fc.raw.file, DFmIITglob_sub$fc.raw.file)]),
                                 " ms)")
+      ## manually convert to factor to keep old ordering (otherwise ggplot will sort it, since its a string)
+      data$fc.raw.file = factor(data$fc.raw.file, levels = unique(data$fc.raw.file), ordered=T)
       DFmIITglob_sub$fc.raw.file = paste0(DFmIITglob_sub$fc.raw.file, " (~", 
                                           round(DFmIITglob_sub$globalIITmedian[match(DFmIITglob_sub$fc.raw.file, DFmIITglob_sub$fc.raw.file)]),
                                           " ms)")
@@ -2182,6 +2210,17 @@ cat(" done\n")
 
 ### write YAML config
 writeYAML(yaml_file, yaml_obj)
+
+
+## write sorting of filenames
+if (!file.exists(filename_sorting))
+{
+  dfs = data.frame(orig.Name=mq$raw_file_mapping$from, new.Name = mq$raw_file_mapping$to)
+  cat(file=filename_sorting, "# This file can be used to manually substitute Raw file names within the report.",
+                             "# The ordering of Raw files in the report can be changed by re-arranging the rows.",
+      sep = "\n")
+  write.table(x = dfs, file=filename_sorting, append = T, quote = F, sep="\t", row.names=F)
+}
 
 cat(paste("Report file created at\n\n    ", report_file, "\n\n", sep=""))
 cat(paste0("\n\nTime elapsed: ", round(as.double(Sys.time() - time_start, units="mins"), 1), " min\n\n"))
