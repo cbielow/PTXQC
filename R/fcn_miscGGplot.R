@@ -21,6 +21,43 @@ ggText = function(title, text, col = "black") {
   return(pl)
 }
 
+#'
+#' Augment a ggplot with footer text
+#' 
+#' @param gg_obj ggplot2 object to be printed
+#' @param bottom_left Footer text for bottom left side
+#' @param bottom_right Footer text for bottom right side
+#' @return -
+#' 
+#' @import ggplot2
+#' @importFrom grid grid.text grid.draw textGrob gpar
+#'
+printWithFooter = function(gg_obj, bottom_left = NULL, bottom_right = NULL) 
+{
+  print(gg_obj)
+  if (!is.null(bottom_right))
+  {
+    label = textGrob(bottom_right,
+                     x = 0.98,  # right side
+                     y = 0.0,   # bottom
+                     just="right", 
+                     hjust = NULL,
+                     vjust = -.5,
+                     gp=gpar(fontsize=7, col="#333333"))
+    grid.draw(label)
+  }
+  if (!is.null(bottom_left))
+  {
+    label = textGrob(bottom_left,
+                     x = 0.02,  # right side
+                     y = 0.0,   # bottom
+                     just="left", 
+                     hjust = NULL,
+                     vjust = -.5,
+                     gp=gpar(fontsize=7, col="#333333"))  
+    grid.draw(label)
+  }
+}
 
 #'
 #' Inverse the order of items on the x-axis (for discrete scales)

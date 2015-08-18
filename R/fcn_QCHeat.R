@@ -58,7 +58,7 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   ## final heat map of QC metrics
   QCM_final = Reduce(function(a,b) merge(a,b,all = TRUE), QCM_shortNames)
   ## add summary column
-  QCM_final$"X999X.Average~Overall~Quality" = apply(QCM_final[,!grepl("fc.raw.file", colnames(QCM_final)), drop=F], 1, function(row) {
+  QCM_final$"X999X_catGen_Average~Overall~Quality" = apply(QCM_final[,!grepl("fc.raw.file", colnames(QCM_final)), drop=F], 1, function(row) {
     row[is.infinite(row)] = NA  ## mask explicitly missing values, since it will bias the mean otherwise
     return(mean(row, na.rm=T))
   })
@@ -93,9 +93,18 @@ getQCHeatMap = function(QCM, raw_file_mapping)
     QCM_final.m$value[QCM_final.m$value < 0] = 0
   }
   
+  ##
   ## rename metrics (remove underscores and dots)
-  QCM_final.m$variable = gsub("X[0-9]*X\\.", "", as.character(QCM_final.m$variable))  ## prefix sorting
-  QCM_final.m$variable = gsub("^\\s+|\\s+$", "", QCM_final.m$variable)                ## trim
+  ##
+  ## sorting prefix
+  QCM_final.m$variable = gsub("X[0-9]*X", "", as.character(QCM_final.m$variable))  ## prefix sorting
+  ## axis color
+  col_axis = c("_catPrep_" = "#606060", "_catLC_" = "black", "_catMS_" = "#606060", "_catGen_" = "black")
+  QCM_final.m$axisCat = gsub("^(_cat[A-Za-z]*_).*", "\\1", QCM_final.m$variable)  ## assign axis color
+  QCM_final.m$axisCol = col_axis[match(QCM_final.m$axisCat, names(col_axis))]
+  QCM_final.m$variable = gsub("_cat[A-Za-z]*_", "", QCM_final.m$variable)            ## remove color category from name
+  ## trim
+  QCM_final.m$variable = gsub("^\\s+|\\s+$", "", QCM_final.m$variable)
 
   QCM_final.m$variable2 = factor(QCM_final.m$variable, levels = unique(QCM_final.m$variable))
   if (any(is.na(QCM_final.m$value))) QCM_final.m$dummy_col = "NA" ## use color legend for missing values
@@ -121,7 +130,10 @@ getQCHeatMap = function(QCM, raw_file_mapping)
                                guide = guide_legend(title = "score"),
                                breaks=c(1,0.5,0),
                                labels=c("best","under\nperforming","fail")) +
-          theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+          theme(axis.text.x = element_text(angle = 90, 
+                                           vjust = 0.5, 
+                                           hjust = 1, 
+                                           colour=QCM_final.m$axisCol[!duplicated(QCM_final.m$variable2)])) +
           ggtitle("Performance overview") +
           xlab("") +
           ylab("Raw file")
