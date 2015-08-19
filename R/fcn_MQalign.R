@@ -458,4 +458,70 @@ computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_inGroup)
   })
   return(f)
 }
+
+#'
+#' Return a tree plot with a possible alignment tree.
+#' 
+#' This allows the user to judge which Raw files have similar corrected RT's (i.e. where aligned successfully).
+#' If there are clear sub-clusters, it might be worth introducing artifical fractions into MaxQuant,
+#' to avoid ID-transfer between these clusters (use the MBR-Align and MBR-ID-Transfer metrics to support the decision).
+#' 
+#' If the input contains fractions, leaf nodes will be colored accordingly.
+#' Distinct sub-clusters should have their own color.
+#' If not, MaxQuant's fraction settings should be optimized.
+#' Note that introducing fractions in MaxQuant will naturally lead to a clustering here (it's somewhat circular).
+#' 
+#' @param d_evd  Evidence table containing calibrated retention times and sequence information.
+#' @param col_fraction Empty vector or 1-values vector giving the name of the fraction column (if existing)
+#' @return ggplot object containing the correlation tree
+#' 
+#' @import ggplot2
+#' @import ggdendro
+#' 
+#' @export
+#'
+RTalignmentTree = function(d_evd, col_fraction = c())
+{
+  #d_evd$fc.raw.file=d_evd$raw.file
+  head(d_evd)
   
+  req_cols = c("calibrated.retention.time", "fc.raw.file", col_fraction, "modified.sequence", "charge")
+  if (!all(req_cols %in% colnames(d_evd)))
+  {
+    stop("RTalignmentTree: Missing columns! Please fix the code: ", 
+         setdiff(req_cols, colnames(d_evd)), "!")
+  }
+  
+  d_evd$seqc = paste(d_evd$modified.sequence, d_evd$charge)
+  
+  d_cast = dcast(d_evd, seqc ~ fc.raw.file, mean, value.var = "calibrated.retention.time")
+  head(d_cast[,-1])
+  d_cast.m = as.matrix(d_cast[,-1])
+  head(d_cast.m)
+  
+  #Dissimilarity = 1 - Correlation
+  #Dissimilarity = (1 - Correlation)/2
+  #Dissimilarity = 1 - Abs(Correlation)
+  #Dissimilarity = Sqrt(1 - Correlation2)
+  dissimilarity = 1 - cor(d_cast.m, use="pairwise.complete.obs")
+  ddata = dendro_data(hclust(as.dist(dissimilarity)), type = "rectangle")
+  
+  if (length(col_fraction))
+  {
+    idx_raw = match(ddata$labels$label, d_evd$fc.raw.file)
+    ddata$labels$col = factor(d_evd[idx_raw, col_fraction])
+  } else {
+    ddata$labels$col = "black"
+  }
+  p = ggplot(segment(ddata)) + 
+    geom_segment(aes_string(x = "x", y = "y", xend = "xend", yend = "yend")) +
+    scale_x_continuous(breaks=ddata$labels$x, labels=ddata$labels$label) +
+    theme_blank() +
+    theme(axis.text.y = element_text(colour=ddata$labels$col),
+          axis.text.x = element_blank()) +
+    coord_flip() +
+    addGGtitle("Clustering Tree of Raw files", "by Correlation of Corrected Retention Times")
+  #p
+  return(p)
+}
+

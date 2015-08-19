@@ -233,6 +233,8 @@ createReport = function(txt_folder, yaml_obj = list())
     
     
     d_smy[[1]]$fc.raw.file = mq$raw_file_mapping$to[match(d_smy[[1]]$raw.file, mq$raw_file_mapping$from)]
+    ## needs to be a factor for 'scale_y_discrete_reverse' below, but lets to the sorting manually...
+    d_smy[[1]]$fc.raw.file = factor(d_smy[[1]]$fc.raw.file, levels=unique(d_smy[[1]]$fc.raw.file), ordered=T)
     
     d_smy[[1]]$x = 1:nrow(d_smy[[1]])
     GPL$add( 
@@ -980,7 +982,7 @@ createReport = function(txt_folder, yaml_obj = list())
         tail(d_evd.m.d)
         ## median peak width
         d_evd.m.d_med = ddply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = function(x) {
-          fcr = as.character(x$fc.raw.file[1])
+          #fcr = as.character(x$fc.raw.file[1])
           #cat(fcr)
           m = median(x$retention.length, na.rm=T);
           return(data.frame(median = m))
@@ -1059,13 +1061,13 @@ createReport = function(txt_folder, yaml_obj = list())
           ## find reference
           if ('fraction' %in% colnames(d_evd)) {
             refRaw = NA
-            colFraction = "fraction"
+            col_fraction = "fraction"
             txt_subtitle = "fraction: neighbour comparison"
             evd_has_fractions = TRUE
             d_evd$fraction[is.na(d_evd$fraction)] = 32000
           } else {
             refRaw = findAlignReference(d_evd)
-            colFraction = c()
+            col_fraction = c()
             txt_subtitle = ""
             evd_has_fractions = FALSE
           } 
@@ -1076,7 +1078,7 @@ createReport = function(txt_folder, yaml_obj = list())
             ## find RT curve based on genuine 3D peaks (should be flat)
             d_alignQ = alignmentCheck(d_evd[(d_evd$type %in% c("MULTI-MSMS")), 
                                             c("calibrated.retention.time", 
-                                              "id", "raw.file", colFraction, "modified.sequence", "charge")], 
+                                              "id", "raw.file", col_fraction, "modified.sequence", "charge")], 
                                       referenceFile = refRaw)
             ## augment more columns
             d_alignQ$retention.time.calibration = d_evd$retention.time.calibration[match(d_alignQ$id, d_evd$id)]
@@ -1227,35 +1229,48 @@ createReport = function(txt_folder, yaml_obj = list())
             GPL$add(pl)
             return(1)
           }
+
           byX(scoreMBRMatch, scoreMBRMatch$fc.raw.file, 12, uniqueRMatchByRawFile, sort_indices = F)
           
-        }
-      }
-      
-      ##
-      ## MBR: additional evidence by matching MS1 by AMT across files
-      ##
-      if (any(d_evd$match.time.difference, na.rm=T)) {
-        ## scatter plot: for each raw file give median time diff and # peptides used for matching
-        mtr.df = ddply(d_evd, "fc.raw.file", function(x) {
-          match_count_abs = sum(!is.na(x$match.time.difference))
-          match_count_pc  = round(100*sum(!is.na(x$match.time.difference))/nrow(x))
-          return (data.frame(abs = match_count_abs, pc = match_count_pc))
-        })
+          ##
+          ## MBR: Tree Clustering
+          ##
+          GPL$add(
+          #print(  
+            RTalignmentTree(d_evd[(d_evd$type %in% c("MULTI-MSMS")), 
+                                  c("calibrated.retention.time", "fc.raw.file", col_fraction, "modified.sequence", "charge")],
+                            col_fraction = col_fraction)
+          )
+          
+          ##
+          ## MBR: additional evidence by matching MS1 by AMT across files
+          ##
+          if (any(d_evd$match.time.difference, na.rm=T)) {
+            ## scatter plot: for each raw file give median time diff and # peptides used for matching
+            mtr.df = ddply(d_evd, "fc.raw.file", function(x) {
+              match_count_abs = sum(!is.na(x$match.time.difference))
+              match_count_pc  = round(100*sum(!is.na(x$match.time.difference))/nrow(x))
+              return (data.frame(abs = match_count_abs, pc = match_count_pc))
+            })
+            
+            p_amt = ggplot(data=mtr.df, aes_string(x = "abs", y = "pc", col = "fc.raw.file")) + 
+              geom_point(size=2) + 
+              #geom_text(size=2, vjust=1, aes_string(alpha=0.5)) + 
+              ggtitle(paste0("EVD: Peptides inferred by AMT-matching\n", round(100*sum(!is.na(d_evd$match.time.difference))/nrow(d_evd)) ,"% average" )) +
+              xlab("inferred by MS1 [count]") +
+              ylab("inferred by MS1 [%]") +
+              xlim(0, max(mtr.df$abs, na.rm=T)*1.1) +
+              ylim(0, max(mtr.df$pc, na.rm=T)*1.1)
+            #install.packages("directlabels")
+            #require(directlabels)
+            GPL$add(direct.label(p_amt, list(cex=0.5, "smart.grid")))
+            #print(p_amt)
+          } ## AMT 
         
-        p_amt = ggplot(data=mtr.df, aes_string(x = "abs", y = "pc", col = "fc.raw.file")) + 
-          geom_point(size=2) + 
-          #geom_text(size=2, vjust=1, aes_string(alpha=0.5)) + 
-          ggtitle(paste0("EVD: Peptides inferred by AMT-matching\n", round(100*sum(!is.na(d_evd$match.time.difference))/nrow(d_evd)) ,"% average" )) +
-          xlab("inferred by MS1 [count]") +
-          ylab("inferred by MS1 [%]") +
-          xlim(0, max(mtr.df$abs, na.rm=T)*1.1) +
-          ylim(0, max(mtr.df$pc, na.rm=T)*1.1)
-        #install.packages("directlabels")
-        #require(directlabels)
-        GPL$add(direct.label(p_amt, list(cex=0.5, "smart.grid")))
-        #print(p_amt)
-      } 
+        } ## MBR has data
+
+      } ## retention.time.difference column exists
+      
       
       ##
       ## charge distribution

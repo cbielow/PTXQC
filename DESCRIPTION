@@ -12,6 +12,7 @@ Imports:
     Biobase,
     directlabels,
     ggplot2,
+    ggdendro,
     graphics,
     plyr,
     proto,

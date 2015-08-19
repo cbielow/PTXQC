@@ -177,3 +177,19 @@ pointsPutX <- function(x_range, x_section, y, col = NA){
 }
 
 
+#'
+#' A blank theme (similar to the deprecated theme_blank())
+#' 
+#' @import ggplot2
+#' 
+#' @export
+#' 
+theme_blank = function()
+{
+  theme_blank <- theme_bw()
+  theme_blank$line <- element_blank()
+  theme_blank$rect <- element_blank()
+  theme_blank$strip.text <- element_blank()
+  theme_blank$axis.title <- element_blank()
+  return (theme_blank)
+}

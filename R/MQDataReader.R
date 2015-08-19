@@ -318,7 +318,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       rf_name = unique(.$mq.data$raw.file)
       ## remove prefix
       rf_name_s = delLCP(rf_name, 
-                         min = 8, 
+                         min_out_length = 8,
                          add_dots = T)
       ## remove infix (2 iterations)
       rf_name_s = simplifyNames(rf_name_s, 
