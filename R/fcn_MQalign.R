@@ -503,7 +503,10 @@ RTalignmentTree = function(d_evd, col_fraction = c())
   #Dissimilarity = (1 - Correlation)/2
   #Dissimilarity = 1 - Abs(Correlation)
   #Dissimilarity = Sqrt(1 - Correlation2)
-  dissimilarity = 1 - cor(d_cast.m, use="pairwise.complete.obs")
+  dissimilarity = (1 - abs(cor(d_cast.m, use="pairwise.complete.obs")))
+  ## if some samples have no overlap, their cell is NA --> set to 1 (max distance)
+  dissimilarity[is.na(dissimilarity)] = 1
+  #plot(hclust(as.dist(dissimilarity), method="ward.D"))
   ddata = dendro_data(hclust(as.dist(dissimilarity)), type = "rectangle")
   
   if (length(col_fraction))
