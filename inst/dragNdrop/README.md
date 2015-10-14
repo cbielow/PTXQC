@@ -1,6 +1,10 @@
 This file is for admins/support-staff who want to configure and install the PTXQC package
 and provide an automated drag'n'drop solution to their MaxQuant users (incl. themselves) for creating QC reports.
 
+<b>
+Note: the drag'n'drop currently only works for Windows, not MacOS or Linux. For the latter, you can have a look at the
+'dragNdrop/QC-dragdrop/_internal/compute_QC_report.R' file, to see how to invoke PTXQC from R.
+</b>
 
 We recommend using a shared network drive as installation folder to which all users have read access. Alternatively you can copy the folder structure we
 are about to a folder on your local machine - however, if you want to use the QC reporting from multiple PC's just use a network folder.
@@ -15,7 +19,7 @@ This will show them how to invoke the QC (it's very easy - see 'Usage' below).
         install.packages("devtools")
         library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
         source("http://bioconductor.org/biocLite.R")
-        biocLite("Biobase)
+        biocLite("Biobase")
         install_github("cbielow/PTXQC") 
         help(package="PTXQC")           ## all done; check out the documentation
 
