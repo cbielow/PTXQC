@@ -24,17 +24,18 @@ PTXQC
 
 **If you want to generate QC reports without actually getting involved in R:**
 
-See ['inst' subfolder] [1] .
-It takes 10 minutes and you are done!
+We offer a Batch-file based Drag'n'drop mechanism to trigger PTXQC on any MaxQuant output folder.
+Unfortunately, this only works for Windows (not Linux or MacOS) at the moment.
+See ['inst' subfolder] [1] for details. It takes 10 minutes and you are done!
 
-**If you are a developer and just want the package:**
+**If you just want the package to use and maybe even modify it:**
 
 Direct installation from GitHub requires the 'devtools' package. The following lines will add PTXQC on a fresh R installation:
 
     install.packages("devtools")
     library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
     source("http://bioconductor.org/biocLite.R")
-    biocLite("Biobase)
+    biocLite("Biobase")
     install_github("cbielow/PTXQC") 
     help(package="PTXQC")           ## all done; check out the documentation
 
