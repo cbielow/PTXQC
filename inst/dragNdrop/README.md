@@ -52,11 +52,11 @@ This will show them how to invoke the QC (it's very easy - see 'Usage' below).
 Now, you should have the following structure
 
     QCdir\QC-dragdrop\
-         \createQC_dragNdrop.bat
-         \createQC_dragNdrop_withYAML.bat
-                \_internal\
-                    \R-3.1.0\...  (version may differ)
-                    \compute_QC_report.R
+                     \createQC_dragNdrop.bat
+                     \createQC_dragNdrop_withYAML.bat
+                     \_internal\
+                               \R-3.1.0\...  (version may differ)
+                               \compute_QC_report.R
  
 You can rename the `QC-dragdrop` folder to anything you like (try to avoid spaces - they usually cause trouble).
  
