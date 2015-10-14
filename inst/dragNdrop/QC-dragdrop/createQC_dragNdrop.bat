@@ -101,14 +101,23 @@ REM echo R_LIBS=%I%\R-3.1.0\library
 REM works WITH and WITHOUT spaces in !txt!
 if "%yaml_file%" NEQ "" (
   ECHO Using YAML '!yaml_file!' file and calling R now ...
+  ECHO.
+  ECHO Calling '%I%\R-3.1.0\bin\x64\rscript.exe --vanilla %I%\compute_QC_report.R !txt! !yaml_file!'
   %I%\R-3.1.0\bin\x64\rscript --vanilla %I%\compute_QC_report.R !txt! !yaml_file!
 ) else (
+  ECHO.
+  ECHO Calling '%I%\R-3.1.0\bin\x64\rscript.exe --vanilla %I%\compute_QC_report.R !txt! !yaml_file!'
   %I%\R-3.1.0\bin\x64\rscript --vanilla %I%\compute_QC_report.R !txt!
 )
 REM report error, if any
 if ERRORLEVEL 1 (
-  ECHO Failed folder %txt%
-  ECHO Failed folder %txt% >> \error.log
+  ECHO Failed folder %txt%. Does it exist and is writeable?!
+  ECHO Failed folder %txt%. Does it exist and is writeable?! >> \error.log
+  ECHO Make sure rscript.exe is present in the folder mentioned above and that your R installation is 64bit.
+  ECHO Also, the file '%I%\compute_QC_report.R' must be present.
+  ECHO.
+  ECHO If the error persists, please make a screenshot of this window and the folders mentioned above and open an issue ticket
+  ECHO on https://github.com/cbielow/PTXQC. Thanks!
 )
 
 goto end
