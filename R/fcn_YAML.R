@@ -118,7 +118,8 @@ writeYAML = function(filename, yaml_obj)
 # Each of the special contaminants requires has its own section (e.g. 'cont_MYCO:') with two parameters: 
 # - a string          = name within the protein identifier
 # - an integer number = a threshold in % which will be plotted to visually ease interpretation
-# 
+# If you do not want any contaminants search, just set
+#     SpecialContaminants: no
 #
 # With the exception(!) of extra 'SpecialContaminants':
 #   Do NOT add extra values (since they are ignored anyway and might even destroy the integrity of this configuration file).

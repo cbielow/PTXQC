@@ -18,13 +18,7 @@
 #' @param txt_folder Path to txt output folder of MaxQuant (e.g. "c:/data/Hek293/txt")
 #' @param yaml_obj   A nested list object with configuration parameters for the report.
 #'                   Useful to switch off certain plots or skip entire sections.
-#' @return List with three strings: 
-#'          \itemize{
-#'            \item pdf_filename     Path to PDF report
-#'            \item yaml_filename    Path to a YAML configuration file used during report generation. 
-#'                                   Parameters missing in yaml_obj (input param) are restored to default.
-#'            \item heatmap_filename Path to Heatmap table
-#'          }
+#' @return List with named filename strings, e.g. $yaml_file, $report_file etc..
 #'          
 #' @import ggplot2
 #' @import directlabels
@@ -39,12 +33,6 @@ createReport = function(txt_folder, yaml_obj = list())
 {
   
   ### script starts...
-  
-  if (!any(file.info(txt_folder)$isdir, na.rm=T))
-  {
-    stop(paste0("Argument txt_folder with value '", txt_folder, "' is not a valid directory\n"));
-  }
-  
   if (class(yaml_obj) != "list")
   {
     stop(paste0("Argument 'yaml_obj' is not of type list\n"));
@@ -64,7 +52,13 @@ createReport = function(txt_folder, yaml_obj = list())
   param_def_PTXQC_UseLocalMQPar = TRUE
   param_useMQPAR = getYAML(yaml_obj, param_name_PTXQC_UseLocalMQPar, param_def_PTXQC_UseLocalMQPar)
   
+  time_start = Sys.time()
   
+  
+  if (!any(file.info(txt_folder)$isdir, na.rm=T))
+  {
+    stop(paste0("Argument txt_folder with value '", txt_folder, "' is not a valid directory\n"));
+  }
   txt_files = list()
   txt_files$param = "parameters.txt"
   txt_files$summary = "summary.txt"
@@ -75,42 +69,19 @@ createReport = function(txt_folder, yaml_obj = list())
   txt_files$mqpar = "mqpar.xml"
   txt_files = lapply(txt_files, function(x) paste(txt_folder, x, sep=.Platform$file.sep))
   
-  ## increase package number if required. Added to output filename
-  if (!require("PTXQC", quietly=T)) pv = "_unknown" else pv = packageVersion("PTXQC")
-  report_version = paste0("v", pv)  
+  ## create names of output files (report PDF, YAML, stats, etc...)
+  fh_out = getReportFilenames(txt_folder)
+  use_extended_PDF_filename = getYAML(yaml_obj, "PTXQC$ReportFilename$extended", TRUE)
+  fh_out$report_file = ifelse(use_extended_PDF_filename, fh_out$report_file_extended, fh_out$report_file_simple)
   
-  
-  time_start = Sys.time()
-  
-  stats_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_stats.txt")
-  unlink(stats_file)
-  cat("Statistics summary:", file=stats_file, append=F, sep="\n")
-  
-  ## amend report filename with a foldername where it resides, to ease discerning different reports in a PDF viewer
-  extra_folderRef = ""
-  extended_PDF_filename = getYAML(yaml_obj, "PTXQC$ReportFilename$extended", TRUE)
-  if (extended_PDF_filename)
-  {
-    folders = rev(unlist(strsplit(normalizePath(txt_folder, winslash = .Platform$file.sep), split=.Platform$file.sep)))
-    while (length(folders)){
-      if (!grepl(":", folders[1]) & folders[1]!="txt") {
-        extra_folderRef = paste0("_", folders[1])
-        break;
-      } else folders = folders[-1]
-    }
-  }
-  
-  report_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, extra_folderRef, ".pdf")
-  yaml_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, ".yaml")
-  heatmap_values_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_heatmap.txt")
-  R_plots_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_plots.Rdata")
-  filename_sorting = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_filename_sort.txt")
+  unlink(fh_out$stats_file)
+  cat("Statistics summary:", file=fh_out$stats_file, append=F, sep="\n")
   
   ## prepare for readMQ()
   mq = MQDataReader$new()
   
   ## read manual filename shortening & sorting (if available)
-  mq$readMappingFile(filename_sorting)
+  mq$readMappingFile(fh_out$filename_sorting)
   
   ######
   ######  parameters.txt ...
@@ -354,7 +325,7 @@ createReport = function(txt_folder, yaml_obj = list())
     ## stats file
     ##
     con_stats_smry = quantile(df.con_stats$cont_pc, probs=c(0,0.5,1))
-    cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=stats_file, append=T, sep="\n")  
+    cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=fh_out$stats_file, append=T, sep="\n")  
     
     ###
     ### intensity boxplot
@@ -381,7 +352,7 @@ createReport = function(txt_folder, yaml_obj = list())
     #for (pl in lpl) print(pl)
     for (pl in lpl) GPL$add(pl)
     rm("lpl")          
-    cat(int_dev.s, file=stats_file, append=T, sep="\n")
+    cat(int_dev.s, file=fh_out$stats_file, append=T, sep="\n")
     
     ##
     ## LFQ boxplots
@@ -421,7 +392,7 @@ createReport = function(txt_folder, yaml_obj = list())
                              names = MAP_pg_groups_LFQ)
       #for (pl in lpl) print(pl)
       for (pl in lpl) GPL$add(pl)
-      cat(lfq_dev.s, file=stats_file, append=T, sep="\n")
+      cat(lfq_dev.s, file=fh_out$stats_file, append=T, sep="\n")
     }
     
     ##
@@ -458,7 +429,7 @@ createReport = function(txt_folder, yaml_obj = list())
                              names = MAP_pg_groups_ITRAQ)
       #for (pl in lpl) print(pl)
       for (pl in lpl) GPL$add(pl)
-      cat(reprt_dev.s, file=stats_file, append = T, sep="\n")
+      cat(reprt_dev.s, file=fh_out$stats_file, append = T, sep="\n")
     }
     
     
@@ -662,21 +633,26 @@ createReport = function(txt_folder, yaml_obj = list())
       ### warn of special contaminants!
       ## these need to be in FASTA headers (description is not enough)!
       ## syntax:  list( contaminant1 = c(name, threshold), contaminant2 = c(...), ...)
-      contaminant_alarm = list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
-      #contaminant_alarm = list("cont_MYCO" = c(name="UniRef100", threshold=1)) # name (FASTA), threshold for % of unique peptides
-      #contaminant_alarm = list("cont_MYCO" = c("MYCOPLASMA", 1), "cont_corrbt" = c("corrbt7", 1)) 
-      # yaml_contaminants = contaminant_alarm
-      
-      #yaml_obj = yaml.load_file(input = rev(list.files(txt_folder, pattern="*.yaml", full.names = T))[1])
-      
-      yaml_contaminants = getYAML(yaml_obj, "File$Evidence$SpecialContaminants", contaminant_alarm)
+      ##
+      ##  if within the YAML file
+      ##    SpecialContaminants: no
+      ##  is set, then 'yaml_contaminants' will be 'FALSE'
+      ##
+      contaminant_default = list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
+      ## contaminant_default = FALSE ## to switch it off by default
+      yaml_contaminants = getYAML(yaml_obj, "File$Evidence$SpecialContaminants", contaminant_default)
       
       #stop(yaml_contaminants)
       
       for (ca_entry in yaml_contaminants)
       {
-        #ca_entry = yaml_contaminants[[1]]
         ca = ca_entry[1]
+        ## 
+        if (ca == FALSE) {
+          cat("No special contaminants requested!\n")
+          break;
+        }
+        
         ca_thresh = as.numeric(ca_entry[2])
         
         not_found = T
@@ -759,8 +735,8 @@ createReport = function(txt_folder, yaml_obj = list())
           report_short = pastet("Contaminant:", ca, paste0(sum(cont_data$above.thres),"/",nrow(cont_data)," Raw files"))
           report_samples  = pastet("Contaminant-details (name, raw.file, spectralCount%): " , ca, paste(cont_data$fc.raw.file, collapse=";"), paste(cont_data$spectralCount, collapse=";"))
           report_samples2 = pastet("Contaminant-details (name, raw.file, intensity%): " , ca, paste(cont_data$fc.raw.file, collapse=";"), paste(cont_data$intensity, collapse=";"))
-          cat(pasten(report_short, report_samples, report_samples2), file=stats_file, append=T, sep="\n")
-          cat(pastet("contamination-proteins:", ca, paste((d_pg$majority.protein.ids[pg_idx]), collapse=",")), file=stats_file, append=T, sep="\n") 
+          cat(pasten(report_short, report_samples, report_samples2), file=fh_out$stats_file, append=T, sep="\n")
+          cat(pastet("contamination-proteins:", ca, paste((d_pg$majority.protein.ids[pg_idx]), collapse=",")), file=fh_out$stats_file, append=T, sep="\n") 
         }
         
       } ## contaminant loop
@@ -1553,7 +1529,7 @@ QCM[["X027X.EVD.MS_Cal-Post"]] = qc_MS1Cal
 ## compute how well calibration worked
 cal_medians = as.vector(by(d_evd$mass.error..ppm., d_evd$raw.file, median, na.rm=T))
 cal_stats = quantile(cal_medians, probs=c(0,0.5,1))
-cat(pastet("medianCalibratedMassError(min,median,max) [ppm]", paste(cal_stats, collapse=",")), file=stats_file, append=T, sep="\n") 
+cat(pastet("medianCalibratedMassError(min,median,max) [ppm]", paste(cal_stats, collapse=",")), file=fh_out$stats_file, append=T, sep="\n") 
 
 ##
 ## elaborate contaminant fraction per Raw.file (this is not possible from PG, since raw files could be merged)
@@ -1863,7 +1839,7 @@ if (enabled_msms)
     
     mcZero = st_bin[, "0"] * 100
     mcZero_stat = 100 - rev(quantile(mcZero, probs=c(0,0.5,1)))
-    cat(pastet("missedCleavages>0 (min,median,max) [%]", paste0(mcZero_stat, collapse=",")), file=stats_file, append=T, sep="\n")
+    cat(pastet("missedCleavages>0 (min,median,max) [%]", paste0(mcZero_stat, collapse=",")), file=fh_out$stats_file, append=T, sep="\n")
     
     ## QC measure for missed-cleavages variation
     qc_mc = data.frame(fc.raw.file = st_bin$fc.raw.file, XXX = st_bin[, "0"], check.names = F)
@@ -2136,7 +2112,7 @@ if (enabled_msmsscans)
 
 hm = getQCHeatMap(QCM, raw_file_mapping = mq$raw_file_mapping)
 #print(hm[["plot"]])
-write.table(hm[["table"]], file = heatmap_values_file, quote= T, sep = "\t", row.names=F)
+write.table(hm[["table"]], file = fh_out$heatmap_values_file, quote= T, sep = "\t", row.names=F)
 GPL$add(hm[["plot"]], ".heatmap")
 
 ## get MQ short name mapping plot (might be NULL if no mapping was required)
@@ -2149,7 +2125,7 @@ cat("Creating PDF ...")
 PDF_writeable = F
 # we give the user a chance to make the PDF writeable to avoid having him run the whole program again
 while(!PDF_writeable){
-  pdf_open = try(pdf(report_file, onefile=T))
+  pdf_open = try(pdf(fh_out$report_file, onefile=T))
   if (inherits(pdf_open, "try-error")) {
     if (interactive()) {
       invisible(readline(prompt="Opening PDF for writing failed. Make sure it's NOT opened in another program (e.g. PDF Viewer). Press [enter] to try again."))
@@ -2168,14 +2144,14 @@ param_PageNumbers = getYAML(yaml_obj, param_name_PTXQC_PageNumbers, param_def_PT
 
 if (param_PageNumbers == "on")
 {
-  printWithPage = function(gg_obj, page_nr, filename = report_file)
+  printWithPage = function(gg_obj, page_nr, filename = fh_out$report_file)
   {
     filename = basename(filename)
     printWithFooter(gg_obj, bottom_left = filename, bottom_right = page_nr)
   }
 } else {
   ## no page number and filename at bottom of each page
-  printWithPage = function(gg_obj, page_nr, filename = report_file)
+  printWithPage = function(gg_obj, page_nr, filename = fh_out$report_file)
   {
     printWithFooter(gg_obj)
   }
@@ -2198,18 +2174,18 @@ cat(" done\n")
 ## save plot object (for easier access, in case someone wants high-res plots)
 ## (...disabled for now until concrete use case pops up)
 #cat("Dumping plot objects as Rdata file ...")
-#save(file = R_plots_file, list = "GPL")
+#save(file = fh_out$R_plots_file, list = "GPL")
 #cat(" done\n")
 
 ### write YAML config
-writeYAML(yaml_file, yaml_obj)
+writeYAML(fh_out$yaml_file, yaml_obj)
 
 ## write sorting of filenames
-mq$writeMappingFile(filename_sorting)
+mq$writeMappingFile(fh_out$filename_sorting)
 
-cat(paste("Report file created at\n\n    ", report_file, "\n\n", sep=""))
+cat(paste("Report file created at\n\n    ", fh_out$report_file, "\n\n", sep=""))
 cat(paste0("\n\nTime elapsed: ", round(as.double(Sys.time() - time_start, units="mins"), 1), " min\n\n"))
 
-## return path to PDF report and YAML config
-return (list(report_filename = report_file, yaml_filename = yaml_file, heatmap_filename = heatmap_values_file))
+## return path to PDF report and YAML config, etc
+return (fh_out)
 }

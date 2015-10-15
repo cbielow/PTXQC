@@ -781,3 +781,50 @@ getAbundanceClass = function(x) {
   r
   return(r$x_cl)
 }
+
+
+#' 
+#' Assembles a list of output file names, which will be created during reporting.
+#' 
+#' @param txt_folder Directory where the MaxQuant output resides
+#' @return List of output file names (just names :))
+#' 
+#' @export
+getReportFilenames = function(txt_folder)
+{
+  ## package version: added to output filename
+  if (!require("PTXQC", quietly=T)) pv = "_unknown" else pv = packageVersion("PTXQC")
+  report_version = paste0("v", pv)  
+  
+  ## amend report filename with a foldername where it resides, to ease discerning different reports in a PDF viewer
+  extra_folderRef = ""
+  folders = rev(unlist(strsplit(normalizePath(txt_folder, winslash = .Platform$file.sep), split=.Platform$file.sep)))
+  while (length(folders)){
+    if (!grepl(":", folders[1]) & folders[1]!="txt") {
+      extra_folderRef = paste0("_", folders[1])
+      break;
+    } else folders = folders[-1]
+  }
+  
+  yaml_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, ".yaml")
+  heatmap_values_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_heatmap.txt")
+  R_plots_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_plots.Rdata")
+  filename_sorting = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_filename_sort.txt")
+  stats_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_stats.txt")
+  report_file_simple   = paste0(txt_folder, .Platform$file.sep, "report_", report_version, ".pdf")
+  report_file_extended = paste0(txt_folder, .Platform$file.sep, "report_", report_version, extra_folderRef, ".pdf")
+  
+  fh = list(yaml_file = yaml_file,
+            heatmap_values_file = heatmap_values_file, 
+            R_plots_file = R_plots_file,
+            filename_sorting = filename_sorting,
+            stats_file = stats_file,
+            report_file_simple = report_file_simple,
+            report_file_extended = report_file_extended
+            )
+  return (fh)
+}
+
+
+
+

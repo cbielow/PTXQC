@@ -15,11 +15,8 @@ createReport(txt_folder, yaml_obj = list())
   plots or skip entire sections.}
 }
 \value{
-List with three strings: \itemize{ \item pdf_filename Path
-to PDF report \item yaml_filename Path to a YAML
-configuration file used during report generation.
-Parameters missing in yaml_obj (input param) are restored
-to default.  \item heatmap_filename Path to Heatmap table }
+List with named filename strings, e.g. $yaml_file,
+$report_file etc..
 }
 \description{
 This is the main function of the package and the only thing

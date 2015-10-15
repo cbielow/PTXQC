@@ -1,6 +1,5 @@
 ## load packages
 require(PTXQC)
-#install.packages("yaml")
 require(yaml)
 ## the next require() is needed to prevent a spurious error in certain R versions (might be a bug in R or a package)
 ## error message is:
@@ -13,7 +12,7 @@ require(directlabels)
 
 
 argv = commandArgs(TRUE)
-#argv = c('C:\\projects\\QC\\data\\txt_SILAC', 'OFF')
+#argv = c('C:\\projects\\QC\\data\\txt_SILAC')
 #cat("Command line args are:\n")
 #cat(paste(argv, collapse="\n", sep=""))
 #cat("\n")
@@ -31,8 +30,17 @@ if (!file.info(PATH_TO_TXT)$isdir)
 
 YAML_CONFIG = list()
 if (length(argv)==2 && nchar(argv[2])>0)
-{
+{ ## YAML was passed via command line
+  cat("\nUsing YAML config provided via command line ...\n")
   YAML_CONFIG = yaml.load_file(input = argv[2])
+} else {
+  ## use a YAML config inside the target directory if present
+  fh_out = getReportFilenames(PATH_TO_TXT)
+  if (file.exists(fh_out$yaml_file))
+  {
+    cat("\nUsing YAML config already present in target directory ...\n")
+    YAML_CONFIG = yaml.load_file(input = fh_out$yaml_file)
+  }
 }
 
 r = createReport(PATH_TO_TXT, YAML_CONFIG)
