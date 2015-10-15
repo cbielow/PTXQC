@@ -35,12 +35,12 @@
   'OrbiXL_2014_Hek293_Treated' will give 'Control',
   'Treated' If \code{add_fs_col} is a number AND the
   longest short-name is still longer, the names are
-  discarded and replaced by a running ID of the form
-  'f<x>', where <x> is a number from 1 to N. If the
-  function is called again and a mapping already exists,
-  this mapping is used. Should some raw.files be unknown
-  (ie the mapping from the previous file is incomplete), an
-  error is thrown.}
+  discarded and replaced by a running ID of the form 'file
+  <x>', where <x> is a number from 1 to N. If the function
+  is called again and a mapping already exists, this
+  mapping is used. Should some raw.files be unknown (ie the
+  mapping from the previous file is incomplete), an error
+  is thrown.}
 
   \item{check_invalid_lines}{After reading the data, check
   for unusual number of NA's to detect if file was

@@ -45,7 +45,6 @@ createReport = function(txt_folder, yaml_obj = list())
     stop(paste0("Argument txt_folder with value '", txt_folder, "' is not a valid directory\n"));
   }
   
-  YAML_CONFIG = list()
   if (class(yaml_obj) != "list")
   {
     stop(paste0("Argument 'yaml_obj' is not of type list\n"));
@@ -111,28 +110,7 @@ createReport = function(txt_folder, yaml_obj = list())
   mq = MQDataReader$new()
   
   ## read manual filename shortening & sorting (if available)
-  if (file.exists(filename_sorting))
-  {
-    dfs = read.delim(filename_sorting, comment.char="#", stringsAsFactors = F)
-    req_cols = c(from = "orig.Name", to = "new.Name")
-    if (!all(req_cols %in% colnames(dfs)))
-    {
-      stop("Input file '", filename_sorting, "' does not contain the columns '", paste(req_cols, collapse="' and '"), "'.",
-           " Please fix and re-run PTXQC!")
-    }
-    colnames(dfs) = names(req_cols)[match(req_cols, colnames(dfs))]
-    if (any(duplicated(dfs$from)) | any(duplicated(dfs$to)))
-    {
-      dups = c(dfs$from[duplicated(dfs$from)], dfs$to[duplicated(dfs$to)])
-      stop("Input file '", filename_sorting, "' has duplicate entries ('", paste(dups, collapse=", "), ")'!",
-           " Please fix and re-run PTXQC!")
-    }
-    dfs
-    dfs$to = factor(dfs$to, levels = unique(dfs$to), ordered = T) ## keep the order
-    dfs$from = factor(dfs$from, levels = unique(dfs$from), ordered = T) ## keep the order
-    mq$raw_file_mapping = dfs
-  }
-
+  mq$readMappingFile(filename_sorting)
   
   ######
   ######  parameters.txt ...
@@ -2207,7 +2185,7 @@ printWithPage(GPL$get(".pl_params"), "p. 1")    # parameters
 printWithPage(GPL$get(".name_mapping"), "p. 2") # short file mapping (if required)
 printWithPage(GPL$get(".heatmap"), "p. 3")      # summary heatmap
 GPL_lst = GPL$getList()
-pc = 4;
+pc = 4; ## subsequent pages start at #4
 for (idx in sort(names(GPL_lst)))
 {
   if (grepl("^\\.", idx)) next;
@@ -2226,16 +2204,8 @@ cat(" done\n")
 ### write YAML config
 writeYAML(yaml_file, yaml_obj)
 
-
 ## write sorting of filenames
-if (!file.exists(filename_sorting))
-{
-  dfs = data.frame(orig.Name=mq$raw_file_mapping$from, new.Name = mq$raw_file_mapping$to)
-  cat(file=filename_sorting, "# This file can be used to manually substitute Raw file names within the report.",
-                             "# The ordering of Raw files in the report can be changed by re-arranging the rows.",
-      sep = "\n")
-  write.table(x = dfs, file=filename_sorting, append = T, quote = F, sep="\t", row.names=F)
-}
+mq$writeMappingFile(filename_sorting)
 
 cat(paste("Report file created at\n\n    ", report_file, "\n\n", sep=""))
 cat(paste0("\n\nTime elapsed: ", round(as.double(Sys.time() - time_start, units="mins"), 1), " min\n\n"))

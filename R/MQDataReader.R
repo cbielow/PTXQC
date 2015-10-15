@@ -1,7 +1,7 @@
 
 ## A proto class for handling consistent Raw file names while loading
 ## multiple MQ result files.
-## If the names are too long, an alias name (eg 'f1', 'f2', ...) is used instead.
+## If the names are too long, an alias name (eg 'file 1', 'file 2', ...) is used instead.
 ##
 ##
 ## [Occasional rage: since S4 is so very inadequate for basically everything which is important in OOP and the syntax is
@@ -51,7 +51,7 @@ MQDataReader <- proto()
 #' 
 MQDataReader$new <- function(.)
 {
-  proto(., raw_file_mapping = NULL, mq.data = NULL, mapping.created = FALSE)
+  proto(., raw_file_mapping = NULL, mq.data = NULL, mapping.creation = NULL)
 }
 
 
@@ -98,7 +98,7 @@ MQDataReader$new <- function(.)
 #'                           E.g. two rawfiles named 'OrbiXL_2014_Hek293_Control', 'OrbiXL_2014_Hek293_Treated' will give
 #'                                                   'Control', 'Treated'
 #'                   If \code{add_fs_col} is a number AND the longest short-name is still longer, the names are discarded and replaced by
-#'                   a running ID of the form 'f<x>', where <x> is a number from 1 to N.
+#'                   a running ID of the form 'file <x>', where <x> is a number from 1 to N.
 #'                   If the function is called again and a mapping already exists, this mapping is used.
 #'                   Should some raw.files be unknown (ie the mapping from the previous file is incomplete), an error is thrown.
 #' @param check_invalid_lines After reading the data, check for unusual number of NA's to detect if file was corrupted by Excel or alike                 
@@ -117,9 +117,6 @@ MQDataReader$new <- function(.)
 # (not exported!)
 MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, add_fs_col=10, check_invalid_lines = T, LFQ_action=FALSE, ...)
 {
-  ## it's either present already or will be created
-  .$mapping.created = FALSE
-  
   # . = MQDataReader$new() ## debug
   # ... = NULL
   cat(paste("Reading file", file,"...\n"))
@@ -346,7 +343,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
         .$raw_file_mapping$to = paste("file", sprintf(paste0("%0", nchar(maxl), "d"), 1:maxl)) ## with leading 0's if required
       }
       ## indicate to outside that a new table is ready
-      .$mapping.created = FALSE
+      .$mapping.creation = 'automatic'
     }
     ## do the mapping    
     .$mq.data$fc.raw.file = as.factor(.$raw_file_mapping$to[match(.$mq.data$raw.file, .$raw_file_mapping$from)])
@@ -423,7 +420,7 @@ MQDataReader$plotNameMapping <- function(.)
         theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), 
               axis.title = element_blank(), panel.border = element_blank(),
               axis.text = element_blank(), strip.text = element_blank(), legend.position = "none") +
-        ggtitle("Info: mapping of raw files to their short names" %+% extra)
+        ggtitle("Mapping of Raw files to their short names\nMapping source: " %+% .$mapping.creation %+% extra)
       return(mqmap_pl)
     }
     l_plots = byXflex(mq_mapping, 1:nrow(mq_mapping), 20, mappingChunk, sort_indices=F);
@@ -434,6 +431,85 @@ MQDataReader$plotNameMapping <- function(.)
   }
     
   return (NULL);  
+}
+
+
+#'
+#' Writes a mapping table of full Raw file names to shortened names.
+#'
+#' The internal structure \code{raw_file_mapping} is written to the
+#' file specified.
+#' If the file already exists, nothing is done.
+#' 
+#' @param filename  Target filename to create.
+#' @return Returns \code{TRUE} if file was created, \code{FALSE} if it already exists.
+#'
+#' @name MQDataReader$writeMappingFile
+#'
+MQDataReader$writeMappingFile = function(., filename)
+{
+  if (!file.exists(filename))
+  {
+    dfs = data.frame(orig.Name = .$raw_file_mapping$from, new.Name = .$raw_file_mapping$to)
+    cat(file = filename,
+        "# This file can be used to manually substitute Raw file names within the report.",
+        "# The ordering of Raw files in the report can be changed by re-arranging the rows.",
+        sep = "\n")
+    write.table(x = dfs, file = filename, append = T, quote = F, sep="\t", row.names=F)
+    return (TRUE)
+  }
+  return (FALSE)
+}
+
+
+#'
+#' Reads a mapping table of full Raw file names to shortened names.
+#'
+#' The internal structure \code{raw_file_mapping} is created using this file.
+#' If the file is missing, nothing is done.
+#' 
+#' The file must have two columns named: 'orig.Name' and 'new.Name' and use Tab as separator.
+#' I.e.
+#' \preformatted{# This file can be used to manually substitute Raw file names within the report.
+#' # The ordering of Raw files in the report can be changed by re-arranging the rows.
+#' orig.Name  new.Name
+#' 2011_05_30_ALH_OT_21_VIL_TMT_FR01	myfile A
+#' 2011_05_30_ALH_OT_22_VIL_TMT_FR02	another B
+#' }
+#' 
+#' @param filename  Source filename to read.
+#' @return Returns \code{TRUE} if file was read, \code{FALSE} if it does not exist.
+#'
+#' @name MQDataReader$readMappingFile
+#'
+MQDataReader$readMappingFile = function(., filename)
+{
+  if (file.exists(filename))
+  {
+    dfs = read.delim(filename, comment.char="#", stringsAsFactors = F)
+    req_cols = c(from = "orig.Name", to = "new.Name")
+    if (!all(req_cols %in% colnames(dfs)))
+    {
+      stop("Input file '", filename, "' does not contain the columns '", paste(req_cols, collapse="' and '"), "'.",
+           " Please fix and re-run PTXQC!")
+    }
+    colnames(dfs) = names(req_cols)[match(req_cols, colnames(dfs))]
+    if (any(duplicated(dfs$from)) | any(duplicated(dfs$to)))
+    {
+      dups = c(dfs$from[duplicated(dfs$from)], dfs$to[duplicated(dfs$to)])
+      stop("Input file '", filename_sorting, "' has duplicate entries ('", paste(dups, collapse=", "), ")'!",
+           " Please fix and re-run PTXQC!")
+    }
+    dfs
+    dfs$to = factor(dfs$to, levels = unique(dfs$to), ordered = T) ## keep the order
+    dfs$from = factor(dfs$from, levels = unique(dfs$from), ordered = T) ## keep the order
+    ## set internal mapping
+    .$raw_file_mapping = dfs
+    ## set who defined it
+    .$mapping.creation = 'file (user-defined)'
+    return (TRUE)
+  }
+  return (FALSE)
 }
 
 #' Replaces values in the mq.data member with (binary) values.
