@@ -7,16 +7,15 @@
 thinOut(data, filterColname, binsize)
 }
 \arguments{
-  \item{data}{The data.frame to be filtered}
+\item{data}{The data.frame to be filtered}
 
-  \item{filterColname}{Name of the filter column as string}
+\item{filterColname}{Name of the filter column as string}
 
-  \item{binsize}{Width of a bin}
+\item{binsize}{Width of a bin}
 }
 \description{
-All values in the column 'filterColname' are assigned to
-bins if width 'binsize'. Only one value per bin is
-retained. All other rows are removed and the reduced data
-frame will all its columns is returned.
+All values in the column 'filterColname' are assigned to bins if width 'binsize'.
+Only one value per bin is retained. All other rows are removed and the reduced
+data frame will all its columns is returned.
 }
 

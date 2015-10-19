@@ -7,22 +7,19 @@
 appendEnv(env_name, v, v_name = NULL)
 }
 \arguments{
-  \item{env_name}{String of the environment variable}
+\item{env_name}{String of the environment variable}
 
-  \item{v}{Value to be inserted}
+\item{v}{Value to be inserted}
 
-  \item{v_name}{String used as variable name. Automatically
-  generated if omitted.}
+\item{v_name}{String used as variable name. Automatically generated if omitted.}
 }
 \value{
 Always TRUE
 }
 \description{
-The environment must exist, and its name must be given as
-string literal in 'env_name'! The value of the variable 'v'
-will be stored under the name given in 'v_name'. If
-'v_name' is not given, a variable name will be created by
-increasing an internal counter and using the its value
-padded with zeros as name (i.e., "0001", "0002" etc).
+The environment must exist, and its name must be given as string literal in 'env_name'!
+The value of the variable 'v' will be stored under the name given in 'v_name'.
+If 'v_name' is not given, a variable name will be created by increasing an internal counter
+and using the its value padded with zeros as name (i.e., "0001", "0002" etc).
 }
 

@@ -7,44 +7,30 @@
 alignmentCheck(data, referenceFile)
 }
 \arguments{
-  \item{data}{A data.frame with columns
-  'calibrated.retention.time', 'id', 'modified.sequence',
-  'charge', 'raw.file' and 'fraction' (if present)}
+\item{data}{A data.frame with columns 'calibrated.retention.time', 'id', 'modified.sequence', 'charge', 'raw.file' and 'fraction' (if present)}
 
-  \item{referenceFile}{A raw file name as occuring in
-  data$raw.file, serving as alignment reference (when no
-  fractions are used).}
+\item{referenceFile}{A raw file name as occuring in data$raw.file, serving as alignment reference (when no fractions are used).}
 }
 \value{
-A data.frame containing the RT diff for each feature found
-in a Raw file and the reference.
+A data.frame containing the RT diff for each feature found in a Raw file and the reference.
 }
 \description{
-The input is a data frame containing feature evidence with
-corrected retention times, e.g. a
-'calibrated.retention.time' column.
+The input is a data frame containing feature evidence with corrected retention times,
+e.g. a 'calibrated.retention.time' column.
 }
 \details{
-Note that this function must be given real MS/MS
-identifications only (type "MULTI-MSMS") in order to work
-correctly!
+Note that this function must be given real MS/MS identifications only (type "MULTI-MSMS")
+in order to work correctly!
 
-For each peptide sequence (and charge) in the reference Raw
-file, this function looks up the already calibrated
-retention time difference of the same feature in all other
-files. For every comparison made, we report the RT
-difference. If alignment worked perfectly, the differences
-are very small (<1 min).
+For each peptide sequence (and charge) in the reference Raw file, this function looks up the
+already calibrated retention time difference of the same feature in all other files. For every comparison made,
+we report the RT difference. If alignment worked perfectly, the differences are very small (<1 min).
 
-An 'id' column must be present, to enable mapping the
-result of this function to the original data frame.
+An 'id' column must be present, to enable mapping the result of this function to the original data frame.
 
-A reference Raw file can be identified using
-'findAlignReference()'. If Maxquants experimental design
-included pre-fractionation, a column named 'fraction'
-should be given and 'referenceFile' should be empty. This
-function will pick the one Raw file for each fraction (the
-first in order) to use as reference. Only the immediately
-neighbouring fractions will be matched to this reference.
+A reference Raw file can be identified using 'findAlignReference()'. If Maxquants experimental design included
+pre-fractionation, a column named 'fraction' should be given and 'referenceFile' should be empty. This function will
+pick the one Raw file for each fraction (the first in order) to use as reference. Only the immediately neighbouring
+fractions will be matched to this reference.
 }
 

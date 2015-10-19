@@ -7,22 +7,20 @@
 getAbundanceClass(x)
 }
 \arguments{
-  \item{x}{Vector of numeric values (in log10)}
+\item{x}{Vector of numeric values (in log10)}
 }
 \value{
-Vector of factors corresponding to input with abundance
-class names (e.g. low, high)
+Vector of factors corresponding to input with abundance class names (e.g. low, high)
 }
 \description{
-Abundances (should be logged already) are grouped into
-different levels, starting from the smallest values ("low")
-to the highest values ("high"). Intermediate abundances are
-either assigned as "mid", or "low-mid". If the range is too
-large, only "low" and "high" are assigned, the intermediate
-values are just numbers.
+Abundances (should be logged already) are grouped into different levels,
+starting from the smallest values ("low") to the highest values ("high").
+Intermediate abundances are either assigned as "mid", or "low-mid".
+If the range is too large, only "low" and "high" are assigned, the intermediate values
+are just numbers.
 }
 \details{
-Example: getAbundanceClass(c(12.4, 17.1, 14.9, 12.3)) ##
---> factor(c("low", "high", "mid", "low"))
+Example:
+ getAbundanceClass(c(12.4, 17.1, 14.9, 12.3)) ## --> factor(c("low", "high", "mid", "low"))
 }
 

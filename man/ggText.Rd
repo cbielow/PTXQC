@@ -7,11 +7,11 @@
 ggText(title, text, col = "black")
 }
 \arguments{
-  \item{title}{The title of the plot}
+\item{title}{The title of the plot}
 
-  \item{text}{Centered text, can contain linebreaks}
+\item{text}{Centered text, can contain linebreaks}
 
-  \item{col}{Colour of text (excluding the title)}
+\item{col}{Colour of text (excluding the title)}
 }
 \value{
 ggplot object

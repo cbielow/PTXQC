@@ -7,23 +7,18 @@
 delLCP(x, min_out_length = 0, add_dots = F)
 }
 \arguments{
-  \item{x}{Vector of strings with common prefix}
+\item{x}{Vector of strings with common prefix}
 
-  \item{min_out_length}{Minimal length of the shortest
-  element of x after LCP removal [default: 0, i.e. empty
-  string is allowed] . If the output would be shorter, the
-  last part of the LCP is kept.}
+\item{min_out_length}{Minimal length of the shortest element of x after LCP removal [default: 0, i.e. empty string is allowed] . If the output would be shorter, the last part of the LCP is kept.}
 
-  \item{add_dots}{Prepend output with '..' if shortening
-  was done.}
+\item{add_dots}{Prepend output with '..' if shortening was done.}
 }
 \value{
 Shortened vector of strings
 }
 \description{
 You should provide only unique strings (to increase speed).
-If only a single string is given, the empty string will be
-returned unless \code{minOutputLength} is set.
+If only a single string is given, the empty string will be returned unless \code{minOutputLength} is set.
 }
 \examples{
 delLCP(c("TK12345_H1"), min_out_length=0)                                 ## ""

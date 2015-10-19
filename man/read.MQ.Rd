@@ -9,19 +9,19 @@ read.MQ(file, filter = "", type = "pg", col_subset = NA,
   add_fs_col = 10, LFQ_action = FALSE, ...)
 }
 \arguments{
-  \item{file}{(Relative) path to a MQ txt file ()}
+\item{file}{(Relative) path to a MQ txt file ()}
 
-  \item{filter}{see \code{\link{MQDataReader$readMQ}}}
+\item{filter}{see \code{\link{MQDataReader$readMQ}}}
 
-  \item{type}{see \code{\link{MQDataReader$readMQ}}}
+\item{type}{see \code{\link{MQDataReader$readMQ}}}
 
-  \item{col_subset}{see \code{\link{MQDataReader$readMQ}}}
+\item{col_subset}{see \code{\link{MQDataReader$readMQ}}}
 
-  \item{add_fs_col}{see \code{\link{MQDataReader$readMQ}}}
+\item{add_fs_col}{see \code{\link{MQDataReader$readMQ}}}
 
-  \item{LFQ_action}{see \code{\link{MQDataReader$readMQ}}}
+\item{LFQ_action}{see \code{\link{MQDataReader$readMQ}}}
 
-  \item{...}{see \code{\link{MQDataReader$readMQ}}}
+\item{...}{see \code{\link{MQDataReader$readMQ}}}
 }
 \value{
 see \code{\link{MQDataReader$readMQ}}

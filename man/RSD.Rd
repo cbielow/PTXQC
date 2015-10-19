@@ -7,7 +7,7 @@
 RSD(x)
 }
 \arguments{
-  \item{x}{Vector of numeric values}
+\item{x}{Vector of numeric values}
 }
 \value{
 RSD

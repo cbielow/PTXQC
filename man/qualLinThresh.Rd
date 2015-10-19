@@ -7,17 +7,17 @@
 qualLinThresh(x, t = 1)
 }
 \arguments{
-  \item{x}{Numeric value(s) between [0, inf]}
+\item{x}{Numeric value(s) between [0, inf]}
 
-  \item{t}{Threshold value, which indicates 100\%}
+\item{t}{Threshold value, which indicates 100\%}
 }
 \value{
 Value between [0, 1]
 }
 \description{
-Ranges between 0 (worst score) and 1 (best score). Useful
-for performance measures where reaching a certain reference
-threshold 't' will be enough to reach 100\%. The input
-range from [0, t] is scored from 0-100\%.
+Ranges between 0 (worst score) and 1 (best score).
+Useful for performance measures where reaching a certain reference threshold 't'
+will be enough to reach 100\%.
+The input range from [0, t] is scored from 0-100\%.
 }
 

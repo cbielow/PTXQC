@@ -7,31 +7,24 @@
 getFragmentErrors(x)
 }
 \arguments{
-  \item{x}{Data frame in long format with numerical
-  expression data}
+\item{x}{Data frame in long format with numerical expression data}
 }
 \value{
-Data frame with mass errors ('msErr') and their 'unit' (Da
-or ppm)
+Data frame with mass errors ('msErr') and their 'unit' (Da or ppm)
 }
 \description{
-Given a data.frame as obtainable from a msms.txt with - a
-'mass.analyzer' column which contains only a single value
-for the whole column - a 'mass.deviations..da.' and (if
-available) 'mass.deviations..ppm.'  - a 'masses' column
-(only required if 'mass.deviations..ppm.' is unavailable
-and the mass.analyzer indicates hig-res data)
+Given a data.frame as obtainable from a msms.txt with
+ - a 'mass.analyzer' column which contains only a single value for the whole column
+ - a 'mass.deviations..da.' and (if available) 'mass.deviations..ppm.'
+ - a 'masses' column (only required if 'mass.deviations..ppm.' is unavailable and the mass.analyzer
+   indicates hig-res data)
 }
 \details{
-Mass deviations are extracted from the columns, e.g. each
-cell containing values separated by semicolons is split
-into single values. The appropriate unit is chosen (Da or
-ppm, depending on ITMS or FTMS data). Also the
-fragmentation type can be used: CID indicates ITMS, HCD to
-FTMS. This is not 100% safe, but older MQ versions do not
-report the mass analyzer properly.
+Mass deviations are extracted from the columns, e.g. each cell containing values separated by
+semicolons is split into single values. The appropriate unit is chosen (Da or ppm, depending on
+ITMS or FTMS data). Also the fragmentation type can be used: CID indicates ITMS, HCD to FTMS.
+This is not 100% safe, but older MQ versions do not report the mass analyzer properly.
 
-If ppm mass deviations are not available, errors in Da will
-be converted to ppm using the corresponding mass values.
+If ppm mass deviations are not available, errors in Da will be converted to ppm using the corresponding mass values.
 }
 

@@ -7,7 +7,7 @@
 pastet(...)
 }
 \arguments{
-  \item{...}{Arguments forwarded to paste()}
+\item{...}{Arguments forwarded to paste()}
 }
 \value{
 return value of paste()

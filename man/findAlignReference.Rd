@@ -7,35 +7,25 @@
 findAlignReference(data, threshold = 1e-04)
 }
 \arguments{
-  \item{data}{The data.frame with columns
-  'retention.time.calibration' and 'raw.file'}
+\item{data}{The data.frame with columns 'retention.time.calibration' and 'raw.file'}
 
-  \item{threshold}{Maximum range (min to max) of values
-  required to be recognized as reference}
+\item{threshold}{Maximum range (min to max) of values required to be recognized as reference}
 }
 \value{
 List of reference raw files (usually just one)
 }
 \description{
-There is only one reference point which has '0' as
-corrected RT (in all MQ versions we've seen so far). This
-is also true for fractions. The reference can be identified
-by using the 'retention.time.calibration' column in
-evidence.txt. The raw.file with very small values is
-usually the one (they are not exactly zero, even though
-they should be!)
+There is only one reference point which has '0' as corrected RT (in all MQ versions we've seen so far).
+This is also true for fractions.
+The reference can be identified by using the 'retention.time.calibration' column in evidence.txt.
+The raw.file with very small values is usually the one (they are not exactly zero, even though they should be!)
 }
 \details{
-Note that MaxQuant uses a guide tree to align the Raw
-files, so the order of files does not influence the
-alignment. But the first file will always be used as
-reference point when reporting delta-RTs. And this file is
-also used by PTXQC as reference file vs all other files to
-find the real calibration function (see alignmentCheck()).
+Note that MaxQuant uses a guide tree to align the Raw files, so the order of files does not influence the
+alignment. But the first file will always be used as reference point when reporting delta-RTs. And this file is also
+used by PTXQC as reference file vs all other files to find the real calibration function (see alignmentCheck()).
 
-This function might return multiple, or no raw file names
-(if MQ decides to change its mind at some point in the
-future). In this case the result should be treated with
-caution or (better) regarded as failure.
+This function might return multiple, or no raw file names (if MQ decides to change its mind at some point in the future).
+In this case the result should be treated with caution or (better) regarded as failure.
 }
 

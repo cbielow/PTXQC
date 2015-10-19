@@ -4,20 +4,15 @@
 \alias{ObjHandler$add}
 \title{Add objects}
 \arguments{
-  \item{.}{A 'this' pointer. Use it to refer/change
-  internal members. It's implicitly added, thus not
-  required too call the function!}
+\item{.}{A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!}
 
-  \item{obj}{Value to be inserted}
+\item{obj}{Value to be inserted}
 
-  \item{name}{String used as object name. Automatically
-  generated if omitted.}
+\item{name}{String used as object name. Automatically generated if omitted.}
 
-  \item{.}{A 'this' pointer. Use it to refer/change
-  internal members. It's implicitly added, thus not
-  required too call the function!}
+\item{.}{A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!}
 
-  \item{name}{Name of list entry to return}
+\item{name}{Name of list entry to return}
 }
 \value{
 Always TRUE (invisible)

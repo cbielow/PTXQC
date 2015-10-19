@@ -9,41 +9,33 @@ boxplotCompare(data, log2 = T, ylab = "intensity", mainlab = ylab,
   names = NA)
 }
 \arguments{
-  \item{data}{Data frame in long format with numerical
-  expression data}
+\item{data}{Data frame in long format with numerical expression data}
 
-  \item{log2}{Apply log2 to the data (yes/no)}
+\item{log2}{Apply log2 to the data (yes/no)}
 
-  \item{ylab}{Label on Y-axis}
+\item{ylab}{Label on Y-axis}
 
-  \item{mainlab}{Main title}
+\item{mainlab}{Main title}
 
-  \item{sublab}{Sub title}
+\item{sublab}{Sub title}
 
-  \item{boxes_per_page}{Maximum number of boxplots per
-  plot. Yields multiple plots if more groups are given.}
+\item{boxes_per_page}{Maximum number of boxplots per plot. Yields multiple plots if more groups are given.}
 
-  \item{abline}{Draw a horziontal green line at the
-  specified y-position (e.g. to indicate target median
-  values)}
+\item{abline}{Draw a horziontal green line at the specified y-position (e.g. to indicate target median values)}
 
-  \item{coord_flip}{Exchange Y and X-axis for better
-  readability}
+\item{coord_flip}{Exchange Y and X-axis for better readability}
 
-  \item{names}{An optional data.frame(long=.., short=..),
-  giving a renaming scheme for the 'group' column}
+\item{names}{An optional data.frame(long=.., short=..), giving a renaming scheme for the 'group' column}
 }
 \value{
 List of ggplot objects
 }
 \description{
-Given a data.frame with two/three columns in long format
-(name, value, [contaminant]; in that order), each group
-(given from 1st column) is plotted as a bar. Contaminants
-(if given) are seperated and plotted as yellow bars.
+Given a data.frame with two/three columns in long format (name, value, [contaminant]; in that order), each group (given from 1st column)
+is plotted as a bar.
+Contaminants (if given) are seperated and plotted as yellow bars.
 }
 \details{
-Boxes are shaded: many NA or Inf lead to more transparency.
-Allows to easily spot sparse groups
+Boxes are shaded: many NA or Inf lead to more transparency. Allows to easily spot sparse groups
 }
 

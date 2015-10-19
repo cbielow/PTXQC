@@ -7,21 +7,19 @@
 mosaicPlot(var1, var2)
 }
 \arguments{
-  \item{var1}{Vector of factors}
+\item{var1}{Vector of factors}
 
-  \item{var2}{Vector of factors}
+\item{var2}{Vector of factors}
 }
 \value{
 ggplot object
 }
 \description{
-Found at
-http://stackoverflow.com/questions/19233365/how-to-create-a-marimekko-mosaic-plot-in-ggplot2
+Found at http://stackoverflow.com/questions/19233365/how-to-create-a-marimekko-mosaic-plot-in-ggplot2
 Modified (e.g. to pass R check)
 }
 \details{
-Returns a ggplot object without printing it. This allows to
-further modify the plot (e.g. rename axis, color schemes
-etc)
+Returns a ggplot object without printing it.
+This allows to further modify the plot (e.g. rename axis, color schemes etc)
 }
 

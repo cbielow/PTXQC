@@ -7,11 +7,11 @@
 printWithFooter(gg_obj, bottom_left = NULL, bottom_right = NULL)
 }
 \arguments{
-  \item{gg_obj}{ggplot2 object to be printed}
+\item{gg_obj}{ggplot2 object to be printed}
 
-  \item{bottom_left}{Footer text for bottom left side}
+\item{bottom_left}{Footer text for bottom left side}
 
-  \item{bottom_right}{Footer text for bottom right side}
+\item{bottom_right}{Footer text for bottom right side}
 }
 \value{
 -

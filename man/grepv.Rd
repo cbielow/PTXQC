@@ -7,11 +7,11 @@
 grepv(reg, data, ...)
 }
 \arguments{
-  \item{reg}{regex param}
+\item{reg}{regex param}
 
-  \item{data}{container}
+\item{data}{container}
 
-  \item{...}{other params forwarded to grep()}
+\item{...}{other params forwarded to grep()}
 }
 \value{
 values of data which matched the regex

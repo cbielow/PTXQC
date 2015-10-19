@@ -7,18 +7,16 @@
 thinOutBatch(data, filterColname, batchColname, binCount = 1000)
 }
 \arguments{
-  \item{data}{The data.frame to be split and
-  filtered(thinned)}
+\item{data}{The data.frame to be split and filtered(thinned)}
 
-  \item{filterColname}{Name of the filter column as string}
+\item{filterColname}{Name of the filter column as string}
 
-  \item{batchColname}{Name of the split column as string}
+\item{batchColname}{Name of the split column as string}
 
-  \item{binCount}{Number of bins in the 'filterColname'
-  dimension.}
+\item{binCount}{Number of bins in the 'filterColname' dimension.}
 }
 \description{
-The binsize is computed from the global data range of the
-filter column by dividing the range into binCount bins.
+The binsize is computed from the global data range of the filter column by dividing the range
+into binCount bins.
 }
 

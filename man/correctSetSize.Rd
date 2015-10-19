@@ -7,43 +7,30 @@
 correctSetSize(item_count, initial_set_size)
 }
 \arguments{
-  \item{item_count}{Known number of items which need to
-  assigned to sets}
+\item{item_count}{Known number of items which need to assigned to sets}
 
-  \item{initial_set_size}{Desired number of items a single
-  set should hold}
+\item{initial_set_size}{Desired number of items a single set should hold}
 }
 \value{
-re-estimated set size which a set should hold in order to
-avoid underfilled sets
+re-estimated set size which a set should hold in order to avoid underfilled sets
 }
 \description{
-This is useful for plotting large datasets where multiple
-pages are needed. E.g. you know that you need 101 barplots,
-but you only want to fit about 25 per page. Naively one
-would now do five plots, with the last one only containing
-a single barplot. Using this function with
-correctSetSize(101, 25) would tell you to use 26 barplots
-per page, so you end up with four plots, all roughly
-equally filled. It also works the other extreme case, where
-your initial size is chosen slightly too high, e.g. Sets of
-size 5 for just 8 items is too much, because we can reduce
-the set size to 4 and still need two sets but now they are
-much more equally filled (correctSetSize(8, 5) == 4).
+This is useful for plotting large datasets where multiple pages are needed.
+E.g. you know that you need 101 barplots, but you only want to fit about 25 per page.
+Naively one would now do five plots, with the last one only containing a single barplot.
+Using this function with correctSetSize(101, 25) would tell you to use 26 barplots per page,
+so you end up with four plots, all roughly equally filled.
+It also works the other extreme case, where your initial size is chosen slightly too high, e.g.
+Sets of size 5 for just 8 items is too much, because we can reduce the set size to 4 and still
+need two sets but now they are much more equally filled (correctSetSize(8, 5) == 4).
 }
 \details{
-We allow for up to set sizes of 150\% from default, to
-avoid the last set being sparse (we remove it and
-distribute to the other bins) 150%\ oversize is the extreme
-case, which only happens with sets of size two. With more
-sets the overhead is much smaller (1/X). Once the number of
-sets is fixed, we distribute all items equally.
+We allow for up to set sizes of 150\% from default, to avoid the last set being sparse (we remove it and distribute to the other bins)
+150%\ oversize is the extreme case, which only happens with sets of size two. With more sets the overhead is much smaller (1/X).
+Once the number of sets is fixed, we distribute all items equally.
 
-E.g. 6 items & initial_set_size=5, would result in 2 bins
-(5 items, 1 item), but we'd rather have one bin of 6 items
-or 8 items & initial_set_size=5, would result in 2 bins
-(5+3 items), since the last set is more than half full, but
-we'd rather have 4+4
+E.g. 6 items & initial_set_size=5, would result in 2 bins (5 items, 1 item), but we'd rather have one bin of 6 items
+or 8 items & initial_set_size=5, would result in 2 bins (5+3 items), since the last set is more than half full, but we'd rather have 4+4
 }
 \examples{
 stopifnot(

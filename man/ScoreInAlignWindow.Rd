@@ -7,20 +7,16 @@
 ScoreInAlignWindow(data, allowed.deltaRT = 1)
 }
 \arguments{
-  \item{data}{A data.frame with columns 'rtdiff' and
-  'raw.file'}
+\item{data}{A data.frame with columns 'rtdiff' and 'raw.file'}
 
-  \item{allowed.deltaRT}{The allowed matching difference (1
-  minute by default)}
+\item{allowed.deltaRT}{The allowed matching difference (1 minute by default)}
 }
 \value{
-A data.frame with one row for each raw.file and columns
-'raw.file' and 'withinRT' (0-1)
+A data.frame with one row for each raw.file and columns 'raw.file' and 'withinRT' (0-1)
 }
 \description{
-Using the result from 'alignmentCheck()', score the
-features of every Raw file and see if they have been
-properly aligned. Returned value is between 0 (bad) and 1
-(all aligned).
+Using the result from 'alignmentCheck()', score the features of every Raw file and see if they
+have been properly aligned.
+Returned value is between 0 (bad) and 1 (all aligned).
 }
 

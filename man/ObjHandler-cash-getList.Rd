@@ -4,9 +4,7 @@
 \alias{ObjHandler$getList}
 \title{Get the objects as list}
 \arguments{
-  \item{.}{A 'this' pointer. Use it to refer/change
-  internal members. It's implicitly added, thus not
-  required too call the function!}
+\item{.}{A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!}
 }
 \value{
 A list holding all objects

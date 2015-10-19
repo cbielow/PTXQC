@@ -8,16 +8,15 @@ to the max obtainable probability of that Gaussian at its center.}
 qualGaussDev(mu, sd)
 }
 \arguments{
-  \item{mu}{Center of Gaussian}
+\item{mu}{Center of Gaussian}
 
-  \item{sd}{SD of Gaussian}
+\item{sd}{SD of Gaussian}
 }
 \value{
-quality, ranging from 0 (bad agreement) to 1 (perfect, i.e.
-centered at 0)
+quality, ranging from 0 (bad agreement) to 1 (perfect, i.e. centered at 0)
 }
 \description{
-Measure for centeredness around 0. Highest score is 1,
-worst score is 0.
+Measure for centeredness around 0.
+Highest score is 1, worst score is 0.
 }
 

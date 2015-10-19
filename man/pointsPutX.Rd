@@ -7,21 +7,20 @@
 pointsPutX(x_range, x_section, y, col = NA)
 }
 \arguments{
-  \item{x_range}{[min,max] valid range of x-values}
+\item{x_range}{[min,max] valid range of x-values}
 
-  \item{x_section}{[min,max] fraction in which to
-  distribute the values (in [0,1] for min,max, e.g.
-  c(0.03,0.08) for 3-8\%)}
+\item{x_section}{[min,max] fraction in which to distribute the values (in [0,1] for min,max, e.g. c(0.03,0.08) for 3-8\%)}
 
-  \item{y}{Y-values}
+\item{y}{Y-values}
 
-  \item{col}{Colour of the points (used as argument to
-  aes(colour=))}
+\item{col}{Colour of the points (used as argument to aes(colour=))}
 }
 \value{
 ggplot object with new geom_point
 }
 \description{
-#' Usage: ggplot(...) + geom_X(...) + pointsPutX(...)
+#'
+Usage:
+  ggplot(...) + geom_X(...) + pointsPutX(...)
 }
 

@@ -7,26 +7,21 @@
 shortenStrings(x, max_len = 20, verbose = TRUE, allow_duplicates = FALSE)
 }
 \arguments{
-  \item{x}{Vector of input strings}
+\item{x}{Vector of input strings}
 
-  \item{max_len}{Maximum length allowed}
+\item{max_len}{Maximum length allowed}
 
-  \item{verbose}{Print which strings were shortened}
+\item{verbose}{Print which strings were shortened}
 
-  \item{allow_duplicates}{If shortened strings are not
-  discernible any longer, consider the short version valid
-  (not the default), otherwise (default) return the full
-  string (--> no-op)}
+\item{allow_duplicates}{If shortened strings are not discernible any longer, consider the short version valid (not the default), otherwise (default) return the full string (--> no-op)}
 }
 \value{
 A vector of shortened strings
 }
 \description{
-Some axis labels are sometimes just too long and printing
-them will either squeeze the actual plot (ggplot) or make
-the labels disappear beyond the margins (graphics::plot)
-One ad-hoc way of avoiding this is to shorten the names,
-hoping they are still meaningful to the viewer.
+Some axis labels are sometimes just too long and printing them will either
+squeeze the actual plot (ggplot) or make the labels disappear beyond the margins (graphics::plot)
+One ad-hoc way of avoiding this is to shorten the names, hoping they are still meaningful to the viewer.
 }
 \examples{
 r = shortenStrings(c("gamg_101", "gamg_101230100451", "jurkat_06_100731121305", "jurkat_06_1"))

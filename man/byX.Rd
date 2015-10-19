@@ -7,28 +7,25 @@
 byX(data, indices, subset_size = 5, FUN, sort_indices = TRUE, ...)
 }
 \arguments{
-  \item{data}{Data.frame whose subsets to use on FUN}
+\item{data}{Data.frame whose subsets to use on FUN}
 
-  \item{indices}{Vector of group assignments, same length
-  as nrow(data)}
+\item{indices}{Vector of group assignments, same length as nrow(data)}
 
-  \item{subset_size}{Number of groups to use in one subset}
+\item{subset_size}{Number of groups to use in one subset}
 
-  \item{FUN}{Function applied to subsets of data}
+\item{FUN}{Function applied to subsets of data}
 
-  \item{sort_indices}{Sort groups (by their sorted
-  character(!) names) before building subsets}
+\item{sort_indices}{Sort groups (by their sorted character(!) names) before building subsets}
 
-  \item{...}{More arguments to FUN}
+\item{...}{More arguments to FUN}
 }
 \value{
 list of function result (one entry for each subset)
 }
 \description{
-One subset consists of 'subset_size' unique groups and thus
-of all rows which in 'data' which have any of these groups.
-The last subset might have less groups, if the number of
-unique groups is not dividable by subset_size.
+One subset consists of 'subset_size' unique groups and thus of all rows which
+in 'data' which have any of these groups.
+The last subset might have less groups, if the number of unique groups is not dividable by subset_size.
 }
 \details{
 FUN is applied on each subset.

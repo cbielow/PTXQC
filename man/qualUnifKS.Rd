@@ -7,31 +7,28 @@
 qualUnifKS(x, y = NULL)
 }
 \arguments{
-  \item{x}{Vector of values from distribution 1}
+\item{x}{Vector of values from distribution 1}
 
-  \item{y}{Vector of values from distribution 2 (or assumed
-  uniform if omitted)}
+\item{y}{Vector of values from distribution 2 (or assumed uniform if omitted)}
 }
 \value{
 p.value of KS test
 }
 \description{
-If only 'x' is given, a one sample KS test is done (min and
-max are taken from 'x'). If both 'x' and 'y' are given, a
-two-sample KS test is conducted.
+If only 'x' is given, a one sample KS test is done (min and max are taken from 'x').
+If both 'x' and 'y' are given, a two-sample KS test is conducted.
 }
 \details{
-Thoughts: this test has multiple problems: - is much too
-stringent, leading to p-values ~ 0 very quickly - looking
-at the 'D' statistic instead is also not good: - using a
-Gaussian, centered at the middle of the data range, gives
-D~0.17, i.e. q=1-D=0.83, which seems to high - if only one
-bin dominates, its position strongly influences D: e.g.
-(all data at the right (or left)):
-ks.test(c(100,100,rep(0,100)), y="punif", min=min(x),
-max=max(x)) ==> d=0.98 (bad fit, thus good metric) (all
-data at the center): ks.test(c(0,100,rep(50,100)),
-y="punif", min=min(x), max=max(x)) ==> d=0.57 (similarly
-bad fit, but metric just does not reflect it)
+Thoughts: this test has multiple problems:
+     - is much too stringent, leading to p-values  ~ 0 very quickly
+     - looking at the 'D' statistic instead is also not good:
+           - using a Gaussian, centered at the middle of the data range, gives
+             D~0.17, i.e. q=1-D=0.83, which seems to high
+           - if only one bin dominates, its position strongly influences D:
+             e.g.
+               (all data at the right (or left)):
+               ks.test(c(100,100,rep(0,100)), y="punif", min=min(x), max=max(x)) ==> d=0.98 (bad fit, thus good metric)
+               (all data at the center):
+               ks.test(c(0,100,rep(50,100)), y="punif", min=min(x), max=max(x))  ==> d=0.57 (similarly bad fit, but metric just does not reflect it)
 }
 

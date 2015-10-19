@@ -7,7 +7,7 @@
 lcpCount(x)
 }
 \arguments{
-  \item{x}{Vector of strings with common prefix}
+\item{x}{Vector of strings with common prefix}
 }
 \value{
 Length of LCP

@@ -7,34 +7,25 @@
 qualUniform(x, weight = vector())
 }
 \arguments{
-  \item{x}{Vector of numeric intensity/count values (e.g.
-  ID's per RT bin); bins are assumed to have equal widths}
+\item{x}{Vector of numeric intensity/count values (e.g. ID's per RT bin); bins are assumed to have equal widths}
 
-  \item{weight}{Vector of weights for values in 'x' (same
-  length as 'x').}
+\item{weight}{Vector of weights for values in 'x' (same length as 'x').}
 }
 \value{
 Value between [0, 1]
 }
 \description{
-Ranges between 0 (worst score) and 1 (best score). Input
-'x' is a vector of counts (or probabilities) for equally
-spaced bins in a histogram. A uniform distribution (e.g.
-c(3,3,3) will get a score of 1. The worst possible case
-(e.g. c(4,0,0)), will get a score of 0, and a linear
-increasing function (e.g. c(1,2,3)) will get something in
-between (0.585 here)
+Ranges between 0 (worst score) and 1 (best score).
+Input 'x' is a vector of counts (or probabilities) for equally spaced bins in a histogram.
+A uniform distribution (e.g. c(3,3,3) will get a score of 1. The worst possible case (e.g. c(4,0,0)), will get a score of 0,
+and a linear increasing function (e.g. c(1,2,3)) will get something in between (0.585 here)
 }
 \details{
-In addition, bin values can be weighted (e.g. by their
-confidence). The total sum of weights is normalized to 1
-internally.
+In addition, bin values can be weighted (e.g. by their confidence). The total sum of weights is normalized to 1 internally.
 
-The distance function used is the square root of the
-absolute difference between a uniform distribution and the
-input 'x' (summed for each element of 'x'). This distance
-is normalized to the worst possible input (e.g. one bin
-with 100% counts, all other bins being empty).
+The distance function used is the square root of the absolute difference between a uniform distribution and the input 'x'
+(summed for each element of 'x').
+This distance is normalized to the worst possible input (e.g. one bin with 100% counts, all other bins being empty).
 }
 \examples{
 stopifnot(qualUniform(c(3,3,3))==1)

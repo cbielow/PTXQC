@@ -24,26 +24,19 @@
 qualBestKS(x)
 }
 \arguments{
-  \item{x}{List of vectors, where each vector holds a
-  distribution}
+\item{x}{List of vectors, where each vector holds a distribution}
 }
 \value{
-A data.frame with ks-test values of the "reference" to all
-other distributions (see Details)
+A data.frame with ks-test values of the "reference" to all other distributions (see Details)
 }
 \description{
-From a list of vectors, compute all vs. all
-Kolmogorov-Smirnoff distance statistics (D)
+From a list of vectors, compute all vs. all Kolmogorov-Smirnoff distance statistics (D)
 }
 \details{
-... and report the row of the matrix which has maximum sum
-(i.e the best "reference" distribution). The returned
-data.frame has as many rows as distributions given and two
-columns. The first column 'name' gives the name of the list
-element, the second column 'ks_best' gives '1-statistic' of
-the Kolmogorov-Smirnoff test to the "reference"
-distribution (which was picked by maximising the sum of
-'ks_best'). Thus, the row with a 'ks_best' of 1 is the
-reference distribution.
+... and report the row of the matrix which has maximum sum (i.e the best "reference" distribution).
+The returned data.frame has as many rows as distributions given and two columns.
+The first column 'name' gives the name of the list element, the second column 'ks_best' gives '1-statistic' of the
+Kolmogorov-Smirnoff test to the "reference" distribution (which was picked by maximising the sum of 'ks_best').
+Thus, the row with a 'ks_best' of 1 is the reference distribution.
 }
 

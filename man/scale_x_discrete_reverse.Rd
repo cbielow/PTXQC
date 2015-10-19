@@ -7,17 +7,14 @@
 scale_x_discrete_reverse(values, ...)
 }
 \arguments{
-  \item{values}{The vector of values as given to the x
-  aestetic}
+\item{values}{The vector of values as given to the x aestetic}
 
-  \item{...}{Other arguments forwarded to
-  'scale_y_discrete()'}
+\item{...}{Other arguments forwarded to 'scale_y_discrete()'}
 }
 \value{
 ggplot object, concatenatable with '+'
 }
 \description{
-Inverse the order of items on the x-axis (for discrete
-scales)
+Inverse the order of items on the x-axis (for discrete scales)
 }
 

@@ -7,16 +7,12 @@
 computeMatchRTFractions(qMBR, qMBRSeg_Dist_inGroup)
 }
 \arguments{
-  \item{qMBR}{A data.frame as computed by
-  peakSegmentation()}
+\item{qMBR}{A data.frame as computed by peakSegmentation()}
 
-  \item{qMBRSeg_Dist_inGroup}{A data.frame as computed by
-  inMatchWindow()}
+\item{qMBRSeg_Dist_inGroup}{A data.frame as computed by inMatchWindow()}
 }
 \value{
-A data.frame which details the distribution of singlets and
-pairs (inRT and outRT) for each Raw file and genuine vs.
-all
+A data.frame which details the distribution of singlets and pairs (inRT and outRT) for each Raw file and genuine vs. all
 }
 \description{
 ...

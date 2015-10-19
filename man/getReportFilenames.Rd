@@ -7,14 +7,12 @@
 getReportFilenames(txt_folder)
 }
 \arguments{
-  \item{txt_folder}{Directory where the MaxQuant output
-  resides}
+\item{txt_folder}{Directory where the MaxQuant output resides}
 }
 \value{
 List of output file names (just names :))
 }
 \description{
-Assembles a list of output file names, which will be
-created during reporting.
+Assembles a list of output file names, which will be created during reporting.
 }
 

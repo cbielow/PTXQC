@@ -4,79 +4,63 @@
 \alias{MQDataReader$readMQ}
 \title{Wrapper to read a MQ txt file (e.g. proteinGroups.txt).}
 \arguments{
-  \item{.}{A 'this' pointer. Use it to refer/change
-  internal members. It's implicitly added, thus not
-  required too call the function!}
+\item{.}{A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!}
 
-  \item{file}{(Relative) path to a MQ txt file ()}
+\item{file}{(Relative) path to a MQ txt file ()}
 
-  \item{filter}{Searched for "C" and "R". If present,
-  [c]ontaminants and [r]everse hits are removed if the
-  respective columns are present. E.g. to filter both,
-  \code{filter = "C+R"}}
+\item{filter}{Searched for "C" and "R". If present, [c]ontaminants and [r]everse hits are removed if the respective columns are present.
+E.g. to filter both, \code{filter = "C+R"}}
 
-  \item{type}{Allowed values are: "pg" (proteinGroups)
-  [default], adds abundance index columns (*AbInd*,
-  replacing 'intensity') "sm" (summary), splits into three
-  row subsets (raw.file, condition, total) Any other value
-  will not add any special columns}
+\item{type}{Allowed values are:
+"pg" (proteinGroups) [default], adds abundance index columns (*AbInd*, replacing 'intensity')
+"sm" (summary), splits into three row subsets (raw.file, condition, total)
+Any other value will not add any special columns}
 
-  \item{col_subset}{A vector of column names as read by
-  read.delim(), e.g., spaces are replaced by dot already.
-  If given, only columns with these names (ignoring
-  lower/uppercase) will be returned (regex allowed) E.g.
-  col_subset=c("^lfq.intensity.", "protein.name")}
+\item{col_subset}{A vector of column names as read by read.delim(), e.g., spaces are replaced by dot already.
+If given, only columns with these names (ignoring lower/uppercase) will be returned (regex allowed)
+E.g. col_subset=c("^lfq.intensity.", "protein.name")}
 
-  \item{add_fs_col}{If TRUE and a column 'raw.file' is
-  present, an additional column 'fc.raw.file' will be added
-  with common prefix AND common substrings removed
-  (\code{\link{simplifyNames}}) E.g. two rawfiles named
-  'OrbiXL_2014_Hek293_Control',
-  'OrbiXL_2014_Hek293_Treated' will give 'Control',
-  'Treated' If \code{add_fs_col} is a number AND the
-  longest short-name is still longer, the names are
-  discarded and replaced by a running ID of the form 'file
-  <x>', where <x> is a number from 1 to N. If the function
-  is called again and a mapping already exists, this
-  mapping is used. Should some raw.files be unknown (ie the
-  mapping from the previous file is incomplete), an error
-  is thrown.}
+\item{add_fs_col}{If TRUE and a column 'raw.file' is present, an additional column 'fc.raw.file' will be added with
+common prefix AND common substrings removed (\code{\link{simplifyNames}})
+        E.g. two rawfiles named 'OrbiXL_2014_Hek293_Control', 'OrbiXL_2014_Hek293_Treated' will give
+                                'Control', 'Treated'
+If \code{add_fs_col} is a number AND the longest short-name is still longer, the names are discarded and replaced by
+a running ID of the form 'file <x>', where <x> is a number from 1 to N.
+If the function is called again and a mapping already exists, this mapping is used.
+Should some raw.files be unknown (ie the mapping from the previous file is incomplete), an error is thrown.}
 
-  \item{check_invalid_lines}{After reading the data, check
-  for unusual number of NA's to detect if file was
-  corrupted by Excel or alike}
+\item{check_invalid_lines}{After reading the data, check for unusual number of NA's to detect if file was corrupted by Excel or alike}
 
-  \item{LFQ_action}{[For type=='pg' only] An additional
-  custom LFQ column ('cLFQ...') is created where zero
-  values in LFQ columns are replaced by the following
-  method IFF(!) the corresponding raw intensity is >0
-  (indicating that LFQ is erroneusly 0) "toNA": replace by
-  NA "impute": replace by lowest LFQ value >0 (simulating
-  'noise')}
+\item{LFQ_action}{[For type=='pg' only] An additional custom LFQ column ('cLFQ...') is created where
+zero values in LFQ columns are replaced by the following method IFF(!) the corresponding raw intensity is >0 (indicating that LFQ is erroneusly 0)
+"toNA": replace by NA
+"impute": replace by lowest LFQ value >0 (simulating 'noise')}
 
-  \item{...}{Additional parameters passed on to
-  read.delim()}
+\item{...}{Additional parameters passed on to read.delim()}
 }
 \value{
 A data.frame of the respective file
 }
 \description{
-Since MaxQuant changes capitalization and sometimes even
-column names, it seemed convenient to have a function which
-just reads a txt file and returns unified column names,
-irrespective of the MQ version. So, it unifies access to
-columns (e.g. by using lower case for ALL columns) and
-ensures columns are identically named across MQ versions:
-\preformatted{ alternative term new term
------------------------------------------ protease enzyme
-protein.descriptions fasta.headers potential.contaminant
-contaminant mass.deviations mass.deviations..da. }
+Since MaxQuant changes capitalization and sometimes even column names, it seemed convenient
+to have a function which just reads a txt file and returns unified column names, irrespective of the MQ version.
+So, it unifies access to columns (e.g. by using lower case for ALL columns) and ensures columns are
+identically named across MQ versions:
+\preformatted{
+ alternative term          new term
+ -----------------------------------------
+ protease                  enzyme
+ protein.descriptions      fasta.headers
+ potential.contaminant     contaminant
+ mass.deviations           mass.deviations..da.
+}
 }
 \details{
-Example of usage: \preformatted{ mq = MQDataReader$new()
-d_evd = mq$readMQ("evidence.txt", type="ev", filter="R",
-col_subset=c("proteins", "Retention.Length",
-"retention.time.calibration")) }
+Example of usage:
+\preformatted{
+  mq = MQDataReader$new()
+  d_evd = mq$readMQ("evidence.txt", type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration"))
+}
 
 If the file is empty, this function stops with an error.
 }

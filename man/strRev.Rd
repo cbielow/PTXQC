@@ -7,7 +7,7 @@
 strRev(x)
 }
 \arguments{
-  \item{x}{String to be reversed}
+\item{x}{String to be reversed}
 }
 \value{
 Reversed string

@@ -7,10 +7,9 @@
 qualHighest(x, N)
 }
 \arguments{
-  \item{x}{Vector of numeric values (e.g. height of
-  histogram bins)}
+\item{x}{Vector of numeric values (e.g. height of histogram bins)}
 
-  \item{N}{Length of x (just a precaution currently)}
+\item{N}{Length of x (just a precaution currently)}
 }
 \value{
 Quality score in the range of [0,1]
@@ -21,8 +20,9 @@ The score is computed according to
 \details{
 q = ((N-1) - sum_i( ((N-i-1)*x_i) ) / (N-1)
 
-Scores range from 0 (worst), to 1 (best). E.g. c(0,0,0,16)
-would yield a score of 1. c(16,0,0,0,0) gives a score of 0.
+Scores range from 0 (worst), to 1 (best).
+E.g. c(0,0,0,16) would yield a score of 1.
+c(16,0,0,0,0) gives a score of 0.
 }
 \examples{
 qualHighest(c(0,0,0,16), 4)   ## 1

@@ -7,27 +7,20 @@
 getYAML(config, param_name, default)
 }
 \arguments{
-  \item{config}{A Yaml object as created by
-  \code{\link[yaml]{yaml.load}}}
+\item{config}{A Yaml object as created by \code{\link[yaml]{yaml.load}}}
 
-  \item{param_name}{A string which holds the param name,
-  i.e. referring to a variable within 'config', e.g.
-  "proteinGroup$doPlot"}
+\item{param_name}{A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"}
 
-  \item{default}{If seeked value is unknown, this will be
-  used as new value}
+\item{default}{If seeked value is unknown, this will be used as new value}
 }
 \value{
-The stored value (might be the default, if no value was
-present)
+The stored value (might be the default, if no value was present)
 }
 \description{
-If the object has the param, then return it. If the param
-is unknown, create it with the given default value and
-return the default.
+If the object has the param, then return it.
+If the param is unknown, create it with the given default value and return the default.
 }
 \note{
-This function has a side-effect: it updates the parameter
-passed as 'config' in the calling environment!!!
+This function has a side-effect: it updates the parameter passed as 'config' in the calling environment!!!
 }
 

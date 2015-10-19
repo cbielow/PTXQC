@@ -7,29 +7,22 @@
 RTalignmentTree(d_evd, col_fraction = c())
 }
 \arguments{
-  \item{d_evd}{Evidence table containing calibrated
-  retention times and sequence information.}
+\item{d_evd}{Evidence table containing calibrated retention times and sequence information.}
 
-  \item{col_fraction}{Empty vector or 1-values vector
-  giving the name of the fraction column (if existing)}
+\item{col_fraction}{Empty vector or 1-values vector giving the name of the fraction column (if existing)}
 }
 \value{
 ggplot object containing the correlation tree
 }
 \description{
-This allows the user to judge which Raw files have similar
-corrected RT's (i.e. where aligned successfully). If there
-are clear sub-clusters, it might be worth introducing
-artifical fractions into MaxQuant, to avoid ID-transfer
-between these clusters (use the MBR-Align and
-MBR-ID-Transfer metrics to support the decision).
+This allows the user to judge which Raw files have similar corrected RT's (i.e. where aligned successfully).
+If there are clear sub-clusters, it might be worth introducing artifical fractions into MaxQuant,
+to avoid ID-transfer between these clusters (use the MBR-Align and MBR-ID-Transfer metrics to support the decision).
 }
 \details{
-If the input contains fractions, leaf nodes will be colored
-accordingly. Distinct sub-clusters should have their own
-color. If not, MaxQuant's fraction settings should be
-optimized. Note that introducing fractions in MaxQuant will
-naturally lead to a clustering here (it's somewhat
-circular).
+If the input contains fractions, leaf nodes will be colored accordingly.
+Distinct sub-clusters should have their own color.
+If not, MaxQuant's fraction settings should be optimized.
+Note that introducing fractions in MaxQuant will naturally lead to a clustering here (it's somewhat circular).
 }
 

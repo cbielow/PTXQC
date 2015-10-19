@@ -7,15 +7,14 @@
 qualMedianDist(x)
 }
 \arguments{
-  \item{x}{A vector numeric values between [0,1]}
+\item{x}{A vector numeric values between [0,1]}
 }
 \value{
-A vector of the same size as x, with quality values between
-[0, 1]
+A vector of the same size as x, with quality values between [0, 1]
 }
 \description{
-Ranges between 0 (worst score) and 1 (best score). Input
-must be between [0,1]. Deviations from the median of the
-sample represent the score for each sample point.
+Ranges between 0 (worst score) and 1 (best score).
+Input must be between [0,1].
+Deviations from the median of the sample represent the score for each sample point.
 }
 

@@ -7,13 +7,12 @@
 delLCS(x)
 }
 \arguments{
-  \item{x}{Vector of strings with common suffix}
+\item{x}{Vector of strings with common suffix}
 }
 \value{
 Shortened vector of strings
 }
 \description{
-Removes the longest common suffix (LCS) from a vector of
-strings.
+Removes the longest common suffix (LCS) from a vector of strings.
 }
 

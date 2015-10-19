@@ -7,15 +7,15 @@
 LCS(s1, s2)
 }
 \arguments{
-  \item{s1}{String one}
+\item{s1}{String one}
 
-  \item{s2}{String two}
+\item{s2}{String two}
 }
 \value{
 String containing the longest common substring
 }
 \description{
-Implementation is very inefficient (dynamic programming in
-R) --> use only on small instances
+Implementation is very inefficient (dynamic programming in R)
+--> use only on small instances
 }
 

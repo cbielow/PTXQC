@@ -7,18 +7,16 @@
 writeYAML(filename, yaml_obj)
 }
 \arguments{
-  \item{filename}{File to write}
+\item{filename}{File to write}
 
-  \item{yaml_obj}{A nested list object with configuration
-  parameters for the report. Useful to switch off certain
-  plots or skip entire sections. Will be converted via
-  'as.yaml()'}
+\item{yaml_obj}{A nested list object with configuration parameters for the report.
+Useful to switch off certain plots or skip entire sections.
+Will be converted via 'as.yaml()'}
 }
 \value{
 TRUE on success
 }
 \description{
-Write YAML config (including some documentation) to a YAML
-file
+Write YAML config (including some documentation) to a YAML file
 }
 

@@ -7,18 +7,18 @@
 addGGtitle(main, sub = "")
 }
 \arguments{
-  \item{main}{String for main title}
+\item{main}{String for main title}
 
-  \item{sub}{String for sub title}
+\item{sub}{String for sub title}
 }
 \value{
 A ggplot object
 }
 \description{
-Found in http://www.antoni.fr/blog/?p=39 .. whewww...
-modified a little
+Found in http://www.antoni.fr/blog/?p=39 .. whewww... modified a little
 }
 \details{
-Usage: ggplot(...) + geom_X(...) + addGGtitle(...)
+Usage:
+  ggplot(...) + geom_X(...) + addGGtitle(...)
 }
 

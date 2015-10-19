@@ -4,15 +4,14 @@
 \alias{MQDataReader$writeMappingFile}
 \title{Writes a mapping table of full Raw file names to shortened names.}
 \arguments{
-  \item{filename}{Target filename to create.}
+\item{filename}{Target filename to create.}
 }
 \value{
-Returns \code{TRUE} if file was created, \code{FALSE} if it
-already exists.
+Returns \code{TRUE} if file was created, \code{FALSE} if it already exists.
 }
 \description{
-The internal structure \code{raw_file_mapping} is written
-to the file specified. If the file already exists, nothing
-is done.
+The internal structure \code{raw_file_mapping} is written to the
+file specified.
+If the file already exists, nothing is done.
 }
 

@@ -7,37 +7,26 @@
 idTransferCheck(data)
 }
 \arguments{
-  \item{data}{A data.frame with columns 'type',
-  'calibrated.retention.time', 'modified.sequence',
-  'charge', 'raw.file'}
+\item{data}{A data.frame with columns 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'raw.file'}
 }
 \value{
-A data.frame containing the RT diff for each ID-group found
-in a Raw file (bg = genuine).
+A data.frame containing the RT diff for each ID-group found in a Raw file (bg = genuine).
 }
 \description{
-The input is a data frame containing feature evidence with
-corrected retention times, e.g. a
-'calibrated.retention.time' column.
+The input is a data frame containing feature evidence with corrected retention times,
+e.g. a 'calibrated.retention.time' column.
 }
 \details{
-Note that this function must be given all MS/MS
-identifications only (type "MULTI-MSMS" and "MSMS-MATCH")
+Note that this function must be given all MS/MS identifications only (type "MULTI-MSMS" and "MSMS-MATCH")
 in order to work correctly!
 
-We compare for each peptide sequence (and charge) the RT
-difference within groups of genuine and mixed pairs. For
-every comparison made, we report the RT difference. If
-alignment worked perfectly, the differences are very small
-(<1 min), for the mixed group, i.e. the pairs are
-accidentally split 3D peaks. Alignment performance has no
-influence on the genuine-only groups.
+We compare for each peptide sequence (and charge) the RT difference within groups of genuine and mixed pairs.
+For every comparison made, we report the RT difference. If alignment worked perfectly, the differences are very small (<1 min),
+for the mixed group, i.e. the pairs are accidentally split 3D peaks. Alignment performance has no influence on the
+genuine-only groups.
 
-Note: We found early MaxQuant versions (e.g. 1.2.2.5) to
-have an empty 'modified.sequence' column for 'MULTI-MATCH'
-entries. The sequence which SHOULD be present is equal to
-the immediate upper row. This is what we use to guess the
-sequence. However, this relies on the data.frame not being
-subsetted before (we can sort using the 'id' column)!
+Note: We found early MaxQuant versions (e.g. 1.2.2.5) to have an empty 'modified.sequence' column for 'MULTI-MATCH' entries.
+The sequence which SHOULD be present is equal to the immediate upper row. This is what we use to guess the sequence.
+However, this relies on the data.frame not being subsetted before (we can sort using the 'id' column)!
 }
 

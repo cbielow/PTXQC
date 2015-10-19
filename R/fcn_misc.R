@@ -826,5 +826,81 @@ getReportFilenames = function(txt_folder)
 }
 
 
+#'
+#' Extract the number of protein groups and peptides observed per Raw file
+#' from an evidence table.
+#'
+#' Required columns are "protein.group.ids", "fc.raw.file", "modified.sequence".
+#' 
+#' If match-between-runs was enabled during the MaxQuant run,
+#' the data.frame returned will contain separate values for 'transferred' evidence
+#' plus an 'MBRgain' column, which will give the extra MBR evidence in percent.
+#' 
+#' @param d_evidence Data.frame of evidence.txt as read by MQDataReader
+#' @return Data.frame with columns 'proteinCounts', 'peptideCounts', 'category', 'MBRgain'
+#'
+#'
+getProteinAndPeptideCounts = function(d_evidence) {
+    
+  required_cols = c("protein.group.ids", "fc.raw.file", "modified.sequence", "match.time.difference")
+  if (!all(required_cols %in% colnames(d_evidence))) {
+    stop("getProteinAndPeptideCounts(): Missing columns!")
+  }
+  
+  d_evidence$hasMTD = !is.na(d_evidence$match.time.difference)
+  
+  ## report Match-between-runs data only if if it was enabled
+  reportMTD = any(d_evidence$hasMTD)
+  
+  prot_pep_counts = ddply(d_evidence, "fc.raw.file", .fun = function(x, reportMTD)
+  {
+    ## proteins
+    x$group_mtdinfo = paste(x$protein.group.ids, x$hasMTD, sep="_")
+    # remove duplicates (since strsplit below is expensive) -- has no effect on double counting of PROTEINS(!), since it honors MTD
+    xpro = x[!duplicated(x$group_mtdinfo),]
+    # split groups
+    p_groups = lapply(as.character(xpro$protein.group.ids), function(x) {
+      return (strsplit(x, split=";", fixed=T))
+    })
+    # get number of unique proteins
+    pg_set_genuineUnique = unique(unlist(p_groups[!xpro$hasMTD]))
+    # MBR will contribute peptides of already known proteins
+    pg_set_allMBRunique = unique(unlist(p_groups[xpro$hasMTD]))
+    pg_count_GenAndMBR = length(intersect(pg_set_allMBRunique, pg_set_genuineUnique))
+    # ... and peptides of proteins which are new in this Raw file (few)
+    pg_count_newMBR = length(pg_set_allMBRunique) - pg_count_GenAndMBR
+    # ... genuine-only proteins:
+    pg_count_onlyGenuine = length(pg_set_genuineUnique) - pg_count_GenAndMBR
+    
+    ## peptides
+    #pep_count_genuineAll = sum(!x$hasMTD) # (we count double sequences... could be charge +2, +3,... or oversampling)
+    pep_set_genuineUnique = unique(x$modified.sequence[!x$hasMTD]) ## unique sequences (discarding PTM's)
+    pep_set_allMBRunique = unique(x$modified.sequence[x$hasMTD])
+    pep_count_GenAndMBR = length(intersect(pep_set_genuineUnique, pep_set_allMBRunique)) ## redundant, i.e. both Genuine and MBR
+    pep_count_newMBR = length(pep_set_allMBRunique) - pep_count_GenAndMBR ## new MBR peptides
+    pep_count_onlyGenuine = length(pep_set_genuineUnique) - pep_count_GenAndMBR ## genuine-only peptides
+    
+    
+    ## return values in MELTED array
+    if (reportMTD)
+    {
+      df = data.frame(proteinCounts = c(pg_count_onlyGenuine, pg_count_GenAndMBR, pg_count_newMBR),
+                      peptideCounts = c(pep_count_onlyGenuine, pep_count_GenAndMBR, pep_count_newMBR),
+                      category = c("genuine (exclusive)", "genuine + transferred", "transferred (exclusive)"),
+                      proteinMBRgain = c(NA, NA, pg_count_newMBR / (pg_count_onlyGenuine + pg_count_GenAndMBR) * 100),
+                      peptideMBRgain = c(NA, NA, pep_count_newMBR / (pep_count_onlyGenuine + pep_count_GenAndMBR) * 100))
+    } else {
+      df = data.frame(proteinCounts = c(pg_count_onlyGenuine),
+                      peptideCounts = c(pep_count_onlyGenuine),
+                      category = c("genuine"),
+                      proteinMBRgain = NA,
+                      peptideMBRgain = NA)
+    }  
+    
+    return (df)
+  }, reportMTD = reportMTD)
+  
+  return (prot_pep_counts)
+}
 
 

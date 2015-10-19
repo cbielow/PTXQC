@@ -7,28 +7,22 @@
 getPCA(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
 }
 \arguments{
-  \item{data}{Matrix(!) where each row is one
-  high-dimensional point, with ncol dimensions, e.g. a
-  mouse as an array of proteinexpressions rownames(data)
-  give classes for colouring (can be duplicates in
-  matrices, as opposed to data.frames)}
+\item{data}{Matrix(!) where each row is one high-dimensional point, with ncol dimensions,
+e.g. a mouse as an array of proteinexpressions
+rownames(data) give classes for colouring (can be duplicates in matrices, as opposed to data.frames)}
 
-  \item{do_plot}{Show PCA plot? if ==2, then shows
-  correlations plot as well}
+\item{do_plot}{Show PCA plot? if ==2, then shows correlations plot as well}
 
-  \item{connect_line_order}{Connect points by lines, the
-  order is given by this vector. Default: NA (no lines)}
+\item{connect_line_order}{Connect points by lines, the order is given by this vector.
+Default: NA (no lines)}
 
-  \item{gg_layer}{More parameters added to a ggplot object
-  (ggplot(x) + gg_layer)}
+\item{gg_layer}{More parameters added to a ggplot object (ggplot(x) + gg_layer)}
 }
 \value{
-[invisible] Named list with "PCA": The PCA object as
-returned by \code{\link[stats]{prcomp}}, access $x for PC
-values and "plots": list of plot objects (one or two)
+[invisible] Named list with "PCA": The PCA object as returned by \code{\link[stats]{prcomp}}, access $x for PC values
+                                and "plots": list of plot objects (one or two)
 }
 \description{
-Create a principal component analysis (PCA) plot for the
-first two dimensions.
+Create a principal component analysis (PCA) plot for the first two dimensions.
 }
 

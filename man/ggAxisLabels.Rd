@@ -7,25 +7,26 @@
 ggAxisLabels(x, n = 20)
 }
 \arguments{
-  \item{x}{Vector of labels (passed by GGplot)}
+\item{x}{Vector of labels (passed by GGplot)}
 
-  \item{n}{Number of labels to show}
+\item{n}{Number of labels to show}
 }
 \value{
 Shortened version of 'x'
 }
 \description{
-By default, 20 labels (or up to 40 see below) are shown. If
-the number of items is less than twice the number of
-desired labels, all labels will be shown (to avoid
-irregular holes for some labels). I.e. if n=20, and x has
-22 entries, there would be only two labels removed, giving
-a very irregular picture. It only becomes somewhat regular
-if after any label there is at least one blank, i.e. at
-most half the entries are labeled. #' Example: ## p is any
-ggplot object p + scale_y_discrete(breaks = ggAxisLabels)
-## customize 'n' my.ggAxisLabels = function(x)
-ggAxisLabels(x, n = 4) p + scale_y_discrete(breaks =
-my.ggAxisLabels)
+By default, 20 labels (or up to 40 see below) are shown.
+If the number of items is less than twice the number of desired labels,
+all labels will be shown (to avoid irregular holes for some labels).
+I.e. if n=20, and x has 22 entries, there would be only two labels removed, giving a very irregular picture.
+It only becomes somewhat regular if after any label there is at least one blank, i.e. at most
+half the entries are labeled.
+#'
+Example:
+  ## p is any ggplot object
+  p + scale_y_discrete(breaks = ggAxisLabels)
+  ## customize 'n'
+  my.ggAxisLabels = function(x) ggAxisLabels(x, n = 4)
+  p + scale_y_discrete(breaks = my.ggAxisLabels)
 }
 

@@ -7,16 +7,14 @@
 renameFile(f_names, mapping)
 }
 \arguments{
-  \item{f_names}{Vector of filenames}
+\item{f_names}{Vector of filenames}
 
-  \item{mapping}{A data.frame with from,to columns}
+\item{mapping}{A data.frame with from,to columns}
 }
 \value{
-A vector of translated file names as factor (ordered by
-mapping!)
+A vector of translated file names as factor (ordered by mapping!)
 }
 \description{
-Given a vector of (short/long) filenames, translate to the
-(long/short) version
+Given a vector of (short/long) filenames, translate to the (long/short) version
 }
 

@@ -7,22 +7,17 @@
 inMatchWindow(data, df.allowed.deltaRT)
 }
 \arguments{
-  \item{data}{A data.frame with columns 'fc.raw.file' and
-  !colname (param)}
+\item{data}{A data.frame with columns 'fc.raw.file' and !colname (param)}
 
-  \item{df.allowed.deltaRT}{The allowed matching difference
-  for each Raw file (as data.frame(fc.rawfile, m))}
+\item{df.allowed.deltaRT}{The allowed matching difference for each Raw file (as data.frame(fc.rawfile, m))}
 }
 \value{
-A data.frame with one row for each raw.file and columns
-'raw.file' and score 'withinRT' (0-1)
+A data.frame with one row for each raw.file and columns 'raw.file' and score 'withinRT' (0-1)
 }
 \description{
-Using the result from 'idTransferCheck()', compute the
-fraction of pairs which are within a certain RT tolerance.
+Using the result from 'idTransferCheck()', compute the fraction of pairs which are within a certain RT tolerance.
 }
 \details{
-Returned value is between 0 (bad) and 1 (all within
-tolerance).
+Returned value is between 0 (bad) and 1 (all within tolerance).
 }
 

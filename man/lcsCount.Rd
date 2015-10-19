@@ -7,7 +7,7 @@
 lcsCount(x)
 }
 \arguments{
-  \item{x}{Vector of strings with common suffix}
+\item{x}{Vector of strings with common suffix}
 }
 \value{
 Length of LCS

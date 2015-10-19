@@ -7,15 +7,14 @@
 a \%+\% b
 }
 \arguments{
-  \item{a}{Char vector}
+\item{a}{Char vector}
 
-  \item{b}{Char vector}
+\item{b}{Char vector}
 }
 \value{
 Concatenated string (no separator)
 }
 \description{
-A string concatenation function, more readable than
-'paste()'.
+A string concatenation function, more readable than 'paste()'.
 }
 

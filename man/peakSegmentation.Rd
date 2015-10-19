@@ -8,38 +8,29 @@ confirmed either by genuine or transferred MS/MS.}
 peakSegmentation(d_evd)
 }
 \arguments{
-  \item{d_evd}{A data.frame of evidences containing the
-  above columns}
+\item{d_evd}{A data.frame of evidences containing the above columns}
 }
 \value{
-A data.frame with one row per Raw file and three columns:
-1) % of native single peaks (ignoring transferred IDs) 2) %
-of single peaks (group of size=1) using only groups which
-have at at one transferred evidence 3) % of single peaks
-using all groups
+A data.frame with one row per Raw file and
+        three columns:
+          1) % of native single peaks (ignoring transferred IDs)
+          2) % of single peaks (group of size=1) using only groups which have at at one transferred evidence
+          3) % of single peaks using all groups
 }
 \description{
-Sometimes, MQ split a feature into 2 or more if the
-chromatograpic conditions are not optimal and there is a
-drop in RT intensity. If both features contain successful
-MS/MS scans, we will find the same peptide twice (with
-slightly different RT) in the same charge state. This
-constitutes a natively split peak and is rare (95% of all
-peaks are unique).
+Sometimes, MQ split a feature into 2 or more if the chromatograpic conditions are not optimal and there
+is a drop in RT intensity.
+If both features contain successful MS/MS scans, we will find the same peptide twice (with slightly different RT)
+in the same charge state. This constitutes a natively split peak and is rare (95% of all peaks are unique).
 }
 \details{
-If Match-between-runs is used and the RT alignment is not
-perfect, then a peptide might be inferred at a wrong RT
-position, even though this Raw file already contains MS/MS
-evidence of this peptide. Usually the number of peak
-duplicates rises drastically (e.g. only 75% of peaks are
-unique after MBR was used). In most cases, the RT is too
-far off to be a split peak. It's rather a lucky hit with
-accidentally the same mass-to-charge, and thus the
-intensity is random. To find by how much these peak pairs
-differ in RT, use idTransferCheck() and inMatchWindow().
+If Match-between-runs is used and the RT alignment is not perfect, then a peptide might be inferred at a wrong
+RT position, even though this Raw file already contains MS/MS evidence of this peptide.
+Usually the number of peak duplicates rises drastically (e.g. only 75% of peaks are unique after MBR was used).
+In most cases, the RT is too far off to be a split peak. It's rather a lucky hit with accidentally the same mass-to-charge,
+and thus the intensity is random.
+To find by how much these peak pairs differ in RT, use idTransferCheck() and inMatchWindow().
 
-Required columns are 'match.time.difference',
-'fc.raw.file', 'modified.sequence', 'charge', 'type'.
+Required columns are 'match.time.difference', 'fc.raw.file', 'modified.sequence', 'charge', 'type'.
 }
 

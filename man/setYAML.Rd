@@ -7,14 +7,11 @@
 setYAML(config, param_name, value)
 }
 \arguments{
-  \item{config}{A Yaml object as created by
-  \code{\link[yaml]{yaml.load}}}
+\item{config}{A Yaml object as created by \code{\link[yaml]{yaml.load}}}
 
-  \item{param_name}{A string which holds the param name,
-  i.e. referring to a variable within 'config', e.g.
-  "proteinGroup$doPlot"}
+\item{param_name}{A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"}
 
-  \item{value}{New value to set}
+\item{value}{New value to set}
 }
 \value{
 The value
@@ -23,7 +20,6 @@ The value
 Set a YAML parameter to a certain value.
 }
 \note{
-This function has a side-effect: it updates the parameter
-passed as 'config' in the calling environment!!!
+This function has a side-effect: it updates the parameter passed as 'config' in the calling environment!!!
 }
 

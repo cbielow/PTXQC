@@ -7,22 +7,18 @@
 assignBlocks(values, set_size = 5, sort_values = TRUE)
 }
 \arguments{
-  \item{values}{Vector of values}
+\item{values}{Vector of values}
 
-  \item{set_size}{Number of distinct values allowed in a
-  set}
+\item{set_size}{Number of distinct values allowed in a set}
 
-  \item{sort_values}{Before assigning values to sets, sort
-  the values?}
+\item{sort_values}{Before assigning values to sets, sort the values?}
 }
 \value{
 Vector (same length as input) with set numbers
 }
 \description{
-Each set has size set_size (internally optimized using
-\code{\link{correctSetSize}}), holding values from
-'values'. This gives n such sets and the return value is
-just the set index for each value.
+Each set has size set_size (internally optimized using \code{\link{correctSetSize}}), holding values from 'values'.
+This gives n such sets and the return value is just the set index for each value.
 }
 \examples{
 library(PTXQC)

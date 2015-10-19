@@ -7,7 +7,7 @@
 del0(x)
 }
 \arguments{
-  \item{x}{A numeric vector}
+\item{x}{A numeric vector}
 }
 \value{
 Vector of same size as 'x', with 0's replaced by NA

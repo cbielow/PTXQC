@@ -7,21 +7,17 @@
 qualCenteredRef(x, tol)
 }
 \arguments{
-  \item{x}{Vector of values (hopefully in interval [-tol,
-  tol])}
+\item{x}{Vector of values (hopefully in interval [-tol, tol])}
 
-  \item{tol}{Border of interval (must be positive)}
+\item{tol}{Border of interval (must be positive)}
 }
 \value{
 Value between [0, 1]
 }
 \description{
-Ranges between 0 (worst score) and 1 (best score). The best
-score is achieved when the median of 'x' is close to the
-center of the interval (given by 'tol'). If median of 'x'
-is close to the border (on either side), the score
-decreases linearly to zero. Can be used for uncalibrated
-mass errors, as a measure of how well they are centered
-around 0.
+Ranges between 0 (worst score) and 1 (best score).
+The best score is achieved when the median of 'x' is close to the center of the interval (given by 'tol').
+If median of 'x' is close to the border (on either side), the score decreases linearly to zero.
+Can be used for uncalibrated mass errors, as a measure of how well they are centered around 0.
 }
 

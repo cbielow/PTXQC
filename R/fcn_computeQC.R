@@ -784,51 +784,22 @@ createReport = function(txt_folder, yaml_obj = list())
       #   contains NA if 'genuine' ID
       d_evd$hasMTD = !is.na(d_evd$match.time.difference)
       
-      protGroupCount_pre = ddply(d_evd[, c("hasMTD", "protein.group.ids", "fc.raw.file")], "fc.raw.file", .fun = function(x){
-        ## proteins
-        # remove duplicates (since strsplit below is expensive)
-        x$group_mtdinfo = paste(x$protein.group.ids, x$hasMTD, sep="_")
-        xpro = x[!duplicated(x$group_mtdinfo),]
-        p_groups = lapply(as.character(xpro$protein.group.ids), function(x) {
-          return (strsplit(x, split=";", fixed=T))
-        })
-        # get number of unique groups
-        pg_count_noMBR = length(unique(unlist(p_groups[!xpro$hasMTD])))
-        pg_count_extraMBR = length(unique(unlist(p_groups))) - pg_count_noMBR
-        
-        ## peptides
-        ## (we count double sequences... mhh...)
-        pep_count_noMBR = sum(!x$hasMTD)
-        pep_count_MBRgain = nrow(x) - pep_count_noMBR
-        
-        return (c(proteinCount_noMBR = pg_count_noMBR, 
-                  proteinCount_MBRgain = pg_count_extraMBR,
-                  pep_count_noMBR = pep_count_noMBR,
-                  pep_count_MBRgain = pep_count_MBRgain))
-      })
-      protGroupCount_pre
-      ## manually melt
-      pgc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, 
-                             protCount = protGroupCount_pre$proteinCount_noMBR, 
-                             category = "genuine")
-      pgc = rbind(pgc,
-                  data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, 
-                             protCount = protGroupCount_pre$proteinCount_MBRgain,
-                             category = "transferred"))
-      pgc
+      pgc = getProteinAndPeptideCounts(d_evd[, c("protein.group.ids", "fc.raw.file", "modified.sequence", "match.time.difference")])
+      head(pgc)
+      
       ## re-order (ddply somehow reorders, even if we use ordered factors...)
       pgc$fc.raw.file = factor(pgc$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
       #levels(pgc$fc.raw.file)
+      ## report Match-between-runs data only if if it was enabled
+      reportMTD = any(d_evd$hasMTD)
       
-      # combine Prot & Pep stats
-      ## Warn: this is still different from summary.txt...
-      #colnames(ppg) = c("# protein groups", "# peptides", "# peptides\n(incl. transferred)", "file")
-      #mdat = melt(ppg, id.vars="file")
-      
-      head(pgc)
+      ## show Prot & Pep stats
       pgc$block = factor(assignBlocks(pgc$fc.raw.file, 30))
-      max_prot = max(protGroupCount_pre$proteinCount_noMBR + protGroupCount_pre$proteinCount_MBRgain)
+      max_prot = max(unlist(dlply(pgc, "fc.raw.file", function(x) sum(x$proteinCounts))))
+      ## average gain in percent
+      gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pgc$proteinMBRgain, na.rm=T)), "")
       
+      ## get scoring threshold (upper limit)
       param_name_EV_protThresh = "File$Evidence$ProteinCountThresh_num"
       param_def_EV_protThresh = 3500
       param_EV_protThresh = getYAML(yaml_obj, param_name_EV_protThresh, param_def_EV_protThresh)
@@ -838,47 +809,38 @@ createReport = function(txt_folder, yaml_obj = list())
         param_EV_protThresh = param_def_EV_protThresh
       }
       
-      #require(RColorBrewer)
-      ddply(pgc, "block", .fun = function(x) {
-        #x$s.raw.file = simplifyNames((as.character(x$raw.file)))
-        GPL$add(ggplot(x, aes_string(x = "fc.raw.file", y = "protCount", fill = "category")) +
+      ddply(pgc, "block", .fun = function(x)
+      {
+        #print(
+        GPL$add(
+                ggplot(x, aes_string(x = "fc.raw.file", y = "proteinCounts", fill = "category")) +
                   geom_bar(stat = "identity", position = "stack") +
                   xlab("") +
                   ylab("count") +
                   scale_x_discrete_reverse(x$fc.raw.file) +
                   ylim(0, max(param_EV_protThresh, max_prot)*1.1) +
-                  scale_fill_manual(values = c("green", "#BEAED4")) +
-                  ggtitle("EVD: Protein ID count") + 
+                  scale_fill_manual(values = c("green", "#BEAED4", "red")) +
+                  addGGtitle("EVD: ProteinGroups count", gain_text) + 
                   geom_abline(alpha = 0.5, intercept = param_EV_protThresh, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
                   coord_flip()
         )
         return (1)
       })
       ## QC measure for protein ID performance
-      qc_protc = pgc[pgc$category=="genuine", c("fc.raw.file", "protCount")]
+      qc_protc = ddply(pgc[grep("^genuine", pgc$category), ], "fc.raw.file", function(x){data.frame(genuineAll = sum(x$proteinCounts))})
       cname = "X045X_catGen_EVD:~Prot~Count~(\">" %+% param_EV_protThresh %+% "\")"
-      qc_protc[,cname] = qualLinThresh(qc_protc$protCount, param_EV_protThresh)
+      qc_protc[,cname] = qualLinThresh(qc_protc$genuineAll, param_EV_protThresh)
       QCM[["EVD.ProtCount"]] = qc_protc[, c("fc.raw.file", cname)]
       
       
       ##
       ## EVD: peptide count
       ##
-      pepc =       data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, 
-                              pepCount = protGroupCount_pre$pep_count_noMBR, 
-                              category = "genuine")
-      pepc = rbind(pepc,
-                   data.frame(fc.raw.file = protGroupCount_pre$fc.raw.file, 
-                              pepCount = protGroupCount_pre$pep_count_MBRgain,
-                              category = "transferred"))
-      pepc
-      ## re-order (ddply somehow reorders, even if we use ordered factors...)
-      pepc$fc.raw.file = factor(pepc$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
-      
-      head(pepc)
-      pepc$block = factor(assignBlocks(pepc$fc.raw.file, 30))
-      max_pep = max(protGroupCount_pre$pep_count_noMBR + protGroupCount_pre$pep_count_MBRgain)
-      
+      max_pep = max(unlist(dlply(pgc, "fc.raw.file", function(x) sum(x$peptideCounts))))
+      ## average gain in percent
+      gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pgc$peptideMBRgain, na.rm=T)), "")
+            
+      ## get scoring threshold (upper limit)
       param_name_EV_pepThresh = "File$Evidence$PeptideCountThresh_num"
       param_def_EV_pepThresh = 15000
       param_EV_pepThresh = getYAML(yaml_obj, param_name_EV_pepThresh, param_def_EV_pepThresh)
@@ -889,17 +851,17 @@ createReport = function(txt_folder, yaml_obj = list())
       }
       
       #require(RColorBrewer)
-      ddply(pepc, "block", .fun = function(x) {
-        #x$s.raw.file = simplifyNames((as.character(x$raw.file)))
-        p = ggplot(x, aes_string(x = "factor(fc.raw.file)", y = "pepCount", fill = "category")) +
+      ddply(pgc, "block", .fun = function(x)
+      {
+        p = ggplot(x, aes_string(x = "factor(fc.raw.file)", y = "peptideCounts", fill = "category")) +
           geom_bar(stat = "identity", position = "stack") +
           xlab("") +
           ylab("count") +
           scale_x_discrete_reverse(x$fc.raw.file) +
           ylim(0, max(param_EV_pepThresh, max_pep)*1.1) +
           geom_abline(alpha = 0.5, intercept = param_EV_pepThresh, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
-          scale_fill_manual(values = c("green", "#BEAED4")) +
-          ggtitle("EVD: Peptide ID count") + 
+          scale_fill_manual(values = c("green", "#BEAED4", "red")) +
+          addGGtitle("EVD: Peptide ID count", gain_text) + 
           coord_flip()
         #print(p)
         GPL$add(p)
@@ -907,9 +869,9 @@ createReport = function(txt_folder, yaml_obj = list())
       })
       
       ## QC measure for peptide ID performance
-      qc_pepc = pepc[pepc$category=="genuine", c("fc.raw.file", "pepCount")]
+      qc_pepc = ddply(pgc[grep("^genuine", pgc$category), ], "fc.raw.file", function(x){data.frame(genuineAll = sum(x$peptideCounts))})
       cname = "X040X_catGen_EVD:~Pep~Count~(\">" %+% param_EV_pepThresh %+% "\")"
-      qc_pepc[,cname] = qualLinThresh(qc_pepc$pepCount, param_EV_pepThresh)
+      qc_pepc[,cname] = qualLinThresh(qc_pepc$genuineAll, param_EV_pepThresh)
       QCM[["EVD.PepCount"]] = qc_pepc[, c("fc.raw.file", cname)]
       
       ####
