@@ -15,11 +15,11 @@
 
 #'
 #' Convenience wrapper for MQDataReader when only a single MQ file should be read
-#' and file mapping need not be stored
+#' and file mapping need not be stored.
 #' 
 #' For params, see \code{\link{MQDataReader$readMQ}}.
 #' 
-#' #' @param file   (Relative) path to a MQ txt file ()
+#' @param file   see \code{\link{MQDataReader$readMQ}}
 #' @param filter see \code{\link{MQDataReader$readMQ}}
 #' @param type   see \code{\link{MQDataReader$readMQ}}
 #' @param col_subset see \code{\link{MQDataReader$readMQ}}

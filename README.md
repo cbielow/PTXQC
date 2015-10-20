@@ -11,8 +11,9 @@ PTXQC
     - digestion efficiency
     - contaminant visualizations
     - identification performance
-  - easy usage (`drag'n'drop` your `txt output folder` onto a `batch file`)
-    - 10 min installation, see ['inst' subfolder] [1]
+    - Match-between-runs performance
+  - easy usage ([Windows OS only] `drag'n'drop` your `txt output folder` onto a `batch file`)
+    - 10 min installation, see [drag'n'drop] [1]
   - PDF report will be generated within your txt folder
   - optional configuration file *in YAML format* for generation of shorter/customized reports
 
@@ -25,24 +26,29 @@ PTXQC
 **If you want to generate QC reports without actually getting involved in R:**
 
 We offer a Batch-file based Drag'n'drop mechanism to trigger PTXQC on any MaxQuant output folder.
-Unfortunately, this only works for Windows (not Linux or MacOS) at the moment.
-See ['inst' subfolder] [1] for details. It takes 10 minutes and you are done!
+This only works for Windows (not Linux or MacOS) at the moment -- but you have a Windows anyway to run MaxQuant, right?!
+See [drag'n'drop] [1] for details. It takes 10 minutes and you are done!
 
 **If you just want the package to use and maybe even modify it:**
 
 Direct installation from GitHub requires the 'devtools' package. The following lines will add PTXQC on a fresh R installation:
 
-    install.packages("devtools")
+    if (!require(devtools, quietly = TRUE)) install.packages("devtools")
     library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
     source("http://bioconductor.org/biocLite.R")
     biocLite("Biobase")
-    install_github("cbielow/PTXQC") 
-    help(package="PTXQC")           ## all done; check out the documentation
+    install_github("cbielow/PTXQC", build_vignettes = TRUE) 
+    
+To get started on how to use the package, see the help and/or vignettes:
 
+    help(package="PTXQC")
+    browseVignettes(package = 'PTXQC')
 
+Please feel free to report bugs (see below), or issue pull requests!    
+    
 ### Platform support
 
-  - Windows (recommended for convenience to make use of the drag'n'drop batch file provided)
+  - Windows (recommended for convenience to make use of the [drag'n'drop] [1] batch file provided)
   - Linux
   - MacOSX
 
@@ -60,7 +66,7 @@ In certain situations, the whole txt-folder or a single MaxQuant file might be h
 
 If you want to see a new metric, or have ideas how to improve the existing ones, just open an issue ticket and leave a description.
   
-### Examples
+### Report Examples
 
 An overview chart at the beginning of the report will give you a first impression.
 <img src="./inst/examples/example_heatmap.png?raw=true" width="500" /><br>

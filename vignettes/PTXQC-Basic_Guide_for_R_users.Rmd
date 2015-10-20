@@ -1,0 +1,95 @@
+﻿---
+title: "Basic R-Usage Guide for PTXQC"
+author: "Chris Bielow <chris.bielow@mdc-berlin.de>"
+date: '`r Sys.Date()`'
+output:
+  html_document: default
+  pdf_document: null
+vignette: >
+  %\VignetteIndexEntry{Basic R-Usage Guide for PTXQC}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+# Basic R-Usage Guide for PTXQC
+
+This vignette serves as a quickstart guide for R users to create a report
+from within R using PTXQC.
+
+**Target Audience:** R users
+
+Reports can be generated using the default configuration of PTXQC. 
+See
+```{r, eval=FALSE}
+vignette("PTXQC-InputData", package = "PTXQC")
+```
+how a txt folder should look like.
+
+## Generate a default report 
+
+This is the most simple invokation of PTXQC::createReport().
+
+```{r, eval=FALSE}
+require(PTXQC)
+
+## the next require() is needed to prevent a spurious error in certain R versions (might be a bug in R or a package)
+## error message is:
+##    Error in Scales$new : could not find function "loadMethod"
+require(methods)
+## the next require() should not be needed, since PTXQC imports it, but on some systems it seems that a sub function 
+## dispatch within 'directlabels' is not working properly. If 'directlabels' is attached, all is well. So ...
+require(directlabels)
+
+## specify a path to a MaxQuant txt folder
+## Note: This folder needs to be complete (see 'vignette("PTXQC-InputData", package = "PTXQC")')
+txt_folder = "c:/Proteomics/MouseLiver/combined/txt"
+
+r = createReport(txt_folder)
+
+cat(paste0("\nReport generated as '", r$report_file, "'\n\n"))
+
+```
+
+## Generate a customized report
+
+The report can be customized via a YAML configuration file.
+For details, see
+
+```{r, eval=FALSE}
+vignette("PTXQC-CustomizeReport", package = "PTXQC")
+```
+
+After editing the YAML configuration to your needs, run the code below.
+
+```{r, eval=FALSE}
+require(PTXQC)
+require(yaml)
+
+## the next require() is needed to prevent a spurious error in certain R versions (might be a bug in R or a package)
+## error message is:
+##    Error in Scales$new : could not find function "loadMethod"
+require(methods)
+## the next require() should not be needed, since PTXQC imports it, but on some systems it seems that a subfunction 
+## dispatch within 'directlabels' is not working properly. If 'directlabels' is attached, all is well. So ...
+require(directlabels)
+
+
+## specify a path to a MaxQuant txt folder
+## Note: This folder can be incomplete, depending on your YAML config
+txt_folder = "c:/Proteomics/MouseLiver/combined/txt"
+
+## use a YAML config inside the target directory if present
+fh_out = getReportFilenames(txt_folder)
+if (file.exists(fh_out$yaml_file))
+{
+  cat("\nUsing YAML config already present in target directory ...\n")
+  yaml_config = yaml.load_file(input = fh_out$yaml_file)
+}
+
+r = createReport(txt_folder, yaml_config)
+
+cat(paste0("\nReport generated as '", r$report_file, "'\n\n"))
+
+```
+
+That's it.

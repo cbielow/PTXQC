@@ -1,11 +1,12 @@
 This file is for admins/support-staff who want to configure and install the PTXQC package
 and provide an automated drag'n'drop solution to their MaxQuant users (incl. themselves) for creating QC reports.
 
-**Note:** the drag'n'drop currently only works for Windows, not MacOS or Linux. For the latter, you can have a look at the `dragNdrop/QC-dragdrop/_internal/compute_QC_report.R` file, to see how to invoke PTXQC from R.
+**Note:** the drag'n'drop currently only works for Windows, not MacOS or Linux. 
+          For the latter, please refer to the vignettes of this package (after installation), which explain how to invoke PTXQC from within R.
 
 We recommend using a shared network drive as installation folder to which all users have read access. Alternatively you can copy the folder structure we are about to create to a folder on your local machine - however, if you want to use the QC reporting from multiple PC's just use a network folder.
 
-When you are done, provide the users with the [user_manual.pdf] from this folder (or write your own).
+When you are done, provide the users with the vignette `PTXQC-DragNDrop` (or write your own).
 This will show them how to invoke the QC (it's very easy - see 'Usage' below).
 
 ### Installation
@@ -32,11 +33,11 @@ This will show them how to invoke the QC (it's very easy - see 'Usage' below).
         ##
         ## the actual installation of packages
         ##
-        install.packages("devtools")
+        if (!require(devtools, quietly = TRUE)) install.packages("devtools")
         library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
         source("http://bioconductor.org/biocLite.R")
         biocLite("Biobase")
-        install_github("cbielow/PTXQC") 
+        install_github("cbielow/PTXQC", build_vignettes = TRUE) 
         help(package="PTXQC")           ## all done; check out the documentation
 
         cat(paste0("\nCopy the packages contained in '", .libPaths()[1], "' to your library folder (see installation manual)."))
@@ -62,11 +63,9 @@ You can rename the `QC-dragdrop` folder to anything you like (try to avoid space
  
 ### Usage (short version)
 
-  For the long version, see [user_manual.pdf].
+  For the long version, see the package vignette `PTXQC-DragNDrop`.
   
   You can create a QC report by dragging a **txt-folder** (or any file within the txt-folder)
   onto the `createQC_dragNdrop.bat` file which resides on your (network) drive.
 
-
-  [user_manual.pdf]: user_manual.pdf
   [http://www.r-project.org]: http://www.r-project.org

@@ -2,13 +2,13 @@ Package: PTXQC
 Type: Package
 Title: Quality report generation for MaxQuant results
 Version: 0.69.0
-Date: 2014-04-11
-Author: Chris Bielow
+Date: 2015-10-20
+Author: Chris Bielow <chris.bielow@mdc-berlin.de> 
 Maintainer: Chris Bielow <chris.bielow@mdc-berlin.de>
-Description: ...
-Depends:
-    R (>= 2.14.0)
-Imports:
+Description: An R-package to generate comprehensive quality control reports from MaxQuant txt-folders.
+Depends: 
+    R (>= 3.0.0)
+Imports: 
     Biobase,
     directlabels,
     ggplot2,
@@ -20,5 +20,10 @@ Imports:
     reshape2,
     seqinr,
     yaml
+Suggests: 
+    knitr (>= 1.10),
+    rmarkdown
+VignetteBuilder: knitr
 License: file LICENSE
 Roxygen: list(wrap = FALSE)
+BugReports: https://github.com/cbielow/PTXQC/issues

@@ -1,0 +1,58 @@
+﻿---
+title: "Drag'n'drop Usage Guide for PTXQC"
+author: "Chris Bielow <chris.bielow@mdc-berlin.de>"
+date: '`r Sys.Date()`'
+output:
+  html_document: default
+  pdf_document: null
+vignette: >
+  %\VignetteIndexEntry{Drag'n'drop Usage Guide for PTXQC}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+
+**Requirements:**
+
+  - any Windows System 
+  - R and PTXQC should be installed using the installation instructions
+    at https://github.com/cbielow/PTXQC/tree/master/inst/dragNdrop.
+
+## Generating a quick QC report without asking questions!
+
+  - open a Windows Explorer and find your MaxQuant txt-output folder
+  - open another Windows Explorer window and navigate to the (network) folder where the QC software
+    was copied to during installation, e.g. `P:\Chris\Exchange\QC` (where drive P could be some network share).
+  -	drag’n’drop the txt folder onto `createQC_dragNdrop.bat` (you can also drag any file within the
+    txt folder, e.g. `evidence.txt`)
+
+<img src="DragNDrop_Action.png" width="600" alt="Drag'n'drop action" />
+
+ - A console will pop up and show stuff. Wait... if all went well, one of the last lines is “Time elapsed: … min”
+   and a pdf report within your txt folder. It has a version and a folder name attached to it
+   (e.g. `report_v0.63_diabetes.pdf`). The version number will increase every time there is an 
+   update in PTXQC (big change in version number means big change in functionality). 
+   The name is taken from the path where the txt is located in – it helps you to distinguish
+   report files when they are open in a PDF viewer or copied somewhere else. 
+   The console window will stay up until you press a key.
+
+<img src="DragNDrop_BatWindow.png" width="677" alt="The command window, visible during report generation" />
+
+## Generating a QC report using a configuration file
+
+There are two ways to customize parameters for a report:
+
+  - PTXQC will search for a YAML file within the txt-folder for which it generates the report. 
+    If there is one (with the correct name, i.e. `report_vXXX.yaml`, where XXX is the PTXQC version number),
+    this report file will be used. Thus, if you already have txt-folder containing a report pdf
+    plus the `report_*.yaml` inside, just edit the YAML file and re-run 
+    PTXQC using onto `createQC_dragNdrop.bat`.
+  -	If your txt-folder has not been analyzed by PTXQC before OR you want to try another configuration, 
+    then you can use the `createQC_dragNdrop_withYAML.bat` to run PTXQC with a custom 
+    configuration which you specified before. This .bat file expects a YAML configuration file
+    right next to the .bat file. This file you need to provide. But no worries. One such file 
+    with default parameters is generated each time you invoke a QC report generation. 
+    Just take any file from a previous run in any other txt-folder. Modify this YAML, 
+    copy it next to the bat file, and name it `config.yaml`. 
+
+**Note**: The second option will take precedence over the first.

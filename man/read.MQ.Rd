@@ -3,13 +3,13 @@
 \name{read.MQ}
 \alias{read.MQ}
 \title{Convenience wrapper for MQDataReader when only a single MQ file should be read
-and file mapping need not be stored}
+and file mapping need not be stored.}
 \usage{
 read.MQ(file, filter = "", type = "pg", col_subset = NA,
   add_fs_col = 10, LFQ_action = FALSE, ...)
 }
 \arguments{
-\item{file}{(Relative) path to a MQ txt file ()}
+\item{file}{see \code{\link{MQDataReader$readMQ}}}
 
 \item{filter}{see \code{\link{MQDataReader$readMQ}}}
 
@@ -28,8 +28,5 @@ see \code{\link{MQDataReader$readMQ}}
 }
 \description{
 For params, see \code{\link{MQDataReader$readMQ}}.
-}
-\details{
-#'
 }
 

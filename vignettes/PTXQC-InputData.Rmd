@@ -1,0 +1,36 @@
+﻿---
+title: "Input data for PTXQC"
+author: "Chris Bielow <chris.bielow@mdc-berlin.de>"
+date: '`r Sys.Date()`'
+output:
+  html_document: default
+  pdf_document: null
+vignette: >
+  %\VignetteIndexEntry{Input data for PTXQC}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+PTXQC generates quality control reports for [MaxQuant] results.
+
+When a full report is generated, PTXQC requires the following **input files**:
+  
+  - parameters.txt
+  - summary.txt
+  - proteinGroups.txt
+  - evidence.txt
+  - msms.txt
+  - msmsScans.txt
+
+These files can be found in the `<baseDir>/combined/txt` folder after MaxQuant analysis successfully finished.
+Here, `<baseDir>` is your main MaxQuant project folder containing your Raw files.
+
+If you are not interested in the full report or only a subset of these files are available,
+PTXQC can be configured to look only at some of them. See
+```{r, eval=FALSE}
+vignette("PTXQC-CustomizeReport", package = "PTXQC")
+```
+for details.
+
+
+  [MaxQuant]: http://www.maxquant.org
