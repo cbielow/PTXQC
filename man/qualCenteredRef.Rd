@@ -16,8 +16,11 @@ Value between [0, 1]
 }
 \description{
 Ranges between 0 (worst score) and 1 (best score).
-The best score is achieved when the median of 'x' is close to the center of the interval (given by 'tol').
+The best score is achieved when the median of 'x' is close to the center of the interval [-tol, tol].
 If median of 'x' is close to the border (on either side), the score decreases linearly to zero.
 Can be used for uncalibrated mass errors, as a measure of how well they are centered around 0.
+}
+\details{
+NA's are removed for all computations.
 }
 

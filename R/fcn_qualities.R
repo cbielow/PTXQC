@@ -48,9 +48,11 @@ qualCentered = function(x)
 #' Quality metric for 'centeredness' of a distribution around zero with a user-supplied range threshold.
 #' 
 #' Ranges between 0 (worst score) and 1 (best score).
-#' The best score is achieved when the median of 'x' is close to the center of the interval (given by 'tol').
+#' The best score is achieved when the median of 'x' is close to the center of the interval [-tol, tol].
 #' If median of 'x' is close to the border (on either side), the score decreases linearly to zero.
 #' Can be used for uncalibrated mass errors, as a measure of how well they are centered around 0.
+#' 
+#' NA's are removed for all computations.
 #' 
 #' @param x  Vector of values (hopefully in interval [-tol, tol])
 #' @param tol Border of interval (must be positive)
@@ -62,9 +64,9 @@ qualCenteredRef = function(x, tol)
   x = na.omit(x)
   if (length(x) == 0) stop("qualCenteredRef(): input is empty or consists of NA only!")
   if (tol <= 0) stop("qualCenteredRef(): negative or zero interval border not allowed!")
-  m = median(x, na.rm=T)
-  if (abs(m) > tol) warning("qualCenteredRef(): Median of x is outside of interval. Score will be set to 0.")
-  q = 1 - (abs(m) / tol)
+  m = abs(median(x, na.rm=T))
+  if (m > tol) warning("qualCenteredRef(): Median of x is outside of interval. Score will be set to 0.")
+  q = 1 - (m / tol)
   q = max(0, q) ## avoid negative scores if abs(x)>tol
   return (q)
 }
@@ -156,95 +158,6 @@ qualUniform = function(x, weight=vector())
 }
 
 
-#'
-#' Test for uniform distribution using Kolmogorov-Smirnoff
-#'
-#' If only 'x' is given, a one sample KS test is done (min and max are taken from 'x').
-#' If both 'x' and 'y' are given, a two-sample KS test is conducted.
-#' 
-#' Thoughts: this test has multiple problems:
-#'      - is much too stringent, leading to p-values  ~ 0 very quickly
-#'      - looking at the 'D' statistic instead is also not good:
-#'            - using a Gaussian, centered at the middle of the data range, gives
-#'              D~0.17, i.e. q=1-D=0.83, which seems to high
-#'            - if only one bin dominates, its position strongly influences D:
-#'              e.g. 
-#'                (all data at the right (or left)):
-#'                ks.test(c(100,100,rep(0,100)), y="punif", min=min(x), max=max(x)) ==> d=0.98 (bad fit, thus good metric)
-#'                (all data at the center):
-#'                ks.test(c(0,100,rep(50,100)), y="punif", min=min(x), max=max(x))  ==> d=0.57 (similarly bad fit, but metric just does not reflect it)
-#'
-#' @param x Vector of values from distribution 1
-#' @param y Vector of values from distribution 2 (or assumed uniform if omitted)
-#' @return p.value of KS test
-#' 
-qualUnifKS = function(x, y = NULL)
-{
-  if (is.null(y)) return (ks.test(x, y="punif", min=min(x), max=max(x))$p.value)
-  else return (ks.test(x, y)$p.value)
-}
-
-#'
-#' Discete ChiSquare-test on raw (unbinned) data
-#' 
-#' Data are first assigned to bins of equal width using 'hist()'.
-#' 
-#' If only 'x' is given, its distribution of compared to a uniform distribution.
-#' If 'y' is given as well, 'x' vs. 'y' is compared (after binning).
-#' If counts of 'x' and 'y' differ, the binned counts of the vector with higher counts 
-#' are rescaled by N/M to match the smaller one (this might lead to bias).
-#' 
-#' 
-#'
-#'
-# qualUniform_C2 = function(x, y = NULL, bin_count = 30)
-# {
-#   
-#   if (!is.null(y)) {
-#     xy = c(x,y)
-#     h = hist(c(x,y), breaks = bin_count, plot = FALSE)
-#     hx = hist(x, breaks = h$breaks, plot = FALSE)
-#     hy = hist(y, breaks = h$breaks, plot = FALSE)
-#     if (length(x) != length(y)) { ## rescale
-#       fac = length(x) / length(y)
-#     }
-#   }
-#   else xy = x;
-#   
-#   
-#   
-#   chisq.test
-#   
-# }
-
-#' 
-#' Compute position of each element in a vector, assuming the rest of the data is a Gaussian
-#' 
-#' For each index i, compute a Gaussian G from x \\ x_i and assess the prob of x_i in G.
-#' The best result is 1, i.e. x_i is in the center of all other values.
-#' The worst results is 0 (for very far outliers), i.e. the value is very far from the median.
-#' 
-#' Problem: magic constant in here...
-#' 
-#' @param x Numeric vector of values (e.g. counts for charge state of 2)
-#' @return Numeric vector of qualities, same length of 'x', ranging from 0 (bad agreement) to 1 (perfect)
-#' 
-qualGauss = function(x)
-{
-  r = rep(NA, length(x))
-  for (i in 1:length(x))
-  {
-    med = median(x[-i])
-    gsd = 0.05 * med; # constant 5%, otherwise some datapoint is always bad;  old: "mad(x[-i], center = med)"
-    p_best = dnorm(med, mean = med, sd = gsd)
-    p_obs =  dnorm(x[i], mean = med, sd = gsd)
-    r[i]  = p_obs/p_best  ## ratio of current position divided by best possible position (=center)
-  }
-  return(r)
-}
-
-
-
 #' 
 #' Compute probability of Gaussian (mu=m, sd=s) at a position 0, with reference 
 #' to the max obtainable probability of that Gaussian at its center.
@@ -299,57 +212,6 @@ qualHighest = function(x, N)
 }
 
 
-# 
-# #'
-# #' Given a vector of values sampled from a mixture of two Gaussians, compute the area contribution
-# #' of the higher/more abundant (=target) Gaussian.
-# #' 
-# #' Returns a score between 1 (Target only) and 0 (Decoy only). Higher scores are better.
-# #' We assume that the target distribution is much more peaked and narrow, whereas the decoy (false matches) are 
-# #' uniformly distributed across all bins (the Gaussian has a large SD).
-# #' If there is not enough data, NA is returned.
-# #' 
-# #' note This is pre-tuned for Match-time-differences
-# #'
-# #' param x Vector of numeric values
-# #' param debug Set to TRUE to generate a plot, showing the fitted Gaussians to the data
-# #' return Ratio of area of the target distribution vs. whole area under the two Gaussians
-# #'
-# #' importFrom mixtools normalmixEM2comp
-# #' 
-# #' 
-# qualGauss2Mix = function(x, debug = FALSE)
-# {
-#   d = na.omit(x)
-#   f = file()
-#   sink(file=f) ## silence output of 'normalmixEM2comp'
-#   fit2 = normalmixEM2comp(d, lambda = c(0.3,0.6), mu = c(mean(d),mean(d)), c(1.5,0.3), maxit = 10000)
-#   sink() ## undo silencing
-#   close(f)
-#   if (inherits(fit2, "try-error"))
-#   { ## not enough data?!
-#     return (NA);
-#   }
-#   if (debug)
-#   {
-#     fit2$mu
-#     fit2$sigma
-#     fit2$lambda
-#     h=hist(d, 100, plot=F)
-#     x = seq(-4,4,by=0.1)
-#     plot(h$mids, h$density)
-#     lines(x, dnorm(x, fit2$mu[1], fit2$sigma[1]) *fit2$lambda[1], col="red")
-#     lines(x, dnorm(x, fit2$mu[2], fit2$sigma[2]) *fit2$lambda[2], col="green")
-#     lines(x, dnorm(x, fit2$mu[1], fit2$sigma[1]) *fit2$lambda[1] + dnorm(x, fit2$mu[2], fit2$sigma[2]) *fit2$lambda[2])
-#   }
-#   ## look at scaling of the one with better SD (order defined above)
-#   q = fit2$lambda[2] / sum(fit2$lambda)
-#   #q
-#   return (q)
-# }
-
-
-
 #'
 #' From a list of vectors, compute all vs. all Kolmogorov-Smirnoff distance statistics (D)
 #' 
@@ -366,6 +228,8 @@ qualHighest = function(x, N)
 qualBestKS = function(x) {
   
   if (class(x) != "list") stop("Function bestKS() expects a list!")
+  
+  if (is.null(names(x))) names(x) = 1:length(x)
   
   ## result matrix
   rr = matrix(0, nrow=length(x), ncol=length(x))
@@ -387,7 +251,7 @@ qualBestKS = function(x) {
   ## get values
   v = pmax(rr[r_max,], rr[, r_max])
   
-  return(data.frame(name = names(x), ks_best = v))
+  return (data.frame(name = names(x), ks_best = v))
          
 }
 

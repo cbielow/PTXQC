@@ -2,7 +2,7 @@
 % Please edit documentation in R/fcn_misc.R
 \name{simplifyNames}
 \alias{simplifyNames}
-\title{Removes common substrings in a set of strings.}
+\title{Removes common substrings (infixes) in a set of strings.}
 \usage{
 simplifyNames(strings, infix_iterations = 2, min_LCS_length = 7,
   min_out_length = 7)

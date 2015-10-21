@@ -2,24 +2,7 @@
 % Please edit documentation in R/fcn_qualities.R
 \name{qualBestKS}
 \alias{qualBestKS}
-\title{#
-#Given a vector of values sampled from a mixture of two Gaussians, compute the area contribution
-#of the higher/more abundant (=target) Gaussian.
-#
-#Returns a score between 1 (Target only) and 0 (Decoy only). Higher scores are better.
-#We assume that the target distribution is much more peaked and narrow, whereas the decoy (false matches) are
-#uniformly distributed across all bins (the Gaussian has a large SD).
-#If there is not enough data, NA is returned.
-#
-#note This is pre-tuned for Match-time-differences
-#
-#param x Vector of numeric values
-#param debug Set to TRUE to generate a plot, showing the fitted Gaussians to the data
-#return Ratio of area of the target distribution vs. whole area under the two Gaussians
-#
-#importFrom mixtools normalmixEM2comp
-#
-#}
+\title{From a list of vectors, compute all vs. all Kolmogorov-Smirnoff distance statistics (D)}
 \usage{
 qualBestKS(x)
 }
@@ -30,9 +13,6 @@ qualBestKS(x)
 A data.frame with ks-test values of the "reference" to all other distributions (see Details)
 }
 \description{
-From a list of vectors, compute all vs. all Kolmogorov-Smirnoff distance statistics (D)
-}
-\details{
 ... and report the row of the matrix which has maximum sum (i.e the best "reference" distribution).
 The returned data.frame has as many rows as distributions given and two columns.
 The first column 'name' gives the name of the list element, the second column 'ks_best' gives '1-statistic' of the

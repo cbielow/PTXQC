@@ -2,7 +2,7 @@
 % Please edit documentation in R/fcn_misc.R
 \name{thinOut}
 \alias{thinOut}
-\title{Thin out a data.frame by removing rows with similar values in a certain column.}
+\title{Thin out a data.frame by removing rows with similar numerical values in a certain column.}
 \usage{
 thinOut(data, filterColname, binsize)
 }
@@ -14,7 +14,7 @@ thinOut(data, filterColname, binsize)
 \item{binsize}{Width of a bin}
 }
 \description{
-All values in the column 'filterColname' are assigned to bins if width 'binsize'.
+All values in the numerical column 'filterColname' are assigned to bins of width 'binsize'.
 Only one value per bin is retained. All other rows are removed and the reduced
 data frame will all its columns is returned.
 }

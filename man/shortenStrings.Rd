@@ -23,8 +23,14 @@ Some axis labels are sometimes just too long and printing them will either
 squeeze the actual plot (ggplot) or make the labels disappear beyond the margins (graphics::plot)
 One ad-hoc way of avoiding this is to shorten the names, hoping they are still meaningful to the viewer.
 }
+\details{
+This function should be applied AFTER you tried more gentle methods, such as \code{\link{delLCP}} or \code{\link{simplifyNames}}.
+}
 \examples{
 r = shortenStrings(c("gamg_101", "gamg_101230100451", "jurkat_06_100731121305", "jurkat_06_1"))
 all(r == c("gamg_101", "gamg_101230100..", "jurkat_06_1007..", "jurkat_06_1"))
+}
+\seealso{
+\code{\link{delLCP}}, \code{\link{simplifyNames}}
 }
 

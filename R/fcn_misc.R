@@ -54,6 +54,11 @@ delLCP <- function(x, min_out_length = 0, add_dots = F)
 #' @param x Vector of strings with common suffix
 #' @return Shortened vector of strings
 #' 
+#' @examples
+#' delLCS(c("TK12345_H1"))                     ## ""
+#' delLCS(c("TK12345_H1", "TK12345_H2"))       ## "TK12345_H1" "TK12345_H2" 
+#' delLCS(c("TK12345_H1", "TK12!45_H1"))       ## "TK123"    "TK12!" 
+#'  
 #' @importFrom Biobase lcSuffix
 #' 
 #' @export
@@ -107,10 +112,14 @@ lcsCount <- function(x)
 #' @export
 LCS <- function(s1, s2) 
 {
+  if (nchar(s1)==0 || nchar(s2)==0) return("")
+
+  
   v1 <- unlist(strsplit(s1,split=""))
   v2 <- unlist(strsplit(s2,split=""))
   
-  num <- matrix(0,nchar(s1), nchar(s2))    
+  
+  num <- matrix(0, nchar(s1), nchar(s2))    
   maxlen <- 0
   pstart = 0
   
@@ -140,7 +149,7 @@ LCS <- function(s1, s2)
 #' Warning: heuristic! This is not guaranteed to find the best solution, since its done pairwise with the shortest input string as reference.
 #' 
 #' @param strings A vector of strings in which to search for LCS
-#' @param min_LCS_length Minimum length expected. Search is aborted if result is shorter
+#' @param min_LCS_length Minimum length expected. Empty string is returned if the result is shorter
 #' @return longest common substring (or "" if shorter than \code{min_LCS_length})
 #' 
 #' @examples
@@ -148,7 +157,7 @@ LCS <- function(s1, s2)
 #' 
 #' @export
 #' 
-LCSn = function(strings, min_LCS_length=7)
+LCSn = function(strings, min_LCS_length = 0)
 {
   ## abort if there is no chance of finding a suitably long substring
   if (min(nchar(strings)) < min_LCS_length) return("");
@@ -161,15 +170,18 @@ LCSn = function(strings, min_LCS_length=7)
   r = unique(sapply(strings_other, LCS, strings[idx_ref]))
   r
   ## if only one string remains, we're done
-  if (length(r) == 1) return (r[1])
+  if (length(r) == 1)
+  {
+    if (nchar(r[1]) < min_LCS_length) return("") else return (r[1])
+  }
   ## if its more, call recursively until a solution is found
   return (LCSn(r, min_LCS_length))
 }
 # LCSn(c("16_IMU008_CISPLA_E5_R11", "48_IMU008_CISPLA_P4_E7_R31", "60_IMU008_CISPLA_E7_R11"), 3)
 
 
-
-#' Removes common substrings in a set of strings.
+#'
+#' Removes common substrings (infixes) in a set of strings.
 #' 
 #' Usually handy for plots, where condition names should be as concise as possible.
 #' E.g. you do not want names like 
@@ -199,14 +211,14 @@ LCSn = function(strings, min_LCS_length=7)
 #' 
 #' @export
 #' 
-simplifyNames = function(strings, infix_iterations=2, min_LCS_length=7, min_out_length = 7)
+simplifyNames = function(strings, infix_iterations = 2, min_LCS_length = 7, min_out_length = 7)
 {
   if (min_LCS_length<6) stop( "simplifyNames(): param 'min_LCS_length' must be 6 at least.")
   
   for (it in 1:infix_iterations)
   {
     lcs = LCSn(strings, min_LCS_length=min_LCS_length)
-    if (nchar(lcs)==0) return (strings)
+    if (nchar(lcs)==0) return (strings) ## to infix of minimum length found
     ## replace infix with 'ab..yz'
     strings_i = sub(paste0("(.*)", lcs, "(.*)"), 
                     paste0("\\1", substring(lcs,1,2), "..", substring(lcs, nchar(lcs)-1), "\\2"), 
@@ -223,6 +235,8 @@ simplifyNames = function(strings, infix_iterations=2, min_LCS_length=7, min_out_
 #' squeeze the actual plot (ggplot) or make the labels disappear beyond the margins (graphics::plot)
 #' One ad-hoc way of avoiding this is to shorten the names, hoping they are still meaningful to the viewer.
 #' 
+#' This function should be applied AFTER you tried more gentle methods, such as \code{\link{delLCP}} or \code{\link{simplifyNames}}.
+#' 
 #' @param x                Vector of input strings
 #' @param max_len          Maximum length allowed
 #' @param verbose          Print which strings were shortened
@@ -233,13 +247,15 @@ simplifyNames = function(strings, infix_iterations=2, min_LCS_length=7, min_out_
 #' r = shortenStrings(c("gamg_101", "gamg_101230100451", "jurkat_06_100731121305", "jurkat_06_1"))
 #' all(r == c("gamg_101", "gamg_101230100..", "jurkat_06_1007..", "jurkat_06_1"))
 #' 
+#' @seealso \code{\link{delLCP}}, \code{\link{simplifyNames}}
+#' 
 #' @export
 #' 
 shortenStrings = function(x, max_len = 20, verbose = TRUE, allow_duplicates = FALSE)
 {
+  if (any(duplicated(x)) & !allow_duplicates) stop("Duplicated input given to 'shortenStrings'!\n  ", paste(x, collapse="\n  "))
+
   idx = nchar(x) > max_len
-  if (any(duplicated(x))) stop("Duplicated input given to 'shortenStrings'!\n  ", paste(x, collapse="\n  "))
-  
   xr = x
   xr[idx] = paste0(substr(x[idx], 1, max_len-2), "..")
   
@@ -278,7 +294,7 @@ shortenStrings = function(x, max_len = 20, verbose = TRUE, allow_duplicates = FA
 #' @examples
 #' supCount(c("abcde...", "abcd...", "abc..."))  ## 5
 #'
-#' x= c("doubled", "doubled", "aLongDummyString")
+#' x = c("doubled", "doubled", "aLongDummyString")
 #' all( substr(x, 1, supCount(x)) == x )   ## TRUE (since due to duplicated entries there is no prefix which makes them unique)
 #' 
 #' @export
@@ -296,18 +312,6 @@ supCount <- function(x, prefix_l=1)
     prefix_l = prefix_l + 1
   }
   return (prefix_l)
-}
-
-#' Reverse a string.
-#' 
-#' @param x String to be reversed
-#' @return Reversed string
-#' 
-#' @export
-#' 
-strRev <- function(x) 
-{
-  return (sapply(lapply(strsplit(x, NULL), rev), paste, collapse=""))
 }
 
 
@@ -409,8 +413,8 @@ byX <- function(data, indices, subset_size = 5, FUN, sort_indices = TRUE, ...)
   return (result)
 }
 
-
-#' Same as 'byX', but with more flexible group size, to avoid that the last group has only a few entries (<50\% of desired size).
+#'
+#' Same as \code{\link{byX}}, but with more flexible group size, to avoid that the last group has only a few entries (<50\% of desired size).
 #' 
 #' The 'subset_size' param is internally optimized using \code{\link{correctSetSize}} and
 #' then \code{\link{byX}} is called.
@@ -581,7 +585,7 @@ del0 = function(x)
 #' 
 #' @examples
 #'     r = getMaxima(c(1,0,3,4,5,0))                                
-#'     all(r == c(1,0,0,0,1,0))
+#'     all(r == c(TRUE,FALSE,FALSE,FALSE,TRUE,FALSE))
 #'     
 #' @export     
 #'     
@@ -700,9 +704,9 @@ appendEnv = function(env_name, v, v_name = NULL)
 }
 
 #'
-#' Thin out a data.frame by removing rows with similar values in a certain column.
+#' Thin out a data.frame by removing rows with similar numerical values in a certain column.
 #' 
-#' All values in the column 'filterColname' are assigned to bins if width 'binsize'.
+#' All values in the numerical column 'filterColname' are assigned to bins of width 'binsize'.
 #' Only one value per bin is retained. All other rows are removed and the reduced
 #' data frame will all its columns is returned.
 #' 

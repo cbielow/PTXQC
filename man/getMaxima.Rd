@@ -22,6 +22,6 @@ Simply sum up the vector to get the number of maxima.
 }
 \examples{
 r = getMaxima(c(1,0,3,4,5,0))
-    all(r == c(1,0,0,0,1,0))
+    all(r == c(TRUE,FALSE,FALSE,FALSE,TRUE,FALSE))
 }
 

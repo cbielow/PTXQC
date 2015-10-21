@@ -2,7 +2,7 @@
 % Please edit documentation in R/fcn_misc.R
 \name{byXflex}
 \alias{byXflex}
-\title{Same as 'byX', but with more flexible group size, to avoid that the last group has only a few entries (<50\% of desired size).}
+\title{Same as \code{\link{byX}}, but with more flexible group size, to avoid that the last group has only a few entries (<50\% of desired size).}
 \usage{
 byXflex(data, indices, subset_size = 5, FUN, sort_indices = TRUE, ...)
 }

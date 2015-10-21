@@ -22,7 +22,8 @@ Imports:
     yaml
 Suggests: 
     knitr (>= 1.10),
-    rmarkdown
+    rmarkdown,
+    testthat
 VignetteBuilder: knitr
 License: file LICENSE
 Roxygen: list(wrap = FALSE)

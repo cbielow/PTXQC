@@ -4,12 +4,12 @@
 \alias{LCSn}
 \title{Find longest common substring from 'n' strings.}
 \usage{
-LCSn(strings, min_LCS_length = 7)
+LCSn(strings, min_LCS_length = 0)
 }
 \arguments{
 \item{strings}{A vector of strings in which to search for LCS}
 
-\item{min_LCS_length}{Minimum length expected. Search is aborted if result is shorter}
+\item{min_LCS_length}{Minimum length expected. Empty string is returned if the result is shorter}
 }
 \value{
 longest common substring (or "" if shorter than \code{min_LCS_length})
