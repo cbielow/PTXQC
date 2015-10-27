@@ -1522,7 +1522,7 @@ cont.top.sort = sort(cont.top, decreasing=T)
 cont.top5.names = names(cont.top.sort)[1:5]
 
 
-plotCont = function(d_evd_sub, top5) 
+plotCont = function(d_evd_sub, top5=cont.top5.names) 
 { 
   #top5 = cont.top5.names
   if (is.null(top5)) stop("Function plotCont() called with invalid argument. Please report this bug.")
