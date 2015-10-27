@@ -1597,7 +1597,7 @@ if (is.null(cont.top5.names))
 ## QC measure for contamination
 qc_contaminants = ddply(d_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
                         function(x) {
-                          v = ifelse(is.null(top5), 
+                          v = ifelse(is.null(cont.top5.names), 
                                      HEATMAP_NA_VALUE, ## use NA in heatmap if there are no contaminants
                                      1-qualLinThresh(sum(as.numeric(x$intensity[x$contaminant]), na.rm=T)/
                                                        sum(as.numeric(x$intensity), na.rm=T)))
