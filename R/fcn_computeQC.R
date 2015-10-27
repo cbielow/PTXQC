@@ -26,7 +26,7 @@
 #' @importFrom grid unit
 #' @importFrom reshape2 melt
 #' @importFrom RColorBrewer brewer.pal
-#'  
+#' @importFrom rmarkdown render
 #' @export
 #'           
 createReport = function(txt_folder, yaml_obj = list())
@@ -39,7 +39,7 @@ createReport = function(txt_folder, yaml_obj = list())
   }
   
   ## list of plots
-  GPL = ObjHandler$new()
+  rep_data = ReportData$new()
   
   ## list of data.frames containing one QC metric per list for each Raw file
   ## used for heat map later on
@@ -71,8 +71,8 @@ createReport = function(txt_folder, yaml_obj = list())
   
   ## create names of output files (report PDF, YAML, stats, etc...)
   fh_out = getReportFilenames(txt_folder)
-  use_extended_PDF_filename = getYAML(yaml_obj, "PTXQC$ReportFilename$extended", TRUE)
-  fh_out$report_file = ifelse(use_extended_PDF_filename, fh_out$report_file_extended, fh_out$report_file_simple)
+  use_extended_report_filename = getYAML(yaml_obj, "PTXQC$ReportFilename$extended", TRUE)
+  fh_out$report_file = ifelse(use_extended_report_filename, fh_out$report_file_extended, fh_out$report_file_simple)
   
   unlink(fh_out$stats_file)
   cat("Statistics summary:", file=fh_out$stats_file, append=F, sep="\n")
@@ -149,7 +149,7 @@ createReport = function(txt_folder, yaml_obj = list())
             axis.text = element_blank(), strip.text = element_blank(), legend.position="none") +
       ggtitle("PAR: parameters") +
       geom_text(data = data.frame(variable=0, ypos=-mid-2, page=0), label = paste(fasta_files, collapse=line_break), size=2, hjust=0)
-    GPL$add(par_pl, ".pl_params")
+    rep_data$add(par_pl, "params")
     ##todo: read in mqpar.xml to get group information and ppm tolerances for all groups (parameters.txt just gives Group1)
   }
   
@@ -186,7 +186,7 @@ createReport = function(txt_folder, yaml_obj = list())
     d_smy[[1]]$fc.raw.file = factor(d_smy[[1]]$fc.raw.file, levels=unique(d_smy[[1]]$fc.raw.file), ordered=T)
     
     d_smy[[1]]$x = 1:nrow(d_smy[[1]])
-    GPL$add( 
+    p = 
       ggplot(d_smy[[1]], aes_string(y = "fc.raw.file", x = "ms.ms.identified....")) +
         geom_point(aes_string(colour = "color")) +
         geom_vline(xintercept = id_rate_bad, color=(lab_IDd)[1]) +
@@ -198,13 +198,12 @@ createReport = function(txt_folder, yaml_obj = list())
         xlim(0, max(dms, id_rate_great)*1.1) + 
         guides(color=guide_legend(title="ID class")) +
         scale_y_discrete_reverse(d_smy[[1]]$fc.raw.file, breaks = ggAxisLabels)
-    )
+    rep_data$add(p)
     ## QC measure for contamination
     qc_sm_id = d_smy[[1]][, c("raw.file", "ms.ms.identified....")]
     cname = "X030X_catMS_SM:~MS^2~ID~rate (\">" %+% id_rate_great %+% "\")"
     qc_sm_id[, cname] = qualLinThresh(qc_sm_id$ms.ms.identified.... , id_rate_great)
     QCM[["SM.MS2_ID_rate"]] = qc_sm_id[,c("raw.file", cname)]
-    
     
     ## table of files with 'bad' MS/MS id rate
     bad_id_count = sum(d_smy[[1]]$color==lab_IDd[1])
@@ -237,7 +236,7 @@ createReport = function(txt_folder, yaml_obj = list())
               axis.text = element_blank(), strip.text = element_blank(), legend.position="none") +
         ggtitle(paste0("SM: Files with '", lab_IDd[1], "' ID rate (", round(bad_id_count*100/nrow(d_smy[[1]])),"% of samples)"))
       
-      GPL$add(smbad_pl)
+      rep_data$add(smbad_pl)
     }
   }  
   
@@ -319,7 +318,7 @@ createReport = function(txt_folder, yaml_obj = list())
       return (pl)
     }
     pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 90, plotContsPG, sort_indices=F)
-    for (p in pg_plots_cont) GPL$add(p);
+    for (p in pg_plots_cont) rep_data$add(p);
     
     ##
     ## stats file
@@ -350,7 +349,7 @@ createReport = function(txt_folder, yaml_obj = list())
                           abline = param_PG_intThresh,
                            names = MAP_pg_groups)
     #for (pl in lpl) print(pl)
-    for (pl in lpl) GPL$add(pl)
+    for (pl in lpl) rep_data$add(pl)
     rm("lpl")          
     cat(int_dev.s, file=fh_out$stats_file, append=T, sep="\n")
     
@@ -391,7 +390,7 @@ createReport = function(txt_folder, yaml_obj = list())
                             abline = param_PG_intThresh,
                              names = MAP_pg_groups_LFQ)
       #for (pl in lpl) print(pl)
-      for (pl in lpl) GPL$add(pl)
+      for (pl in lpl) rep_data$add(pl)
       cat(lfq_dev.s, file=fh_out$stats_file, append=T, sep="\n")
     }
     
@@ -428,7 +427,7 @@ createReport = function(txt_folder, yaml_obj = list())
                             abline = param_PG_intThresh,
                              names = MAP_pg_groups_ITRAQ)
       #for (pl in lpl) print(pl)
-      for (pl in lpl) GPL$add(pl)
+      for (pl in lpl) rep_data$add(pl)
       cat(reprt_dev.s, file=fh_out$stats_file, append = T, sep="\n")
     }
     
@@ -457,7 +456,7 @@ createReport = function(txt_folder, yaml_obj = list())
       )[["plots"]]
       )
       #print(lpl)
-      if (!inherits(lpl, "try-error")) for (pl in lpl) GPL$add(pl);
+      if (!inherits(lpl, "try-error")) for (pl in lpl) rep_data$add(pl);
     }
     
     
@@ -560,7 +559,7 @@ createReport = function(txt_folder, yaml_obj = list())
       plotRatios = function(df_ratios, d_min, d_max, title_col)
       {
         br = c(2, 5, 10, 20);
-        GPL$add(
+        rep_data$add(
         #print(
           ggplot(data = df_ratios, aes_string(x = "x", y = "y", colour = "col")) + 
             facet_grid(col ~ ., scales = "free_y") +
@@ -704,7 +703,7 @@ createReport = function(txt_folder, yaml_obj = list())
           pl_cont = ggText("PG: Contaminants",
                            paste0("Contaminant '", ca, "' was not found in any sample.\n\nDid you use the correct database?"),
                            "red")
-          GPL$add(pl_cont)
+          rep_data$add(pl_cont)
         } else {
           plotContUser = function(datav, extra_limit) {
             #cat(paste0("CA entry is ", extra_limit, "\n"))
@@ -720,7 +719,7 @@ createReport = function(txt_folder, yaml_obj = list())
               scale_fill_discrete(name = "Method") +
               geom_hline(yintercept = extra_limit, linetype = 'dashed') +
               facet_wrap(~ section, ncol = 1, scales = "free_x")
-            GPL$add(pr)
+            rep_data$add(pr)
             #print(pr)
             return(1)
           }
@@ -772,7 +771,7 @@ createReport = function(txt_folder, yaml_obj = list())
                            sublab=paste0("RSD ", round(int_dev_pep, 1),"% (expected < 5%)\n"),
                            abline = param_EV_intThresh)
       #for (pl in lpl) print(pl)
-      for (pl in lpl) GPL$add(pl)
+      for (pl in lpl) rep_data$add(pl)
       ## QC measure for peptide intensity
       qc_pepint = medians_pep
       cname = "X003X_catPrep_EVD:~Pep~Intensity~(\">" %+% param_def_EV_intThresh %+% "\")"
@@ -812,7 +811,7 @@ createReport = function(txt_folder, yaml_obj = list())
       ddply(pgc, "block", .fun = function(x)
       {
         #print(
-        GPL$add(
+        rep_data$add(
                 ggplot(x, aes_string(x = "fc.raw.file", y = "proteinCounts", fill = "category")) +
                   geom_bar(stat = "identity", position = "stack") +
                   xlab("") +
@@ -864,7 +863,7 @@ createReport = function(txt_folder, yaml_obj = list())
           addGGtitle("EVD: Peptide ID count", gain_text) + 
           coord_flip()
         #print(p)
-        GPL$add(p)
+        rep_data$add(p)
         return (1)
       })
       
@@ -934,10 +933,10 @@ createReport = function(txt_folder, yaml_obj = list())
             pointsPutX(x_range=range(data$mid), x_section=c(0.03,0.08), y=d_evd.m.d_med_sub$median, col=d_evd.m.d_med_sub$fc.raw.file[,drop=T])
           
           #print(pl)
-          GPL$add(pl)
+          rep_data$add(pl)
         }
         for (bl in unique(d_evd.m.d$block))
-        { ## needs to be within a function, otherwise GPL$add and print() somehow have delayed eval's which confused ggplot...
+        { ## needs to be within a function, otherwise rep_data$add and print() somehow have delayed eval's which confused ggplot...
           fcn_plotPeakWidth(data = d_evd.m.d[d_evd.m.d$block==bl,])
         }
         
@@ -1001,7 +1000,7 @@ createReport = function(txt_folder, yaml_obj = list())
             
             if (nrow(d_alignQ)==0)
             { ## very unusual case: reference contains no evidence -- e.g. pull-down experiment
-              GPL$add(
+              rep_data$add(
                 ggText("EVD: RT Distance of peptides from reference after alignment", "Alignment cannot be verfied -- no data.")
               )
             } else {
@@ -1071,7 +1070,7 @@ createReport = function(txt_folder, yaml_obj = list())
                   facet_wrap(~ fc.raw.file_augment) +
                   addGGtitle("EVD: MBR - alignment", txt_subtitle)  
                 #print(pl)
-                GPL$add(pl)
+                rep_data$add(pl)
                 return(1)
               }
               ylim_g = quantile(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), probs=c(0.01,0.99), na.rm=T) * 1.1
@@ -1142,7 +1141,7 @@ createReport = function(txt_folder, yaml_obj = list())
               ggtitle("EVD: MBR - ID Transfer") + 
               facet_wrap(~sample)
             #print(pl)
-            GPL$add(pl)
+            rep_data$add(pl)
             return(1)
           }
 
@@ -1151,7 +1150,7 @@ createReport = function(txt_folder, yaml_obj = list())
           ##
           ## MBR: Tree Clustering
           ##
-          GPL$add(
+          rep_data$add(
           #print(  
             RTalignmentTree(d_evd[(d_evd$type %in% c("MULTI-MSMS")), 
                                   c("calibrated.retention.time", "fc.raw.file", col_fraction, "modified.sequence", "charge")],
@@ -1179,7 +1178,7 @@ createReport = function(txt_folder, yaml_obj = list())
               ylim(0, max(mtr.df$pc, na.rm=T)*1.1)
             #install.packages("directlabels")
             #require(directlabels)
-            GPL$add(direct.label(p_amt, list(cex=0.5, "smart.grid")))
+            rep_data$add(direct.label(p_amt, list(cex=0.5, "smart.grid")))
             #print(p_amt)
           } ## AMT 
         
@@ -1195,7 +1194,7 @@ createReport = function(txt_folder, yaml_obj = list())
       ## 
       fcChargePlot = function(d_sub)
       {
-        GPL$add(
+        rep_data$add(
           #print(
           mosaicPlot(d_sub$fc.raw.file, d_sub$charge) +
             xlab("Raw file") +
@@ -1238,7 +1237,7 @@ createReport = function(txt_folder, yaml_obj = list())
           scale_linetype_manual(values = rep_len(c("solid", "dashed"), nrOfRaws)) +
           scale_color_manual(values = brewer.pal(nrOfRaws, "Set1")) 
         #print(qp)
-        GPL$add(qp)
+        rep_data$add(qp)
         return (1)
       }
       byXflex(d_evd, d_evd$raw.file, raws_perPlot, fcRTSubset, smr_evdRT=smr_evdRT, sort_indices = FALSE)
@@ -1282,7 +1281,7 @@ createReport = function(txt_folder, yaml_obj = list())
             ggtitle("Raw files affected by wrong calibration numbers") +
             ylab("% of ID's affected") +
             xlab("")
-          GPL$add(p)
+          rep_data$add(p)
           return(1)
         }, sort_indices=F)
         affected_raw_files = de_cal_pc_pl[, 1]
@@ -1394,7 +1393,7 @@ plotPCUnCal = function(d_sub, affected_raw_files, ylim_g)
       coord_flip() +
       addGGtitle("EVD: Uncalibrated mass error", recal_message)
   #print(pl)
-  GPL$add(pl)
+  rep_data$add(pl)
   return(1)
 }
 ## some outliers can have ~5000ppm, blowing up the plot margins
@@ -1466,7 +1465,7 @@ plotPCCal = function(d_sub, affected_raw_files, ylim_g)
     pl = pl + geom_hline(yintercept = c(-param_EV_PrecursorTolPPMmainSearch, param_EV_PrecursorTolPPMmainSearch), colour="red", linetype = "longdash")  ## == vline for coord_flip
   } 
   #print(pl)
-  GPL$add(pl)
+  rep_data$add(pl)
   return (1)
 }
 ylim_g = range(na.rm=T, boxplot.stats(d_evd$mass.error..ppm.)$stats[c(1, 5)], c(-param_EV_PrecursorTolPPMmainSearch, param_EV_PrecursorTolPPMmainSearch) * 1.05)
@@ -1562,7 +1561,7 @@ plotCont = function(d_evd_sub, top5)
   head(d_sum)
   
   ## plot
-  GPL$add(
+  rep_data$add(
   #print(  
     ggplot(d_sum, aes_string(   x = "factor(fc.raw.file)",
                                 y = "s.intensity", 
@@ -1629,7 +1628,7 @@ fcnPlotOversampling = function(d_dups)
   
   #fp = colorRampPalette( brewer.pal( 6 , "Blues" ) )
   #rev(fp(length(n_unique))
-  GPL$add(
+  rep_data$add(
     #print(
     ggplot(d_dups) + 
       geom_bar(stat="identity", position="stack", aes_string(x = "fc.raw.file", y = "fraction", fill="n")) +
@@ -1724,7 +1723,7 @@ if (enabled_msms)
       scale_fill_manual(values = c(forward = "#99d594", decoy = "#ff0000")) +
       ggtitle("MSMS: Fragment mass errors per Raw file") +
       facet_wrap(~facet)
-    GPL$add(pl)
+    rep_data$add(pl)
     #print(pl)
     return(1)
   }
@@ -1794,7 +1793,7 @@ if (enabled_msms)
         scale_x_discrete_reverse(st_bin.m$fc.raw.file) +
         addGGtitle("MSMS: Missed cleavages per Raw file", msg_cont_removed)
       #print(pl)
-      GPL$add(pl)
+      rep_data$add(pl)
       return(1)
     }    
     byXflex(st_bin, st_bin$fc.raw.file, 25, fcMCRTSubset, smr_msmsMC=smr_msmsMC, sort_indices=F)
@@ -1887,7 +1886,7 @@ if (enabled_msmsscans)
         guides(color=guide_legend(title="")) +
         ggtitle("MSMSscans: TopN over RT")
       #print(pl)
-      GPL$add(pl)
+      rep_data$add(pl)
       return (1)
     }
     byXflex(DFmse, DFmse$fc.raw.file, 8, plotMaxSEinRT, sort_indices=F)
@@ -1949,7 +1948,7 @@ if (enabled_msmsscans)
         pointsPutX(x_range=range(data$rRT), x_section=c(0.03,0.08), y=DFmIITglob_sub$globalIITmedian, col=DFmIITglob_sub$fc.raw.file[,drop=T])
       
       #print(pl)
-      GPL$add(pl)
+      rep_data$add(pl)
       return (1)
     }
     byXflex(DFmIIT, DFmIIT$fc.raw.file, 8, plotIITinRT, sort_indices=F)
@@ -2003,7 +2002,7 @@ if (enabled_msmsscans)
     
     plotScanEventDiff = function(dfc.ratio)
     {
-      GPL$add(
+      rep_data$add(
         ggplot(dfc.ratio, aes_string(x = "scan.event.number", y = "n")) +
           geom_bar(stat="identity") +
           xlab("highest scan event") +
@@ -2062,7 +2061,7 @@ if (enabled_msmsscans)
       return (p)
     }
     pl = byXflex(df.ratio, df.ratio$fc.raw.file, 9, plotScanEvent, sort_indices=F)
-    for (p in pl) GPL$add(p)
+    for (p in pl) rep_data$add(p)
     
     ## QC measure for constantly identifiying peptides, irrespective of scan event number
     ## -- we weight scan events by their number of occurence
@@ -2075,63 +2074,89 @@ if (enabled_msmsscans)
 hm = getQCHeatMap(QCM, raw_file_mapping = mq$raw_file_mapping)
 #print(hm[["plot"]])
 write.table(hm[["table"]], file = fh_out$heatmap_values_file, quote= T, sep = "\t", row.names=F)
-GPL$add(hm[["plot"]], ".heatmap")
+rep_data$add(hm[["plot"]], "heatmap")
 
 ## get MQ short name mapping plot (might be NULL if no mapping was required)
-GPL$add(mq$plotNameMapping(), ".name_mapping")
+rep_data$add(mq$plotNameMapping(), "name_mapping")
 
 ##
-## plot it to PDF!
+## plot it!!!
 ##
-cat("Creating PDF ...")
-PDF_writeable = F
-# we give the user a chance to make the PDF writeable to avoid having him run the whole program again
-while(!PDF_writeable){
-  pdf_open = try(pdf(fh_out$report_file, onefile=T))
-  if (inherits(pdf_open, "try-error")) {
-    if (interactive()) {
-      invisible(readline(prompt="Opening PDF for writing failed. Make sure it's NOT opened in another program (e.g. PDF Viewer). Press [enter] to try again."))
-    } else
-    {
-      stop("Opening PDF for writing failed. Make sure it's NOT opened in another program and run PTXQC again.")
-    }
-  } else {
-    PDF_writeable=T
-  } 
-}
 
-param_name_PTXQC_PageNumbers = "PTXQC$AddPageNumbers"
+
+out_formats_supported = c("html", "plainPDF")
+
+param_name_PTXQC_OutputFormats = "PTXQC$OutputFormats"
+param_def_PTXQC_OutputFormats = out_formats_supported[2]
+param_OutputFormats = getYAML(yaml_obj, param_name_PTXQC_OutputFormats, param_def_PTXQC_OutputFormats)
+
+param_name_PTXQC_PageNumbers = "PTXQC$PlainPDF$AddPageNumbers"
 param_def_PTXQC_PageNumbers = "on"
 param_PageNumbers = getYAML(yaml_obj, param_name_PTXQC_PageNumbers, param_def_PTXQC_PageNumbers)
 
-if (param_PageNumbers == "on")
+cat("Creating Report file ...")
+
+## give the user a chance to close open reports which are currently blocked for writing
+if (!wait_for_writable(fh_out$report_file))
 {
-  printWithPage = function(gg_obj, page_nr, filename = fh_out$report_file)
-  {
-    filename = basename(filename)
-    printWithFooter(gg_obj, bottom_left = filename, bottom_right = page_nr)
-  }
-} else {
-  ## no page number and filename at bottom of each page
-  printWithPage = function(gg_obj, page_nr, filename = fh_out$report_file)
-  {
-    printWithFooter(gg_obj)
-  }
+  stop("Target file not writable")
 }
 
-printWithPage(GPL$get(".pl_params"), "p. 1")    # parameters
-printWithPage(GPL$get(".name_mapping"), "p. 2") # short file mapping (if required)
-printWithPage(GPL$get(".heatmap"), "p. 3")      # summary heatmap
-GPL_lst = GPL$getList()
-pc = 4; ## subsequent pages start at #4
-for (idx in sort(names(GPL_lst)))
+
+
+#
+#param_OutputFormats = "html pdf"
+#
+out_formats = unlist(strsplit(param_OutputFormats, "[ ,]+"))
+out_formats
+out_format_requested = out_formats_supported[match(out_formats, out_formats_supported)]
+if (any(is.na(out_format_requested)))
 {
-  if (grepl("^\\.", idx)) next;
-  printWithPage(GPL_lst[[idx]], paste("p.", pc))
-  pc= pc + 1
+  stop("Output format(s) not supported: '", paste(out_formats[is.na(out_format_requested)], collapse="', '"), "'")
 }
-dev.off();
-cat(" done\n")
+
+if ("html" %in% out_format_requested)
+{
+  #template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
+  #knit2html(template, output = paste0(fh_out$report_file, ".html"))
+  template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
+  template
+  ## Rmarkdown: convert to Markdown, and then to HTML or PDF...
+  render(template, output_file = paste0(fh_out$report_file, ".html"))
+  ##render(template, output_file = paste0(fh_out$report_file, ".pdf"))
+}
+
+  
+if ("plainPDF" %in% out_format_requested)
+{
+  if (param_PageNumbers == "on")
+  {
+    printWithPage = function(gg_obj, page_nr, filename = fh_out$report_file)
+    {
+      filename = basename(filename)
+      printWithFooter(gg_obj, bottom_left = filename, bottom_right = page_nr)
+    }
+  } else {
+    ## no page number and filename at bottom of each page
+    printWithPage = function(gg_obj, page_nr, filename = fh_out$report_file)
+    {
+      print(gg_obj)
+    }
+  }
+  pdf(paste0(fh_out$report_file, ".pdf"))
+  printWithPage(rep_data$get("params"), "p. 1")       # parameters
+  printWithPage(rep_data$get("name_mapping"), "p. 2") # short file mapping
+  printWithPage(rep_data$get("heatmap"), "p. 3")      # summary heatmap
+  GPL_lst = rep_data$get("metric")
+  pc = 4; ## subsequent pages start at #4
+  for (idx in sort(names(GPL_lst)))
+  {
+    printWithPage(GPL_lst[[idx]], paste("p.", pc))
+    pc = pc + 1
+  }
+  dev.off();
+  cat(" done\n")
+}
 
 ## save plot object (for easier access, in case someone wants high-res plots)
 ## (...disabled for now until concrete use case pops up)
@@ -2145,7 +2170,7 @@ writeYAML(fh_out$yaml_file, yaml_obj)
 ## write sorting of filenames
 mq$writeMappingFile(fh_out$filename_sorting)
 
-cat(paste("Report file created at\n\n    ", fh_out$report_file, "\n\n", sep=""))
+cat(paste("Report file created at\n\n    ", fh_out$report_file, ".*\n\n", sep=""))
 cat(paste0("\n\nTime elapsed: ", round(as.double(Sys.time() - time_start, units="mins"), 1), " min\n\n"))
 
 ## return path to PDF report and YAML config, etc

@@ -18,11 +18,11 @@ Imports:
     proto,
     RColorBrewer,
     reshape2,
+    rmarkdown,
     seqinr,
     yaml
 Suggests: 
     knitr (>= 1.10),
-    rmarkdown,
     testthat
 VignetteBuilder: knitr
 License: file LICENSE

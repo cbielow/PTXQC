@@ -815,8 +815,8 @@ getReportFilenames = function(txt_folder)
   R_plots_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_plots.Rdata")
   filename_sorting = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_filename_sort.txt")
   stats_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_stats.txt")
-  report_file_simple   = paste0(txt_folder, .Platform$file.sep, "report_", report_version, ".pdf")
-  report_file_extended = paste0(txt_folder, .Platform$file.sep, "report_", report_version, extra_folderRef, ".pdf")
+  report_file_simple   = paste0(txt_folder, .Platform$file.sep, "report_", report_version)
+  report_file_extended = paste0(report_file_simple, extra_folderRef)
   
   fh = list(yaml_file = yaml_file,
             heatmap_values_file = heatmap_values_file, 
@@ -907,4 +907,46 @@ getProteinAndPeptideCounts = function(d_evidence) {
   return (prot_pep_counts)
 }
 
-
+#'
+#' Check if a file is writable and blocks an interactive session, waiting for user input.
+#'
+#' This functions gives the user a chance to make the output file writeable before a write attempt
+#' is actually made by R to avoid having run the whole program again upon write failure.
+#'
+#' Note: The file will not be overwritten or changed by this function.
+#' 
+#' @param filename The file to test for writable
+#' @param prompt_text If not writable, show this prompt text to the user
+#' @param abort_answer If the user enters this string into the prompt, this function will stop()
+#'
+wait_for_writable = function(filename,
+                             prompt_text = paste0("The file '", filename, "' is not writable. Please close all applications using this file. Press '", abort_answer, "' to abort!"),
+                             abort_answer = "n")
+{
+  while(TRUE)
+  {
+    is_writeable = try({
+                       f = file(filename, open="a"); ## test for append, which will not overwrite the file
+                       close(f)
+                       }, silent = T
+                       )
+                       
+    if (inherits(is_writeable, "try-error")) {
+      if (interactive()) {
+        r = invisible(readline(prompt = prompt_text))
+        if (r == abort_answer)
+        { ## manual abort by user
+          return (FALSE)
+        }
+      } else
+      { ## not writable and non-interactive .. we cannot wait
+        return(FALSE)  
+      }
+    } else {
+      return (TRUE)
+    }
+  }
+  
+  ## unreachable
+  return (FALSE)
+}
