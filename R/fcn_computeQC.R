@@ -1525,9 +1525,8 @@ cont.top5.names = names(cont.top.sort)[1:5]
 plotCont = function(d_evd_sub, top5) 
 { 
   #top5 = cont.top5.names
-  #d_evd_sub = d_evd[, c("intensity", "pname", "fc.raw.file", "contaminant", "proteins", "protein.names")]
-  #head(d_evd_sub)
-  #dd <<- d_evd_sub
+  if (is.null(top5)) stop("Function plotCont() called with invalid argument. Please report this bug.")
+  
   intensity = NULL ## to make R CHECK happy...
   d_evd.cont.only_sub = d_evd_sub[d_evd_sub$contaminant,]
   ## rewrite prot names, and subsume 6th and below as 'other'
@@ -1585,14 +1584,24 @@ plotCont = function(d_evd_sub, top5)
   return (1)  
 }
 
-byXflex(d_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices=F, plotCont, top5=cont.top5.names)
+if (is.null(top5))
+{
+  pl_cont = ggText("EVD: Contaminant per Raw file",
+                   paste0("No contaminants found in any sample.\n\nIncorporating contaminants during search is highly recommended!"),
+                   "red")
+  rep_data$add(pl_cont)  
+} else {
+  byXflex(d_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices=F, plotCont, top5=cont.top5.names)
+}
 
 ## QC measure for contamination
 qc_contaminants = ddply(d_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
-                        function(x) data.frame("X001X_catPrep_EVD:~Contaminants" =
-                                                 1-qualLinThresh(sum(as.numeric(x$intensity[x$contaminant]), na.rm=T)/
-                                                                   sum(as.numeric(x$intensity), na.rm=T)), 
-                                               check.names = F))
+                        function(x) {
+                          v = ifelse(is.null(top5), 
+                                     HEATMAP_NA_VALUE, ## use NA in heatmap if there are no contaminants
+                                     1-qualLinThresh(sum(as.numeric(x$intensity[x$contaminant]), na.rm=T)/
+                                                       sum(as.numeric(x$intensity), na.rm=T)))
+                          data.frame("X001X_catPrep_EVD:~Contaminants" = v, check.names = F)})
 QCM[["EVD.Contaminants"]] = qc_contaminants
 
 }
