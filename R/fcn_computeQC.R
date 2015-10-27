@@ -1522,7 +1522,7 @@ cont.top.sort = sort(cont.top, decreasing=T)
 cont.top5.names = names(cont.top.sort)[1:5]
 
 
-plotCont = function(d_evd_sub, top5) 
+plotCont = function(d_evd_sub, top5=cont.top5.names) 
 { 
   #top5 = cont.top5.names
   if (is.null(top5)) stop("Function plotCont() called with invalid argument. Please report this bug.")
@@ -1584,7 +1584,7 @@ plotCont = function(d_evd_sub, top5)
   return (1)  
 }
 
-if (is.null(top5))
+if (is.null(cont.top5.names))
 {
   pl_cont = ggText("EVD: Contaminant per Raw file",
                    paste0("No contaminants found in any sample.\n\nIncorporating contaminants during search is highly recommended!"),
@@ -1597,7 +1597,7 @@ if (is.null(top5))
 ## QC measure for contamination
 qc_contaminants = ddply(d_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
                         function(x) {
-                          v = ifelse(is.null(top5), 
+                          v = ifelse(is.null(cont.top5.names), 
                                      HEATMAP_NA_VALUE, ## use NA in heatmap if there are no contaminants
                                      1-qualLinThresh(sum(as.numeric(x$intensity[x$contaminant]), na.rm=T)/
                                                        sum(as.numeric(x$intensity), na.rm=T)))
