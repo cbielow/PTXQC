@@ -1584,7 +1584,7 @@ plotCont = function(d_evd_sub, top5=cont.top5.names)
   return (1)  
 }
 
-if (is.null(top5))
+if (is.null(cont.top5.names))
 {
   pl_cont = ggText("EVD: Contaminant per Raw file",
                    paste0("No contaminants found in any sample.\n\nIncorporating contaminants during search is highly recommended!"),
