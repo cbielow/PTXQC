@@ -21,7 +21,7 @@ A data.frame with one row per Raw file and
 Sometimes, MQ split a feature into 2 or more if the chromatograpic conditions are not optimal and there
 is a drop in RT intensity.
 If both features contain successful MS/MS scans, we will find the same peptide twice (with slightly different RT)
-in the same charge state. This constitutes a natively split peak and is rare (95% of all peaks are unique).
+in the same charge state. This constitutes a natively split peak and is rare (95% of all genuine peaks are unique).
 }
 \details{
 If Match-between-runs is used and the RT alignment is not perfect, then a peptide might be inferred at a wrong
@@ -32,5 +32,8 @@ and thus the intensity is random.
 To find by how much these peak pairs differ in RT, use idTransferCheck() and inMatchWindow().
 
 Required columns are 'match.time.difference', 'fc.raw.file', 'modified.sequence', 'charge', 'type'.
+
+Note that this function must be given MS/MS identifications of type "MULTI-MSMS" and "MSMS-MATCH".
+It will stop() otherwise.
 }
 

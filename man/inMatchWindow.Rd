@@ -2,7 +2,7 @@
 % Please edit documentation in R/fcn_MQalign.R
 \name{inMatchWindow}
 \alias{inMatchWindow}
-\title{Compute the fraction of 3D-peak pairs per Raw file which have an acceptable RT difference after alignment}
+\title{For grouped peaks: separate them into in-width vs. out-width class.}
 \usage{
 inMatchWindow(data, df.allowed.deltaRT)
 }
@@ -15,7 +15,9 @@ inMatchWindow(data, df.allowed.deltaRT)
 A data.frame with one row for each raw.file and columns 'raw.file' and score 'withinRT' (0-1)
 }
 \description{
-Using the result from 'idTransferCheck()', compute the fraction of pairs which are within a certain RT tolerance.
+Looking at groups only: Compute the fraction of 3D-peak pair groups per Raw file which
+have an acceptable RT difference after alignment using the result from 'idTransferCheck()',
+i.e. compute the fraction of groups which are within a certain RT tolerance.
 }
 \details{
 Returned value is between 0 (bad) and 1 (all within tolerance).
