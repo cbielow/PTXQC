@@ -1,9 +1,9 @@
 
 ### Examples
 
-PTXQC will provide you with a report in PDF format, summarizing the quality of your data.
+PTXQC will provide you with a report in PDF/HTML format, summarizing the quality of your data.
 
-The first page in the PDF will be a summary of Maxquant parameters (i.e. which FASTA files were used, was Match-between-runs activated etc...).
+The first page in the PDF will be a summary of MaxQuant parameters (i.e. which FASTA files were used, was Match-between-runs activated etc...).
 
 The second page is an overview heatmap.
 The screenshots given here, a from a rather small run of just 5 files. You can easily analyse a study with more than 100 files, but the report will get bigger :)
@@ -20,6 +20,7 @@ Also, you could check how a new LC gradient influences the identifications over 
 
 Find the full report here [Dataset2_5files_report_v0.61.0-100min.pdf].
 
+See the package vignettes for documentation on how to create and customize a report.
 
   [Dataset2_5files_report_v0.61.0-100min.pdf]: Dataset2_5files_report_v0.61.0-100min.pdf
 
