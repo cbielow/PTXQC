@@ -13,6 +13,8 @@ vignette: >
 
 PTXQC generates quality control reports for [MaxQuant] results.
 
+## Input
+
 When a full report is generated, PTXQC requires the following **input files**:
   
   - parameters.txt
@@ -32,5 +34,11 @@ vignette("PTXQC-CustomizeReport", package = "PTXQC")
 ```
 for details.
 
+## Output
+
+By default PTXQC will generate a report in **PDF** format.
+
+We are currently adding support for a more interactive **HTML** report. To enable HTML output,
+just set it in the YAML config file (see above for the vignette hint on report customization).
 
   [MaxQuant]: http://www.maxquant.org

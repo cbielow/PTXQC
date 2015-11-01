@@ -1,8 +1,8 @@
 Package: PTXQC
 Type: Package
 Title: Quality Report Generation for MaxQuant Results
-Version: 0.69.0
-Date: 2015-10-20
+Version: 0.69.1
+Date: 2015-10-29
 Author: Chris Bielow <chris.bielow@mdc-berlin.de> 
 Maintainer: Chris Bielow <chris.bielow@mdc-berlin.de>
 Description: An R-package to generate comprehensive quality control reports from MaxQuant txt-folders.

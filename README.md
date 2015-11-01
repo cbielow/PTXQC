@@ -21,6 +21,26 @@ PTXQC
   - MaxQuant users (no knowledge of R required)
   - bioinformaticians (who want to contribute or customize)
 
+### Documentation
+  
+Besides this documentation on GitHub, the package vignettes
+of PTXQC will give you valuable information. *After* the package is installed (see below),
+you can browse the vignettes using either of these commands within R:
+
+    help(package="PTXQC")
+    browseVignettes(package = 'PTXQC')
+  
+If you do not want to wait that long, have a look at the ['vignettes' subfolder] [3].
+The top part contains some technical gibberish, but the rest is identical to the
+vignettes you would see in R.
+
+You will find documentation on
+  - Input and Output
+  - Report customization
+  - (for MaxQuant users) Usage of Drag'n'drop
+  - (for R users) code examples in R
+  - ...
+  
 ### Installation
 
 **If you want to generate QC reports without actually getting involved in R:**
@@ -29,7 +49,7 @@ We offer a Batch-file based Drag'n'drop mechanism to trigger PTXQC on any MaxQua
 This only works for Windows (not Linux or MacOS) at the moment -- but you have a Windows anyway to run MaxQuant, right?!
 See [drag'n'drop] [1] for details. It takes 10 minutes and you are done!
 
-**If you just want the package to use and maybe even modify it:**
+**If you just want the package to use (and maybe even modify) it:**
 
 Direct installation from GitHub requires the 'devtools' package. The following lines will add PTXQC on a fresh R installation:
 
@@ -77,3 +97,4 @@ For more, see the ['inst/examples' subfolder] [2].
   
   [1]: https://github.com/cbielow/PTXQC/tree/master/inst/dragNdrop
   [2]: https://github.com/cbielow/PTXQC/tree/master/inst/examples
+  [3]: https://github.com/cbielow/PTXQC/tree/master/vignettes
