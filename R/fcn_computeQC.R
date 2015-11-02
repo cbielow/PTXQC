@@ -658,7 +658,7 @@ createReport = function(txt_folder, yaml_obj = list())
         
         if (enabled_proteingroups)
         {
-          pg_idx = grep(ca, d_pg$fasta.headers, ignore.case = T)
+          pg_idx = d_pg$id[grep(ca, d_pg$fasta.headers, ignore.case = T)]
         } else {
           ## fail hard; we could hack around this (e.g. by loading fasta headers from evidence.txt), but it
           ## wastes a lot of memory and time
