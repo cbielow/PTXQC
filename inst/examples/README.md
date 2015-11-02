@@ -3,6 +3,14 @@
 
 PTXQC will provide you with a report in PDF/HTML format, summarizing the quality of your data.
 
+Please refer to the publication (currently under review; link is coming soon) for details on which quality metrics are available and how they are scored.
+
+## Obtaining example data
+If you want to generate a report yourself, example input data can be found on the PRIDE repository under the following accession numbers: [PXD003133] [1]. This data corresponds to the MaxQuant data used in the publication.
+The 'PTXQC-Basic_Guide_for_R_users' vignette has R code snippets to automate this. If you are not an R person and have Windows as operating system, just download the zip files from the PRIDE link above, and run PTXQC via drag'n'drop (as described in the 'PTXQC-DragNDrop' vignette).
+
+## Report Layout
+
 The first page in the PDF will be a summary of MaxQuant parameters (i.e. which FASTA files were used, was Match-between-runs activated etc...).
 
 The second page is an overview heatmap.
@@ -24,5 +32,7 @@ See the package vignettes for documentation on how to create and customize a rep
 
   [Dataset2_5files_report_v0.61.0-100min.pdf]: Dataset2_5files_report_v0.61.0-100min.pdf
 
+  
+  [1] http://www.ebi.ac.uk/pride/archive/projects/PXD003133
 
 

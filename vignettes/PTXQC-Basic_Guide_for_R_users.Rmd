@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Basic R-Usage Guide for PTXQC"
 author: "Chris Bielow <chris.bielow@mdc-berlin.de>"
 date: '`r Sys.Date()`'
@@ -42,7 +42,16 @@ require(directlabels)
 
 ## specify a path to a MaxQuant txt folder
 ## Note: This folder needs to be complete (see 'vignette("PTXQC-InputData", package = "PTXQC")')
-txt_folder = "c:/Proteomics/MouseLiver/combined/txt"
+if (1) {
+  ## we will use an example dataset from PRIDE (dataset 2 of the PTXQC publication)
+  local_zip = tempfile(fileext=".zip")
+  download.file("ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2015/11/PXD003133/txt_20min.zip", destfile = local_zip)
+  unzip(local_zip, exdir = tempdir()) ## extracts content
+  txt_folder = paste0(tempdir(),"\\txt_20min")
+} else {
+  ## if you have local MaxQuant output, just use it
+  txt_folder = "c:/Proteomics/MouseLiver/combined/txt"
+}
 
 r = createReport(txt_folder)
 
@@ -76,7 +85,16 @@ require(directlabels)
 
 ## specify a path to a MaxQuant txt folder
 ## Note: This folder can be incomplete, depending on your YAML config
-txt_folder = "c:/Proteomics/MouseLiver/combined/txt"
+if (1) {
+  ## we will use an example dataset from PRIDE (dataset 2 of the PTXQC publication)
+  local_zip = tempfile(fileext=".zip")
+  download.file("ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2015/11/PXD003133/txt_20min.zip", destfile = local_zip)
+  unzip(local_zip, exdir = tempdir()) ## extracts content
+  txt_folder = paste0(tempdir(),"\\txt_20min")
+} else {
+  ## if you have local MaxQuant output, just use it
+  txt_folder = "c:/Proteomics/MouseLiver/combined/txt"
+}
 
 ## use a YAML config inside the target directory if present
 fh_out = getReportFilenames(txt_folder)
