@@ -1,14 +1,13 @@
-
-setClass("QCMetric", representation(plotObjs = "list", name = "character"), 
-         prototype(name = NA_character_, plotObjs = list()))
-asMarkUp <- function(object) 0
-setGeneric("asMarkUp")
-setMethod("asMarkUp", signature(object = "QCMetric"), function(object) {
-  ## meant for ggplot objects
-  print(object@plotObjs)
-})
-m = new("QCMetric", name = "MS/MS")
-m@plotObjs
+#setClass("QCMetric", representation(plotObjs = "list", name = "character"), 
+#         prototype(name = NA_character_, plotObjs = list()))
+#asMarkUp <- function(object) 0
+#setGeneric("asMarkUp")
+#setMethod("asMarkUp", signature(object = "QCMetric"), function(object) {
+#  ## meant for ggplot objects
+#  print(object@plotObjs)
+#})
+#m = new("QCMetric", name = "MS/MS")
+#m@plotObjs
 
 
 
