@@ -2,7 +2,7 @@
 % Please edit documentation in R/fcn_misc.R
 \name{grepv}
 \alias{grepv}
-\title{Grep with values returned instead of indices}
+\title{Grep with values returned instead of indices.}
 \usage{
 grepv(reg, data, ...)
 }
@@ -17,7 +17,8 @@ grepv(reg, data, ...)
 values of data which matched the regex
 }
 \description{
-Grep with values returned instead of indices
+The parameter 'value' should not be passed to this function since it is
+passed internally already.
 }
 \examples{
 grepv("x", c("abc", "xyz"))
