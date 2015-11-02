@@ -491,7 +491,11 @@ assignBlocks = function(values, set_size = 5, sort_values = TRUE)
 
 
 
-#' Grep with values returned instead of indices
+#'
+#' Grep with values returned instead of indices.
+#' 
+#' The parameter 'value' should not be passed to this function since it is 
+#' passed internally already.
 #' 
 #' @param reg  regex param
 #' @param data container 
@@ -507,8 +511,7 @@ assignBlocks = function(values, set_size = 5, sort_values = TRUE)
 #'    
 grepv = function(reg, data, ...)
 {
-  idx = grep(reg, data, ...)
-  return (data[idx])  
+  return (grep(reg, data, value = TRUE, ...))  
 }
 
 #' paste with tab as separator
@@ -794,6 +797,7 @@ getAbundanceClass = function(x) {
 #' @return List of output file names (just names :))
 #' 
 #' @export
+#' 
 getReportFilenames = function(txt_folder)
 {
   ## package version: added to output filename
