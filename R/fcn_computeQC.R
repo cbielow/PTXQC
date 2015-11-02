@@ -956,21 +956,14 @@ createReport = function(txt_folder, yaml_obj = list())
       ##
       if ("retention.time.calibration" %in% colnames(d_evd))
       {
-        MBR_warning = ""
-        if (quantile(abs(d_evd$retention.time.calibration), probs = 0.99) < 1e-4)
-        { ## Probably MBR was switched off
-          ## Alternatively, we could use 'd_evd$match.time.difference', but its not guaranteed that the user has activated it
-          MBR_warning = "Warning: MBR was off - data are (very small) MQ artifacts"  
-        }
+        ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
+        MBR_HAS_DATA = (sum(d_evd$type == "MULTI-MATCH") > 0)
         
         param_name_mbr = "File$Evidence$MatchBetweenRuns_wA"
         param_evd_mbr = getYAML(yaml_obj, param_name_mbr, "auto")
-        if (param_evd_mbr == FALSE || (nchar(MBR_warning)>0 && param_evd_mbr=="auto"))
+        if ((param_evd_mbr == FALSE) || (MBR_HAS_DATA == FALSE))
         {
-          MBR_warning_auto = ""
-          if (nchar(MBR_warning)>0) MBR_warning_auto = "Match-between-runs has no data to show."
-          #plot(0:100, 0:100, type="n", axes=F, xlab="",ylab="")
-          #mtext(line=-2, paste0("'Match-between-runs' plot is disabled.\n\nYAML variable '", param_name_mbr, "' is set to '",  param_evd_mbr,"'.\n", MBR_warning_auto))  
+          ## MBR is not evaluated
         } else
         {
           ## find reference
