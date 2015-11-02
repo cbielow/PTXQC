@@ -1,5 +1,5 @@
 
-### Examples
+# Examples
 
 PTXQC will provide you with a report in PDF/HTML format, summarizing the quality of your data.
 
@@ -33,6 +33,6 @@ See the package vignettes for documentation on how to create and customize a rep
   [Dataset2_5files_report_v0.61.0-100min.pdf]: Dataset2_5files_report_v0.61.0-100min.pdf
 
   
-  [1] http://www.ebi.ac.uk/pride/archive/projects/PXD003133
+  [1]: http://www.ebi.ac.uk/pride/archive/projects/PXD003133
 
 
