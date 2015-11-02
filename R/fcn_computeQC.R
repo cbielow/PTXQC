@@ -1248,26 +1248,26 @@ createReport = function(txt_folder, yaml_obj = list())
                                                               check.names = F))
       
       
-      ##
-      ## barplots of mass error
-      ##
-      cat("EVD: Precursor Mass Error ...\n")
-      
-      ## MQ seems to mess up mass recal on some (iTRAQ/TMT) samples, by reporting ppm errors which include modifications
-      ## , thus one sees >1e5 ppm, e.g. 144.10 Da
-      ##  this affects both 'uncalibrated.mass.error..ppm.'   and
-      ##                    'mass.error..ppm.'
-      ## HOWEVER, 'uncalibrated...calibrated.m.z..ppm.' seems unaffected, but is not available in all MQ versions :(
-      ##    also, 'mass' and 'm/z' columns seem unaffected.
-      ## We cannot reconstruct mass_error[ppm] from 'm/z' and mass columns 
-      ## since 'm/z' is just too close to the theoretical value or islacking precision of the stored numbers.
-      ##
-      ## The MQ list reports one case with high ppm error (8000), where the KR.count was at fault. We cannot
-      ## reconstruct this.
-      ##
-      ## Also, MaxQuant will not report uncalibrated mass errors if the data are too sparse for a given Raw file.
-      ## Then, 'uncalibrated.mass.error..ppm.' will be 'NaN' throughout -- but weirdly, calibrated masses will be reported.
-      ##
+##
+## barplots of mass error
+##
+cat("EVD: Precursor Mass Error ...\n")
+
+## MQ seems to mess up mass recal on some (iTRAQ/TMT) samples, by reporting ppm errors which include modifications
+## , thus one sees >1e5 ppm, e.g. 144.10 Da
+##  this affects both 'uncalibrated.mass.error..ppm.'   and
+##                    'mass.error..ppm.'
+## HOWEVER, 'uncalibrated...calibrated.m.z..ppm.' seems unaffected, but is not available in all MQ versions :(
+##    also, 'mass' and 'm/z' columns seem unaffected.
+## We cannot always reconstruct mass_error[ppm] from 'm/z' and mass columns 
+## since 'm/z' is just too close to the theoretical value or islacking precision of the stored numbers.
+##
+## The MQ list reports one case with high ppm error (8000), where the KR.count was at fault. We cannot
+## reconstruct this.
+##
+## Also, MaxQuant will not report uncalibrated mass errors if the data are too sparse for a given Raw file.
+## Then, 'uncalibrated.mass.error..ppm.' will be 'NaN' throughout -- but weirdly, calibrated masses will be reported.
+##
 
 param_name_EV_PrecursorTolPPM = "File$Evidence$MQpar_firstSearchTol_num"
 param_def_EV_PrecursorTolPPM = 20
@@ -1278,6 +1278,10 @@ if (param_useMQPAR) {
     param_EV_PrecursorTolPPM = setYAML(yaml_obj, param_name_EV_PrecursorTolPPM, as.numeric(v))
   }
 }
+
+param_name_EV_PrecursorOutOfCalSD = "File$Evidence$firstSearch_outOfCalWarnSD_num"
+param_def_EV_PrecursorOutOfCalSD = 2
+param_EV_PrecursorOutOfCalSD = getYAML(yaml_obj, param_name_EV_PrecursorOutOfCalSD, param_def_EV_PrecursorOutOfCalSD)
 
 ##
 ## check for MS1-out-of-calibration (i.e. the tol-window being too small)
@@ -1298,25 +1302,57 @@ if (enabled_summary) {
 } else {
   MS1_decal_smr$ms.ms.identified.... = 0 ## upon no info: assume low IDrate
 }
-MS1_decal_smr$lowIDRate = MS1_decal_smr$ms.ms.identified.... < 1
-param_name_EV_PrecursorOutOfCalSD = "File$Evidence$firstSearch_outOfCalWarnSD_num"
-param_def_EV_PrecursorOutOfCalSD = 2
-param_EV_PrecursorOutOfCalSD = getYAML(yaml_obj, param_name_EV_PrecursorOutOfCalSD, param_def_EV_PrecursorOutOfCalSD)
-MS1_decal_smr$outOfCal = ((MS1_decal_smr$sd > param_EV_PrecursorOutOfCalSD) & MS1_decal_smr$lowIDRate) ||
-                          (MS1_decal_smr$sd > 100) ## covers the case of huge uncalibrated.mass.error..ppm. column (MQ bug)
 
+MS1_decal_smr$lowIDRate = MS1_decal_smr$ms.ms.identified.... < 1
+MS1_decal_smr$hasMassErrorBug = FALSE
+MS1_decal_smr$hasMassErrorBug_unfixable = FALSE
 recal_message = ""
-if (any(MS1_decal_smr$sd > 100)) recal_message = "MaxQuant bug -- values incorrect"
-if (any((MS1_decal_smr$sd > param_EV_PrecursorOutOfCalSD) & MS1_decal_smr$lowIDRate)) recal_message = "search tolerance too small"
+recal_message_post = ""
+## check each raw file individually (usually its just a few who are affected)
+de_cal = ddply(d_evd, "raw.file", .fun = function(x) data.frame(q = (quantile(abs(x$uncalibrated.mass.error..ppm.), probs = 0.5, na.rm=T) > 1e3)))
+if (any(de_cal$q, na.rm=T))
+{
+  recal_message = "MQ bug: data rescued"
+  recal_message_post = 'MQ bug: data cannot be rescued'
+  
+  de_cal$fc.raw.file = renameFile(de_cal$raw.file, mq$raw_file_mapping)
+  MS1_decal_smr$hasMassErrorBug[ MS1_decal_smr$raw.file %in% de_cal$raw.file[de_cal$q > 0] ] = TRUE
+  
+  ## re-compute 'uncalibrated.mass.error..ppm.' and 'mass.error..ppm.'
+  d_evd$theomz = d_evd$mass / d_evd$charge + 1.00726
+  d_evd$mass.error..ppm.2 = (d_evd$theomz - d_evd$m.z) / d_evd$theomz * 1e6
+  d_evd$uncalibrated.mass.error..ppm.2 = d_evd$mass.error..ppm.2 + d_evd$uncalibrated...calibrated.m.z..ppm.
+
+  
+  ## check if fix worked
+  de_cal2 = ddply(d_evd, "raw.file", .fun = function(x)  data.frame(q = (median(abs(x$uncalibrated.mass.error..ppm.2), na.rm=T) > 1e3)))
+  if (any(de_cal2$q))
+  { ## fix did not work
+    MS1_decal_smr$hasMassErrorBug_unfixable[ MS1_decal_smr$raw.file %in% de_cal2$raw.file[de_cal2$q] ] = TRUE
+    recal_message = "m/z recalibration bugfix applied but failed\n(there are still large numbers)"
+  }
+  
+  idx_overwrite = (d_evd$raw.file %in% de_cal$raw.file[de_cal$q > 0])
+  ## overwrite original values
+  d_evd$mass.error..ppm.[idx_overwrite] = d_evd$mass.error..ppm.2[idx_overwrite]
+  d_evd$uncalibrated.mass.error..ppm.[idx_overwrite] = d_evd$uncalibrated.mass.error..ppm.2[idx_overwrite]
+}
+
+MS1_decal_smr$outOfCal = (MS1_decal_smr$sd > param_EV_PrecursorOutOfCalSD) & MS1_decal_smr$lowIDRate & 
+                         (MS1_decal_smr$sd < 100)  ## upper bound, to distinguish from MQ bug (which has much larger SD's)
+
+## report too small search tolerance
+if (any(MS1_decal_smr$outOfCal)) recal_message = "search tolerance too small"
+
 
 ## Raw files where the mass error is obviously wrong (PSM's not substracted etc...)
-affected_raw_files = MS1_decal_smr$raw.file[MS1_decal_smr$outOfCal]
+affected_raw_files = MS1_decal_smr$raw.file[MS1_decal_smr$outOfCal | MS1_decal_smr$hasMassErrorBug]
 
 plotPCUnCal = function(d_sub, affected_raw_files, ylim_g)
 {
   d_sub$col = "default"
   if (length(affected_raw_files) > 0) d_sub$col = c("default", "MQ bug")[(d_sub$raw.file %in% affected_raw_files) + 1]
-  ## out-of-calibration Raw files:
+  ## add 'out-of-calibration' Raw files:
   ooc_raw = MS1_decal_smr$raw.file[MS1_decal_smr$outOfCal]
   d_sub$col[d_sub$raw.file %in% ooc_raw] = "out-of-search-tol"
   ## only show legend if special things happen  
@@ -1363,7 +1399,6 @@ colnames(qc_MS1deCal) = c("raw.file", "X026X_catMS_EVD:~MS~Cal-Pre~(" %+% param_
 QCM[["X026X.EVD.MS_Cal-Pre"]] = qc_MS1deCal
 
 
-
 ##
 ## post calibration
 ##
@@ -1386,12 +1421,12 @@ if (is.na(param_EV_PrecursorTolPPMmainSearch))
 plotPCCal = function(d_sub, affected_raw_files, ylim_g)
 {
   d_sub$col = "default"
-  #if (length(affected_raw_files) > 0) {
-  #  d_sub$col = c("default", "MQ bug")[(d_sub$raw.file %in% affected_raw_files) + 1]
-  #  d_sub$mass.error..ppm.[d_sub$raw.file %in% affected_raw_files] = 0
-  #  if (all(d_sub$mass.error..ppm.==0)) d_sub$mass.error..ppm.=rnorm(nrow(d_sub),sd=0.0001, mean=mean(ylim_g))
-  #}
-  ## out-of-calibration Raw files:
+  if (length(affected_raw_files) > 0) {
+    d_sub$col = c("default", "MQ bug")[(d_sub$raw.file %in% affected_raw_files) + 1]
+    d_sub$mass.error..ppm.[d_sub$raw.file %in% affected_raw_files] = 0
+    if (all(d_sub$mass.error..ppm.==0)) d_sub$mass.error..ppm.=rnorm(nrow(d_sub),sd=0.0001, mean=mean(ylim_g))
+  }
+  ## add 'out-of-calibration' Raw files:
   ooc_raw = MS1_decal_smr$raw.file[MS1_decal_smr$outOfCal]
   d_sub$col[d_sub$raw.file %in% ooc_raw] = "out-of-search-tol"
   ## only show legend if special things happen  
@@ -1406,7 +1441,7 @@ plotPCCal = function(d_sub, affected_raw_files, ylim_g)
     ylim(ylim_g) +
     scale_x_discrete_reverse(d_sub$fc.raw.file) +
     coord_flip() +
-    addGGtitle("EVD: Calibrated mass error")
+    addGGtitle("EVD: Calibrated mass error", recal_message_post)
   if (!is.na(param_EV_PrecursorTolPPMmainSearch)) {
     pl = pl + geom_hline(yintercept = c(-param_EV_PrecursorTolPPMmainSearch, param_EV_PrecursorTolPPMmainSearch), colour="red", linetype = "longdash")  ## == vline for coord_flip
   } 
@@ -1424,12 +1459,14 @@ obs_par = ddply(d_evd[, c("mass.error..ppm.", "raw.file")], "raw.file",
 qc_MS1Cal = data.frame(raw.file = obs_par$raw.file, 
                        val = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
 ## if we suspect out-of-calibration, give lowest score
-qc_MS1Cal$val[qc_MS1Cal$raw.file %in% MS1_decal_smr$raw.file[MS1_decal_smr$outOfCal]] = 0 
-## bugfix will not work for postCalibration, since values are always too low
-qc_MS1Cal$val[qc_MS1Cal$raw.file %in% affected_raw_files] = HEATMAP_NA_VALUE
+qc_MS1Cal$val[qc_MS1Cal$raw.file %in% MS1_decal_smr$raw.file[ MS1_decal_smr$outOfCal ]] = 0 
+## MQ mass bugfix will not work for postCalibration, since values are always too low
+qc_MS1Cal$val[qc_MS1Cal$raw.file %in% MS1_decal_smr$raw.file[ MS1_decal_smr$hasMassErrorBug ]] = HEATMAP_NA_VALUE
 cname = "X027X_catMS_EVD:~MS~Cal-Post"
 colnames(qc_MS1Cal)[colnames(qc_MS1Cal) == "val"] = cname
 QCM[["X027X.EVD.MS_Cal-Post"]] = qc_MS1Cal
+
+
 
 
 ## compute how well calibration worked
