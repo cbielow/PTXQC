@@ -1,6 +1,7 @@
 PTXQC
 ---------------
 
+[![Build Status](https://travis-ci.org/cbielow/PTXQC.svg?branch=master)](https://travis-ci.org/cbielow/PTXQC) 
 [![Project Stats](https://www.openhub.net/p/PTXQC/widgets/project_thin_badge.gif)](https://www.openhub.net/p/PTXQC)
 
 **This package allows users of MaxQuant to generate quality control reports in PDF format.**
