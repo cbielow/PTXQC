@@ -32,7 +32,7 @@ you can browse the vignettes using either of these commands within R:
     browseVignettes(package = 'PTXQC')
   
 If you do not want to wait that long, have a look at the ['vignettes' subfolder] [3].
-The top part contains some technical gibberish, but the rest is identical to the
+The top part contains a small table with technical gibberish, but the rest is identical to the
 vignettes you would see in R.
 
 You will find documentation on
@@ -104,3 +104,5 @@ For example input data and full reports, see the ['inst/examples' subfolder] [2]
 ### Citation
 
 The paper is currently under review. A DOI and link will be provided here (soon?)! :)
+
+The data used therein is available in the ['inst/examples' subfolder] [2].

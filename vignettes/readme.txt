@@ -1,10 +1,12 @@
-This folder contains the package vignettes in Markdown (.md files).
+This folder contains the package vignettes in Markdown (.Rmd files).
 
 When the package is build, R/knitr will automatically create 'proper' vignette files,
 which end up as HTML in PTXQC/doc/*.html.
 
+On GitHub, you can just open any of the vignettes and they will be displayed as HTML in your browser.
 
-Thoughts on GitHub:
+
+Technical thoughts on GitHub:
 
 Since this package is also hosted on GitHub, vignettes can be directly viewed 'raw' by just browsing to this directory (PTXQC/vignettes).
 GitHub has a nice feature, which renders the Markdown header as table (instead of displaying the YAML text or ugly LaTex commands).
