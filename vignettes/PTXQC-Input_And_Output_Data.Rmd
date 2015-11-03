@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Input/Output data for PTXQC"
 author: "Chris Bielow <chris.bielow@mdc-berlin.de>"
 date: '`r Sys.Date()`'
@@ -30,7 +30,7 @@ These files can be found in the `<baseDir>/combined/txt` folder after MaxQuant a
 Here, `<baseDir>` is your main MaxQuant project folder containing your Raw files.
 
 If you are not interested in the full report or only a subset of these files are available,
-PTXQC can be configured to look only at some of them. See
+PTXQC can be configured to look only at some of them. See the [PTX-CustomizeReport] [Ref_VignCust] vignette
 ```{r, eval=FALSE}
 vignette("PTXQC-CustomizeReport", package = "PTXQC")
 ```
@@ -38,9 +38,21 @@ for details.
 
 ## Output
 
-By default PTXQC will generate a report in **PDF** format.
+By default, PTXQC will generate a report in **PDF** format.
 
 We are currently adding support for a more interactive **HTML** report. To enable HTML output,
 just set it in the YAML config file (see above for the vignette hint on report customization).
 
+Further output files (with the same prefix name as the PDF report), include
+
+  - `report_vXXX_heatmap.txt` (values of the overview heatmap)
+  - `report_vXXX_filename_sort.txt` (customize the order and naming of Raw files in the report)
+  - `report_v0.69.1.yaml` (the configuration file)
+  
+The YAML configuration file is created the first time you run PTXQC on a txt-folder. Customize it as you see fit.
+
+Read more about `report_vXXX_filename_sort.txt` and `report_v0.69.1.yaml` in the [PTX-CustomizeReport] [Ref_VignCust] vignette.
+  
+
   [MaxQuant]: http://www.maxquant.org
+  [Ref_VignCust]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-CustomizeReport.Rmd

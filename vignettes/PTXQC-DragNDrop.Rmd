@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Drag'n'drop Usage Guide for PTXQC"
 author: "Chris Bielow <chris.bielow@mdc-berlin.de>"
 date: '`r Sys.Date()`'
@@ -24,16 +24,16 @@ vignette: >
   - open a Windows Explorer and find your MaxQuant txt-output folder
   - open another Windows Explorer window and navigate to the (network) folder where the QC software
     was copied to during installation, e.g. `P:\Chris\Exchange\QC` (where drive P could be some network share).
-  -	drag’n’drop the txt folder onto `createQC_dragNdrop.bat` (you can also drag any file within the
+  - drag'n'drop the txt folder onto `createQC_dragNdrop.bat` (you can also drag any file within the
     txt folder, e.g. `evidence.txt`)
 
 <img src="DragNDrop_Action.png" width="600" alt="Drag'n'drop action" />
 
- - A console will pop up and show stuff. Wait... if all went well, one of the last lines is “Time elapsed: … min”
+ - A console will pop up and show stuff. Wait... if all went well, one of the last lines is `Time elapsed: ... min`
    and a pdf report within your txt folder. It has a version and a folder name attached to it
    (e.g. `report_v0.63_diabetes.pdf`). The version number will increase every time there is an 
    update in PTXQC (big change in version number means big change in functionality). 
-   The name is taken from the path where the txt is located in – it helps you to distinguish
+   The name is taken from the path where the txt is located in - it helps you to distinguish
    report files when they are open in a PDF viewer or copied somewhere else. 
    The console window will stay up until you press a key.
 
@@ -48,7 +48,7 @@ There are two ways to customize parameters for a report:
     this report file will be used. Thus, if you already have txt-folder containing a report pdf
     plus the `report_*.yaml` inside, just edit the YAML file and re-run 
     PTXQC using onto `createQC_dragNdrop.bat`.
-  -	If your txt-folder has not been analyzed by PTXQC before OR you want to try another configuration, 
+  - If your txt-folder has not been analysed by PTXQC before OR you want to try another configuration, 
     then you can use the `createQC_dragNdrop_withYAML.bat` to run PTXQC with a custom 
     configuration which you specified before. This .bat file expects a YAML configuration file
     right next to the .bat file. This file you need to provide. But no worries. One such file 

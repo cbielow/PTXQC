@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Customizing PTXQC reports"
 author: "Chris Bielow <chris.bielow@mdc-berlin.de>"
 date: '`r Sys.Date()`'
@@ -39,19 +39,20 @@ Alternatively, you can set the MaxQuant parameters manually in the YAML file (se
 
 ## More customization using the YAML config file
 
-A configuration file allows you to enable/disable certain plots, and to modify most target thresholds used for the scoring metrics and within plots, e.g. the number of proteins you expect. This will differ by platform and instrument – so adapt it to your needs. The defaults are meant for a Thermo Orbitrap Velos, a 4h LC gradient for a complex matrix (e.g. human cells).
+A configuration file allows you to enable/disable certain plots, and to modify most target thresholds used for the scoring metrics and within plots, e.g. the number of proteins you expect. This will differ by platform and instrument; so adapt it to your needs. The defaults are meant for a Thermo Orbitrap Velos, a 4h LC gradient for a complex matrix (e.g. human cells).
 Disabling certain report sections will decrease report size and hide metrics which you may not need. The time required to create the report will also reduce, but usually this is not a bottleneck.
 
 PTXQC uses YAML format for its parameter configuration. YAML is short for 'YAML Aint Markup Language'; yes, it's an endless recursion.
-There is a nice tutorial for YAML at http://rhnh.net/2011/01/31/yaml-tutorial -- or just Google to find more.
+There is a nice tutorial for YAML at [http://rhnh.net/2011/01/31/yaml-tutorial] -- or just Google to find more.
 Also, any PTXQC YAML file will start with a comment section which explains the format.
 
 Before you run PTXQC, look at the `report_*.yaml` file within your txt folder. If you did not run PTXQC 
 before on this folder, you can take any other YAML config file or run PTXQC with default settings
 (see above) to create such a file.
-Edit the YAML file as you desire using a text editor of your choice (e.g. Notepad++). Each YAML file has a leading comment section which will describe the basics of how YAML looks like and what you should/not change.
+Edit the YAML file as you desire using a text editor of your choice (e.g. Notepad++). **Each YAML file has a leading comment section which will describe the basics of how YAML looks like and what you should/not change.**
 
-The YAML file will look similar to this:
+The YAML shown below is shortened and lacks parts of the introductory comment section.
+But in general, the YAML file will look like this:
 
     # This is a configuration file for PTXQC reporting.
     # One such file is generated automatically every time a report PDF is created.
@@ -90,9 +91,15 @@ Should this shortening not reach a predefined threshold of 10 characters in leng
 If you do not want that, you can either:
 
   - Increase this length threshold in the YAML config to force usage of the shortened versions. 
-    But be advised that using long filenames might result in ugly axis with overlapping text etc…
-  -	Use a manual mapping table: a file named `report_vXXX_filename_sort.txt` will be created in your txt-folder,
-    which contains the file name mapping that is used. You can edit this file with any text editor
+    But be advised that using long filenames might result in ugly axis with overlapping text etc.
+  - Use a manual mapping table: a file named `report_vXXX_filename_sort.txt` will be created in your txt-folder,
+    which contains the file name mapping that PTXQC computed. You can edit this file with any text editor
     and upon running PTXQC again, this new mapping will be applied.
 
-    
+## Reordering Raw files in the report
+
+By default, the order of Raw files in the report is _identical_ to the order specified within MaxQuant.
+
+You already read about the `report_vXXX_filename_sort.txt` file above.
+It can not only be used to assign custom names, but also to re-arrange the order in which Raw files are shown in the plots and heatmap.
+Open it with a text editor and simply rearrange the rows in the file. Easy!    
