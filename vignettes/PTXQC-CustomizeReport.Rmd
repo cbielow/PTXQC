@@ -2,12 +2,16 @@
 title: "Customizing PTXQC reports"
 author: "Chris Bielow <chris.bielow@mdc-berlin.de>"
 date: '`r Sys.Date()`'
-output: rmarkdown::html_vignette
+output:
+  html_document: default
+  pdf_document: null
 vignette: >
   %\VignetteIndexEntry{Customizing PTXQC reports}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
+
+# Customizing PTXQC reports
 
 Reports rely on a small set of parameters, which do two things:
 
