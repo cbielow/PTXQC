@@ -93,9 +93,14 @@ An overview chart at the beginning of the report will give you a first impressio
 <img src="./inst/examples/example_heatmap.png?raw=true" width="500" /><br>
 Detailed plots can be found in the remainder of each report.
 
-For more, see the ['inst/examples' subfolder] [2].
+For example input data and full reports, see the ['inst/examples' subfolder] [2].
 
   
   [1]: https://github.com/cbielow/PTXQC/tree/master/inst/dragNdrop
   [2]: https://github.com/cbielow/PTXQC/tree/master/inst/examples
   [3]: https://github.com/cbielow/PTXQC/tree/master/vignettes
+  
+  
+### Citation
+
+The paper is currently under review. A DOI and link will be provided here (soon?)! :)
