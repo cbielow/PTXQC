@@ -10,7 +10,7 @@ If you want to generate a report yourself, example input data can be found on th
 following accession numbers: [PXD003133 (MBR)] [1], [PXD003134 (Myco)] [2], and [PXD000427 (TMT)] [3].
 This data corresponds to the MaxQuant data used in the publication.
 
-The 'PTXQC-Basic_Guide_for_R_users' vignette has R code snippets to automatically download the data. If you are not an R person and have Windows as operating system, just download the zip files from the PRIDE link above, and run PTXQC via drag'n'drop (as described in the 'PTXQC-DragNDrop' vignette).
+The [PTXQC-Basic_Guide_for_R_users] [4] vignette has R code snippets to automatically download the data. If you are not an R person and have Windows as operating system, just download the zip files from the PRIDE link above, and run PTXQC via drag'n'drop (as described in the [PTXQC-DragNDrop] [5] vignette).
 
 ## Report Layout
 
@@ -39,3 +39,5 @@ See the package vignettes for documentation on how to create and customize a rep
   [1]: http://www.ebi.ac.uk/pride/archive/projects/PXD003133
   [2]: http://www.ebi.ac.uk/pride/archive/projects/PXD003134
   [3]: http://www.ebi.ac.uk/pride/archive/projects/PXD000427
+  [4]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-Basic_Guide_for_R_users.Rmd
+  [5]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-DragNDrop.Rmd
