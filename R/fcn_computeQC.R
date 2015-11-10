@@ -1356,7 +1356,7 @@ if (any(de_cal$q, na.rm=T))
   
   ## check if fix worked
   de_cal2 = ddply(d_evd, "raw.file", .fun = function(x)  data.frame(q = (median(abs(x$uncalibrated.mass.error..ppm.2), na.rm=T) > 1e3)))
-  if (any(de_cal2$q))
+  if (any(de_cal2$q, na.rm = T))
   { ## fix did not work
     MS1_decal_smr$hasMassErrorBug_unfixable[ MS1_decal_smr$raw.file %in% de_cal2$raw.file[de_cal2$q] ] = TRUE
     recal_message = "m/z recalibration bugfix applied but failed\n(there are still large numbers)"
