@@ -22,7 +22,7 @@
 #'          
 #' @import ggplot2
 #' @import directlabels
-#' @importFrom plyr ddply dlply adply summarise
+#' @importFrom plyr ddply dlply ldply llply adply summarise
 #' @importFrom grid unit
 #' @importFrom reshape2 melt
 #' @importFrom RColorBrewer brewer.pal
@@ -608,7 +608,7 @@ createReport = function(txt_folder, yaml_obj = list())
     d_evd = mq$readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration", 
                                                                          "Retention.time$", "Match.Time.Difference", "^intensity$", "^Type$",
                                                                          "Mass\\.Error", "^uncalibrated...calibrated." , "^m.z$",
-                                                                         "^Match.q.value$", 
+                                                                         "^score$", 
                                                                          "^fraction$",  ## only available when fractions were given
                                                                          "Raw.file", "^Protein.Group.IDs$", "Contaminant", "[RK]\\.Count", 
                                                                          "^Charge$", "modified.sequence", "^Mass$", "^protein.names$", "^ms.ms.count$"))
@@ -658,7 +658,7 @@ createReport = function(txt_folder, yaml_obj = list())
         
         if (enabled_proteingroups)
         {
-          pg_idx = d_pg$id[grep(ca, d_pg$fasta.headers, ignore.case = T)]
+          pg_id = d_pg$id[grep(ca, d_pg$fasta.headers, ignore.case = T)]
         } else {
           ## fail hard; we could hack around this (e.g. by loading fasta headers from evidence.txt), but it
           ## wastes a lot of memory and time
@@ -667,7 +667,7 @@ createReport = function(txt_folder, yaml_obj = list())
         } 
         
         
-        if (length(pg_idx) > 0)
+        if (length(pg_id) > 0)
         {
           
           ## we might or might not have found something... we plot it anyways, so the user can be sure that we searched for it
@@ -677,25 +677,37 @@ createReport = function(txt_folder, yaml_obj = list())
           ## do not trust MBR here. We want real evidence!
           evd_realMS = !grepl("MATCH", d_evd$type)
           ## for each Raw file: find unique peptides of our contaminant
-          cont_data = ddply(d_evd[evd_uniqueGroup & evd_realMS, c("intensity", "fc.raw.file", "protein.group.ids")], "fc.raw.file", function(x) {
+          cont_data.l = dlply(d_evd[evd_uniqueGroup & evd_realMS, 
+                                  c("score", "intensity", "fc.raw.file", "protein.group.ids")],
+                            "fc.raw.file",
+                            function(x) {
             if (length(grep(";", x$protein.group.ids))) stop("more than one proteinGroup for supposedly unique peptide...")
             
-            idx_cont = x$protein.group.ids %in% pg_idx
+            x$idx_cont = x$protein.group.ids %in% pg_id
             
-            sc = sum(idx_cont) / nrow(x) * 100
-            int = sum(as.numeric(x$intensity[idx_cont]), na.rm=T) / sum(as.numeric(x$intensity), na.rm=T) * 100
+            sc = sum(x$idx_cont) / nrow(x) * 100
+            int = sum(as.numeric(x$intensity[x$idx_cont]), na.rm=T) / sum(as.numeric(x$intensity), na.rm=T) * 100
             
             above.thresh = (sc > ca_thresh) | (int > ca_thresh)
             
-            return (data.frame(spectralCount = sc, intensity = int, above.thresh = above.thresh))
+            cont_scoreECDF = ddply(x, "idx_cont", function(xx) {
+              r = getECDF(xx$score)
+              r$condition = c("sample", "contaminant")[xx$idx_cont[1]+1]
+              return(r)
+            })
+            ks_p = ks.test(x$score[x$idx_cont], x$score[!x$idx_cont], alternative = "greater")$p.value
+            return (list(cont_data = data.frame(spectralCount = sc, intensity = int,
+                                                above.thresh = above.thresh, fc.raw.file = x$fc.raw.file[1],
+                                                score_KS = ks_p),
+                         cont_scoreECDF = cont_scoreECDF))
           })
-          #head(cont_data)
+          head(cont_data.l)
           
           ## melt
-          cont_data.long = melt(cont_data[, c("fc.raw.file", "spectralCount", "intensity")], id.vars="fc.raw.file")
-          cont_data.long
+          cont_data = ldply(cont_data.l, function(l) { l$cont_data })
+          cont_data.long = melt(cont_data, id.vars="fc.raw.file")
           
-          not_found = all(cont_data$above.thresh==FALSE)
+          not_found = all(cont_data.long$value[cont_data.long$variable == "above.thresh"] == FALSE)
         }
         
         if (not_found)
@@ -705,25 +717,45 @@ createReport = function(txt_folder, yaml_obj = list())
                            "red")
           rep_data$add(pl_cont)
         } else {
-          plotContUser = function(datav, extra_limit) {
+          plotContUser = function(data, extra_limit) {
+            datav = subset(data, data$variable %in% c('spectralCount', "intensity"))
+            dataAT = subset(data, data$variable %in% c('above.thresh'))
+            contRaws = dataAT$fc.raw.file[ dataAT$value == TRUE]
+            dataKS = subset(data, data$variable == 'score_KS' & (data$fc.raw.file %in% contRaws))
+            dataKS$value = paste0("p = ", round(dataKS$value,2))
             #cat(paste0("CA entry is ", extra_limit, "\n"))
+            maxY = max(datav$value, extra_limit)
             datav$section = as.integer(seq(0, nrow(datav)/40, length.out = nrow(datav)))
             pr = ggplot(datav, aes_string(x = "fc.raw.file", y = "value")) +
               geom_bar(stat="identity", aes_string(fill = "variable"), position = "dodge", width=.7) +
               ggtitle(paste0("EVD: Contaminant '", ca, "'")) +
               xlab("")  +
               ylab("abundance (%)") +
-              ylim(c(0, max(datav$value, extra_limit)*1.1)) +
+              ylim(c(0, maxY * 1.1)) +
               theme(plot.title = element_text(colour = "red"),
                     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
               scale_fill_discrete(name = "Method") +
               geom_hline(yintercept = extra_limit, linetype = 'dashed') +
+              geom_text(data = dataKS, aes_string(label = "value", y = maxY * 1.05)) +
               facet_wrap(~ section, ncol = 1, scales = "free_x")
             rep_data$add(pr)
             #print(pr)
             return(1)
           }
           byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, FUN = plotContUser, sort_indices=F, extra_limit = ca_thresh)
+          
+          ## plot Andromeda score distribution of contaminant vs. sample
+          llply(cont_data.l, function(l)
+          {
+            if (l$cont_data$above.thresh == FALSE) return(NULL)
+            pr = ggplot(l$cont_scoreECDF) + 
+              geom_line(aes_string(x = "x", y = "y", col = "condition")) + 
+              ggtitle(paste0("Empirical CDF of '", l$cont_data$fc.raw.file, "'\np = ", round(l$cont_data$score_KS, 2))) + 
+              ylab("Pr") + xlab("Andromeda score")
+            rep_data$add(pr)
+            #print(pr)
+            return(NULL)
+          })
           
           ## add heatmap column
           cname = paste0("X002X_catPrep_EVD:Contaminant~(", ca, ")")
@@ -735,7 +767,7 @@ createReport = function(txt_folder, yaml_obj = list())
           report_samples  = pastet("Contaminant-details (name, raw.file, spectralCount%): " , ca, paste(cont_data$fc.raw.file, collapse=";"), paste(cont_data$spectralCount, collapse=";"))
           report_samples2 = pastet("Contaminant-details (name, raw.file, intensity%): " , ca, paste(cont_data$fc.raw.file, collapse=";"), paste(cont_data$intensity, collapse=";"))
           cat(pasten(report_short, report_samples, report_samples2), file=fh_out$stats_file, append=T, sep="\n")
-          cat(pastet("contamination-proteins:", ca, paste((d_pg$majority.protein.ids[pg_idx]), collapse=",")), file=fh_out$stats_file, append=T, sep="\n") 
+          cat(pastet("contamination-proteins:", ca, paste((d_pg$majority.protein.ids[pg_id]), collapse=",")), file=fh_out$stats_file, append=T, sep="\n") 
         }
         
       } ## contaminant loop
@@ -1176,8 +1208,6 @@ createReport = function(txt_folder, yaml_obj = list())
               ylab("inferred by MS1 [%]") +
               xlim(0, max(mtr.df$abs, na.rm=T)*1.1) +
               ylim(0, max(mtr.df$pc, na.rm=T)*1.1)
-            #install.packages("directlabels")
-            #require(directlabels)
             rep_data$add(direct.label(p_amt, list(cex=0.5, "smart.grid")))
             #print(p_amt)
           } ## AMT 

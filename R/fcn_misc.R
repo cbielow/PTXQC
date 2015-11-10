@@ -390,6 +390,8 @@ byX <- function(data, indices, subset_size = 5, FUN, sort_indices = TRUE, ...)
 {
   stopifnot(subset_size > 0)
   
+  stopifnot(nrow(data) == length(indices))
+  
   groups = unique(indices)
   if (sort_indices)
   {
@@ -954,3 +956,36 @@ wait_for_writable = function(filename,
   ## unreachable
   return (FALSE)
 }
+
+
+
+#'
+#' Estimate the empirical density and return it
+#'
+#'
+#' @param samples Vector of input values (samples from the distribution)
+#' @param y_eval Vector of points where CDF is evaluated (each percentile by default)
+#' @return Data.frame with columns 'x', 'y'
+#'
+#' @examples
+#'   plot(getECDF(rnorm(1e4)))
+#'   
+#' @export
+#'    
+getECDF = function(samples, y_eval = (1:100)/100)
+{
+  ## internal little helper
+  inv_ecdf <- function(f){ 
+    x <- environment(f)$x 
+    y <- environment(f)$y 
+    approxfun(y, x) 
+  } 
+  ## compute ECDF
+  ec = ecdf(samples)
+  ## sample it at certain y-positions
+  iec = inv_ecdf(ec)
+  x_eval = iec(y_eval)
+  r = data.frame(x = x_eval, y = y_eval)
+  return (r)
+}
+
