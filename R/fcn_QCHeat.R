@@ -30,9 +30,13 @@ HEATMAP_NA_VALUE = -Inf
 #'
 #' @examples
 #'   mapping = data.frame(from=c("A.raw","B.raw"), to=c("A","B"))
-#'   QC_data = list(somedata  = data.frame(raw.file=c("A.raw", "B.raw"), "X005X.EVD:~Some~later~MS^2" = 1:2),
-#'              someother = data.frame(raw.file=c("A.raw", "B.raw"), "X002X.EVD:~First~col" = 5:6),
-#'              middle = data.frame(raw.file=c("A.raw", "B.raw"), "X003X.EVD:~Middle_col" = 3:4))
+#'   QC_data = list(
+#'                somedata  = data.frame(raw.file=c("A.raw", "B.raw"),
+#'                                       "X005X.EVD:~Some~later~MS^2" = 1:2),
+#'                someother = data.frame(raw.file=c("A.raw", "B.raw"),
+#'                                       "X002X.EVD:~First~col" = 5:6),
+#'                   middle = data.frame(raw.file=c("A.raw", "B.raw"),
+#'                                       "X003X.EVD:~Middle_col" = 3:4))
 #'   getQCHeatMap(QC_data, mapping)
 #' 
 #' 

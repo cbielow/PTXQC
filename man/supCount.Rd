@@ -22,7 +22,8 @@ e.g.  substr(x, 1, supCount(x)) == x
 \examples{
 supCount(c("abcde...", "abcd...", "abc..."))  ## 5
 
-x = c("doubled", "doubled", "aLongDummyString")
-all( substr(x, 1, supCount(x)) == x )   ## TRUE (since due to duplicated entries there is no prefix which makes them unique)
+  x = c("doubled", "doubled", "aLongDummyString")
+  all( substr(x, 1, supCount(x)) == x )
+  ## TRUE (no unique prefix due to duplicated entries)
 }
 

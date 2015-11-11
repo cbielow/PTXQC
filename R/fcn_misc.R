@@ -14,15 +14,32 @@
 #' @return Shortened vector of strings
 #' 
 #' @examples
-#' delLCP(c("TK12345_H1"), min_out_length=0)                                 ## ""
-#' delLCP(c("TK12345_H1"), min_out_length=4)                                 ## "5_H1"
-#' delLCP(c("TK12345_H1"), min_out_length=4, add_dots = TRUE)                ## "..5_H1"
-#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=4)                   ## "5_H1" "5_H2"
-#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=4, add_dots = TRUE)  ## "..5_H1" "..5_H2"
-#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=8)                   ## "12345_H1", "12345_H2"
-#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=8, add_dots = TRUE)  ## "TK12345_H1", "TK12345_H2" (unchanged, even though its 10 chars, since '..' would add another two)
-#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=60)                  ## "TK12345_H1", "TK12345_H2" (unchanged)
-#' delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=60, add_dots = TRUE) ## "TK12345_H1", "TK12345_H2" (unchanged)
+#'   delLCP(c("TK12345_H1"), min_out_length=0)
+#'   ## ""
+#' 
+#'   delLCP(c("TK12345_H1"), min_out_length=4)
+#'   ## "5_H1"
+#' 
+#'   delLCP(c("TK12345_H1"), min_out_length=4, add_dots = TRUE)
+#'   ## "..5_H1"
+#' 
+#'   delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=4)
+#'   ## "5_H1" "5_H2"
+#' 
+#'   delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=4, add_dots = TRUE)
+#'   ## "..5_H1" "..5_H2"
+#' 
+#'   delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=8)
+#'   ## "12345_H1", "12345_H2"
+#' 
+#'   delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=8, add_dots = TRUE)
+#'   ## "TK12345_H1", "TK12345_H2" (unchanged, since '..' would add another two)
+#' 
+#'   delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=60)
+#'   ## "TK12345_H1", "TK12345_H2" (unchanged)
+#' 
+#'   delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=60, add_dots = TRUE)
+#'   ## "TK12345_H1", "TK12345_H2" (unchanged)
 #' 
 #' @importFrom Biobase lcPrefix
 #' 
@@ -203,7 +220,8 @@ LCSn = function(strings, min_LCS_length = 0)
 #'
 #' @examples
 #' require(PTXQC)
-#' simplifyNames(c('TK20130501_H2M1_010_IMU008_CISPLA_E3_R1.raw', 'TK20130501_H2M1_026_IMU008_CISPLA_E7_R2.raw'), infix_iterations = 2)
+#' simplifyNames(c('TK20130501_H2M1_010_IMU008_CISPLA_E3_R1.raw',
+#'                 'TK20130501_H2M1_026_IMU008_CISPLA_E7_R2.raw'), infix_iterations = 2)
 #' # --> "TK.._010_I.._E3_R1.raw","TK.._026_I.._E7_R2.raw"
 #' 
 #' try(simplifyNames(c("bla", "foo"), min_LCS_length=5))
@@ -292,10 +310,11 @@ shortenStrings = function(x, max_len = 20, verbose = TRUE, allow_duplicates = FA
 #' @return Integer with minimal prefix length required
 #' 
 #' @examples
-#' supCount(c("abcde...", "abcd...", "abc..."))  ## 5
+#'   supCount(c("abcde...", "abcd...", "abc..."))  ## 5
 #'
-#' x = c("doubled", "doubled", "aLongDummyString")
-#' all( substr(x, 1, supCount(x)) == x )   ## TRUE (since due to duplicated entries there is no prefix which makes them unique)
+#'   x = c("doubled", "doubled", "aLongDummyString")
+#'   all( substr(x, 1, supCount(x)) == x )   
+#'   ## TRUE (no unique prefix due to duplicated entries)
 #' 
 #' @export
 #' 
