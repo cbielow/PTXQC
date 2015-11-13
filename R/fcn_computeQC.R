@@ -999,7 +999,8 @@ createReport = function(txt_folder, yaml_obj = list())
         } else
         {
           ## find reference
-          if ('fraction' %in% colnames(d_evd)) {
+          if (('fraction' %in% colnames(d_evd)) && (length(unique(d_evd$fraction)) > 1)) {
+            ## fractions: there must be more than one, otherwise MQ will treat the samples as unfractionated
             refRaw = NA
             col_fraction = "fraction"
             txt_subtitle = "fraction: neighbour comparison"
@@ -1008,7 +1009,7 @@ createReport = function(txt_folder, yaml_obj = list())
           } else {
             refRaw = findAlignReference(d_evd)
             col_fraction = c()
-            txt_subtitle = ""
+            txt_subtitle = paste("alignment reference:", refRaw)
             evd_has_fractions = FALSE
           } 
           if (length(refRaw) != 1) {
