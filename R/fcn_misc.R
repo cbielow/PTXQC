@@ -737,6 +737,7 @@ appendEnv = function(env_name, v, v_name = NULL)
 #' @param data The data.frame to be filtered
 #' @param filterColname Name of the filter column as string
 #' @param binsize Width of a bin
+#' @return Data.frame with reduced rows, but identical input columns
 #'
 #'
 thinOut = function(data, filterColname, binsize)
@@ -763,6 +764,7 @@ thinOut = function(data, filterColname, binsize)
 #' @param filterColname Name of the filter column as string
 #' @param batchColname Name of the split column as string
 #' @param binCount Number of bins in the 'filterColname' dimension.
+#' @return Data.frame with reduced rows, but identical input columns
 #'
 #' @importFrom plyr ddply
 thinOutBatch = function(data, filterColname, batchColname, binCount = 1000)
@@ -943,6 +945,7 @@ getProteinAndPeptideCounts = function(d_evidence) {
 #' @param filename The file to test for writable
 #' @param prompt_text If not writable, show this prompt text to the user
 #' @param abort_answer If the user enters this string into the prompt, this function will stop()
+#' @return TRUE if writable, FALSE if aborted by user or (not-writeable and non-interactive)
 #'
 wait_for_writable = function(filename,
                              prompt_text = paste0("The file '", filename, "' is not writable. Please close all applications using this file. Press '", abort_answer, "' to abort!"),

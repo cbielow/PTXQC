@@ -180,6 +180,8 @@ pointsPutX = function(x_range, x_section, y, col = NA){
 #'
 #' A blank theme (similar to the deprecated theme_blank())
 #' 
+#' @return A ggplot2 object, representing an empty theme
+#' 
 #' @import ggplot2
 #' 
 #' @export

@@ -15,6 +15,9 @@ wait_for_writable(filename, prompt_text = paste0("The file '", filename,
 
 \item{abort_answer}{If the user enters this string into the prompt, this function will stop()}
 }
+\value{
+TRUE if writable, FALSE if aborted by user or (not-writeable and non-interactive)
+}
 \description{
 This functions gives the user a chance to make the output file writeable before a write attempt
 is actually made by R to avoid having run the whole program again upon write failure.

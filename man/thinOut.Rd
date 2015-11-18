@@ -13,6 +13,9 @@ thinOut(data, filterColname, binsize)
 
 \item{binsize}{Width of a bin}
 }
+\value{
+Data.frame with reduced rows, but identical input columns
+}
 \description{
 All values in the numerical column 'filterColname' are assigned to bins of width 'binsize'.
 Only one value per bin is retained. All other rows are removed and the reduced
