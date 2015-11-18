@@ -64,7 +64,7 @@ qualCenteredRef = function(x, tol)
   x = na.omit(x)
   if (length(x) == 0) stop("qualCenteredRef(): input is empty or consists of NA only!")
   if (tol <= 0) stop("qualCenteredRef(): negative or zero interval border not allowed!")
-  m = abs(median(x, na.rm=T))
+  m = abs(median(x, na.rm = TRUE))
   if (m > tol) warning("qualCenteredRef(): Median of x is outside of interval. Score will be set to 0.")
   q = 1 - (m / tol)
   q = max(0, q) ## avoid negative scores if abs(x)>tol
@@ -85,7 +85,7 @@ qualCenteredRef = function(x, tol)
 qualMedianDist = function(x)
 {
   if (any(x < 0 | x > 1)) stop("qualMedianDist(): x values out of range [0,1]!")
-  q = 1 - abs(x - median(x, na.rm=T))
+  q = 1 - abs(x - median(x, na.rm = TRUE))
   return (q)
 }
 
@@ -245,7 +245,7 @@ qualBestKS = function(x) {
   ## fill diagonal with 1's
   diag(rr) = 1
   ## add up all values for each reference distribution (equivalent to just rowSums on full matrix)
-  rr_sums = rowSums(rr, na.rm=T) + colSums(rr, na.rm=T)
+  rr_sums = rowSums(rr, na.rm = TRUE) + colSums(rr, na.rm = TRUE)
   ## pick best
   r_max = which.max(rr_sums)
   ## get values

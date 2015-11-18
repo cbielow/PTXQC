@@ -30,7 +30,7 @@ findAlignReference = function(data, threshold = 1e-4)
   {
     stop("findAlignReference(): Error, could not find column 'raw.file' in data. Aborting!")  
   }
-  fr = ddply(data, "raw.file", function(x) data.frame(range = diff(range(x$retention.time.calibration, na.rm=T))))
+  fr = ddply(data, "raw.file", function(x) data.frame(range = diff(range(x$retention.time.calibration, na.rm = TRUE))))
   ref = as.character(fr$raw.file[fr$range < threshold])
   return (ref)  
 }
@@ -170,7 +170,7 @@ ScoreInAlignWindow = function(data, allowed.deltaRT = 1)
     stop("alignmentCheck(): columns missing!")  
   }
   alignQC = ddply(data, "raw.file", function(x) {
-    withinRT = sum(abs(x$rtdiff) < allowed.deltaRT, na.rm=T) / sum(!is.na(x$rtdiff))
+    withinRT = sum(abs(x$rtdiff) < allowed.deltaRT, na.rm = TRUE) / sum(!is.na(x$rtdiff))
     return(data.frame(withinRT = withinRT))
   })
   
@@ -217,7 +217,7 @@ idTransferCheck = function(data) {
   ## check if data is missing
   if (unique(data$modified.sequence[data$type=="MULTI-MATCH"])[1]=="")
   {
-    warning(immediate.=T, "idTransferCheck(): Input data has empty cells for column 'modified.sequence' of type 'MULTI-MATCH'. Early MaxQuant versions (e.g. 1.2.2) have this problem. We will try to reconstruct the data.")
+    warning(immediate. = TRUE, "idTransferCheck(): Input data has empty cells for column 'modified.sequence' of type 'MULTI-MATCH'. Early MaxQuant versions (e.g. 1.2.2) have this problem. We will try to reconstruct the data.")
     ## use the preceeding sequence (and hope that there are no missing rows in between)
     data = data[order(data$id), ]
     ## find blocks of MATCHed rows ...
@@ -259,7 +259,7 @@ idTransferCheck = function(data) {
       ## rtdiff_mixed might be empty, if only singlets where transferred
       if (nrow(rt_diffs_mixed) > 0) {
         ## only merge if non-empty (otherwise the whole merge is empty)
-        rt_diffs_genuine = merge(rt_diffs_genuine, rt_diffs_mixed, all = T)
+        rt_diffs_genuine = merge(rt_diffs_genuine, rt_diffs_mixed, all = TRUE)
       }
     }
   
@@ -267,7 +267,7 @@ idTransferCheck = function(data) {
   })
   #head(alignQ)
   #hist(log(1+alignQ$rtdiff), 100)
-  #hist(log(1+alignQ$rtdiff_bg), 100, add=T, col="red")
+  #hist(log(1+alignQ$rtdiff_bg), 100, add=TRUE, col="red")
   
   return(alignQ)
 }
@@ -304,12 +304,12 @@ inMatchWindow = function(data, df.allowed.deltaRT)
     # x=data[ data$fc.raw.file=="file 01",]
     allowed.deltaRT = df.allowed.deltaRT$m[match(x$fc.raw.file[1], df.allowed.deltaRT$fc.raw.file)]
     
-    withinRT_genuine = sum(abs(x$rtdiff_genuine) < allowed.deltaRT, na.rm=T) / sum(!is.na(x$rtdiff_genuine))
-    withinRT_mixed   = sum(abs(x$rtdiff_mixed) < allowed.deltaRT, na.rm=T) / sum(!is.na(x$rtdiff_mixed))
+    withinRT_genuine = sum(abs(x$rtdiff_genuine) < allowed.deltaRT, na.rm = TRUE) / sum(!is.na(x$rtdiff_genuine))
+    withinRT_mixed   = sum(abs(x$rtdiff_mixed) < allowed.deltaRT, na.rm = TRUE) / sum(!is.na(x$rtdiff_mixed))
     ## compute the RT-span if all evidence is considered 
     ##  --> simply the max of mixed and genuine, since each evidence must be in either of these two
-    x$rtdiff_all = pmax(x$rtdiff_mixed, x$rtdiff_genuine, na.rm=T)
-    withinRT_all = sum(abs(x$rtdiff_all) < allowed.deltaRT, na.rm=T) / sum(!is.na(x$rtdiff_all))
+    x$rtdiff_all = pmax(x$rtdiff_mixed, x$rtdiff_genuine, na.rm = TRUE)
+    withinRT_all = sum(abs(x$rtdiff_all) < allowed.deltaRT, na.rm = TRUE) / sum(!is.na(x$rtdiff_all))
     return(data.frame(withinRT_genuine, withinRT_mixed, withinRT_all))
   })
   
@@ -423,7 +423,7 @@ peakSegmentation = function(d_evd)
   empty_fc.raw.files = fc.raw.files[!(fc.raw.files %in% mbr_score$fc.raw.file)]
   if (length(empty_fc.raw.files) > 0)
   { ## ... add them with NA values
-    mbr_score = merge(mbr_score, data.frame(fc.raw.file = empty_fc.raw.files), all=T)   
+    mbr_score = merge(mbr_score, data.frame(fc.raw.file = empty_fc.raw.files), all = TRUE)   
   }
   
   return (mbr_score = mbr_score)
@@ -461,7 +461,7 @@ computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_inGroup)
   ## compute percentage of outside dRT peaks in genuine, matched and combined(=all)
   ## then calc the drop.
   f = ddply(qMBR, "fc.raw.file", function(x) {
-    #x = qMBR[3, , drop=F]
+    #x = qMBR[3, , drop = FALSE]
     rr = qMBRSeg_Dist_inGroup$fc.raw.file==x$fc.raw.file
     
     nat.inRT = qMBRSeg_Dist_inGroup$withinRT_genuine[rr] ## e.g. 0.87
@@ -483,7 +483,7 @@ computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_inGroup)
                    single=c(x$single.nat, x$single.matched, x$single.all),
                    multi.inRT = c(x$single.nat.inRT, x$single.matched.inRT, x$single.all.inRT),
                    multi.outRT = c(x$single.nat.outRT, x$single.matched.outRT, x$single.all.outRT),
-                   sample = factor(c("genuine", "transferred", "all"), levels=c("genuine", "transferred", "all", ordered = T)))
+                   sample = factor(c("genuine", "transferred", "all"), levels=c("genuine", "transferred", "all", ordered = TRUE)))
     return(r)    
   })
   return(f)

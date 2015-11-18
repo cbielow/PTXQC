@@ -164,7 +164,7 @@ addGGtitle = function(main, sub=""){
 #' 
 #' @export
 #' 
-pointsPutX <- function(x_range, x_section, y, col = NA){
+pointsPutX = function(x_range, x_section, y, col = NA){
   #require(ggplot2)
   x_dist = dist(x_range)
   x_pos = x_range[1] + x_section*x_dist

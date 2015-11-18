@@ -3,12 +3,13 @@ Type: Package
 Title: Quality Report Generation for MaxQuant Results
 Version: 0.69.5
 Date: 2015-10-29
-Author: Chris Bielow <chris.bielow@mdc-berlin.de> 
+Author: Chris Bielow <chris.bielow@mdc-berlin.de>
 Maintainer: Chris Bielow <chris.bielow@mdc-berlin.de>
-Description: An R-package to generate comprehensive quality control reports from MaxQuant txt-folders.
-Depends: 
+Description: An R-package to generate comprehensive quality control reports from
+    MaxQuant txt-folders.
+Depends:
     R (>= 3.0.0)
-Imports: 
+Imports:
     Biobase,
     directlabels,
     ggplot2,
@@ -21,10 +22,11 @@ Imports:
     rmarkdown,
     seqinr,
     yaml
-Suggests: 
+Suggests:
     knitr (>= 1.10),
     testthat
 VignetteBuilder: knitr
 License: file LICENSE
 Roxygen: list(wrap = FALSE)
 BugReports: https://github.com/cbielow/PTXQC/issues
+RoxygenNote: 5.0.1

@@ -45,7 +45,7 @@
 #' 
 #' 
 #' @export
-delLCP <- function(x, min_out_length = 0, add_dots = F)
+delLCP <- function(x, min_out_length = 0, add_dots = FALSE)
 {
   x = as.character(x)
   #require(Biobase)
@@ -219,7 +219,7 @@ LCSn = function(strings, min_LCS_length = 0)
 #' @return A list of shortened strings, with the same length as the input                       
 #'
 #' @examples
-#' require(PTXQC)
+#' #library(PTXQC)
 #' simplifyNames(c('TK20130501_H2M1_010_IMU008_CISPLA_E3_R1.raw',
 #'                 'TK20130501_H2M1_026_IMU008_CISPLA_E7_R2.raw'), infix_iterations = 2)
 #' # --> "TK.._010_I.._E3_R1.raw","TK.._026_I.._E7_R2.raw"
@@ -424,7 +424,7 @@ byX <- function(data, indices, subset_size = 5, FUN, sort_indices = TRUE, ...)
     #cat(paste("block", x, " ... "))
     range = x:(min(x+subset_size-1, length(groups)))
     lns = indices %in% groups[range];
-    subset = droplevels(data[lns, , drop=F])
+    subset = droplevels(data[lns, , drop = FALSE])
     rownames(subset) = rownames(data)[lns]
     #cat(paste("call\n"))
     r = FUN(subset, ...)    
@@ -479,7 +479,7 @@ byXflex <- function(data, indices, subset_size = 5, FUN, sort_indices = TRUE, ..
 #' @return Vector (same length as input) with set numbers
 #' 
 #' @examples
-#'  library(PTXQC)
+#'  #library(PTXQC)
 #'  assignBlocks(c(1:11, 1), set_size = 3, sort_values = FALSE)
 #'  ## --> 1 1 1 2 2 2 3 3 3 4 4 1
 #'  
@@ -767,7 +767,7 @@ thinOut = function(data, filterColname, binsize)
 #' @importFrom plyr ddply
 thinOutBatch = function(data, filterColname, batchColname, binCount = 1000)
 {
-  binsize = (max(data[, filterColname], na.rm=T) - min(data[, filterColname], na.rm=T)) / binCount
+  binsize = (max(data[, filterColname], na.rm=TRUE) - min(data[, filterColname], na.rm=TRUE)) / binCount
   r = ddply(data, batchColname, thinOut, filterColname, binsize)
   return (r)  
 }
@@ -805,7 +805,7 @@ getAbundanceClass = function(x) {
     lvls[length(lvls)] = "high"
   }
   r$x_cl = lvls[r$x_diff_fac]
-  r$x_cl = factor(r$x_cl, levels=lvls, ordered=T)
+  r$x_cl = factor(r$x_cl, levels=lvls, ordered=TRUE)
   r
   return(r$x_cl)
 }
@@ -822,7 +822,7 @@ getAbundanceClass = function(x) {
 getReportFilenames = function(txt_folder)
 {
   ## package version: added to output filename
-  if (!require("PTXQC", quietly=T)) pv = "_unknown" else pv = packageVersion("PTXQC")
+  if (!require("PTXQC", quietly=TRUE)) pv = "_unknown" else pv = packageVersion("PTXQC")
   report_version = paste0("v", pv)  
   
   ## amend report filename with a foldername where it resides, to ease discerning different reports in a PDF viewer
@@ -889,7 +889,7 @@ getProteinAndPeptideCounts = function(d_evidence) {
     xpro = x[!duplicated(x$group_mtdinfo),]
     # split groups
     p_groups = lapply(as.character(xpro$protein.group.ids), function(x) {
-      return (strsplit(x, split=";", fixed=T))
+      return (strsplit(x, split=";", fixed=TRUE))
     })
     # get number of unique proteins
     pg_set_genuineUnique = unique(unlist(p_groups[!xpro$hasMTD]))
@@ -953,7 +953,7 @@ wait_for_writable = function(filename,
     is_writeable = try({
                        f = file(filename, open="a"); ## test for append, which will not overwrite the file
                        close(f)
-                       }, silent = T
+                       }, silent = TRUE
                        )
                        
     if (inherits(is_writeable, "try-error")) {

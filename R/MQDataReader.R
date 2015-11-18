@@ -30,7 +30,7 @@
 #'
 #' @export
 #' 
-read.MQ <- function(file, filter="", type="pg", col_subset=NA, add_fs_col=10, LFQ_action=FALSE, ...)
+read.MQ <- function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 10, LFQ_action = FALSE, ...)
 {
   mq = MQDataReader$new()
   mq$readMQ(file, filter, type, col_subset, add_fs_col, LFQ_action, ...)
@@ -115,7 +115,7 @@ MQDataReader$new <- function(.)
 #'
 #'
 # (not exported!)
-MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, add_fs_col=10, check_invalid_lines = T, LFQ_action=FALSE, ...)
+MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, add_fs_col=10, check_invalid_lines = TRUE, LFQ_action=FALSE, ...)
 {
   # . = MQDataReader$new() ## debug
   # ... = NULL
@@ -130,13 +130,13 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   { ## just read a tiny bit to get column names
     ## do not use data.table::fread for this, since it will read the WHOLE file and takes ages...
     data_header = try(read.delim(file, na.strings=c("NA", "n. def."), comment.char="", nrows=2))
-    if (inherits(data_header, 'try-error')) stop(msg_parse_error, call.=F);
+    if (inherits(data_header, 'try-error')) stop(msg_parse_error, call. = FALSE);
     
     colnames(data_header) = tolower(colnames(data_header))
     idx_keep = rep(FALSE, ncol(data_header))    
     for (valid in col_subset)
     {
-      idx_new = grepl(valid, colnames(data_header), ignore.case = T)
+      idx_new = grepl(valid, colnames(data_header), ignore.case = TRUE)
       if (sum(idx_new) == 0) cat(paste0("WARNING: Could not find column regex '", valid, "' using case-INsensitive matching.\n"))
       idx_keep = idx_keep | idx_new
     }
@@ -160,12 +160,12 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   ## higher memory consumption during load (due to memory mapped files) compared to read.delim... but about 5x faster
   ## , but also different numerical results when parsing numbers!!!
   #.$mq.data = try(
-  #  fread(file, header=T, sep='\t', na.strings=c("NA", "n. def."), verbose=T, select = idx_keep, data.table=F, ...)
+  #  fread(file, header = TRUE, sep='\t', na.strings=c("NA", "n. def."), verbose = TRUE, select = idx_keep, data.table = FALSE, ...)
   #)
-  #colnames(.$mq.data) = make.names(colnames(.$mq.data), unique = T)
+  #colnames(.$mq.data) = make.names(colnames(.$mq.data), unique = TRUE)
   ## comment.char should be "", since lines will be TRUNCATED starting at the comment char.. and a protein identifier might contain just anything...
-  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def."), comment.char="", stringsAsFactors = F, colClasses = col_subset, ...))
-  if (inherits(.$mq.data, 'try-error')) stop(msg_parse_error, call.=F);
+  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def."), comment.char="", stringsAsFactors = FALSE, colClasses = col_subset, ...))
+  if (inherits(.$mq.data, 'try-error')) stop(msg_parse_error, call. = FALSE);
   
   #colnames(.$mq.data)
   
@@ -221,22 +221,22 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
         vals = .$mq.data[, cc]
         ## affected rows
         bad_rows = (.$mq.data[, rawint_col]>0 & .$mq.data[, cc]==0)
-        if (sum(bad_rows, na.rm=T)==0) {next;}
+        if (sum(bad_rows, na.rm = TRUE)==0) {next;}
         ## take action
         if (LFQ_action=="toNA" | LFQ_action=="impute") {
           ## set to NA
           impVal = NA;
           vals[bad_rows] = impVal;
           if (LFQ_action=="impute") {
-            impVal = min(vals[vals>0], na.rm=T)
+            impVal = min(vals[vals>0], na.rm = TRUE)
             ## replace with minimum noise value (>0!)
             vals[bad_rows] = impVal;
           }
-          cat(paste0("   '", cc, "' ", sum(bad_rows, na.rm=T), ' entries (', sum(bad_rows, na.rm=T)/nrow(.$mq.data)*100,'%) with ', impVal, '\n'))
+          cat(paste0("   '", cc, "' ", sum(bad_rows, na.rm = TRUE), ' entries (', sum(bad_rows, na.rm = TRUE)/nrow(.$mq.data)*100,'%) with ', impVal, '\n'))
           ## add column
           .$mq.data[, paste0("c", cc)] = vals;
           ##
-          stats = rbind(stats, c(sum(bad_rows, na.rm=T), impVal))
+          stats = rbind(stats, c(sum(bad_rows, na.rm = TRUE), impVal))
           
         }
         else {
@@ -253,7 +253,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     ##
     ## apply potential fix (MQ 1.5 writes numbers in scientific notation with ',' -- which parses as String :( )
     ##
-    int_cols_nn = (apply(.$mq.data[,int_cols, drop=F], 2, class) != "numeric")
+    int_cols_nn = (apply(.$mq.data[,int_cols, drop = FALSE], 2, class) != "numeric")
     if (any(int_cols_nn))
     {
       .$mq.data[, int_cols[int_cols_nn]] = sapply(int_cols[int_cols_nn], function(x_name)
@@ -276,7 +276,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     ##
     if ("mol..weight..kda." %in% colnames(.$mq.data)){
       ### add abundance index columns (for both, intensity and lfq.intensity)
-      .$mq.data[, sub("intensity", "AbInd", int_cols)] = apply(.$mq.data[,int_cols, drop=F], 2, function(x)
+      .$mq.data[, sub("intensity", "AbInd", int_cols)] = apply(.$mq.data[,int_cols, drop = FALSE], 2, function(x)
       {
         return (x / .$mq.data[,"mol..weight..kda."])
       })
@@ -289,7 +289,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     ## find the first row, which lists Groups (after Raw files): it has two non-zero entries only 
     ##                                                           (or even less if the group name is empty)
     ##dx <<- .$mq.data;
-    idx_group = which(apply(.$mq.data, 1, function(x) sum(x!="", na.rm=T))<=2)[1]
+    idx_group = which(apply(.$mq.data, 1, function(x) sum(x!="", na.rm = TRUE))<=2)[1]
     ## summary.txt will not contain groups, if none where specified during MQ-configuration
     if (is.na(idx_group)) {
       idx_group = nrow(.$mq.data)
@@ -316,7 +316,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       ## remove prefix
       rf_name_s = delLCP(rf_name, 
                          min_out_length = 8,
-                         add_dots = T)
+                         add_dots = TRUE)
       ## remove infix (2 iterations)
       rf_name_s = simplifyNames(rf_name_s, 
                                 2, 
@@ -423,7 +423,7 @@ MQDataReader$plotNameMapping <- function(.)
         ggtitle("Mapping of Raw files to their short names\nMapping source: " %+% .$mapping.creation %+% extra)
       return(mqmap_pl)
     }
-    l_plots = byXflex(mq_mapping, 1:nrow(mq_mapping), 20, mappingChunk, sort_indices=F);
+    l_plots = byXflex(mq_mapping, 1:nrow(mq_mapping), 20, mappingChunk, sort_indices = FALSE);
     return (l_plots)
   } else {
     cat("No mapping found. Omitting plot.")
@@ -455,7 +455,7 @@ MQDataReader$writeMappingFile = function(., filename)
         "# This file can be used to manually substitute Raw file names within the report.",
         "# The ordering of Raw files in the report can be changed by re-arranging the rows.",
         sep = "\n")
-    write.table(x = dfs, file = filename, append = T, quote = F, sep="\t", row.names=F)
+    write.table(x = dfs, file = filename, append = TRUE, quote = FALSE, sep="\t", row.names = FALSE)
     return (TRUE)
   }
   return (FALSE)
@@ -473,8 +473,8 @@ MQDataReader$writeMappingFile = function(., filename)
 #' \preformatted{# This file can be used to manually substitute Raw file names within the report.
 #' # The ordering of Raw files in the report can be changed by re-arranging the rows.
 #' orig.Name  new.Name
-#' 2011_05_30_ALH_OT_21_VIL_TMT_FR01	myfile A
-#' 2011_05_30_ALH_OT_22_VIL_TMT_FR02	another B
+#' 2011_05_30_ALH_OT_21_VIL_TMT_FR01   myfile A
+#' 2011_05_30_ALH_OT_22_VIL_TMT_FR02   another B
 #' }
 #' 
 #' @param filename  Source filename to read.
@@ -486,7 +486,7 @@ MQDataReader$readMappingFile = function(., filename)
 {
   if (file.exists(filename))
   {
-    dfs = read.delim(filename, comment.char="#", stringsAsFactors = F)
+    dfs = read.delim(filename, comment.char="#", stringsAsFactors = FALSE)
     req_cols = c(from = "orig.Name", to = "new.Name")
     if (!all(req_cols %in% colnames(dfs)))
     {
@@ -501,8 +501,8 @@ MQDataReader$readMappingFile = function(., filename)
            " Please fix and re-run PTXQC!")
     }
     dfs
-    dfs$to = factor(dfs$to, levels = unique(dfs$to), ordered = T) ## keep the order
-    dfs$from = factor(dfs$from, levels = unique(dfs$from), ordered = T) ## keep the order
+    dfs$to = factor(dfs$to, levels = unique(dfs$to), ordered = TRUE) ## keep the order
+    dfs$from = factor(dfs$from, levels = unique(dfs$from), ordered = TRUE) ## keep the order
     ## set internal mapping
     .$raw_file_mapping = dfs
     ## set who defined it
@@ -574,7 +574,7 @@ MQDataReader$getInvalidLines <- function(.)
 {
   if (!inherits(.$mq.data, 'data.frame'))
   {
-    stop("In 'MQDataReader$getInvalidLines': function called before data was loaded. Internal error. Exiting.", call.=F);
+    stop("In 'MQDataReader$getInvalidLines': function called before data was loaded. Internal error. Exiting.", call. = FALSE);
   }
   broken_rows = c()
   if ("id" %in% colnames(.$mq.data))

@@ -35,15 +35,15 @@
 #' 
 #' @export
 #' 
-boxplotCompare <- function(data, 
-                           log2 = T,
-                           ylab = "intensity",
-                           mainlab = ylab,
-                           sublab = "",
-                           boxes_per_page = 30,
-                           abline = NA,
-                           coord_flip = T,
-                           names = NA)
+boxplotCompare = function(data, 
+                          log2 = TRUE,
+                          ylab = "intensity",
+                          mainlab = ylab,
+                          sublab = "",
+                          boxes_per_page = 30,
+                          abline = NA,
+                          coord_flip = TRUE,
+                          names = NA)
 {
  
   if (ncol(data) == 2) {
@@ -108,11 +108,11 @@ boxplotCompare <- function(data,
   {
     #require(ggplot2)
     pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat")) + ## do not use col="cat", since this will dodge bars and loose scaling
-          geom_boxplot(varwidth=T) +
+          geom_boxplot(varwidth = TRUE) +
           xlab("") + 
           ylab(ylab) +
           ylim(ylims) +
-          scale_alpha(guide=FALSE) +
+          scale_alpha(guide = FALSE) +
           scale_fill_manual(values=cols, name = "Category") + 
           scale_color_manual(values=cols, name = "Category") + 
           theme(axis.text.x = element_text(angle=90, vjust = 0.5)) +
@@ -124,14 +124,14 @@ boxplotCompare <- function(data,
     {
       pl = pl + geom_abline(alpha = 0.5, intercept = abline, slope = 0, colour = "green")
     }
-    if (coord_flip == T)
+    if (coord_flip == TRUE)
     {
       pl = pl + coord_flip()
     }
     #print(pl)
     return(pl)
   }
-  lpl = byXflex(data = data, indices = data$group, subset_size = boxes_per_page, sort_indices = F, FUN = fcn_boxplot_internal, abline)
+  lpl = byXflex(data = data, indices = data$group, subset_size = boxes_per_page, sort_indices = FALSE, FUN = fcn_boxplot_internal, abline)
   return (lpl)
 }
 
@@ -179,10 +179,10 @@ getFragmentErrors = function(x)
         ms2_unit = "[ppm]"; ms2_col = "mass.deviations..da."
         convert_Da2PPM = TRUE
       }
-  err = unlist(strsplit(paste(x[, ms2_col], sep="", collapse=";"), split=";", fixed=T))
+  err = unlist(strsplit(paste(x[, ms2_col], sep="", collapse=";"), split=";", fixed = TRUE))
   if (convert_Da2PPM) {
     stopifnot("masses" %in% colnames(x))
-    mass = unlist(strsplit(paste(x$masses, sep="", collapse=";"), split=";", fixed=T))
+    mass = unlist(strsplit(paste(x$masses, sep="", collapse=";"), split=";", fixed = TRUE))
     err = as.numeric(err) / as.numeric(mass) * 1e6
   }
   ## return as character, otherwise it will get converted to factor by ddply?

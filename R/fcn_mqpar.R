@@ -29,11 +29,11 @@ getMQPARValue = function(mqpar_filename, param_name)
   if (!file.exists(pattern=mqpar_filename)) {
     warning("The file '", mqpar_filename, "' was not found. MaxQuant parameters could not be extracted. Will fall back to default value, which however is only an approximation.",
             " Please either: a) copy the mqpar.xml which was used for this MQ analysis into your TXT folder or,",
-            " b) make sure that you configure all YAML parameters whose name starts with 'MQpar_' correctly.", immediate. = T)
+            " b) make sure that you configure all YAML parameters whose name starts with 'MQpar_' correctly.", immediate. = TRUE)
     return (NULL)
   }
   
-  lines = readLines(con = mqpar_filename, warn = F)
+  lines = readLines(con = mqpar_filename, warn = FALSE)
   idx = grep(param_name, lines)
   ## is the tag present multiple times? (if yes, we found parameter groups)
   results = gsub(paste0("[ ]*<", param_name, ">(.*)</", param_name, ">[ ]*"), "\\1", lines[idx])
@@ -41,15 +41,15 @@ getMQPARValue = function(mqpar_filename, param_name)
   ## if regex did not work, the whole line will be returned, including the tag
   if (length(grep(param_name, results)) > 0)
   {
-    stop("getMQPARValue(): The parameter '", param_name, "' was found but could not be extracted from the line(s)\n  ", paste(lines[idx], collapse="\n  "), "\n  Please contact the package support.", call.=F)
+    stop("getMQPARValue(): The parameter '", param_name, "' was found but could not be extracted from the line(s)\n  ", paste(lines[idx], collapse="\n  "), "\n  Please contact the package support.", call. = FALSE)
   }
   
   if (length(unique(results)) > 1) {
     warning("getMQPARValue(): The parameter '", param_name, "' was found more than once in the file '", mqpar_filename, "' with different values (probably due to usage of parameter groups).",
-            " PTXQC currently cannot deal with that -- the YAML param is going to be used. Sorry.", immediate. = T);
+            " PTXQC currently cannot deal with that -- the YAML param is going to be used. Sorry.", immediate. = TRUE);
     return (NULL);
   } else if (length(results) == 0) {
-    stop("getMQPARValue(): The parameter '", param_name, "' was not found in the file '", mqpar_filename, "'. Please contact the package support.", call.=F);
+    stop("getMQPARValue(): The parameter '", param_name, "' was not found in the file '", mqpar_filename, "'. Please contact the package support.", call. = FALSE);
   }
   
   ## all tests passed, return the unique result

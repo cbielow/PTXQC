@@ -62,9 +62,9 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   ## final heat map of QC metrics
   QCM_final = Reduce(function(a,b) merge(a,b,all = TRUE), QCM_shortNames)
   ## add summary column
-  QCM_final$"X999X_catGen_Average~Overall~Quality" = apply(QCM_final[,!grepl("fc.raw.file", colnames(QCM_final)), drop=F], 1, function(row) {
+  QCM_final$"X999X_catGen_Average~Overall~Quality" = apply(QCM_final[,!grepl("fc.raw.file", colnames(QCM_final)), drop = FALSE], 1, function(row) {
     row[is.infinite(row)] = NA  ## mask explicitly missing values, since it will bias the mean otherwise
-    return(mean(row, na.rm=T))
+    return(mean(row, na.rm = TRUE))
   })
   
   ## reorder file names
@@ -86,12 +86,12 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   ## some other files might be missing on purpose
   QCM_final.m$value[is.infinite(QCM_final.m$value)] = NA
   
-  if (any(QCM_final.m$value > 1, na.rm=T))
+  if (any(QCM_final.m$value > 1, na.rm = TRUE))
   {
     warning("getQCHeatMap() received quality data values larger than one! This can be corrected here, but should be done upstream.")
     QCM_final.m$value[QCM_final.m$value > 1] = 1
   }
-  if (any(QCM_final.m$value < 0, na.rm=T))
+  if (any(QCM_final.m$value < 0, na.rm = TRUE))
   {
     warning("getQCHeatMap() received quality data values smaller than zero! This can be corrected here, but should be done upstream.")
     QCM_final.m$value[QCM_final.m$value < 0] = 0

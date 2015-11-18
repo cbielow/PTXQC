@@ -23,7 +23,7 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
   #require(stats)
   #require(seqinr)
   
-  pc = prcomp(data, scale.=T)
+  pc = prcomp(data, scale. = TRUE)
   useOrd = !is.na(connect_line_order[1])
   # create data frame with scores
   scores = as.data.frame(pc$x)
@@ -84,7 +84,7 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
     # create data frame with correlations between variables and PCs
     correlations = as.data.frame(cor(data, pc$x))
     # data frame with arrows coordinates
-    arrows = data.frame(x1=rep(0,ncol(data)), y1=rep(0,ncol(data)),
+    arrows = data.frame(x1=rep(0, ncol(data)), y1=rep(0, ncol(data)),
                         x2=correlations$PC1, y2=correlations$PC2)
     
     
@@ -93,8 +93,8 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
       geom_path(data=corcir, aes_string(x = "x", y = "y"), colour="gray65") +  ## open circles
       geom_segment(data=arrows, aes_string(x = "x1", y = "y1", xend = "x2", yend = "y2"), colour="gray65") +
       geom_text(data=correlations, aes_string(x  = "PC1", y = "PC2", label = "rownames(correlations)")) +
-      geom_hline(yintercept=0, colour="gray65") +
-      geom_vline(xintercept=0, colour="gray65") +
+      geom_hline(yintercept = 0, colour = "gray65") +
+      geom_vline(xintercept = 0, colour = "gray65") +
       xlim(-1.1,1.1) + ylim(-1.1,1.1) +
       labs(x="pc1 axis", y="pc2 axis") +
       ggtitle("Circle of correlations")

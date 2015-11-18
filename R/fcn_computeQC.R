@@ -55,7 +55,7 @@ createReport = function(txt_folder, yaml_obj = list())
   time_start = Sys.time()
   
   
-  if (!any(file.info(txt_folder)$isdir, na.rm=T))
+  if (!any(file.info(txt_folder)$isdir, na.rm = TRUE))
   {
     stop(paste0("Argument txt_folder with value '", txt_folder, "' is not a valid directory\n"));
   }
@@ -75,7 +75,7 @@ createReport = function(txt_folder, yaml_obj = list())
   fh_out$report_file = ifelse(use_extended_report_filename, fh_out$report_file_extended, fh_out$report_file_simple)
   
   unlink(fh_out$stats_file)
-  cat("Statistics summary:", file=fh_out$stats_file, append=F, sep="\n")
+  cat("Statistics summary:", file=fh_out$stats_file, append = FALSE, sep="\n")
   
   ## prepare for readMQ()
   mq = MQDataReader$new()
@@ -97,9 +97,9 @@ createReport = function(txt_folder, yaml_obj = list())
     d_parAll = d_parAll[!grepl("^AIF ", d_parAll$parameter),]
     d_parAll$value = gsub(";", line_break, d_parAll$value)
     ## seperate FASTA files (usually they destroy the layout)
-    idx_fastafile = grepl("fasta file", d_parAll$parameter, ignore.case = T)
+    idx_fastafile = grepl("fasta file", d_parAll$parameter, ignore.case = TRUE)
     d_par_file = d_parAll[idx_fastafile, ]
-    fasta_files = sapply(unlist(strsplit(d_par_file$value, "\n")), function(x) rev(strsplit(x,"\\", fixed=T)[[1]])[1])
+    fasta_files = sapply(unlist(strsplit(d_par_file$value, "\n")), function(x) rev(strsplit(x,"\\", fixed = TRUE)[[1]])[1])
     d_par = d_parAll[!idx_fastafile, ]
     ## remove duplicates
     d_par = d_par[!duplicated(d_par$parameter),]
@@ -117,7 +117,7 @@ createReport = function(txt_folder, yaml_obj = list())
     d_par$value = sapply(d_par$value, function (s) 
     {
       allowed_len = nchar("Use least modified peptide"); ## this is a typical entry -- everything which is longer gets split
-      r = paste(sapply(unlist(strsplit(s, line_break, fixed=T)), function(s1) {
+      r = paste(sapply(unlist(strsplit(s, line_break, fixed = TRUE)), function(s1) {
         if (nchar(s1) > allowed_len) {
           s_beg = seq(1, nchar(s1) - 1, allowed_len)
           s1 = paste(unlist(substring(s1, s_beg, s_beg + allowed_len)), collapse = line_break)
@@ -183,7 +183,7 @@ createReport = function(txt_folder, yaml_obj = list())
     
     d_smy[[1]]$fc.raw.file = mq$raw_file_mapping$to[match(d_smy[[1]]$raw.file, mq$raw_file_mapping$from)]
     ## needs to be a factor for 'scale_y_discrete_reverse' below, but lets to the sorting manually...
-    d_smy[[1]]$fc.raw.file = factor(d_smy[[1]]$fc.raw.file, levels=unique(d_smy[[1]]$fc.raw.file), ordered=T)
+    d_smy[[1]]$fc.raw.file = factor(d_smy[[1]]$fc.raw.file, levels=unique(d_smy[[1]]$fc.raw.file), ordered = TRUE)
     
     d_smy[[1]]$x = 1:nrow(d_smy[[1]])
     p = 
@@ -285,16 +285,16 @@ createReport = function(txt_folder, yaml_obj = list())
     MAP_pg_groups = data.frame(long = colsW)
     MAP_pg_groups$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups$long, 
                                                               min_out_length = GL_name_min_length, 
-                                                              add_dots = T), 
+                                                              add_dots = TRUE), 
                                                        min_out_length = GL_name_min_length))
     
     ## Contaminants stats
     df.con_stats = adply(colsW, .margins=1, function(group) {
       #cat(group)
       return(data.frame(group_long = as.character(group),
-                        log10_int  = log10(sum(as.numeric(d_pg[, group]), na.rm=T)),
-                        cont_pc    = sum(as.numeric(d_pg[d_pg$contaminant, group]), na.rm=T) /
-                          sum(as.numeric(d_pg[, group], na.rm=T))*100
+                        log10_int  = log10(sum(as.numeric(d_pg[, group]), na.rm = TRUE)),
+                        cont_pc    = sum(as.numeric(d_pg[d_pg$contaminant, group]), na.rm = TRUE) /
+                          sum(as.numeric(d_pg[, group], na.rm = TRUE))*100
       ))
     })
     df.con_stats$group = MAP_pg_groups$short[match(df.con_stats$group_long, MAP_pg_groups$long)]
@@ -317,14 +317,14 @@ createReport = function(txt_folder, yaml_obj = list())
       #print(pl)
       return (pl)
     }
-    pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 90, plotContsPG, sort_indices=F)
+    pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 90, plotContsPG, sort_indices = FALSE)
     for (p in pg_plots_cont) rep_data$add(p);
     
     ##
     ## stats file
     ##
     con_stats_smry = quantile(df.con_stats$cont_pc, probs=c(0,0.5,1))
-    cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=fh_out$stats_file, append=T, sep="\n")  
+    cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=fh_out$stats_file, append = TRUE, sep="\n")  
     
     ###
     ### intensity boxplot
@@ -334,14 +334,14 @@ createReport = function(txt_folder, yaml_obj = list())
     #cat("colsW:\n")
     #cat(paste0(colsW, collapse=","))
     ## some stats (for plot title)
-    medians_no0 = sort(apply(log2(d_pg[, colsW, drop=F]), 2, function(x) quantile(x[x>0], probs=0.5, na.rm=T))) # + c(0,0,0,0,0,0))
+    medians_no0 = sort(apply(log2(d_pg[, colsW, drop = FALSE]), 2, function(x) quantile(x[x>0], probs=0.5, na.rm = TRUE))) # + c(0,0,0,0,0,0))
     int_dev_no0 = RSD(medians_no0)
     ## do not remove zeros (but add +1 since RSD is 'NA' when 'inf' is included in log-data)
-    medians = sort(apply(log2(d_pg[, colsW, drop=F]+1), 2, quantile, na.rm=T, probs=0.5)) # + c(0,0,0,0,0,0))
+    medians = sort(apply(log2(d_pg[, colsW, drop = FALSE]+1), 2, quantile, na.rm = TRUE, probs=0.5)) # + c(0,0,0,0,0,0))
     int_dev = RSD(medians)
     int_dev.s = pastet("INT RSD [%]", round(int_dev, 3))
-    lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
-                            log2 = T, 
+    lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
+                            log2 = TRUE, 
                          mainlab = "PG: intensity distribution",
                             ylab = expression(log[2]*" intensity"),
                           sublab = paste0("RSD ", round(int_dev_no0, 1),"% (w/o zero int.; expected < 5%)\n",
@@ -351,7 +351,7 @@ createReport = function(txt_folder, yaml_obj = list())
     #for (pl in lpl) print(pl)
     for (pl in lpl) rep_data$add(pl)
     rm("lpl")          
-    cat(int_dev.s, file=fh_out$stats_file, append=T, sep="\n")
+    cat(int_dev.s, file=fh_out$stats_file, append = TRUE, sep="\n")
     
     ##
     ## LFQ boxplots
@@ -370,19 +370,19 @@ createReport = function(txt_folder, yaml_obj = list())
       MAP_pg_groups_LFQ = data.frame(long = colsW)
       MAP_pg_groups_LFQ$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups_LFQ$long, 
                                                                     min_out_length = GL_name_min_length, 
-                                                                    add_dots = T), 
+                                                                    add_dots = TRUE), 
                                                              min_out_length = GL_name_min_length))
 
       clusterCols$lfq.intensity = colsW ## cluster using LFQ
       ## some stats (for plot title)
-      medians_no0 = sort(apply(log2(d_pg[, colsW, drop=F]), 2, function(x) quantile(x[x>0], probs=0.5, na.rm=T))) # + c(0,0,0,0,0,0))
+      medians_no0 = sort(apply(log2(d_pg[, colsW, drop = FALSE]), 2, function(x) quantile(x[x>0], probs=0.5, na.rm = TRUE))) # + c(0,0,0,0,0,0))
       lfq_dev_no0 = RSD(medians_no0)
       ## do not remove zeros (but add +1 since RSD is 'NA' when 'inf' is included in log-data)
-      medians = sort(apply(log2(d_pg[, colsW, drop=F]+1), 2, quantile, probs=0.5, na.rm=T)) # + c(0,0,0,0,0,0))
+      medians = sort(apply(log2(d_pg[, colsW, drop = FALSE]+1), 2, quantile, probs=0.5, na.rm = TRUE)) # + c(0,0,0,0,0,0))
       lfq_dev = RSD(medians)
       lfq_dev.s = pastet("LFQ RSD [%]", round(lfq_dev, 3))
-      lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
-                              log2 = T, 
+      lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
+                              log2 = TRUE, 
                            mainlab = "PG: LFQ intensity distribution", 
                               ylab = expression(log[2]*" LFQ intensity"),
                             sublab = paste0("RSD ", round(lfq_dev_no0, 1),"% (w/o zero int.; expected < 5%)\n",
@@ -391,7 +391,7 @@ createReport = function(txt_folder, yaml_obj = list())
                              names = MAP_pg_groups_LFQ)
       #for (pl in lpl) print(pl)
       for (pl in lpl) rep_data$add(pl)
-      cat(lfq_dev.s, file=fh_out$stats_file, append=T, sep="\n")
+      cat(lfq_dev.s, file=fh_out$stats_file, append = TRUE, sep="\n")
     }
     
     ##
@@ -406,20 +406,20 @@ createReport = function(txt_folder, yaml_obj = list())
       MAP_pg_groups_ITRAQ = data.frame(long = c(colsITRAQ))
       MAP_pg_groups_ITRAQ$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups_ITRAQ$long, 
                                                                       min_out_length = GL_name_min_length, 
-                                                                      add_dots = T), 
+                                                                      add_dots = TRUE), 
                                                                min_out_length = GL_name_min_length))
 
       colsW = colsITRAQ
       clusterCols$reporter.intensity = colsW ## cluster using reporters
       ## some stats (for plot title)
-      medians_no0 = sort(apply(log2(d_pg[, colsW, drop=F]), 2, function(x) quantile(x[x>0], probs=0.5, na.rm=T))) # + c(0,0,0,0,0,0))
+      medians_no0 = sort(apply(log2(d_pg[, colsW, drop = FALSE]), 2, function(x) quantile(x[x>0], probs=0.5, na.rm = TRUE))) # + c(0,0,0,0,0,0))
       reprt_dev_no0 = RSD(medians_no0)
       ## do not remove zeros (but add +1 since RSD is 'NA' when 'inf' is included in log-data)
-      medians = sort(apply(log2(d_pg[, colsW, drop=F]+1), 2, quantile, probs=0.5, na.rm=T)) # + c(0,0,0,0,0,0))
+      medians = sort(apply(log2(d_pg[, colsW, drop = FALSE]+1), 2, quantile, probs=0.5, na.rm = TRUE)) # + c(0,0,0,0,0,0))
       reprt_dev = RSD(medians)
       reprt_dev.s = pastet("Reporter RSD [%]", round(reprt_dev, 3))
-      lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop=F], id.vars=c("contaminant"))[,c(2,3,1)],
-                              log2 = T, 
+      lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
+                              log2 = TRUE, 
                               ylab = expression(log[2]*" reporter intensity"),
                            mainlab = "PG: reporter intensity distribution",
                             sublab = paste0("RSD ", round(reprt_dev_no0, 1),"% (w/o zero int.; expected < 5%)\n",
@@ -428,7 +428,7 @@ createReport = function(txt_folder, yaml_obj = list())
                              names = MAP_pg_groups_ITRAQ)
       #for (pl in lpl) print(pl)
       for (pl in lpl) rep_data$add(pl)
-      cat(reprt_dev.s, file=fh_out$stats_file, append = T, sep="\n")
+      cat(reprt_dev.s, file=fh_out$stats_file, append = TRUE, sep="\n")
     }
     
     
@@ -447,12 +447,12 @@ createReport = function(txt_folder, yaml_obj = list())
         next;
       }
       ## remove contaminants
-      data = t(d_pg[!d_pg$contaminant, unlist(clusterCols[cond]), drop=F])
+      data = t(d_pg[!d_pg$contaminant, unlist(clusterCols[cond]), drop = FALSE])
       ## remove constant/zero columns (== dimensions == proteins)
-      data = data[, colSums(data, na.rm=T) > 0, drop=F]
+      data = data[, colSums(data, na.rm = TRUE) > 0, drop = FALSE]
       rownames(data) = MAP_pg_groups_ALL$short[match(rownames(data), MAP_pg_groups_ALL$long)]
       lpl = try(getPCA(data = data,
-                       gg_layer = addGGtitle(paste0("PG: PCA of '", sub(".", " ", cond, fixed=T), "'"), "(excludes contaminants)")
+                       gg_layer = addGGtitle(paste0("PG: PCA of '", sub(".", " ", cond, fixed = TRUE), "'"), "(excludes contaminants)")
       )[["plots"]]
       )
       #print(lpl)
@@ -467,13 +467,13 @@ createReport = function(txt_folder, yaml_obj = list())
     ratio_cols = grepv("^ratio\\.[hm]\\.l", colnames(d_pg))  ## e.g. "ratio.m.l.ARK5exp" or "ratio.m.l.variability.ARK5exp"
     ## remove everything else
     ## e.g. we do not want ratio.h.l.variability.ARK5exp, i.e. the 'variability' property
-    ratio_cols = grepv("^ratio.[hm].l.normalized", ratio_cols, invert=T)
-    ratio_cols = grepv("^ratio.[hm].l.count", ratio_cols, invert=T)
-    ratio_cols = grepv("^ratio.[hm].l.variability", ratio_cols, invert=T)
-    ratio_cols = grepv("^ratio.[hm].l.significance.a", ratio_cols, invert=T) ## from MQ 1.0.1x
-    ratio_cols = grepv("^ratio.[hm].l.significance.b", ratio_cols, invert=T)
-    ratio_cols = grepv("^ratio.[hm].l.iso.count", ratio_cols, invert=T) ## from MQ 1.5.1.2
-    ratio_cols = grepv("^ratio.[hm].l.type", ratio_cols, invert=T)
+    ratio_cols = grepv("^ratio.[hm].l.normalized", ratio_cols, invert = TRUE)
+    ratio_cols = grepv("^ratio.[hm].l.count", ratio_cols, invert = TRUE)
+    ratio_cols = grepv("^ratio.[hm].l.variability", ratio_cols, invert = TRUE)
+    ratio_cols = grepv("^ratio.[hm].l.significance.a", ratio_cols, invert = TRUE) ## from MQ 1.0.1x
+    ratio_cols = grepv("^ratio.[hm].l.significance.b", ratio_cols, invert = TRUE)
+    ratio_cols = grepv("^ratio.[hm].l.iso.count", ratio_cols, invert = TRUE) ## from MQ 1.5.1.2
+    ratio_cols = grepv("^ratio.[hm].l.type", ratio_cols, invert = TRUE)
     ratio_cols
     
     if (length(ratio_cols) > 0)
@@ -482,7 +482,7 @@ createReport = function(txt_folder, yaml_obj = list())
       
       ## remove reverse and contaminants (might skew the picture)
       idx_row = !d_pg$contaminant & !d_pg$reverse
-      d_sub = log2(d_pg[idx_row, ratio_cols, drop=F])
+      d_sub = log2(d_pg[idx_row, ratio_cols, drop = FALSE])
       ## rename "ratio.h.l" to "h.l" (same for m.l in tripleSILAC)
       idx_globalRatio = grep("ratio\\.[hm]\\.l$", colnames(d_sub))
       if (length(idx_globalRatio)) colnames(d_sub)[idx_globalRatio] = gsub("^ratio\\.", "", colnames(d_sub)[idx_globalRatio])
@@ -492,23 +492,23 @@ createReport = function(txt_folder, yaml_obj = list())
         idx_other = setdiff(1:ncol(d_sub), idx_globalRatio)
         colnames(d_sub)[idx_other] = shortenStrings(simplifyNames(delLCP(colnames(d_sub)[idx_other], 
                                                                          min_out_length = GL_name_min_length, 
-                                                                         add_dots = T), 
+                                                                         add_dots = TRUE), 
                                                                   min_out_length = GL_name_min_length))
       }
       #summary(d_sub)
       # 
-      # plot(density(d_sub[,1], bw = "SJ", adjust=1, na.rm=T, n=128))
+      # plot(density(d_sub[,1], bw = "SJ", adjust=1, na.rm = TRUE, n=128))
       # plot(d_sub[,1])
-      # h = density(d_sub[,1], bw = "SJ", adjust=1, na.rm=T, n=128)
+      # h = density(d_sub[,1], bw = "SJ", adjust=1, na.rm = TRUE, n=128)
       
       
       ## get ranges to fix breaks for density intervals
-      # breaks = seq(min(d_sub, na.rm=T), max(d_sub, na.rm=T), length.out=(max(dd, na.rm=T)-min(dd, na.rm=T))/0.5)
+      # breaks = seq(min(d_sub, na.rm = TRUE), max(d_sub, na.rm = TRUE), length.out=(max(dd, na.rm = TRUE)-min(dd, na.rm = TRUE))/0.5)
       # mid = hist(d_sub[, 1], breaks = breaks)$mids
       ratio.densities = do.call(rbind, (lapply(1:ncol(d_sub), function(x) {
         name = colnames(d_sub)[x]
         ## density estimation can fail if not enough data
-        h = try(density(na.omit(d_sub[ ,x]), bw = "SJ", adjust=2, na.rm=T))
+        h = try(density(na.omit(d_sub[ ,x]), bw = "SJ", adjust=2, na.rm = TRUE))
         if (inherits(h, "try-error")) return (data.frame(x = 1, y = 1, col = name, multimodal = FALSE))
         count = sum(getMaxima(h$y))
         if (count > 1) name = paste(name, "*")
@@ -575,7 +575,7 @@ createReport = function(txt_folder, yaml_obj = list())
                                   guide_legend("shape")
             ) +
             scale_x_continuous(limits = c(d_min, d_max), trans = "identity", breaks = c(-br, 0, br), labels=c(paste0("1/",2^(br)), 1, 2^br)) +
-            guides(colour=FALSE) +
+            guides(colour = FALSE) +
             theme(plot.title = element_text(colour = title_col)) +
             theme_bw() +
             geom_vline(alpha = 0.5, xintercept = 0, colour = "green", linetype = "dashed", size = 1.5) +
@@ -584,7 +584,7 @@ createReport = function(txt_folder, yaml_obj = list())
         return (1)
       }
       
-      byXflex(ratio.densities, ratio.densities$col, 5, plotRatios, sort_indices = F, d_min = quantile(d_sub, na.rm=T, probs=0.00), d_max = quantile(d_sub, na.rm=T, probs=1), title_col)
+      byXflex(ratio.densities, ratio.densities$col, 5, plotRatios, sort_indices = FALSE, d_min = quantile(d_sub, na.rm = TRUE, probs=0.00), d_max = quantile(d_sub, na.rm = TRUE, probs=1), title_col)
       
     }
     ## rm("d_pg") required in evidence....
@@ -654,11 +654,11 @@ createReport = function(txt_folder, yaml_obj = list())
         
         ca_thresh = as.numeric(ca_entry[2])
         
-        not_found = T
+        not_found = TRUE
         
         if (enabled_proteingroups)
         {
-          pg_id = d_pg$id[grep(ca, d_pg$fasta.headers, ignore.case = T)]
+          pg_id = d_pg$id[grep(ca, d_pg$fasta.headers, ignore.case = TRUE)]
         } else {
           ## fail hard; we could hack around this (e.g. by loading fasta headers from evidence.txt), but it
           ## wastes a lot of memory and time
@@ -686,7 +686,7 @@ createReport = function(txt_folder, yaml_obj = list())
             x$idx_cont = x$protein.group.ids %in% pg_id
             
             sc = sum(x$idx_cont) / nrow(x) * 100
-            int = sum(as.numeric(x$intensity[x$idx_cont]), na.rm=T) / sum(as.numeric(x$intensity), na.rm=T) * 100
+            int = sum(as.numeric(x$intensity[x$idx_cont]), na.rm = TRUE) / sum(as.numeric(x$intensity), na.rm = TRUE) * 100
             
             above.thresh = (sc > ca_thresh) | (int > ca_thresh)
             
@@ -742,7 +742,8 @@ createReport = function(txt_folder, yaml_obj = list())
             #print(pr)
             return(1)
           }
-          byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, FUN = plotContUser, sort_indices=F, extra_limit = ca_thresh)
+          byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, 
+                  FUN = plotContUser, sort_indices = FALSE, extra_limit = ca_thresh)
           
           ## plot Andromeda score distribution of contaminant vs. sample
           llply(cont_data.l, function(l)
@@ -766,8 +767,8 @@ createReport = function(txt_folder, yaml_obj = list())
           report_short = pastet("Contaminant:", ca, paste0(sum(cont_data$above.thres),"/",nrow(cont_data)," Raw files"))
           report_samples  = pastet("Contaminant-details (name, raw.file, spectralCount%): " , ca, paste(cont_data$fc.raw.file, collapse=";"), paste(cont_data$spectralCount, collapse=";"))
           report_samples2 = pastet("Contaminant-details (name, raw.file, intensity%): " , ca, paste(cont_data$fc.raw.file, collapse=";"), paste(cont_data$intensity, collapse=";"))
-          cat(pasten(report_short, report_samples, report_samples2), file=fh_out$stats_file, append=T, sep="\n")
-          cat(pastet("contamination-proteins:", ca, paste((d_pg$majority.protein.ids[pg_id]), collapse=",")), file=fh_out$stats_file, append=T, sep="\n") 
+          cat(pasten(report_short, report_samples, report_samples2), file=fh_out$stats_file, append=TRUE, sep="\n")
+          cat(pastet("contamination-proteins:", ca, paste((d_pg$majority.protein.ids[pg_id]), collapse=",")), file=fh_out$stats_file, append=TRUE, sep="\n") 
         }
         
       } ## contaminant loop
@@ -792,12 +793,12 @@ createReport = function(txt_folder, yaml_obj = list())
       
       colnames(d_evd)
       medians_pep = ddply(d_evd[ ,c("fc.raw.file", "intensity")], "fc.raw.file",
-                          function(x) data.frame(med = log2(quantile(x$intensity, probs=0.5, na.rm=T))))
+                          function(x) data.frame(med = log2(quantile(x$intensity, probs=0.5, na.rm = TRUE))))
       
       int_dev_pep = RSD((medians_pep$med))
       int_dev.s = pastet("INT RSD [%]", round(int_dev_pep, 3))
       lpl = boxplotCompare(data = d_evd[, c("fc.raw.file", "intensity", "contaminant")],
-                           log2 = T, 
+                           log2 = TRUE, 
                            mainlab="EVD: peptide intensity distribution",
                            ylab = expression(log[2]*" intensity"),
                            sublab=paste0("RSD ", round(int_dev_pep, 1),"% (expected < 5%)\n"),
@@ -828,7 +829,7 @@ createReport = function(txt_folder, yaml_obj = list())
       pgc$block = factor(assignBlocks(pgc$fc.raw.file, 30))
       max_prot = max(unlist(dlply(pgc, "fc.raw.file", function(x) sum(x$proteinCounts))))
       ## average gain in percent
-      gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pgc$proteinMBRgain, na.rm=T)), "")
+      gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pgc$proteinMBRgain, na.rm = TRUE)), "")
       
       ## get scoring threshold (upper limit)
       param_name_EV_protThresh = "File$Evidence$ProteinCountThresh_num"
@@ -869,7 +870,7 @@ createReport = function(txt_folder, yaml_obj = list())
       ##
       max_pep = max(unlist(dlply(pgc, "fc.raw.file", function(x) sum(x$peptideCounts))))
       ## average gain in percent
-      gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pgc$peptideMBRgain, na.rm=T)), "")
+      gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pgc$peptideMBRgain, na.rm = TRUE)), "")
             
       ## get scoring threshold (upper limit)
       param_name_EV_pepThresh = "File$Evidence$PeptideCountThresh_num"
@@ -917,9 +918,9 @@ createReport = function(txt_folder, yaml_obj = list())
         {      
           r = range(x$retention.time)
           brs = seq(from=r[1], to=r[2]+bin_width/60, by=bin_width/60)
-          x$bin = cut(x$retention.time, breaks=brs, include.lowest=T)
+          x$bin = cut(x$retention.time, breaks=brs, include.lowest = TRUE)
           retLStats = ddply(x, "bin", .fun = function(xb) {
-            data.frame(mid = brs[as.numeric(xb$bin[1])], retlengthAvg = median(xb$retention.length, na.rm=T))
+            data.frame(mid = brs[as.numeric(xb$bin[1])], retlengthAvg = median(xb$retention.length, na.rm = TRUE))
           })
           return(retLStats)
         }
@@ -931,15 +932,15 @@ createReport = function(txt_folder, yaml_obj = list())
         d_evd.m.d_med = ddply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = function(x) {
           #fcr = as.character(x$fc.raw.file[1])
           #cat(fcr)
-          m = median(x$retention.length, na.rm=T);
+          m = median(x$retention.length, na.rm = TRUE);
           return(data.frame(median = m))
         })
         
         
         d_evd.m.d$block = factor(assignBlocks(d_evd.m.d$fc.raw.file, 8))
         ## identical limits for all plots
-        d_evd.xlim = quantile(d_evd.m.d$mid, c(0,1), na.rm=T)
-        d_evd.ylim = quantile(d_evd.m.d$retlengthAvg, c(0,1), na.rm=T)
+        d_evd.xlim = quantile(d_evd.m.d$mid, c(0,1), na.rm = TRUE)
+        d_evd.ylim = quantile(d_evd.m.d$retlengthAvg, c(0,1), na.rm = TRUE)
         
         fcn_plotPeakWidth = function(data)
         {
@@ -949,7 +950,7 @@ createReport = function(txt_folder, yaml_obj = list())
                                     round(d_evd.m.d_med_sub$median[match(data$fc.raw.file, d_evd.m.d_med_sub$fc.raw.file)], 1),
                                     " min)")
           ## manually convert to factor to keep old ordering (otherwise ggplot will sort it, since its a string)
-          data$fc.raw.file = factor(data$fc.raw.file, levels = unique(data$fc.raw.file), ordered=T)
+          data$fc.raw.file = factor(data$fc.raw.file, levels = unique(data$fc.raw.file), ordered = TRUE)
           d_evd.m.d_med_sub$fc.raw.file = paste0(d_evd.m.d_med_sub$fc.raw.file, " (~", 
                                                  round(d_evd.m.d_med_sub$median[match(d_evd.m.d_med_sub$fc.raw.file, d_evd.m.d_med_sub$fc.raw.file)], 1),
                                                  " min)")
@@ -962,7 +963,7 @@ createReport = function(txt_folder, yaml_obj = list())
             ylim(d_evd.ylim) +
             ggtitle("EVD: Peak width over RT") +
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-            pointsPutX(x_range=range(data$mid), x_section=c(0.03,0.08), y=d_evd.m.d_med_sub$median, col=d_evd.m.d_med_sub$fc.raw.file[,drop=T])
+            pointsPutX(x_range=range(data$mid), x_section=c(0.03,0.08), y=d_evd.m.d_med_sub$median, col=d_evd.m.d_med_sub$fc.raw.file[, drop = TRUE])
           
           #print(pl)
           rep_data$add(pl)
@@ -1099,14 +1100,14 @@ createReport = function(txt_folder, yaml_obj = list())
                 rep_data$add(pl)
                 return(1)
               }
-              ylim_g = quantile(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), probs=c(0.01,0.99), na.rm=T) * 1.1
-              byX(evd_RT_t, evd_RT_t$fc.raw.file, 3*3, splitRTAlignByRawFile, sort_indices = F, ylim_g)
+              ylim_g = quantile(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), probs=c(0.01,0.99), na.rm = TRUE) * 1.1
+              byX(evd_RT_t, evd_RT_t$fc.raw.file, 3*3, splitRTAlignByRawFile, sort_indices = FALSE, ylim_g)
 
               ## test shape of mass-error:
 #               vv = ddply(d_evd, "fc.raw.file", function(x) {
 #                 ## only matched
 #                 xx = x[!is.na(x$match.time.difference),]
-#                 h = hist(xx$mass.error..ppm., 100, main=x$fc.raw.file[1], add=T)
+#                 h = hist(xx$mass.error..ppm., 100, main=x$fc.raw.file[1], add = TRUE)
 #                 data.frame(m = h$mids, d = h$density)
 #               })
 #               ggplot(vv) + geom_line(aes(x=m, y=d, col=fc.raw.file))
@@ -1178,7 +1179,7 @@ createReport = function(txt_folder, yaml_obj = list())
             return(1)
           }
 
-          byX(scoreMBRMatch, scoreMBRMatch$fc.raw.file, 12, uniqueRMatchByRawFile, sort_indices = F)
+          byX(scoreMBRMatch, scoreMBRMatch$fc.raw.file, 12, uniqueRMatchByRawFile, sort_indices = FALSE)
           
           ##
           ## MBR: Tree Clustering
@@ -1193,7 +1194,7 @@ createReport = function(txt_folder, yaml_obj = list())
           ##
           ## MBR: additional evidence by matching MS1 by AMT across files
           ##
-          if (any(d_evd$match.time.difference, na.rm=T)) {
+          if (any(d_evd$match.time.difference, na.rm = TRUE)) {
             ## scatter plot: for each raw file give median time diff and # peptides used for matching
             mtr.df = ddply(d_evd, "fc.raw.file", function(x) {
               match_count_abs = sum(!is.na(x$match.time.difference))
@@ -1207,8 +1208,8 @@ createReport = function(txt_folder, yaml_obj = list())
               ggtitle(paste0("EVD: Peptides inferred by AMT-matching\n", round(100*sum(!is.na(d_evd$match.time.difference))/nrow(d_evd)) ,"% average" )) +
               xlab("inferred by MS1 [count]") +
               ylab("inferred by MS1 [%]") +
-              xlim(0, max(mtr.df$abs, na.rm=T)*1.1) +
-              ylim(0, max(mtr.df$pc, na.rm=T)*1.1)
+              xlim(0, max(mtr.df$abs, na.rm = TRUE)*1.1) +
+              ylim(0, max(mtr.df$pc, na.rm = TRUE)*1.1)
             rep_data$add(direct.label(p_amt, list(cex=0.5, "smart.grid")))
             #print(p_amt)
           } ## AMT 
@@ -1230,7 +1231,7 @@ createReport = function(txt_folder, yaml_obj = list())
           mosaicPlot(d_sub$fc.raw.file, d_sub$charge) +
             xlab("Raw file") +
             ylab("fraction [%]") +
-            guides(fill=guide_legend(title="charge"), color=FALSE) + # avoid black line in legend
+            guides(fill=guide_legend(title="charge"), color = FALSE) + # avoid black line in legend
             scale_x_reverse() +
             coord_flip() +
             theme(axis.text.y=element_blank(), axis.ticks=element_blank()) +
@@ -1253,7 +1254,7 @@ createReport = function(txt_folder, yaml_obj = list())
       cat("EVD: Peptides over RT ...\n")
       raws_perPlot = 8
       smr_evdRT = summary(d_evd$retention.time)
-      max_y = max(by(d_evd$retention.time, d_evd$fc.raw.file,  function(d) max(hist(d, breaks=seq(from=min(d)-3, to=max(d)+3, by=3), plot=F)$counts)))
+      max_y = max(by(d_evd$retention.time, d_evd$fc.raw.file,  function(d) max(hist(d, breaks=seq(from=min(d)-3, to=max(d)+3, by=3), plot = FALSE)$counts)))
       fcRTSubset <- function(d_sub, smr_evdRT)
       {
         nrOfRaws = length(unique(d_sub$fc.raw.file))
@@ -1276,7 +1277,7 @@ createReport = function(txt_folder, yaml_obj = list())
       ## QC measure for uniform-ness
       QCM[["ID_rate_over_RT"]] = ddply(d_evd[, c("retention.time",  "raw.file")], "raw.file", 
                                        function(x) data.frame("X015X_catLC_EVD:~ID~rate~over~RT" = qualUniform(x$retention.time), 
-                                                              check.names = F))
+                                                              check.names = FALSE))
       
       
 ##
@@ -1325,8 +1326,8 @@ param_EV_PrecursorOutOfCalSD = getYAML(yaml_obj, param_name_EV_PrecursorOutOfCal
 ## -- uninformative for detection is the distribution (it's still Gaussian for a strange reason)
 MS1_decal_smr = ddply(d_evd, "raw.file", function(x) 
   data.frame(n = nrow(x), 
-             sd = round(sd(x$mass.error..ppm., na.rm=T), 1), 
-             range = diff(quantile(x$mass.error..ppm., c(0.01, 0.99), na.rm=T))))
+             sd = round(sd(x$mass.error..ppm., na.rm = TRUE), 1), 
+             range = diff(quantile(x$mass.error..ppm., c(0.01, 0.99), na.rm = TRUE))))
 ## additionally use MS2-ID rate (should be below 1%)
 if (enabled_summary) {
   MS1_decal_smr = merge(MS1_decal_smr, d_smy$raw[, c("raw.file", "ms.ms.identified....")])
@@ -1340,8 +1341,8 @@ MS1_decal_smr$hasMassErrorBug_unfixable = FALSE
 recal_message = ""
 recal_message_post = ""
 ## check each raw file individually (usually its just a few who are affected)
-de_cal = ddply(d_evd, "raw.file", .fun = function(x) data.frame(q = (quantile(abs(x$uncalibrated.mass.error..ppm.), probs = 0.5, na.rm=T) > 1e3)))
-if (any(de_cal$q, na.rm=T))
+de_cal = ddply(d_evd, "raw.file", .fun = function(x) data.frame(q = (quantile(abs(x$uncalibrated.mass.error..ppm.), probs = 0.5, na.rm = TRUE) > 1e3)))
+if (any(de_cal$q, na.rm = TRUE))
 {
   recal_message = "MQ bug: data rescued"
   recal_message_post = 'MQ bug: data cannot be rescued'
@@ -1356,8 +1357,8 @@ if (any(de_cal$q, na.rm=T))
 
   
   ## check if fix worked
-  de_cal2 = ddply(d_evd, "raw.file", .fun = function(x)  data.frame(q = (median(abs(x$uncalibrated.mass.error..ppm.2), na.rm=T) > 1e3)))
-  if (any(de_cal2$q, na.rm = T))
+  de_cal2 = ddply(d_evd, "raw.file", .fun = function(x)  data.frame(q = (median(abs(x$uncalibrated.mass.error..ppm.2), na.rm = TRUE) > 1e3)))
+  if (any(de_cal2$q, na.rm = TRUE))
   { ## fix did not work
     MS1_decal_smr$hasMassErrorBug_unfixable[ MS1_decal_smr$raw.file %in% de_cal2$raw.file[de_cal2$q] ] = TRUE
     recal_message = "m/z recalibration bugfix applied but failed\n(there are still large numbers)"
@@ -1391,7 +1392,7 @@ plotPCUnCal = function(d_sub, affected_raw_files, ylim_g)
   
   ## amend SD to fc.raw.file
   d_sub$fc.raw.file = paste0(d_sub$fc.raw.file, " (sd = ", MS1_decal_smr$sd[match(d_sub$raw.file, MS1_decal_smr$raw.file)], "ppm)")
-  d_sub$fc.raw.file = factor(d_sub$fc.raw.file, levels=unique(d_sub$fc.raw.file), ordered=T)
+  d_sub$fc.raw.file = factor(d_sub$fc.raw.file, levels=unique(d_sub$fc.raw.file), ordered = TRUE)
   
   pl = ggplot(d_sub, col=d_sub$col) +
       geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
@@ -1412,7 +1413,7 @@ plotPCUnCal = function(d_sub, affected_raw_files, ylim_g)
 ## some outliers can have ~5000ppm, blowing up the plot margins
 ## --> remove outliers 
 ylim_g = range(boxplot.stats(d_evd$uncalibrated.mass.error..ppm.)$stats[c(1, 5)], c(-param_EV_PrecursorTolPPM, param_EV_PrecursorTolPPM) * 1.05)
-byXflex(d_evd, d_evd$fc.raw.file, 20, plotPCUnCal, sort_indices=F, affected_raw_files=affected_raw_files, ylim_g)
+byXflex(d_evd, d_evd$fc.raw.file, 20, plotPCUnCal, sort_indices = FALSE, affected_raw_files=affected_raw_files, ylim_g)
 
 ## scores
 qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "raw.file")], "raw.file", 
@@ -1446,7 +1447,7 @@ if (param_useMQPAR) {
 }
 if (is.na(param_EV_PrecursorTolPPMmainSearch))
 {
-  warning("PTXQC: Cannot draw borders for calibrated mass error, since neither 'File$Evidence$MQpar_mainSearchTol_num' is set nor a mqpar.xml file is present!", immediate.=T)
+  warning("PTXQC: Cannot draw borders for calibrated mass error, since neither 'File$Evidence$MQpar_mainSearchTol_num' is set nor a mqpar.xml file is present!", immediate. = TRUE)
 }
 
 plotPCCal = function(d_sub, affected_raw_files, ylim_g)
@@ -1480,13 +1481,13 @@ plotPCCal = function(d_sub, affected_raw_files, ylim_g)
   rep_data$add(pl)
   return (1)
 }
-ylim_g = range(na.rm=T, boxplot.stats(d_evd$mass.error..ppm.)$stats[c(1, 5)], c(-param_EV_PrecursorTolPPMmainSearch, param_EV_PrecursorTolPPMmainSearch) * 1.05)
-byXflex(d_evd, d_evd$fc.raw.file, 20, plotPCCal, sort_indices=F, affected_raw_files=affected_raw_files, ylim_g=ylim_g)
+ylim_g = range(na.rm = TRUE, boxplot.stats(d_evd$mass.error..ppm.)$stats[c(1, 5)], c(-param_EV_PrecursorTolPPMmainSearch, param_EV_PrecursorTolPPMmainSearch) * 1.05)
+byXflex(d_evd, d_evd$fc.raw.file, 20, plotPCCal, sort_indices = FALSE, affected_raw_files=affected_raw_files, ylim_g=ylim_g)
 
 ## QC measure for post-calibration ppm error
 ## .. assume 0 centered and StdDev of observed data
 obs_par = ddply(d_evd[, c("mass.error..ppm.", "raw.file")], "raw.file", 
-                function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm=T), sd = sd(x$mass.error..ppm., na.rm=T)))
+                function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm = TRUE), sd = sd(x$mass.error..ppm., na.rm = TRUE)))
 qc_MS1Cal = data.frame(raw.file = obs_par$raw.file, 
                        val = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
 ## if we suspect out-of-calibration, give lowest score
@@ -1501,9 +1502,9 @@ QCM[["X027X.EVD.MS_Cal-Post"]] = qc_MS1Cal
 
 
 ## compute how well calibration worked
-cal_medians = as.vector(by(d_evd$mass.error..ppm., d_evd$raw.file, median, na.rm=T))
+cal_medians = as.vector(by(d_evd$mass.error..ppm., d_evd$raw.file, median, na.rm = TRUE))
 cal_stats = quantile(cal_medians, probs=c(0,0.5,1))
-cat(pastet("medianCalibratedMassError(min,median,max) [ppm]", paste(cal_stats, collapse=",")), file=fh_out$stats_file, append=T, sep="\n") 
+cat(pastet("medianCalibratedMassError(min,median,max) [ppm]", paste(cal_stats, collapse=",")), file=fh_out$stats_file, append = TRUE, sep="\n") 
 
 ##
 ## elaborate contaminant fraction per Raw.file (this is not possible from PG, since raw files could be merged)
@@ -1527,10 +1528,10 @@ if ("protein.names" %in% colnames(d_evd))
 d_evd$pname = d_evd[, evd_pname];
 d_evd$pname[d_evd$pname==""] = d_evd$proteins[d_evd$pname==""] ## a NOP if it already is 'proteins', but ok
 
-d_evd.totalInt = sum(as.numeric(d_evd$intensity), na.rm=T)
+d_evd.totalInt = sum(as.numeric(d_evd$intensity), na.rm = TRUE)
 d_evd.cont.only = d_evd[d_evd$contaminant,]
-cont.top = by(d_evd.cont.only, d_evd.cont.only$pname, function(x) sum(as.numeric(x$intensity), na.rm=T) / d_evd.totalInt*100)
-cont.top.sort = sort(cont.top, decreasing=T)
+cont.top = by(d_evd.cont.only, d_evd.cont.only$pname, function(x) sum(as.numeric(x$intensity), na.rm = TRUE) / d_evd.totalInt*100)
+cont.top.sort = sort(cont.top, decreasing = TRUE)
 #head(cont.top.sort)
 cont.top5.names = names(cont.top.sort)[1:5]
 
@@ -1547,10 +1548,10 @@ plotCont = function(d_evd_sub, top5=cont.top5.names)
   ## aggregate identical proteins
   ##  use sum(as.numeric(.)) to prevent overflow
   d_sum = ddply(d_evd.cont.only_sub[, c("intensity", "pname", "fc.raw.file")], c("pname", "fc.raw.file"), 
-                function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm=T)))
+                function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm = TRUE)))
   ## normalize by total intensity of raw file
   d_norm = ddply(d_evd_sub[, c("intensity", "fc.raw.file")],  "fc.raw.file", 
-                 function(x) summarise(x, total.intensity=sum(as.numeric(intensity), na.rm=T)))
+                 function(x) summarise(x, total.intensity=sum(as.numeric(intensity), na.rm = TRUE)))
   d_sum$total.intensity = d_norm$total.intensity[match(d_sum$fc.raw.file, d_norm$fc.raw.file)]
   d_sum$Log10Diff = getAbundanceClass(log10(d_sum$total.intensity))
   d_sum$s.intensity = d_sum$s.intensity / d_sum$total.intensity * 100
@@ -1569,7 +1570,7 @@ plotCont = function(d_evd_sub, top5=cont.top5.names)
   d_sum = rbind(d_sum1, d_sum2)
   ## value of factors determines order in the legend
   ## --> make proteins a factor, with 'other' being the first
-  d_sum$Protein = factor(d_sum$pname, levels=unique(c("other", d_sum$pname)), ordered=T)
+  d_sum$Protein = factor(d_sum$pname, levels=unique(c("other", d_sum$pname)), ordered = TRUE)
   head(d_sum)
   
   ## plot
@@ -1589,7 +1590,7 @@ plotCont = function(d_evd_sub, top5=cont.top5.names)
       scale_fill_manual(values = brewer.pal(6,"Accent")) + 
       scale_colour_manual(values = brewer.pal(6,"Accent")) +
       geom_hline(aes_string(yintercept = "5"), linetype='dashed') +
-      #guides(alpha=NULL, fill = guide_legend(nrow = 2, ncol = 3, byrow = TRUE, reverse = T)) +
+      #guides(alpha=NULL, fill = guide_legend(nrow = 2, ncol = 3, byrow = TRUE, reverse = TRUE)) +
       #theme(legend.position="top", legend.title=element_blank()) +
       coord_flip() +
       scale_x_discrete_reverse(d_sum$fc.raw.file)
@@ -1604,7 +1605,7 @@ if (is.null(cont.top5.names))
                    "red")
   rep_data$add(pl_cont)  
 } else {
-  byXflex(d_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices=F, plotCont, top5=cont.top5.names)
+  byXflex(d_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices = FALSE, plotCont, top5=cont.top5.names)
 }
 
 ## QC measure for contamination
@@ -1612,9 +1613,9 @@ qc_contaminants = ddply(d_evd[, c("intensity", "contaminant", "fc.raw.file")], "
                         function(x) {
                           v = ifelse(is.null(cont.top5.names), 
                                      HEATMAP_NA_VALUE, ## use NA in heatmap if there are no contaminants
-                                     1-qualLinThresh(sum(as.numeric(x$intensity[x$contaminant]), na.rm=T)/
-                                                       sum(as.numeric(x$intensity), na.rm=T)))
-                          data.frame("X001X_catPrep_EVD:~Contaminants" = v, check.names = F)})
+                                     1-qualLinThresh(sum(as.numeric(x$intensity[x$contaminant]), na.rm = TRUE)/
+                                                       sum(as.numeric(x$intensity), na.rm = TRUE)))
+                          data.frame("X001X_catPrep_EVD:~Contaminants" = v, check.names = FALSE)})
 QCM[["EVD.Contaminants"]] = qc_contaminants
 
 }
@@ -1627,7 +1628,7 @@ QCM[["EVD.Contaminants"]] = qc_contaminants
 cat("EVD: MS2 oversampling ...\n")
 
 d_dups = ddply(d_evd, "fc.raw.file", function(x) {
-  tt = as.data.frame(table(x$ms.ms.count), stringsAsFactors = F)
+  tt = as.data.frame(table(x$ms.ms.count), stringsAsFactors = FALSE)
   tt$Count = as.numeric(tt$Var1)
   ## remove "0", since this would be MBR-features
   tt = tt[tt$Count!=0,]
@@ -1646,7 +1647,7 @@ fcnPlotOversampling = function(d_dups)
   ## reorder factor, such that '10+' is last
   d_dups$n = as.character(d_dups$n)
   n_unique = sort(unique(d_dups$n)) ## sort as character vector!
-  d_dups$n = factor(d_dups$n, levels=n_unique[order(nchar(n_unique))], ordered=T)
+  d_dups$n = factor(d_dups$n, levels=n_unique[order(nchar(n_unique))], ordered = TRUE)
   
   #fp = colorRampPalette( brewer.pal( 6 , "Blues" ) )
   #rev(fp(length(n_unique))
@@ -1664,7 +1665,7 @@ fcnPlotOversampling = function(d_dups)
   )
   return(TRUE)
 }
-byXflex(d_dups, d_dups$fc.raw.file, 30, fcnPlotOversampling, sort_indices = F)
+byXflex(d_dups, d_dups$fc.raw.file, 30, fcnPlotOversampling, sort_indices = FALSE)
 ## QC measure for centered-ness of MS2-calibration
 qc_evd_twin = d_dups[d_dups$n==1,]
 cname = "X025X_catMS_EVD:~MS^2~Oversampling"
@@ -1688,7 +1689,7 @@ if (enabled_msms)
   #d_msms_s = mq$readMQ(txt_files$msms, type="msms", filter = "", nrows=10)
   #colnames(d_msms_s)
   #head(d_msms)
-  d_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c("Missed\\.cleavages", "^Raw.file$", "^mass.deviations", "^masses$", "^mass.analyzer$", "fragmentation", "reverse", "^evidence.id$"), check_invalid_lines = F)
+  d_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c("Missed\\.cleavages", "^Raw.file$", "^mass.deviations", "^masses$", "^mass.analyzer$", "fragmentation", "reverse", "^evidence.id$"), check_invalid_lines = FALSE)
   
   d_msms = d_msms[order(match(as.character(d_msms$fc.raw.file), mq$raw_file_mapping$to)),]
   ## sort fc.raw.file's factor values as well
@@ -1728,7 +1729,7 @@ if (enabled_msms)
   head(ms2_decal)
   class(ms2_decal$msErr)
   ms2_decal$msErr = as.numeric(as.character(ms2_decal$msErr))
-  #ms2_range = diff(range(ms2_decal$msErr, na.rm=T))
+  #ms2_range = diff(range(ms2_decal$msErr, na.rm = TRUE))
   #ms2_binwidth = ms2_range/20
   ## precision (plotting is just so much quicker, despite using a fixed binwidth)
   #ms2_decal$msErr = round(ms2_decal$msErr, digits=ceiling(-log10(ms2_binwidth)+1))
@@ -1751,7 +1752,7 @@ if (enabled_msms)
   }
   ## separate plots for each mass analyzer, since we want to keep 'fixed' scales for all raw.files (comparability)
   ddply(ms2_decal, "mass.analyzer", function(ms2_decal) {
-    byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, fcPlotMS2Dec, sort_indices=F); 
+    byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, fcPlotMS2Dec, sort_indices = FALSE); 
     return(1) })
   
   ##
@@ -1764,7 +1765,7 @@ if (enabled_msms)
                          function(x)
                          {
                            xx = na.omit(x$msErr);
-                           data.frame(X1 = qualCentered(xx), check.names=F)
+                           data.frame(X1 = qualCentered(xx), check.names = FALSE)
                          })
     ## augment fragmentation methods with -Inf for missing raw files (otherwise they would become 'red'=fail)
     if (length( setdiff(mq$raw_file_mapping$to, qc_MS2_decal$fc.raw.file) )) {
@@ -1781,7 +1782,7 @@ if (enabled_msms)
   ##
   cat("MSMS: missed cleavages per Raw file ...\n")
   
-  max_mc = max(-Inf, d_msms$missed.cleavages, na.rm=T) ## will be -Inf iff enzyme was not specified and columns is 100% NA
+  max_mc = max(-Inf, d_msms$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
   if (!is.infinite(max_mc))
   { ## MC's require an enzyme to be set
     smr_msmsMC = summary(d_msms$missed.cleavages)
@@ -1818,14 +1819,14 @@ if (enabled_msms)
       rep_data$add(pl)
       return(1)
     }    
-    byXflex(st_bin, st_bin$fc.raw.file, 25, fcMCRTSubset, smr_msmsMC=smr_msmsMC, sort_indices=F)
+    byXflex(st_bin, st_bin$fc.raw.file, 25, fcMCRTSubset, smr_msmsMC=smr_msmsMC, sort_indices = FALSE)
     
     mcZero = st_bin[, "0"] * 100
     mcZero_stat = 100 - rev(quantile(mcZero, probs=c(0,0.5,1)))
-    cat(pastet("missedCleavages>0 (min,median,max) [%]", paste0(mcZero_stat, collapse=",")), file=fh_out$stats_file, append=T, sep="\n")
+    cat(pastet("missedCleavages>0 (min,median,max) [%]", paste0(mcZero_stat, collapse=",")), file=fh_out$stats_file, append = TRUE, sep="\n")
     
     ## QC measure for missed-cleavages variation
-    qc_mc = data.frame(fc.raw.file = st_bin$fc.raw.file, XXX = st_bin[, "0"], check.names = F)
+    qc_mc = data.frame(fc.raw.file = st_bin$fc.raw.file, XXX = st_bin[, "0"], check.names = FALSE)
     cname = "X004X_catPrep_MSMS:~MC"
     colnames(qc_mc)[grep("XXX", colnames(qc_mc))] = cname
     QCM[["MSMS.MC"]] = qc_mc
@@ -1855,7 +1856,7 @@ if (enabled_msmsscans)
                                         "^Identified", 
                                         "^Scan.event.number", 
                                         "^Raw.file"),
-                         check_invalid_lines = F)
+                         check_invalid_lines = FALSE)
   ##
   ## MQ version 1.0.13 has very rudimentary MSMSscans.txt, with no header, so we need to skip the metrics of this file
   ##
@@ -1911,10 +1912,10 @@ if (enabled_msmsscans)
       rep_data$add(pl)
       return (1)
     }
-    byXflex(DFmse, DFmse$fc.raw.file, 8, plotMaxSEinRT, sort_indices=F)
+    byXflex(DFmse, DFmse$fc.raw.file, 8, plotMaxSEinRT, sort_indices = FALSE)
     
     ## QC measure for smoothness of TopN over RT
-    qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame("X012X_catLC_MS^2*Scans:~TopN~over~RT" = qualUniform(x$medSE), check.names=F))
+    qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame("X012X_catLC_MS^2*Scans:~TopN~over~RT" = qualUniform(x$medSE), check.names = FALSE))
     QCM[["MSMSscans.TopN_over_RT"]] = qc_TopNRT
     
     ##
@@ -1946,7 +1947,7 @@ if (enabled_msmsscans)
     
     plotIITinRT = function(data)
     {
-      data$fc.raw.file = data$fc.raw.file[,drop=T]
+      data$fc.raw.file = data$fc.raw.file[,drop = TRUE]
       nrOfRaws = length(unique(data$fc.raw.file))
       DFmIITglob_sub = DFmIITglob[DFmIITglob$fc.raw.file %in% data$fc.raw.file,]
       DFmIITglob_sub$x = min(DFmIITglob_sub$x) ## same X for every raw file
@@ -1955,7 +1956,7 @@ if (enabled_msmsscans)
                                 round(DFmIITglob_sub$globalIITmedian[match(data$fc.raw.file, DFmIITglob_sub$fc.raw.file)]),
                                 " ms)")
       ## manually convert to factor to keep old ordering (otherwise ggplot will sort it, since its a string)
-      data$fc.raw.file = factor(data$fc.raw.file, levels = unique(data$fc.raw.file), ordered=T)
+      data$fc.raw.file = factor(data$fc.raw.file, levels = unique(data$fc.raw.file), ordered = TRUE)
       DFmIITglob_sub$fc.raw.file = paste0(DFmIITglob_sub$fc.raw.file, " (~", 
                                           round(DFmIITglob_sub$globalIITmedian[match(DFmIITglob_sub$fc.raw.file, DFmIITglob_sub$fc.raw.file)]),
                                           " ms)")
@@ -1967,22 +1968,22 @@ if (enabled_msmsscans)
         geom_hline(yintercept = param_MSMSScans_ionInjThresh, linetype = 'dashed') +
         guides(color=guide_legend(title="Raw file with\naverage inj. time")) +
         ggtitle("MSMSscans: Ion Injection Time over RT") +
-        pointsPutX(x_range=range(data$rRT), x_section=c(0.03,0.08), y=DFmIITglob_sub$globalIITmedian, col=DFmIITglob_sub$fc.raw.file[,drop=T])
+        pointsPutX(x_range=range(data$rRT), x_section=c(0.03,0.08), y=DFmIITglob_sub$globalIITmedian, col=DFmIITglob_sub$fc.raw.file[,drop = TRUE])
       
       #print(pl)
       rep_data$add(pl)
       return (1)
     }
-    byXflex(DFmIIT, DFmIIT$fc.raw.file, 8, plotIITinRT, sort_indices=F)
+    byXflex(DFmIIT, DFmIIT$fc.raw.file, 8, plotIITinRT, sort_indices = FALSE)
     
     
     ## QC measure for injection times below expected threshold
     DFmIIT_belowThresh = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
-      return (data.frame(belowThresh_IIT = sum(x$ion.injection.time < param_MSMSScans_ionInjThresh, na.rm=T) / nrow(x)))
+      return (data.frame(belowThresh_IIT = sum(x$ion.injection.time < param_MSMSScans_ionInjThresh, na.rm = TRUE) / nrow(x)))
     })
     head(DFmIIT_belowThresh)
     qc_IIT = ddply(DFmIIT_belowThresh, "fc.raw.file", function(x) data.frame("X024X_catMS_MS^2*Scans:~Ion~Inj~Time" = qualLinThresh(x$belowThresh_IIT, t = 1),
-                                                                             check.names = F))
+                                                                             check.names = FALSE))
     QCM[["MSMSscans.Ion_Inj_Time"]] = qc_IIT
     
     
@@ -2034,12 +2035,12 @@ if (enabled_msmsscans)
       )
       return (1)
     }
-    byXflex(dfc.ratio, dfc.ratio$fc.raw.file, 9, plotScanEventDiff, sort_indices=F)
+    byXflex(dfc.ratio, dfc.ratio$fc.raw.file, 9, plotScanEventDiff, sort_indices = FALSE)
     
     ## QC measure for always reaching the maximum TopN
     maxTopN = max(dfc.ratio$scan.event.number)
     qc_TopN = ddply(dfc.ratio, "fc.raw.file", function(x) data.frame("X035X_catMS_MS^2*Scans:~TopN~high" = qualHighest(x$n, maxTopN),
-                                                                     check.names = F))
+                                                                     check.names = FALSE))
     QCM[["MSMSscans.TopN"]] = qc_TopN
     
     
@@ -2082,20 +2083,20 @@ if (enabled_msmsscans)
         ggtitle(paste0("MSMSscans: TopN % identified over N"))
       return (p)
     }
-    pl = byXflex(df.ratio, df.ratio$fc.raw.file, 9, plotScanEvent, sort_indices=F)
+    pl = byXflex(df.ratio, df.ratio$fc.raw.file, 9, plotScanEvent, sort_indices = FALSE)
     for (p in pl) rep_data$add(p)
     
     ## QC measure for constantly identifiying peptides, irrespective of scan event number
     ## -- we weight scan events by their number of occurence
     qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame("X038X_catMS_MS^2*Scans:~TopN~ID~over~N" = qualUniform(x$ratio, x$count),
-                                                                       check.names = F))
+                                                                       check.names = FALSE))
     QCM[["MSMSscans.TopN_ID_over_N"]] = qc_TopN_ID
   } ## end MSMSscan from MQ > 1.0.13
 }
 
 hm = getQCHeatMap(QCM, raw_file_mapping = mq$raw_file_mapping)
 #print(hm[["plot"]])
-write.table(hm[["table"]], file = fh_out$heatmap_values_file, quote= T, sep = "\t", row.names=F)
+write.table(hm[["table"]], file = fh_out$heatmap_values_file, quote = TRUE, sep = "\t", row.names = FALSE)
 rep_data$add(hm[["plot"]], "heatmap")
 
 ## get MQ short name mapping plot (might be NULL if no mapping was required)
