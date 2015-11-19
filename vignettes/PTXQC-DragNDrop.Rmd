@@ -47,13 +47,15 @@ There are two ways to customize parameters for a report:
     If there is one (with the correct name, i.e. `report_vXXX.yaml`, where XXX is the PTXQC version number),
     this report file will be used. Thus, if you already have txt-folder containing a report pdf
     plus the `report_*.yaml` inside, just edit the YAML file and re-run 
-    PTXQC using onto `createQC_dragNdrop.bat`.
-  - If your txt-folder has not been analysed by PTXQC before OR you want to try another configuration, 
-    then you can use the `createQC_dragNdrop_withYAML.bat` to run PTXQC with a custom 
-    configuration which you specified before. This .bat file expects a YAML configuration file
-    right next to the .bat file. This file you need to provide. But no worries. One such file 
+    PTXQC.
+  - If your txt-folder has not been analysed by PTXQC before *or* you want to try another configuration, 
+    you can use the `createQC_dragNdrop_withYAML.bat`. This .bat file expects a YAML configuration file
+    right next to itself. This YAML file you need to provide. But no worries. One such YAML file 
     with default parameters is generated each time you invoke a QC report generation. 
-    Just take any file from a previous run in any other txt-folder. Modify this YAML, 
-    copy it next to the bat file, and name it `config.yaml`. 
+    Just take any YAML file from a previous run in any other txt-folder. Copy the YAML file next to the .bat file, and name it `config.yaml`.
+    Modify it to your needs using a text editor such as Notepad.
+    From now on, you can use the `createQC_dragNdrop_withYAML.bat` for any report which should use this configuration.
+    The usage is identical to the one you already know - just target `createQC_dragNdrop_withYAML.bat` instead of `createQC_dragNdrop.bat`
+    when dragging a txt-folder.
 
 **Note**: The second option will take precedence over the first.
