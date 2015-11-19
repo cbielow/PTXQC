@@ -76,12 +76,15 @@ Please feel free to report bugs (see below), or issue pull requests!
 ### Bug reporting / Feature requests
 
 If you encounter a bug, e.g. error message, wrong figures, missing axis annotation or anything which looks
-suspicious, please use the GitHub issue tracker (top right) and file a report.
+suspicious, please use the [GitHub issue tracker] [issuetracker] and file a report.
 
-You should mention the **version of PTXQC** which contains the bug (see the report_XXX.pdf, where XXX will be the version),
-and the **PDF report** itself (if one was generated).
-Also the **error message** you see is probably very important. Either copy it or provide a screen shot.
-Please be a precise as possible when providing the bug report -- just imagine what kind of information you would like to have in order
+You should include
+  - **stage** you encounter the bug, e.g. during installation, report creation, or after report creation (i.e. a bug in the report itself).
+  - **PDF report** itself (if one was generated).
+  - **version of PTXQC**, e.g. see the report_XXX.pdf (where XXX will be the version) or see the DESCRIPTION file of the PTXQC package or call `help(package="PTXQC")` within R
+  - **error message** (very important!). Either copy it or provide a screen shot.
+
+Please be as precise as possible when providing the bug report - just imagine what kind of information you would like to have in order
 to track down the issue.
 In certain situations, the whole txt-folder or a single MaxQuant file might be helpful to solve the problem.
 
@@ -96,13 +99,19 @@ Detailed plots can be found in the remainder of each report.
 For example input data and full reports, see the ['inst/examples' subfolder] [2].
 
   
-  [1]: https://github.com/cbielow/PTXQC/tree/master/inst/dragNdrop
-  [2]: https://github.com/cbielow/PTXQC/tree/master/inst/examples
-  [3]: https://github.com/cbielow/PTXQC/tree/master/vignettes
-  
-  
 ### Citation
 
 The paper is currently under review. A DOI and link will be provided here (soon?)! :)
+Use [PTXQC v0.69.3] [JPR_PTXQC] if you want the version which was used in the paper, i.e.
+use `install_github("cbielow/PTXQC", ref="v0.69.3", build_vignettes = TRUE)` when following the [Installation](#Installation) procedure.
 
-The data used therein is available in the ['inst/examples' subfolder] [2].
+The input data is available in the ['inst/examples' subfolder] [2].
+
+We recommend to use the most recent PTXQC for the best user experience.
+
+  
+  [1]: https://github.com/cbielow/PTXQC/tree/master/inst/dragNdrop
+  [2]: https://github.com/cbielow/PTXQC/tree/master/inst/examples
+  [3]: https://github.com/cbielow/PTXQC/tree/master/vignettes
+  [issuetracker]: https://github.com/cbielow/PTXQC/issues
+  [JPR_PTXQC]: https://github.com/cbielow/PTXQC/releases/tag/v0.69.3

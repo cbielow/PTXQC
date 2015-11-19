@@ -1,0 +1,49 @@
+---
+title: "Frequently asked questions for PTXQC"
+author: "Chris Bielow <chris.bielow@mdc-berlin.de>"
+date: '`r Sys.Date()`'
+output:
+  html_document: default
+    toc: true
+  pdf_document: null
+vignette: >
+  %\VignetteIndexEntry{Frequently asked questions for PTXQC}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+# FAQ (Frequently asked questions) for PTXQC
+
+## Installation
+_______
+### Question: Some error occurred during installation. What do I do? ###
+
+**Answer:** One common error is that the CRAN mirror hosting the R packages is incomplete/buggy and installation of packages fails.
+   This **could** look like this:
+   ```
+   Error in XXXX(file.path(pkgname, "DESCRIPTION"), c("Package", "Type")) : 
+   cannot open the connection
+   In addition: Warning messages:
+   ...
+   ```
+   or
+   ```
+   Warning message:
+   In download.file(url, destfile, method, mode = "wb", ...) :
+   downloaded length 228962 != reported length 229751
+   ```
+   
+   Try another CRAN mirror (type `chooseCRANmirror()`) and then re-run the failed command.
+  
+   If you're still stuck, please open a [ticket] [issuetracker] (see 'Bug Reporting' on the main PTXQC homepage for the details you should provide).
+_______
+
+## Report content
+
+### Q: How do I know what the figures in the report mean? ###
+
+**Answer:** Most metrics and figures are described in the publication (see 'Citation' on the main homepage of PTXQC). Updated and new metrics will be described in the documentation of the package.
+
+_______
+   
+  [issuetracker]: https://github.com/cbielow/PTXQC/issues

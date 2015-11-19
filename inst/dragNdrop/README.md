@@ -11,25 +11,27 @@ When you are done, provide the users with the [PTXQC-DragNDrop] [Ref_VignDrag] v
 This will show them how to invoke the QC (it's very easy - see 'Usage' below).
 
 ### Installation
- - create clean R installation by downloading R from [http://www.r-project.org] and installing it. Make sure to install the x64 version for 64bit support.
+ - create a clean R installation by downloading R from [http://www.r-project.org] and installing it. Make sure to install the x64 version for 64bit support.
    If you already have R installed, you might skip this step.
  - Now, we install PTXQC and its dependency packages.
-   Start the R GUI and execute the following commands to install the `PTXQC` package (dependencies should be installed automatically):
+   Start the R GUI (64bit!) and execute the following commands to install the `PTXQC` package (dependencies are installed automatically):
 
-   If you use an existing R installation which should not contain PTXQC, you can use the following snipped to create an extra library. 
-   This approach also avoids a copy of all your custom libraries unrelated to PTXQC to end up in the final installation.
+   If you use an existing R installation which should not contain PTXQC, you can use the following snipped to create an extra package library. 
+   This approach also avoids a copy of all your custom packages unrelated to PTXQC to end up in the final installation.
    On the other hand, if you installed R anew or want PTXQC installed for your daily R work you should skip this section:
    
         ##
         ## the following section of code is only required to create a self-contained 
-        ## library folder which hosts all required libraries for PTXQC for ease of copying
+        ## library folder which hosts all required packages for PTXQC for ease of copying
         ##
         tmp_dir = tempfile("PTXQC_pck_")
         dir.create(tmp_dir)
         .libPaths(tmp_dir)
-        cat(paste0("\nNew temporary library folder: '", .libPaths()[1], "' created. Installing PTXQC ..."))
+        cat(paste0("\nNew temporary library folder: '", .libPaths()[1], "' created. Installing PTXQC ...\n"))
 
-   Now, install PTXQC:
+   Now, install PTXQC. Run **each line** separately, i.e. do not copy and paste the whole block.
+   If an error should occur, this allows to track it down more easily. See [FAQ - Installation] [Ref_VignFAQ]
+   how to resolve them.
    
         ##
         ## the actual installation of packages
@@ -40,16 +42,19 @@ This will show them how to invoke the QC (it's very easy - see 'Usage' below).
         biocLite("Biobase")
         install_github("cbielow/PTXQC", build_vignettes = TRUE) 
 
-        cat(paste0("\nCopy the packages contained in '", .libPaths()[1], "' to your library folder (see installation manual)."))
+        cat(paste0("\nPTXQC was installed to '", .libPaths()[1], "'.\n\n"))
 
- - The last command will tell you where R installed PTXQC. Open this folder (let's call it **`<libR>`**) in your file explorer. It can either be your default R library 
-   folder which comes with R (e.g. `C:\Program Files\R\R-3.1.0\library`), or it could look like this `C:/Users/cbielow/AppData/Local/Temp/RtmpqieWNY/PTXQC_pck_42c06da97783`. 
- - copy the folder `<libR>\PTXQC\inst\QC-dragdrop` to your target location (let's call it <QCdir>) where you want PTXQC to reside. Usually, that's some
-   network or local drive (e.g. **`<QCdir>`** = `Z:\my-proteomics`)
- - copy the whole R installation directory (e.g. `c:\program files\R\R-3.1.0`) into the `<QCdir>\QC-dragdrop\_internal` sub-folder
- - rename your newly copied R installation directory to `R-3.1.0` (or edit the `<QCdir>\QC-dragdrop\createQC_dragNdrop.bat` to match your R version)
- - if the <libR> folder was not your default R library, but a temp folder, then copy the packages it contains (PTXQC among others),
-   into `<QCdir>\QC-dragdrop\_internal\R-3.1.0\library`.
+ 1. The last command will tell you where R installed PTXQC, i.e. `PTXQC was installed to '<libR>'.`
+    Open this **`<libR>`** folder in your file explorer. It will either be your default R library 
+    folder which comes with R (e.g. `C:\Program Files\R\R-3.1.0\library`), or a temp folder like 
+    this `C:/Users/cbielow/AppData/Local/Temp/RtmpqieWNY/PTXQC_pck_42c06da97783`.
+ 2. Copy the folder `<libR>\PTXQC\inst\QC-dragdrop` to a custom target location of your choice (let's call it **`<QCdir>`**) where you want PTXQC to reside. Usually, that's some
+    network or local drive (e.g. **`<QCdir>`** = `Z:\my-proteomics`)
+ 3. copy the whole R installation directory (e.g. `c:\program files\R\R-3.1.0`) into the `<QCdir>\QC-dragdrop\_internal` sub-folder,
+    such that you end up with `<QCdir>\QC-dragdrop\_internal\R-3.1.0\` (your R version number might differ)
+ 4. rename your newly copied R installation directory to `R-3.1.0` (or edit the `<QCdir>\QC-dragdrop\createQC_dragNdrop.bat` to match your R version)
+ 5. if the `<libR>` folder was not your default R library (see step 1), but a temp folder, then copy the packages it contains (PTXQC among others),
+    into `<QCdir>\QC-dragdrop\_internal\R-3.1.0\library\`.
  
 Now, you should have the following structure
 
@@ -62,13 +67,13 @@ Now, you should have the following structure
  
 You can rename the `QC-dragdrop` folder to anything you like (try to avoid spaces - they usually cause trouble).
 
-To make PTXQC accessible more easily, you can create a shortcut on your Windows Desktop to the `createQC_dragNdrop.bat`. Use this shortcut like the original (see usage below).
+To make PTXQC accessible more easily, you can create a shortcut on your Windows Desktop pointing to `createQC_dragNdrop.bat`. Use this shortcut as if it were the original batch file (see usage below).
 
 
 ### Updating the PTXQC Drag'n'drop installation
 
-The quick way to update your installation, is to start the R console of the R installation at `<QCdir>\QC-dragdrop\_internal\R-3.1.0\bin\x64\rgui.exe` and
-run the two code block of the installation (see above) again. Then, to copy the packages in the `<libR>` folder to the main R library (see the last bullet point above).
+Start the R GUI of the R installation at `<QCdir>\QC-dragdrop\_internal\R-3.1.0\bin\x64\rgui.exe` and
+run the two block of code from the installation (see above) again. Then, copy the packages in the `<libR>` folder to the main R library (see the last bullet point above).
  
  
 ### Usage (short version)
@@ -81,3 +86,4 @@ run the two code block of the installation (see above) again. Then, to copy the 
 
   [Ref_Vign]: https://github.com/cbielow/PTXQC/tree/master/vignettes
   [Ref_VignDrag]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-DragNDrop.Rmd
+  [Ref_VignFAQ]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-FAQ.Rmd
