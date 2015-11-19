@@ -52,15 +52,19 @@ See [drag'n'drop] [1] for details. It takes 10 minutes and you are done!
 
 **If you just want the package to use (and maybe even modify) it:**
 
-Direct installation from GitHub requires the 'devtools' package. The following lines will add PTXQC on a fresh R installation:
-
+The following lines will install the PTXQC package.
+Direct installation from GitHub requires the 'devtools' package.
+Run **each line** separately in your R console, i.e. do not copy and paste the whole block.
+If an error should occur, this allows to track it down more easily. See [FAQ - Installation] [Ref_VignFAQ]
+how to resolve them.
+   
     if (!require(devtools, quietly = TRUE)) install.packages("devtools")
     library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
     source("http://bioconductor.org/biocLite.R")
     biocLite("Biobase")
     install_github("cbielow/PTXQC", build_vignettes = TRUE) 
     
-To get started on how to use the package, see the help and/or vignettes:
+To get started, see the help and/or vignettes:
 
     help(package="PTXQC")
     browseVignettes(package = 'PTXQC')
@@ -115,3 +119,4 @@ We recommend to use the most recent PTXQC for the best user experience.
   [3]: https://github.com/cbielow/PTXQC/tree/master/vignettes
   [issuetracker]: https://github.com/cbielow/PTXQC/issues
   [JPR_PTXQC]: https://github.com/cbielow/PTXQC/releases/tag/v0.69.3
+  [Ref_VignFAQ]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-FAQ.Rmd

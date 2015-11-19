@@ -44,16 +44,18 @@ This will show them how to invoke the QC (it's very easy - see 'Usage' below).
 
         cat(paste0("\nPTXQC was installed to '", .libPaths()[1], "'.\n\n"))
 
+Almost done, we just need to copy some folders:
+        
  1. The last command will tell you where R installed PTXQC, i.e. `PTXQC was installed to '<libR>'.`
-    Open this **`<libR>`** folder in your file explorer. It will either be your default R library 
+    **Open** this **`<libR>`** folder in your file explorer. It will either be your default R library 
     folder which comes with R (e.g. `C:\Program Files\R\R-3.1.0\library`), or a temp folder like 
     this `C:/Users/cbielow/AppData/Local/Temp/RtmpqieWNY/PTXQC_pck_42c06da97783`.
- 2. Copy the folder `<libR>\PTXQC\inst\QC-dragdrop` to a custom target location of your choice (let's call it **`<QCdir>`**) where you want PTXQC to reside. Usually, that's some
+ 2. **Copy** the folder `<libR>\PTXQC\inst\QC-dragdrop` to a custom target location of your choice (let's call it **`<QCdir>`**) where you want PTXQC to reside. Usually, that's some
     network or local drive (e.g. **`<QCdir>`** = `Z:\my-proteomics`)
- 3. copy the whole R installation directory (e.g. `c:\program files\R\R-3.1.0`) into the `<QCdir>\QC-dragdrop\_internal` sub-folder,
+ 3. **Copy** the whole R installation directory (e.g. `c:\program files\R\R-3.1.0`) into the `<QCdir>\QC-dragdrop\_internal` sub-folder,
     such that you end up with `<QCdir>\QC-dragdrop\_internal\R-3.1.0\` (your R version number might differ)
- 4. rename your newly copied R installation directory to `R-3.1.0` (or edit the `<QCdir>\QC-dragdrop\createQC_dragNdrop.bat` to match your R version)
- 5. if the `<libR>` folder was not your default R library (see step 1), but a temp folder, then copy the packages it contains (PTXQC among others),
+ 4. **Rename** your newly copied R installation directory to `R-3.1.0` (or edit the `<QCdir>\QC-dragdrop\createQC_dragNdrop.bat` to match your R version)
+ 5. If the `<libR>` folder was not your default R library (see step 1), but a temp folder, then **copy** the packages it contains (PTXQC among others),
     into `<QCdir>\QC-dragdrop\_internal\R-3.1.0\library\`.
  
 Now, you should have the following structure
