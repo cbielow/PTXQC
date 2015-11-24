@@ -16,7 +16,7 @@ thinOutBatch(data, filterColname, batchColname, binCount = 1000)
 \item{binCount}{Number of bins in the 'filterColname' dimension.}
 }
 \value{
-Data.frame, with reduced rows, but identical columns
+Data.frame with reduced rows, but identical input columns
 }
 \description{
 The binsize is computed from the global data range of the filter column by dividing the range

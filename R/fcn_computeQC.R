@@ -689,13 +689,14 @@ createReport = function(txt_folder, yaml_obj = list())
             int = sum(as.numeric(x$intensity[x$idx_cont]), na.rm = TRUE) / sum(as.numeric(x$intensity), na.rm = TRUE) * 100
             
             above.thresh = (sc > ca_thresh) | (int > ca_thresh)
-            
             cont_scoreECDF = ddply(x, "idx_cont", function(xx) {
+              if (length(unique(xx$score)) < 2) return(NULL) ## not enough data for ECDF
               r = getECDF(xx$score)
               r$condition = c("sample", "contaminant")[xx$idx_cont[1]+1]
               return(r)
             })
-            ks_p = ks.test(x$score[x$idx_cont], x$score[!x$idx_cont], alternative = "greater")$p.value
+            if (!any(x$idx_cont)) ks_p = NA else ## no contaminant peptide 
+              ks_p = ks.test(x$score[x$idx_cont], x$score[!x$idx_cont], alternative = "greater")$p.value
             return (list(cont_data = data.frame(spectralCount = sc, intensity = int,
                                                 above.thresh = above.thresh, fc.raw.file = x$fc.raw.file[1],
                                                 score_KS = ks_p),
@@ -939,8 +940,8 @@ createReport = function(txt_folder, yaml_obj = list())
         
         d_evd.m.d$block = factor(assignBlocks(d_evd.m.d$fc.raw.file, 8))
         ## identical limits for all plots
-        d_evd.xlim = quantile(d_evd.m.d$mid, c(0,1), na.rm = TRUE)
-        d_evd.ylim = quantile(d_evd.m.d$retlengthAvg, c(0,1), na.rm = TRUE)
+        d_evd.xlim = quantile(d_evd.m.d$mid, c(0, 1), na.rm = TRUE)
+        d_evd.ylim = c(0, quantile(d_evd.m.d$retlengthAvg,0.99, na.rm = TRUE)) ## ignore top peaks, since they are usually early non-peptide eluents
         
         fcn_plotPeakWidth = function(data)
         {
@@ -960,11 +961,10 @@ createReport = function(txt_folder, yaml_obj = list())
             guides(color = guide_legend(title = "Raw file with\naverage peak width")) +
             xlab("retention time [min]") +
             ylab("peak width [min]") +
-            ylim(d_evd.ylim) +
+            coord_cartesian(ylim = d_evd.ylim) + ## zoom -- do not cut data (preserve lines)
             ggtitle("EVD: Peak width over RT") +
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
             pointsPutX(x_range=range(data$mid), x_section=c(0.03,0.08), y=d_evd.m.d_med_sub$median, col=d_evd.m.d_med_sub$fc.raw.file[, drop = TRUE])
-          
           #print(pl)
           rep_data$add(pl)
         }
@@ -987,6 +987,7 @@ createReport = function(txt_folder, yaml_obj = list())
       ## (not supported in MQ 1.0.13)  
       ## Even if MBR=off, this column always contains numbers (usually 0, or very small)
       ##
+      cat("EVD: Match-between-runs ...\n")
       if ("retention.time.calibration" %in% colnames(d_evd))
       {
         ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
