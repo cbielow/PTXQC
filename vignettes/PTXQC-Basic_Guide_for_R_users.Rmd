@@ -29,7 +29,7 @@ how a txt folder should look like.
 
 This is the most simple invokation of PTXQC::createReport().
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 require(PTXQC)
 
 ## the next require() is needed to prevent a spurious error in certain R versions (might be a bug in R or a package)
@@ -102,6 +102,9 @@ if (file.exists(fh_out$yaml_file))
 {
   cat("\nUsing YAML config already present in target directory ...\n")
   yaml_config = yaml.load_file(input = fh_out$yaml_file)
+} else {
+  cat("\nYAML config not found in folder '", txt_folder, "'. The first run of PTXQC will create one for you.", sep="")
+  yaml_config = list()
 }
 
 r = createReport(txt_folder, yaml_config)

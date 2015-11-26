@@ -224,6 +224,7 @@ qualHighest = function(x, N)
 #' @param x List of vectors, where each vector holds a distribution
 #' @return A data.frame with ks-test values of the "reference" to all other distributions (see Details)
 #'
+#' @import stats
 #'
 qualBestKS = function(x) {
   

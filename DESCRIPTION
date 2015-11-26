@@ -15,12 +15,15 @@ Imports:
     ggplot2,
     ggdendro,
     graphics,
+    grid,
     plyr,
     proto,
     RColorBrewer,
     reshape2,
     rmarkdown,
     seqinr,
+    stats,
+    utils,
     yaml
 Suggests:
     knitr (>= 1.10),
@@ -30,5 +33,5 @@ License: file LICENSE
 biocViews: Software, QualityControl, ReportWriting, Proteomics, MassSpectrometry, DataImport, Visualization
 Roxygen: list(wrap = FALSE)
 RoxygenNote: 5.0.1
+URL: https://github.com/cbielow/PTXQC
 BugReports: https://github.com/cbielow/PTXQC/issues
-

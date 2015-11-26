@@ -819,12 +819,15 @@ getAbundanceClass = function(x) {
 #' @param txt_folder Directory where the MaxQuant output resides
 #' @return List of output file names (just names :))
 #' 
+#' @import utils
+#' 
 #' @export
 #' 
 getReportFilenames = function(txt_folder)
 {
   ## package version: added to output filename
-  if (!require("PTXQC", quietly=TRUE)) pv = "_unknown" else pv = packageVersion("PTXQC")
+  pv = try(packageVersion("PTXQC"))
+  if (inherits(pv, "try-error")) pv = "_unknown"
   report_version = paste0("v", pv)  
   
   ## amend report filename with a foldername where it resides, to ease discerning different reports in a PDF viewer

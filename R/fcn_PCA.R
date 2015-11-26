@@ -12,7 +12,7 @@
 #'                                 and "plots": list of plot objects (one or two)
 #' 
 #' @import ggplot2
-#' @importFrom stats prcomp
+#' @import stats
 #' @importFrom seqinr circle
 #' 
 #' @export

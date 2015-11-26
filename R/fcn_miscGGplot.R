@@ -30,7 +30,7 @@ ggText = function(title, text, col = "black") {
 #' @return -
 #' 
 #' @import ggplot2
-#' @importFrom grid grid.text grid.draw textGrob gpar
+#' @importFrom grid gpar grid.draw grid.text textGrob unit
 #'
 printWithFooter = function(gg_obj, bottom_left = NULL, bottom_right = NULL) 
 {
