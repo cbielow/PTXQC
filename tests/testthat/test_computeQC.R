@@ -1,0 +1,40 @@
+library(PTXQC)
+context("fcn_computeQC.R")
+
+test_that("createReport", {
+  ## this is a rather lengthy function, and its hard to test in all its granlarity (hence we test
+  ## the functions within in other tests), but at least we want to see that it produces
+  ## results -- even though its hard to test if the resulting PDF report is exactly what we expect
+  ## without going into mindboggling image-comparison tests...
+  
+  
+  ## get some data
+  local_zip = tempfile(fileext=".zip")
+  download.file("https://github.com/cbielow/PTXQC_data/raw/master/txt_Ecoli.zip", destfile = local_zip)
+  unzip(local_zip, exdir = tempdir()) ## extracts content
+  txt_folder = paste0(tempdir(),"\\txt")
+  yaml_obj = list() ## so special config...
+  
+  r = createReport(txt_folder, yaml_obj)
+  expect_equal(c("yaml_file", "heatmap_values_file", "R_plots_file", "filename_sorting", "stats_file",         
+                 "report_file_simple", "report_file_extended", "report_file", "report_file_extension"), names(r))
+  rep_file = paste0(r[["report_file"]], r[["report_file_extension"]])
+  
+  expect_equal(file.exists(rep_file), TRUE)
+  expect_gt(file.info(rep_file)$size, 100*1024) ## ~119kb PDF
+  
+  expect_equal(file.exists(r[["heatmap_values_file"]]), TRUE)
+  d_heatmap = read.delim(r[["heatmap_values_file"]])
+  expect_equal(dim(d_heatmap), c(2, 22)) ## two files, 22 metrics
+  expect_equal(as.character(d_heatmap$fc.raw.file), c("..Ecoli_01", "..Ecoli_02"))
+  
+  expect_equal(file.exists(r[["filename_sorting"]]), TRUE)
+  d_filenamesort = read.delim(r[["filename_sorting"]], comment.char="#")
+  expect_equal(dim(d_filenamesort), c(2, 2)) ## two files, two columns
+  expect_equal(as.character(d_filenamesort$new.Name), c("..Ecoli_01", "..Ecoli_02"))
+  
+  
+  unlink(local_zip) ## delete zip
+  unlink(txt_folder, recursive = TRUE) ## delete txt-folder
+  
+})

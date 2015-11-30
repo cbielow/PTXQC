@@ -2120,13 +2120,6 @@ param_PageNumbers = getYAML(yaml_obj, param_name_PTXQC_PageNumbers, param_def_PT
 
 cat("Creating Report file ...")
 
-## give the user a chance to close open reports which are currently blocked for writing
-if (!wait_for_writable(fh_out$report_file))
-{
-  stop("Target file not writable")
-}
-
-
 
 #
 #param_OutputFormats = "html pdf"
@@ -2141,6 +2134,8 @@ if (any(is.na(out_format_requested)))
 
 if ("html" %in% out_format_requested)
 {
+  fh_out$report_file_extension = c(fh_out$report_file_extension, ".html")
+  
   #template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
   #knit2html(template, output = paste0(fh_out$report_file, ".html"))
   template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
@@ -2153,6 +2148,14 @@ if ("html" %in% out_format_requested)
   
 if ("plainPDF" %in% out_format_requested)
 {
+  fh_out$report_file_extension = c(fh_out$report_file_extension, ".pdf")
+  report_file_PDF = paste0(fh_out$report_file, ".pdf")
+  ## give the user a chance to close open reports which are currently blocked for writing
+  if (!wait_for_writable(report_file_PDF))
+  {
+    stop("Target file not writable")
+  }
+  
   if (param_PageNumbers == "on")
   {
     printWithPage = function(gg_obj, page_nr, filename = fh_out$report_file)
@@ -2167,7 +2170,7 @@ if ("plainPDF" %in% out_format_requested)
       print(gg_obj)
     }
   }
-  pdf(paste0(fh_out$report_file, ".pdf"))
+  pdf(report_file_PDF)
   printWithPage(rep_data$get("params"), "p. 1")       # parameters
   printWithPage(rep_data$get("name_mapping"), "p. 2") # short file mapping
   printWithPage(rep_data$get("heatmap"), "p. 3")      # summary heatmap
