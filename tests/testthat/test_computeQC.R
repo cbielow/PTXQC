@@ -10,7 +10,7 @@ test_that("createReport", {
   
   ## get some data
   local_zip = tempfile(fileext=".zip")
-  download.file("https://github.com/cbielow/PTXQC_data/raw/master/txt_Ecoli.zip", destfile = local_zip)
+  download.file("http://github.com/cbielow/PTXQC_data/raw/master/txt_Ecoli.zip", destfile = local_zip)
   unzip(local_zip, exdir = tempdir()) ## extracts content
   txt_folder = paste0(tempdir(),"\\txt")
   yaml_obj = list() ## so special config...
