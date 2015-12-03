@@ -22,7 +22,7 @@ test_that("createReport", {
   })
 
   unzip(local_zip, exdir = tempdir()) ## extracts content
-  txt_folder = paste0(tempdir(),"\\txt")
+  txt_folder = file.path(tempdir(), "txt")
   yaml_obj = list() ## so special config...
   
   r = createReport(txt_folder, yaml_obj)
