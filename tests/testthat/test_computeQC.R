@@ -20,7 +20,6 @@ test_that("createReport", {
     ## in case of error, try with Curl
     dl = download.file(target_url, destfile = local_zip, method='curl') ## for Linux/MacOSX
   })
-  expect_equal(dl, 0) ## 0 is success
 
   unzip(local_zip, exdir = tempdir()) ## extracts content
   txt_folder = paste0(tempdir(),"\\txt")
