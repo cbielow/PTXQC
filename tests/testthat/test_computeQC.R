@@ -1,4 +1,14 @@
 library(PTXQC)
+
+## the next require() is needed to prevent a spurious error in certain R versions (might be a bug in R or a package)
+## error message is:
+##    Error in Scales$new : could not find function "loadMethod"
+require(methods)
+
+## the next require() should not be needed, since PTXQC imports it, but on some systems it seems that a subfunction 
+## dispatch within 'directlabels' is not working properly. If 'directlabels' is attached, all is well. So ...
+require(directlabels)
+
 context("fcn_computeQC.R")
 
 test_that("createReport", {
