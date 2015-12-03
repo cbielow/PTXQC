@@ -10,7 +10,13 @@ test_that("createReport", {
   
   ## get some data
   local_zip = tempfile(fileext=".zip")
-  download.file("http://github.com/cbielow/PTXQC_data/raw/master/txt_Ecoli.zip", destfile = local_zip)
+  ## getting the correct URL is tricky, since download methods like 'curl' will not follow
+  ## redirects, but download the server message instead. Try 'curl' etc on the command line, to see
+  ## what's going on and find the right URL
+  target_url = "https://raw.githubusercontent.com/cbielow/PTXQC_data/master/txt_Ecoli.zip"
+  dl = download.file(target_url, destfile = local_zip)
+  expect_equal(dl, 0) ## 0 is success
+
   unzip(local_zip, exdir = tempdir()) ## extracts content
   txt_folder = paste0(tempdir(),"\\txt")
   yaml_obj = list() ## so special config...
