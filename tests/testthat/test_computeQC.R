@@ -12,9 +12,14 @@ test_that("createReport", {
   local_zip = tempfile(fileext=".zip")
   ## getting the correct URL is tricky, since download methods like 'curl' will not follow
   ## redirects, but download the server message instead. Try 'curl' etc on the command line, to see
-  ## what's going on and find the right URL
+  ## what's going on and find the right URL (for GitHub: we need https and raw.github....)
   target_url = "https://raw.githubusercontent.com/cbielow/PTXQC_data/master/txt_Ecoli.zip"
-  dl = download.file(target_url, destfile = local_zip)
+  tryCatch({
+    dl = download.file(target_url, destfile = local_zip)
+  }, error = function(err) {
+    ## in case of error, try with Curl
+    dl = download.file(target_url, destfile = local_zip, method='curl') ## for Linux/MacOSX
+  })
   expect_equal(dl, 0) ## 0 is success
 
   unzip(local_zip, exdir = tempdir()) ## extracts content
