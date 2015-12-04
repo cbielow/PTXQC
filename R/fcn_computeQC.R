@@ -21,8 +21,7 @@
 #' @return List with named filename strings, e.g. $yaml_file, $report_file etc..
 #'          
 #' @import ggplot2
-#' @import directlabels
-#' @importFrom plyr ddply dlply ldply llply adply summarise
+#' @importFrom plyr ddply dlply ldply llply adply summarise mapvalues
 #' @importFrom grid unit
 #' @importFrom reshape2 melt
 #' @importFrom RColorBrewer brewer.pal
@@ -171,34 +170,21 @@ createReport = function(txt_folder, yaml_obj = list())
     
     ### MS/MS identified [%]
     dms = d_smy$raw$"ms.ms.identified...."
-    dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was aquired
+    dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was acquired
     lab_IDd = c("red", 
                 "blue", 
                 "green")
     names(lab_IDd) = c("bad (<" %+% id_rate_bad %+% "%)", 
                        "ok (" %+% id_rate_bad %+% "-" %+% id_rate_great %+% "%)",
                        "great (>" %+% id_rate_great %+% "%)")
-    d_smy[[1]]$color = factor(cut(dms, breaks=c(-1, id_rate_bad, id_rate_great, 100), labels=names(lab_IDd)))
-    
-    
+    d_smy[[1]]$cat = factor(cut(dms, breaks=c(-1, id_rate_bad, id_rate_great, 100), labels=names(lab_IDd)))
     d_smy[[1]]$fc.raw.file = mq$raw_file_mapping$to[match(d_smy[[1]]$raw.file, mq$raw_file_mapping$from)]
-    ## needs to be a factor for 'scale_y_discrete_reverse' below, but lets to the sorting manually...
+    ## needs to be a factor for 'scale_y_discrete_reverse' below, but lets do the sorting manually...
     d_smy[[1]]$fc.raw.file = factor(d_smy[[1]]$fc.raw.file, levels=unique(d_smy[[1]]$fc.raw.file), ordered = TRUE)
+    rep_data$add(
+      plot_IDRate(d_smy[[1]], id_rate_bad, id_rate_great, lab_IDd)
+    )
     
-    d_smy[[1]]$x = 1:nrow(d_smy[[1]])
-    p = 
-      ggplot(d_smy[[1]], aes_string(y = "fc.raw.file", x = "ms.ms.identified....")) +
-        geom_point(aes_string(colour = "color")) +
-        geom_vline(xintercept = id_rate_bad, color=(lab_IDd)[1]) +
-        geom_vline(xintercept = id_rate_great, color=(lab_IDd)[3]) +
-        ylab("") + 
-        xlab("MS/MS identified [%]") +
-        scale_colour_manual(values=lab_IDd) + 
-        ggtitle("SM: MS/MS identified per Raw file") + 
-        xlim(0, max(dms, id_rate_great)*1.1) + 
-        guides(color=guide_legend(title="ID class")) +
-        scale_y_discrete_reverse(d_smy[[1]]$fc.raw.file, breaks = ggAxisLabels)
-    rep_data$add(p)
     ## QC measure for contamination
     qc_sm_id = d_smy[[1]][, c("raw.file", "ms.ms.identified....")]
     cname = "X030X_catMS_SM:~MS^2~ID~rate (\">" %+% id_rate_great %+% "\")"
@@ -206,37 +192,20 @@ createReport = function(txt_folder, yaml_obj = list())
     QCM[["SM.MS2_ID_rate"]] = qc_sm_id[,c("raw.file", cname)]
     
     ## table of files with 'bad' MS/MS id rate
-    bad_id_count = sum(d_smy[[1]]$color==lab_IDd[1])
+    bad_id_count = sum(d_smy[[1]]$cat==names(lab_IDd[1]))
     if (bad_id_count>0)
     {
-      sm_badID = d_smy[[1]][d_smy[[1]]$color==lab_IDd[1],c("raw.file","ms.ms.identified....")]
+      sm_badID = d_smy[[1]][d_smy[[1]]$cat==names(lab_IDd[1]), c("raw.file","ms.ms.identified....")]
       if (nrow(sm_badID) > 40)
       {
         sm_badID[40, "raw.file"] = paste(nrow(sm_badID) - 39, "more ...");
         sm_badID[40, "ms.ms.identified...."] = ""
         sm_badID = sm_badID[1:40, ]
       }
-      sm_badID$ypos = -(1:nrow(sm_badID))
-      head(sm_badID)
-      sm_badID.long = melt(sm_badID, id.vars = c("ypos"), measure.vars=c("raw.file","ms.ms.identified...."))
-      head(sm_badID.long)
-      sm_badID.long$variable = as.character(sm_badID.long$variable)
-      sm_badID.long$col = "#000000";
-      sm_badID.long$col[sm_badID.long$variable=="ms.ms.identified...."] = "#5F0000"
-      sm_badID.long$variable[sm_badID.long$variable=="raw.file"] = "6"
-      sm_badID.long$variable[sm_badID.long$variable=="ms.ms.identified...."] = "8"
-      sm_badID.long$variable = as.numeric(sm_badID.long$variable)
-      sm_badID.long$size = 2
-      sm_badID.long2 = rbind(data.frame(ypos=0, variable=c(6, 8), value=c("raw file", "% identified"), col="#000000", size=3), sm_badID.long)
-      smbad_pl = ggplot(sm_badID.long2, aes_string(x = "variable", y = "ypos"))  +
-        xlim(0, 11) + 
-        geom_text(aes_string(label = "value"), color = sm_badID.long2$col, hjust=1, size=sm_badID.long2$size) +
-        theme_bw() +
-        theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
-              axis.text = element_blank(), strip.text = element_blank(), legend.position="none") +
-        ggtitle(paste0("SM: Files with '", lab_IDd[1], "' ID rate (", round(bad_id_count*100/nrow(d_smy[[1]])),"% of samples)"))
-      
-      rep_data$add(smbad_pl)
+      p = plot_IDRateBad(sm_badID, 
+                         paste0("SM: Files with '", lab_IDd[1],
+                                "' ID rate (", round(bad_id_count*100/nrow(d_smy[[1]])), "% of samples)"))
+      rep_data$add(p)
     }
   }  
   
@@ -287,8 +256,9 @@ createReport = function(txt_folder, yaml_obj = list())
                                                               min_out_length = GL_name_min_length, 
                                                               add_dots = TRUE), 
                                                        min_out_length = GL_name_min_length))
-    
-    ## Contaminants stats
+    ##
+    ## Contaminants plots
+    ##
     df.con_stats = adply(colsW, .margins=1, function(group) {
       #cat(group)
       return(data.frame(group_long = as.character(group),
@@ -301,23 +271,7 @@ createReport = function(txt_folder, yaml_obj = list())
     df.con_stats$logAbdClass = getAbundanceClass(df.con_stats$log10_int)
     df.con_stats
     
-    plotContsPG = function(datav) {
-      datav$section = as.integer(seq(0, nrow(datav)/correctSetSize(nrow(datav),30)*0.999, length.out=nrow(datav)))
-      pl = 
-        ggplot(data=datav, aes_string(x = "group", y = "cont_pc", alpha="logAbdClass")) +
-        scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(datav$logAbdClass))==1) + 1], 1.0), ## ordering of range is critical!
-                             name = "Abundance\nclass") +
-        geom_bar(stat="identity") +
-        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-        xlab("")  +
-        ggtitle("PG: Contaminant per condition") +
-        ylab("contaminant (% intensity)") +
-        geom_hline(aes_string(yintercept = "5"), linetype = 'dashed')
-      if (length(unique(datav$section))>1) pl = pl + facet_wrap(~ section, ncol = 1, scales="free_x")
-      #print(pl)
-      return (pl)
-    }
-    pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 90, plotContsPG, sort_indices = FALSE)
+    pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 90, plot_ContsPG, sort_indices = FALSE)
     for (p in pg_plots_cont) rep_data$add(p);
     
     ##
@@ -520,7 +474,6 @@ createReport = function(txt_folder, yaml_obj = list())
       #head((ratio.densities))
       
       
-      legend_title = "group"
       ## compute label incorporation?
       ratio.mode = ddply(ratio.densities, "col", .fun = function(x) {
         mode = x$x[which.max(x$y)]
@@ -546,45 +499,22 @@ createReport = function(txt_folder, yaml_obj = list())
       } else
       {
         cat(paste0("Maximum ratio (log2) was ", max(abs(ratio.mode$mode)), ", NOT reaching the threshold of ", abs(log2(enabled_pg_ratioLabIncThresh)), " for label-incorporation computation.\nSkipping ratios ...\n"))
+        legend_title = "group"
       }
       
-      title_ratio = "PG: ratio density\n(w/o contaminants)"
-      title_col = "black"
+      main_title = "PG: ratio density\n(w/o contaminants)"
+      main_col = "black"
       if (any(ratio.densities$multimodal))
       {
-        title_ratio = paste0(title_ratio, "\nWarning: multimodal densities detected")
-        title_col = "red"
+        main_title = paste0(title_ratio, "\nWarning: multimodal densities detected")
+        main_col = "red"
       }
-      
-      plotRatios = function(df_ratios, d_min, d_max, title_col)
-      {
-        br = c(2, 5, 10, 20);
-        rep_data$add(
-        #print(
-          ggplot(data = df_ratios, aes_string(x = "x", y = "y", colour = "col")) + 
-            facet_grid(col ~ ., scales = "free_y") +
-            geom_line(size = 1.2) +
-            geom_area(aes_string(alpha = "ltype", fill = "col")) +
-            xlab("ratio")  +
-            ylab("density")  +
-            #facet_grid(col ~ ) +
-            scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide_legend(legend_title)) + 
-            scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=40)) +
-            scale_alpha_discrete(range = c(1, 0.2), 
-                                  labels=c("dotted"="unimodal", "solid"="multimodal"),
-                                  guide_legend("shape")
-            ) +
-            scale_x_continuous(limits = c(d_min, d_max), trans = "identity", breaks = c(-br, 0, br), labels=c(paste0("1/",2^(br)), 1, 2^br)) +
-            guides(colour = FALSE) +
-            theme(plot.title = element_text(colour = title_col)) +
-            theme_bw() +
-            geom_vline(alpha = 0.5, xintercept = 0, colour = "green", linetype = "dashed", size = 1.5) +
-            ggtitle(title_ratio)
-        )
-        return (1)
-      }
-      
-      byXflex(ratio.densities, ratio.densities$col, 5, plotRatios, sort_indices = FALSE, d_min = quantile(d_sub, na.rm = TRUE, probs=0.00), d_max = quantile(d_sub, na.rm = TRUE, probs=1), title_col)
+      ##
+      ## plot ratios
+      ##
+      rep_data$add(
+        byXflex(ratio.densities, ratio.densities$col, 5, plot_RatiosPG, sort_indices = FALSE, d_range = range(d_sub, na.rm=TRUE), main_title, main_col, legend_title)
+      )
       
     }
     ## rm("d_pg") required in evidence....
@@ -718,44 +648,19 @@ createReport = function(txt_folder, yaml_obj = list())
                            "red")
           rep_data$add(pl_cont)
         } else {
-          plotContUser = function(data, extra_limit) {
-            datav = subset(data, data$variable %in% c('spectralCount', "intensity"))
-            dataAT = subset(data, data$variable %in% c('above.thresh'))
-            contRaws = dataAT$fc.raw.file[ dataAT$value == TRUE]
-            dataKS = subset(data, data$variable == 'score_KS' & (data$fc.raw.file %in% contRaws))
-            dataKS$value = paste0("p = ", round(dataKS$value,2))
-            #cat(paste0("CA entry is ", extra_limit, "\n"))
-            maxY = max(datav$value, extra_limit)
-            datav$section = as.integer(seq(0, nrow(datav)/40, length.out = nrow(datav)))
-            pr = ggplot(datav, aes_string(x = "fc.raw.file", y = "value")) +
-              geom_bar(stat="identity", aes_string(fill = "variable"), position = "dodge", width=.7) +
-              ggtitle(paste0("EVD: Contaminant '", ca, "'")) +
-              xlab("")  +
-              ylab("abundance (%)") +
-              ylim(c(0, maxY * 1.1)) +
-              theme(plot.title = element_text(colour = "red"),
-                    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-              scale_fill_discrete(name = "Method") +
-              geom_hline(yintercept = extra_limit, linetype = 'dashed') +
-              geom_text(data = dataKS, aes_string(label = "value", y = maxY * 1.05)) +
-              facet_wrap(~ section, ncol = 1, scales = "free_x")
-            rep_data$add(pr)
-            #print(pr)
-            return(1)
-          }
-          byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, 
-                  FUN = plotContUser, sort_indices = FALSE, extra_limit = ca_thresh)
+          ## plot User-Contaminants
+          rep_data$add(
+            byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, 
+                  FUN = plot_ContUser, sort_indices = FALSE, name_contaminant = ca, extra_limit = ca_thresh)
+          )
           
           ## plot Andromeda score distribution of contaminant vs. sample
           llply(cont_data.l, function(l)
           {
             if (l$cont_data$above.thresh == FALSE) return(NULL)
-            pr = ggplot(l$cont_scoreECDF) + 
-              geom_line(aes_string(x = "x", y = "y", col = "condition")) + 
-              ggtitle(paste0("Empirical CDF of '", l$cont_data$fc.raw.file, "'\np = ", round(l$cont_data$score_KS, 2))) + 
-              ylab("Pr") + xlab("Andromeda score")
-            rep_data$add(pr)
-            #print(pr)
+            p = plot_ContUserScore(l$cont_scoreECDF, l$cont_data$fc.raw.file, l$cont_data$score_KS)
+            rep_data$add(p)
+            #print(p)
             return(NULL)
           })
           
@@ -841,23 +746,19 @@ createReport = function(txt_folder, yaml_obj = list())
         cat("YAML value for '" %+% param_name_EV_protThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_protThresh %+% ".")
         param_EV_protThresh = param_def_EV_protThresh
       }
-      
+      ##
+      ## PROTEIN counts
+      ##
       ddply(pgc, "block", .fun = function(x)
       {
-        #print(
-        rep_data$add(
-                ggplot(x, aes_string(x = "fc.raw.file", y = "proteinCounts", fill = "category")) +
-                  geom_bar(stat = "identity", position = "stack") +
-                  xlab("") +
-                  ylab("count") +
-                  scale_x_discrete_reverse(x$fc.raw.file) +
-                  ylim(0, max(param_EV_protThresh, max_prot)*1.1) +
-                  scale_fill_manual(values = c("green", "#BEAED4", "red")) +
-                  addGGtitle("EVD: ProteinGroups count", gain_text) + 
-                  geom_abline(alpha = 0.5, intercept = param_EV_protThresh, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
-                  coord_flip()
-        )
-        return (1)
+        x$counts = x$proteinCounts
+        p = plot_CountData(data = x, 
+                           y_max = max(param_EV_protThresh, max_prot)*1.1,
+                           thresh_line = param_EV_protThresh,
+                           title = c("EVD: ProteinGroups count", gain_text))
+        #print(p)
+        rep_data$add(p)
+        return (NULL)
       })
       ## QC measure for protein ID performance
       qc_protc = ddply(pgc[grep("^genuine", pgc$category), ], "fc.raw.file", function(x){data.frame(genuineAll = sum(x$proteinCounts))})
@@ -886,16 +787,11 @@ createReport = function(txt_folder, yaml_obj = list())
       #require(RColorBrewer)
       ddply(pgc, "block", .fun = function(x)
       {
-        p = ggplot(x, aes_string(x = "factor(fc.raw.file)", y = "peptideCounts", fill = "category")) +
-          geom_bar(stat = "identity", position = "stack") +
-          xlab("") +
-          ylab("count") +
-          scale_x_discrete_reverse(x$fc.raw.file) +
-          ylim(0, max(param_EV_pepThresh, max_pep)*1.1) +
-          geom_abline(alpha = 0.5, intercept = param_EV_pepThresh, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
-          scale_fill_manual(values = c("green", "#BEAED4", "red")) +
-          addGGtitle("EVD: Peptide ID count", gain_text) + 
-          coord_flip()
+        x$counts = x$peptideCounts
+        p = plot_CountData(data = x, 
+                           y_max = max(param_EV_pepThresh, max_pep)*1.1,
+                           thresh_line = param_EV_pepThresh,
+                           title = c("EVD: Peptide ID count", gain_text))
         #print(p)
         rep_data$add(p)
         return (1)
@@ -915,64 +811,28 @@ createReport = function(txt_folder, yaml_obj = list())
       if ("retention.length" %in% colnames(d_evd))  
       {
         ## compute some summary stats before passing data to ggplot (performance issue for large experiments) 
-        fcn_peakWidthOverTime = function(x, bin_width = 60) 
-        {      
-          r = range(x$retention.time)
-          brs = seq(from=r[1], to=r[2]+bin_width/60, by=bin_width/60)
-          x$bin = cut(x$retention.time, breaks=brs, include.lowest = TRUE)
-          retLStats = ddply(x, "bin", .fun = function(xb) {
-            data.frame(mid = brs[as.numeric(xb$bin[1])], retlengthAvg = median(xb$retention.length, na.rm = TRUE))
-          })
-          return(retLStats)
-        }
-        
-        d_evd.m.d = ddply(d_evd[,c("retention.time", "retention.length", "fc.raw.file")], "fc.raw.file", .fun = fcn_peakWidthOverTime)
+        d_evd.m.d = ddply(d_evd[,c("retention.time", "retention.length", "fc.raw.file")], "fc.raw.file", .fun = peakWidthOverTime)
         head(d_evd.m.d)
-        tail(d_evd.m.d)
         ## median peak width
-        d_evd.m.d_med = ddply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = function(x) {
+        d_evd.m.d_avg = ddply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = function(x) {
           #fcr = as.character(x$fc.raw.file[1])
           #cat(fcr)
           m = median(x$retention.length, na.rm = TRUE);
           return(data.frame(median = m))
         })
-        
-        
+        d_evd.m.d_avg$fc.raw.file_aug = paste0(d_evd.m.d_avg$fc.raw.file, " (~", round(d_evd.m.d_avg$median, 1)," min)")
+        ## augment Raw filename with avg. RT peak width
+        d_evd.m.d$fc.raw.file = mapvalues(d_evd.m.d$fc.raw.file, d_evd.m.d_avg$fc.raw.file, d_evd.m.d_avg$fc.raw.file_aug)
         d_evd.m.d$block = factor(assignBlocks(d_evd.m.d$fc.raw.file, 8))
         ## identical limits for all plots
-        d_evd.xlim = quantile(d_evd.m.d$mid, c(0, 1), na.rm = TRUE)
-        d_evd.ylim = c(0, quantile(d_evd.m.d$retlengthAvg,0.99, na.rm = TRUE)) ## ignore top peaks, since they are usually early non-peptide eluents
+        d_evd.xlim = range(d_evd.m.d$RT, na.rm = TRUE)
+        d_evd.ylim = c(0, quantile(d_evd.m.d$peakWidth, 0.99, na.rm = TRUE)) ## ignore top peaks, since they are usually early non-peptide eluents
         
-        fcn_plotPeakWidth = function(data)
-        {
-          d_evd.m.d_med_sub = d_evd.m.d_med[ d_evd.m.d_med$fc.raw.file %in% data$fc.raw.file, ]
-          ## augment legend with average peak width[m]
-          data$fc.raw.file = paste0(data$fc.raw.file, " (~", 
-                                    round(d_evd.m.d_med_sub$median[match(data$fc.raw.file, d_evd.m.d_med_sub$fc.raw.file)], 1),
-                                    " min)")
-          ## manually convert to factor to keep old ordering (otherwise ggplot will sort it, since its a string)
-          data$fc.raw.file = factor(data$fc.raw.file, levels = unique(data$fc.raw.file), ordered = TRUE)
-          d_evd.m.d_med_sub$fc.raw.file = paste0(d_evd.m.d_med_sub$fc.raw.file, " (~", 
-                                                 round(d_evd.m.d_med_sub$median[match(d_evd.m.d_med_sub$fc.raw.file, d_evd.m.d_med_sub$fc.raw.file)], 1),
-                                                 " min)")
-          pl = ggplot(data) +
-            geom_line(aes_string(x = "mid", y = "retlengthAvg", colour = "fc.raw.file"), size=1, alpha=0.7) +
-            scale_color_manual(values = brewer.pal(length(unique(data$fc.raw.file)), "Set1")) +
-            guides(color = guide_legend(title = "Raw file with\naverage peak width")) +
-            xlab("retention time [min]") +
-            ylab("peak width [min]") +
-            coord_cartesian(ylim = d_evd.ylim) + ## zoom -- do not cut data (preserve lines)
-            ggtitle("EVD: Peak width over RT") +
-            theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-            pointsPutX(x_range=range(data$mid), x_section=c(0.03,0.08), y=d_evd.m.d_med_sub$median, col=d_evd.m.d_med_sub$fc.raw.file[, drop = TRUE])
-          #print(pl)
-          rep_data$add(pl)
-        }
+        ## plot peak width        
         for (bl in unique(d_evd.m.d$block))
         { ## needs to be within a function, otherwise rep_data$add and print() somehow have delayed eval's which confused ggplot...
-          fcn_plotPeakWidth(data = d_evd.m.d[d_evd.m.d$block==bl,])
+          rep_data$add(plot_RTPeakWidth(data = d_evd.m.d[d_evd.m.d$block==bl,], x_lim = d_evd.xlim, y_lim = d_evd.ylim))
         }
-        
         
         ## QC measure for reproducibility of peak shape
         ##.. create a list of distributions
@@ -1068,53 +928,17 @@ createReport = function(txt_folder, yaml_obj = list())
               }
               ## amend fc.raw.file with % good ID pairs
               qcAlign$newlabel = paste0(qcAlign$newlabel, " (", round(qcAlign$withinRT*100), "% good)")
-              evd_RT_t$fc.raw.file_augment = evd_RT_t$fc.raw.file
-              levels(evd_RT_t$fc.raw.file_augment) = qcAlign$newlabel[match(levels(evd_RT_t$fc.raw.file_augment), qcAlign$fc.raw.file)]
+              evd_RT_t$fc.raw.file_ext = mapvalues(evd_RT_t$fc.raw.file, qcAlign$fc.raw.file, qcAlign$newlabel)
 
               evd_RT_t$RTdiff_in = c("green", "red")[(abs(evd_RT_t$rtdiff) > param_EV_MatchingTolerance)+1]
               
               ## plot alignment result
-  
-              splitRTAlignByRawFile = function(RTdata, ylim_g)
-              {
-                #RTdata = evd_RT_t[ evd_RT_t$fc.raw.file == "file 13",]
-                pl = ggplot(RTdata, aes_string(x="calibrated.retention.time", y="retention.time.calibration")) + 
-                  ## the MaxQuant correction (plot real data, no spline, since it can be very irregular)
-                  geom_line(aes(alpha=0.7), color = "blue") +
-                  ## PTXQC correction
-                  geom_point(aes_string(x="calibrated.retention.time", y="rtdiff", color="RTdiff_in"), alpha=0.5) + 
-                  scale_alpha(name = 'Alignment function', 
-                              labels = list(expression("MaxQuant" ~ Delta*"RT")),
-                              range=c(1,1)) + 
-                  scale_colour_manual(name = expression(bold("ID pairs ("*Delta*"RT to Ref)")), 
-                                      values = c("green"="green", "red"="red"),
-                                      labels=c("green" = paste0("good (<",param_EV_MatchingTolerance,"min)"), 
-                                                 "red" = paste0("bad (>",param_EV_MatchingTolerance,"min)"))) +
-                  guides(colour = guide_legend(order = 2), 
-                          alpha = guide_legend(order = 1)) +   ## alpha-legend on top, color below
-                  ylim(ylim_g) +
-                  xlab("corrected RT [min]") +
-                  ylab(expression(Delta*"RT [min]")) +
-                  facet_wrap(~ fc.raw.file_augment) +
-                  addGGtitle("EVD: MBR - alignment", txt_subtitle)  
-                #print(pl)
-                rep_data$add(pl)
-                return(1)
-              }
-              ylim_g = quantile(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), probs=c(0.01,0.99), na.rm = TRUE) * 1.1
-              byX(evd_RT_t, evd_RT_t$fc.raw.file, 3*3, splitRTAlignByRawFile, sort_indices = FALSE, ylim_g)
+              y_lim = quantile(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), probs = c(0.01,0.99), na.rm = TRUE) * 1.1
+              rep_data$add(
+                byX(evd_RT_t, evd_RT_t$fc.raw.file, 3*3, plot_MBRAlign, sort_indices = FALSE, 
+                    y_lim = y_lim, title_sub = txt_subtitle, match_tol = param_EV_MatchingTolerance)
+              )
 
-              ## test shape of mass-error:
-#               vv = ddply(d_evd, "fc.raw.file", function(x) {
-#                 ## only matched
-#                 xx = x[!is.na(x$match.time.difference),]
-#                 h = hist(xx$mass.error..ppm., 100, main=x$fc.raw.file[1], add = TRUE)
-#                 data.frame(m = h$mids, d = h$density)
-#               })
-#               ggplot(vv) + geom_line(aes(x=m, y=d, col=fc.raw.file))
-              ## --> not discriminatory :(
-              
-              
               ## save some memory
               if (!exists("DEBUG_PTXQC")) {
                 rm("evd_RT_t")
@@ -1126,7 +950,6 @@ createReport = function(txt_folder, yaml_obj = list())
 ### 
 ###     MBR: ID transfer
 ###
-
 
           ## increase of segmentation by MBR:
           ## three values returned: single peaks(%) in genuine, transferred and all(combined)
@@ -1143,7 +966,7 @@ createReport = function(txt_folder, yaml_obj = list())
 
           ## Check which fraction of ID-pairs belong to the 'in-width' group.
           ## The allowed RT delta is given in 'd_evd.m.d_med' (estimated from global peak width for each file)
-          qMBRSeg_Dist_inGroup = inMatchWindow(qMBRSeg_Dist, df.allowed.deltaRT = d_evd.m.d_med)
+          qMBRSeg_Dist_inGroup = inMatchWindow(qMBRSeg_Dist, df.allowed.deltaRT = d_evd.m.d_avg)
           ## puzzle together final picture
           scoreMBRMatch = computeMatchRTFractions(qMBR, qMBRSeg_Dist_inGroup)
           #head(scoreMBRMatch)
@@ -1158,32 +981,14 @@ createReport = function(txt_folder, yaml_obj = list())
           qualMBR.m[is.na(qualMBR.m[, cname]), cname] = HEATMAP_NA_VALUE
           QCM[["EVD.MBR_IDTransfer"]] = qualMBR.m[, c("fc.raw.file", cname)]
           QCM[["EVD.MBR_IDTransfer"]]
-          
-          uniqueRMatchByRawFile = function(RTdata)
-          {
-            RTdata.m = melt(RTdata, id.vars=c("fc.raw.file", "sample"))
-            RTdata.m$value = RTdata.m$value * 100 ## used to be scores in [0-1]
-            pl = ggplot(RTdata.m) + 
-              geom_bar(aes_string(x="fc.raw.file", y="value", fill="variable"), stat="identity", position="stack") + 
-              scale_fill_manual("peak class", 
-                                values = c("single"="green", "multi.inRT"="lightgreen", "multi.outRT"="red"),
-                                labels=c("single", "group (in width)", "group (out width)")) +
-              ylim(0, 100.1) + ## ggplot might not show the last (red) group upon 100.0
-              xlab("") +
-              ylab("fraction of 3D-peaks [%]") +
-              coord_flip() + 
-              scale_x_discrete_reverse(factor(RTdata$fc.raw.file)) +
-              ggtitle("EVD: MBR - ID Transfer") + 
-              facet_wrap(~sample)
-            #print(pl)
-            rep_data$add(pl)
-            return(1)
-          }
-
-          byX(scoreMBRMatch, scoreMBRMatch$fc.raw.file, 12, uniqueRMatchByRawFile, sort_indices = FALSE)
+         
+          ## plot ID-transfer
+          rep_data$add(
+            byX(scoreMBRMatch, scoreMBRMatch$fc.raw.file, 12, plot_MBRIDtransfer, sort_indices = FALSE)
+          )
           
           ##
-          ## MBR: Tree Clustering
+          ## MBR: Tree Clustering (experimental)
           ##
           rep_data$add(
           #print(  
@@ -1195,25 +1000,15 @@ createReport = function(txt_folder, yaml_obj = list())
           ##
           ## MBR: additional evidence by matching MS1 by AMT across files
           ##
-          if (any(d_evd$match.time.difference, na.rm = TRUE)) {
-            ## scatter plot: for each raw file give median time diff and # peptides used for matching
+          if (any(!is.na(d_evd$match.time.difference))) {
+            ## gain for each raw file: absolute gain, and percent gain
             mtr.df = ddply(d_evd, "fc.raw.file", function(x) {
               match_count_abs = sum(!is.na(x$match.time.difference))
-              match_count_pc  = round(100*sum(!is.na(x$match.time.difference))/nrow(x))
+              match_count_pc  = round(100*match_count_abs/(nrow(x)-match_count_abs)) ## newIDs / oldIDs
               return (data.frame(abs = match_count_abs, pc = match_count_pc))
             })
-            
-            p_amt = ggplot(data=mtr.df, aes_string(x = "abs", y = "pc", col = "fc.raw.file")) + 
-              geom_point(size=2) + 
-              #geom_text(size=2, vjust=1, aes_string(alpha=0.5)) + 
-              ggtitle(paste0("EVD: Peptides inferred by AMT-matching\n", round(100*sum(!is.na(d_evd$match.time.difference))/nrow(d_evd)) ,"% average" )) +
-              xlab("inferred by MS1 [count]") +
-              ylab("inferred by MS1 [%]") +
-              xlim(0, max(mtr.df$abs, na.rm = TRUE)*1.1) +
-              ylim(0, max(mtr.df$pc, na.rm = TRUE)*1.1)
-            rep_data$add(direct.label(p_amt, list(cex=0.5, "smart.grid")))
-            #print(p_amt)
-          } ## AMT 
+            rep_data$add(plot_MBRgain(data = mtr.df, title_sub = gain_text))
+          }
         
         } ## MBR has data
 
@@ -1225,23 +1020,10 @@ createReport = function(txt_folder, yaml_obj = list())
       ##
       ##  (this uses genuine peptides only -- no MBR!)
       ## 
-      fcChargePlot = function(d_sub)
-      {
-        rep_data$add(
-          #print(
-          mosaicPlot(d_sub$fc.raw.file, d_sub$charge) +
-            xlab("Raw file") +
-            ylab("fraction [%]") +
-            guides(fill=guide_legend(title="charge"), color = FALSE) + # avoid black line in legend
-            scale_x_reverse() +
-            coord_flip() +
-            theme(axis.text.y=element_blank(), axis.ticks=element_blank()) +
-            ggtitle("EVD: charge distribution")
-        )
-        return (1);
-      }
-      byXflex(d_evd[!d_evd$hasMTD, c("fc.raw.file", "charge")], d_evd$fc.raw.file[!d_evd$hasMTD],
-              30, fcChargePlot, sort_indices = FALSE)
+      d_charge = mosaicize(d_evd[!d_evd$hasMTD, c("fc.raw.file", "charge")])
+      rep_data$add(
+        byXflex(d_charge, d_charge$Var1, 30, plot_Charge, sort_indices = FALSE)
+      )
       
       ## QC measure for charge centeredness
       qc_charge = ddply(d_evd[!d_evd$hasMTD, c("charge",  "raw.file")], "raw.file", function(x) data.frame(c = (sum(x$charge==2)/nrow(x))))
@@ -1254,26 +1036,15 @@ createReport = function(txt_folder, yaml_obj = list())
       ##
       cat("EVD: Peptides over RT ...\n")
       raws_perPlot = 8
-      smr_evdRT = summary(d_evd$retention.time)
-      max_y = max(by(d_evd$retention.time, d_evd$fc.raw.file,  function(d) max(hist(d, breaks=seq(from=min(d)-3, to=max(d)+3, by=3), plot = FALSE)$counts)))
-      fcRTSubset <- function(d_sub, smr_evdRT)
-      {
-        nrOfRaws = length(unique(d_sub$fc.raw.file))
-        qp = ggplot(data = d_sub, aes_string(x = "retention.time", colour = "fc.raw.file", linetype = "fc.raw.file")) +
-          geom_freqpoly(binwidth = 3) +
-          xlim(from = smr_evdRT["Min."] - 1, to = smr_evdRT["Max."] + 2) +
-          xlab("RT [min]") + 
-          ylim(from = 0, to = max_y) +
-          ylab("ID count") +
-          ggtitle("EVD: IDs over RT") +
-          theme(legend.title=element_blank()) +
-          scale_linetype_manual(values = rep_len(c("solid", "dashed"), nrOfRaws)) +
-          scale_color_manual(values = brewer.pal(nrOfRaws, "Set1")) 
-        #print(qp)
-        rep_data$add(qp)
-        return (1)
-      }
-      byXflex(d_evd, d_evd$raw.file, raws_perPlot, fcRTSubset, smr_evdRT=smr_evdRT, sort_indices = FALSE)
+      
+      rt_range = range(d_evd$retention.time, na.rm = TRUE)
+      df_idRT = ddply(d_evd, "fc.raw.file", function(x) {
+        h = hist(x$retention.time, breaks=seq(from=rt_range[1]-3, to=rt_range[2]+3, by=3), plot = FALSE)
+        return(data.frame(RT = h$mid, counts = h$counts))
+      })
+      rep_data$add(
+        byXflex(df_idRT, df_idRT$fc.raw.file, raws_perPlot, plot_IDsOverRT, sort_indices = FALSE)
+      )
       
       ## QC measure for uniform-ness
       QCM[["ID_rate_over_RT"]] = ddply(d_evd[, c("retention.time",  "raw.file")], "raw.file", 
@@ -2194,7 +1965,7 @@ if ("plainPDF" %in% out_format_requested)
 ### write YAML config
 writeYAML(fh_out$yaml_file, yaml_obj)
 
-## write sorting of filenames
+## write shortnames and sorting of filenames
 mq$writeMappingFile(fh_out$filename_sorting)
 
 cat(paste("Report file created at\n\n    ", fh_out$report_file, ".*\n\n", sep=""))

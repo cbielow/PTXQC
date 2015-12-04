@@ -7,11 +7,10 @@
 \item{filename}{Target filename to create.}
 }
 \value{
-Returns \code{TRUE} if file was created, \code{FALSE} if it already exists.
+Returns NULL.
 }
 \description{
 The internal structure \code{raw_file_mapping} is written to the
 file specified.
-If the file already exists, nothing is done.
 }
 

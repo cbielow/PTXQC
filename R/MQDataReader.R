@@ -309,7 +309,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     ## check if we already have a mapping
     if (is.null(.$raw_file_mapping))
     {
-      .$raw_file_mapping = .$getShortNames(unique(.$mq.data$raw.file))
+      .$raw_file_mapping = .$getShortNames(unique(.$mq.data$raw.file), add_fs_col)
       ## indicate to outside that a new table is ready
       .$mapping.creation = .$getMappingCreation()['auto']
     }
@@ -327,7 +327,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
                 paste(missing, collapse=", ", sep="") %+% ". Edit the table if necessary and re-run PTXQC.")
         ## augment
         .$raw_file_mapping = rbind(.$raw_file_mapping,
-                                   .$getShortNames(missing, nrow(.$raw_file_mapping) + 1))
+                                   .$getShortNames(missing, add_fs_col, nrow(.$raw_file_mapping) + 1))
       } else {
         stop("Hithero unknown Raw files: " %+% paste(missing, collapse=", ", sep="") %+% " occurred in file '" %+% file %+% "' which were not present in previous txt files.")
       }
@@ -343,7 +343,17 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
 } ## end readMQ()
 
 
-MQDataReader$getShortNames = function(., raw.files, fallbackStartNr = 1)
+#'
+#' Shorten a set of Raw file names and return a data frame with the mappings.
+#' 
+#' @param raw.files Vector of Raw files
+#' @param max_len Maximal length of shortening results, before resorting to canonical names (file 1,...) 
+#' @param fallbackStartNr Starting index for canonical names
+#' @return data.frame with mapping
+#' 
+#' @name MQDataReader$getShortNames
+#' 
+MQDataReader$getShortNames = function(., raw.files, max_len, fallbackStartNr = 1)
 {
   ##
   ## mapping will have: $from, $to and optionally $best_effort (if shorting was unsuccessful and numbers had to be used)
@@ -371,7 +381,7 @@ MQDataReader$getShortNames = function(., raw.files, fallbackStartNr = 1)
   df.mapping = data.frame(from = rf_name, to = rf_name_s, stringsAsFactors = FALSE)
 
   ## check if the minimal length was reached
-  if (max(nchar(df.mapping$to)) > add_fs_col)
+  if (max(nchar(df.mapping$to)) > max_len)
   { ## resort to short naming convention
     df.mapping[, "best effort"] = df.mapping$to
     cat("Filenames are longer than the maximal allowed size of '" %+% add_fs_col %+% "'. Resorting to short versions 'file X'.\n\n")

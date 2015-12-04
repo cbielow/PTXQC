@@ -636,35 +636,41 @@ getMaxima = function(x, thresh_rel = 0.2)
   return (pos)
 }
 
-#' Mosaic plot of two columns in long format.
+#'
+#' Prepare a Mosaic plot of two columns in long format.
 #' 
 #' Found at http://stackoverflow.com/questions/19233365/how-to-create-a-marimekko-mosaic-plot-in-ggplot2
 #' Modified (e.g. to pass R check)
 #' 
-#' Returns a ggplot object without printing it.
-#' This allows to further modify the plot (e.g. rename axis, color schemes etc)
+#' Returns a data frame, which can be used for plotting and has the following columns:
+#' 'Var1' - marginalized values from 1st input column
+#' 'Var2' - marginalized values from 2nd input column
+#' 'Freq' - relative frequency of the combination given in [Var1, Var2]
+#' 'margin_var1' - frequency of the value given in Var1
+#' 'var2_height' - frequency of the value given in Var2, relative to Var1
+#' 'var1_center' - X-position when plotting (large sets get a larger share)
 #' 
-#' @param var1 Vector of factors
-#' @param var2 Vector of factors
-#' @return ggplot object
+#' @param data A data.frame with exactly two columns
+#' @return Data.frame
 #' 
+#' @examples
+#'   data = data.frame(raw.file = c(rep('file A', 100), rep('file B', 40)),
+#'                     charge = c(rep(2, 60), rep(3, 30), rep(4, 10),
+#'                                rep(2, 30), rep(3, 7), rep(4, 3)))
+#'   mosaicize(data)                             
+#'   
 #' 
-#' @export
-#' 
-mosaicPlot = function(var1, var2)
+mosaicize = function(data)
 {
-  lev_var1 = length(levels(var1))
-  
-  pl.data = as.data.frame(prop.table(table(var1, var2)))
-  pl.data$margin_var1 = prop.table(table(var1))
-  pl.data$var2_height = pl.data$Freq / pl.data$margin_var1
-  pl.data$var1_center = c(0, cumsum(pl.data$margin_var1)[(1:lev_var1) -1]) + pl.data$margin_var1 / 2
-  
-  pl = 
-    ggplot(pl.data, aes_string(x = "var1_center", y = "var2_height")) +
-      geom_bar(stat = "identity", aes_string(width = "margin_var1", fill = "var2"), color = "black")  +
-      geom_text(aes_string(label = "as.character(var1)", x = "var1_center", y = 1.05)) 
-  return (pl)
+  stopifnot(ncol(data)==2)
+  lev_var1 = length(unique(data[, 1]))
+
+  ct.data = as.data.frame(prop.table(table(data[, 1], data[, 2])))
+  ct.data$Margin_var1 = prop.table(table(data[, 1]))
+  ct.data$Var2_height = ct.data$Freq / ct.data$Margin_var1
+  ct.data$Var1_center = c(0, cumsum(ct.data$Margin_var1)[(1:lev_var1) -1]) + ct.data$Margin_var1 / 2
+  #ct.data = ct.data[ order(ct.data$Var1), ]
+  return (ct.data)
 }
 
 #' A string concatenation function, more readable than 'paste()'.
@@ -1012,5 +1018,38 @@ getECDF = function(samples, y_eval = (1:100)/100)
   x_eval = iec(y_eval)
   r = data.frame(x = x_eval, y = y_eval)
   return (r)
+}
+
+#'
+#' Discretize RT peak widths by averaging values per time bin.
+#'
+#' Should be applied for each Raw file individually.
+#'
+#' Returns a data.frame, where 'bin' gives the index of each bin, 'RT' is 
+#' the middle of each bin and 'peakWidth' is the averaged peak width per bin.
+#'
+#' @param data Data.frame with columns 'retention.time' and 'retention.length'
+#' @param RT_bin_width Bin size in minutes
+#' @return Data.frame with columns 'bin', 'RT', 'peakWidth'
+#' 
+#' @importFrom plyr ddply
+#' 
+#' @examples
+#'   data = data.frame(retention.time = seq(30,200, by=0.001)) ## one MS/MS per 0.1 sec
+#'   data$retention.length = seq(0.3, 0.6, length.out = nrow(data)) + rnorm(nrow(data), 0, 0.1)
+#'   d = peakWidthOverTime(data)
+#'   plot(d$RT, d$peakWidth)
+#'   
+#'   
+peakWidthOverTime = function(data, RT_bin_width = 2) 
+{      
+  r = range(data$retention.time)
+  brs = seq(from = r[1], to = r[2] + RT_bin_width, by = RT_bin_width)
+  data$bin = findInterval(data$retention.time, brs, all.inside = TRUE) ## faster than cut(..., labels = FALSE)
+  #data$bin = cut(data$retention.time, breaks = brs, include.lowest = TRUE, labels = FALSE)
+  retLStats = ddply(data, "bin", .fun = function(xb) {
+    data.frame(RT = brs[xb$bin[1]], peakWidth = median(xb$retention.length, na.rm = TRUE))
+  })
+  return(retLStats)
 }
 
