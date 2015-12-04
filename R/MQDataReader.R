@@ -309,50 +309,29 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     ## check if we already have a mapping
     if (is.null(.$raw_file_mapping))
     {
-      ##
-      ## mapping will have: $from, $to and optionally $best_effort (if shorting was unsuccessful and numbers had to be used)
-      ##
-      rf_name = unique(.$mq.data$raw.file)
-      ## remove prefix
-      rf_name_s = delLCP(rf_name, 
-                         min_out_length = 8,
-                         add_dots = TRUE)
-      ## remove infix (2 iterations)
-      rf_name_s = simplifyNames(rf_name_s, 
-                                2, 
-                                min_LCS_length = 7,
-                                min_out_length = 8)
-      
-      ## check if shorter filenames are still unique (they should be.. if not we have a problem!!)
-      if (length(rf_name) != length(unique(rf_name_s)))
-      {
-        cat("Original names:\n")
-        cat(rf_name)
-        cat("Short names:\n")
-        cat(rf_name_s)
-        stop("While loading MQ data: shortened raw filenames are not unique! This should not happen. Please contact the developers and provide the above names!")
-      }
-      .$raw_file_mapping = data.frame(from = rf_name, to = rf_name_s, stringsAsFactors = FALSE)
-      ## check if the minimal length was reached
-      #add_fs_col = 10
-      if (max(nchar(.$raw_file_mapping$to)) > add_fs_col)
-      { ## resort to short naming convention
-        .$raw_file_mapping[, "best effort"] = .$raw_file_mapping$to
-        cat("Filenames are longer than the maximal allowed size of '" %+% add_fs_col %+% "'. Resorting to short versions 'file X'.\n\n")
-        maxl = length(unique(.$mq.data$raw.file))
-        .$raw_file_mapping$to = paste("file", sprintf(paste0("%0", nchar(maxl), "d"), 1:maxl)) ## with leading 0's if required
-      }
+      .$raw_file_mapping = .$getShortNames(unique(.$mq.data$raw.file))
       ## indicate to outside that a new table is ready
-      .$mapping.creation = 'automatic'
+      .$mapping.creation = .$getMappingCreation()['auto']
     }
     ## do the mapping    
     .$mq.data$fc.raw.file = as.factor(.$raw_file_mapping$to[match(.$mq.data$raw.file, .$raw_file_mapping$from)])
     ## check for NA's
     if (any(is.na(.$mq.data$fc.raw.file)))
-    {
+    { ## if mapping is incomplete
       missing = unique(.$mq.data$raw.file[is.na(.$mq.data$fc.raw.file)])
-      stop("Generation of short Raw file names failed due to missing mapping entries:" %+% paste(missing, collapse=", ", sep=""))
-    }
+      if (.$mapping.creation == .$getMappingCreation()['user'])
+      {
+        ## the user has re-run MaxQuant with more Raw files,
+        ## but the old _filename_sort.txt file was used to read the (now incomplete mapping)
+        warning("Incomplete report_XXX_filename.sort.txt. Augmenting shortened Raw files: " %+% 
+                paste(missing, collapse=", ", sep="") %+% ". Edit the table if necessary and re-run PTXQC.")
+        ## augment
+        .$raw_file_mapping = rbind(.$raw_file_mapping,
+                                   .$getShortNames(missing, nrow(.$raw_file_mapping) + 1))
+      } else {
+        stop("Hithero unknown Raw files: " %+% paste(missing, collapse=", ", sep="") %+% " occurred in file '" %+% file %+% "' which were not present in previous txt files.")
+      }
+    } 
     cat(paste0(" done\n"))
   }
 
@@ -363,6 +342,44 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   return (.$mq.data);
 } ## end readMQ()
 
+
+MQDataReader$getShortNames = function(., raw.files, fallbackStartNr = 1)
+{
+  ##
+  ## mapping will have: $from, $to and optionally $best_effort (if shorting was unsuccessful and numbers had to be used)
+  ##
+  rf_name = raw.files
+  ## remove prefix
+  rf_name_s = delLCP(rf_name, 
+                     min_out_length = 8,
+                     add_dots = TRUE)
+  ## remove infix (2 iterations)
+  rf_name_s = simplifyNames(rf_name_s, 
+                            2, 
+                            min_LCS_length = 7,
+                            min_out_length = 8)
+  
+  ## check if shorter filenames are still unique (they should be.. if not we have a problem!!)
+  if (length(rf_name) != length(unique(rf_name_s)))
+  {
+    cat("Original names:\n")
+    cat(rf_name)
+    cat("Short names:\n")
+    cat(rf_name_s)
+    stop("While loading MQ data: shortened raw filenames are not unique! This should not happen. Please contact the developers and provide the above names!")
+  }
+  df.mapping = data.frame(from = rf_name, to = rf_name_s, stringsAsFactors = FALSE)
+
+  ## check if the minimal length was reached
+  if (max(nchar(df.mapping$to)) > add_fs_col)
+  { ## resort to short naming convention
+    df.mapping[, "best effort"] = df.mapping$to
+    cat("Filenames are longer than the maximal allowed size of '" %+% add_fs_col %+% "'. Resorting to short versions 'file X'.\n\n")
+    maxl = length(raw.files) - 1 + fallbackStartNr
+    df.mapping$to = paste("file", sprintf(paste0("%0", nchar(maxl), "d"), fallbackStartNr:maxl)) ## with leading 0's if required
+  }
+  return(df.mapping)
+}
 
 #' Plots the current mapping of Raw file names to their shortened version.
 #'
@@ -439,26 +456,25 @@ MQDataReader$plotNameMapping <- function(.)
 #'
 #' The internal structure \code{raw_file_mapping} is written to the
 #' file specified.
-#' If the file already exists, nothing is done.
 #' 
 #' @param filename  Target filename to create.
-#' @return Returns \code{TRUE} if file was created, \code{FALSE} if it already exists.
+#' @return Returns NULL.
 #'
 #' @name MQDataReader$writeMappingFile
 #'
 MQDataReader$writeMappingFile = function(., filename)
 {
-  if (!file.exists(filename))
-  {
-    dfs = data.frame(orig.Name = .$raw_file_mapping$from, new.Name = .$raw_file_mapping$to)
-    cat(file = filename,
-        "# This file can be used to manually substitute Raw file names within the report.",
-        "# The ordering of Raw files in the report can be changed by re-arranging the rows.",
-        sep = "\n")
-    write.table(x = dfs, file = filename, append = TRUE, quote = FALSE, sep="\t", row.names = FALSE)
-    return (TRUE)
+  dfs = data.frame(orig.Name = .$raw_file_mapping$from, new.Name = .$raw_file_mapping$to)
+  if ("best effort" %in% colnames(.$raw_file_mapping)) {
+    dfs$best_effort = .$raw_file_mapping[, "best effort"]
   }
-  return (FALSE)
+    
+  cat(file = filename,
+      "# This file can be used to manually substitute Raw file names within the report.",
+      "# The ordering of Raw files in the report can be changed by re-arranging the rows.",
+      sep = "\n")
+  write.table(x = dfs, file = filename, append = TRUE, quote = FALSE, sep="\t", row.names = FALSE)
+  return(NULL)
 }
 
 
@@ -510,6 +526,11 @@ MQDataReader$readMappingFile = function(., filename)
     return (TRUE)
   }
   return (FALSE)
+}
+
+MQDataReader$getMappingCreation = function(.)
+{
+  return(c(user = 'file (user-defined)', auto = 'automatic'))
 }
 
 #' Replaces values in the mq.data member with (binary) values.
