@@ -228,7 +228,7 @@ createReport = function(txt_folder, yaml_obj = list())
     
     
     colsSIL = grepv("^intensity\\.[hlm](\\.|$)", colnames(d_pg))
-    colsLF = grepv("^intensity\\.[^hlm]", colnames(d_pg))
+    colsLF = grepv("^intensity\\..", colnames(d_pg))
     colsOneCond = "intensity" ## just one group -- we still want to know what the overall intensity is
     if (length(colsSIL)) {
       ## ignore intensity.l and alike if real groups are present
@@ -301,7 +301,7 @@ createReport = function(txt_folder, yaml_obj = list())
     ## LFQ boxplots
     ##
     colsSIL = grepv("^lfq.intensity\\.[hlm](\\.|$)", colnames(d_pg))
-    colsLF = grepv("^lfq.intensity\\.[^hlm]", colnames(d_pg))
+    colsLF = grepv("^lfq.intensity\\..", colnames(d_pg))
     
     ## a global PG name mapping
     MAP_pg_groups_LFQ = NA
@@ -885,7 +885,7 @@ createReport = function(txt_folder, yaml_obj = list())
             evd_RT_t = thinOutBatch(d_alignQ,
                                     "calibrated.retention.time",
                                     "raw.file")
-
+            
             evd_RT_t$fc.raw.file = renameFile(evd_RT_t$raw.file, mq$raw_file_mapping)
             
             ## param
