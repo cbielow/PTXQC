@@ -31,6 +31,5 @@ Returns a data frame, which can be used for plotting and has the following colum
                                rep(2, 30), rep(3, 7), rep(4, 3)))
   mosaicize(data)                             
   
-
 }
 

@@ -4,10 +4,12 @@
 \alias{plot_MBRgain}
 \title{Plot MaxQuant Match-between-runs id transfer performance.}
 \usage{
-plot_MBRgain(data, title_sub)
+plot_MBRgain(data, title_sub = "")
 }
 \arguments{
 \item{data}{A data.frame with columns as described above}
+
+\item{title_sub}{Subtitle text}
 }
 \value{
 GGplot object

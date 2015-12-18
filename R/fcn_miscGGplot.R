@@ -8,7 +8,7 @@
 #' @return ggplot object
 #' 
 #' @import ggplot2
-#' @importFrom grid unit
+#' @import grid
 #'
 ggText = function(title, text, col = "black") {
   pl = ggplot(data.frame(text = text, ypos=1, xpos=1), 
@@ -30,7 +30,7 @@ ggText = function(title, text, col = "black") {
 #' @return -
 #' 
 #' @import ggplot2
-#' @importFrom grid gpar grid.draw grid.text textGrob unit
+#' @import grid
 #'
 printWithFooter = function(gg_obj, bottom_left = NULL, bottom_right = NULL) 
 {
@@ -194,4 +194,25 @@ theme_blank = function()
   theme_blank$strip.text <- element_blank()
   theme_blank$axis.title <- element_blank()
   return (theme_blank)
+}
+
+#'
+#' Return color brew palettes, but fail hard if number of requested colors
+#' is larger than the palette is holding.
+#' 
+#' Internally calls 'brewer.pal(n, palette)', checking 'n' beforehand.
+#' 
+#' @param n Number of colours
+#' @param palette Name of palette (e.g. "set1")
+#' @return character vector of colors
+#' 
+#' @importFrom RColorBrewer brewer.pal brewer.pal.info
+#' 
+brewer.pal.Safe = function(n = 3, palette = "Set1")
+{
+  idx = which(rownames(brewer.pal.info) == palette)
+  if (length(idx) != 1) stop("Palette ", palette," unknown!")
+  if (brewer.pal.info$maxcolors[idx] < n) stop("Palette ", palette, " provides ", brewer.pal.info$maxcolors[idx], " colors, but not ", n, " as requested!")
+  
+  return (brewer.pal(n, palette))
 }

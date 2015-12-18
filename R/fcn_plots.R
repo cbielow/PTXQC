@@ -32,59 +32,6 @@ plot_ContsPG = function(data)
   return (p)
 }
 
-#'
-#' Plot ratios of labeled data (e.g. SILAC) from proteinGroups.txt
-#'
-#' The 'x' values are expected to be log2() transformed already.
-#' 
-#' @param df_ratios A data.frame with columns 'x', 'y', 'col', 'ltype'
-#' @param d_range X-axis range of plot
-#' @param main_title Plot title
-#' @param main_col Color of title
-#' @param legend_title Legend text
-#' @return GGplot object
-#' 
-#' @import ggplot2
-#' @importFrom RColorBrewer brewer.pal
-
-#' @examples 
-#' 
-#'  x1 = seq(-3, 3, by = 0.1)
-#'  y1 = dnorm(x1)
-#'  x2 = seq(-5, 1, by = 0.1)
-#'  y2 = dnorm(x2, mean = -1)
-#'  data = data.frame( x = c(x1,x2),
-#'                     y = c(y1,y2), 
-#'                     col = c(rep("ok", length(x1)), rep("shifted", length(x2))), 
-#'                     ltype = "dotted")
-#'  plot_RatiosPG(data, range(data$x), "Ratio plot", "red", "group")
-#' 
-plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
-{
-  br = c(2, 5, 10, 20);
-  
-  p =
-    ggplot(data = df_ratios, aes_string(x = "x", y = "y", colour = "col")) + 
-      facet_grid(col ~ ., scales = "free_y") +
-      geom_line(size = 1.2) +
-      geom_area(aes_string(alpha = "ltype", fill = "col")) +
-      xlab("ratio")  +
-      ylab("density")  +
-      scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide_legend(legend_title)) + 
-      scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=40)) +
-      scale_alpha_discrete(range = c(1, 0.2), 
-                           labels=c("dotted"="unimodal", "solid"="multimodal"),
-                           guide_legend("shape")
-      ) +
-      scale_x_continuous(limits = d_range, trans = "identity", breaks = c(-br, 0, br), labels=c(paste0("1/",2^(br)), 1, 2^br)) +
-      guides(colour = FALSE) +
-      theme(plot.title = element_text(colour = main_col)) +
-      theme_bw() +
-      geom_vline(alpha = 0.5, xintercept = 0, colour = "green", linetype = "dashed", size = 1.5) +
-      ggtitle(main_title)
-  #print(p)
-  return (p)
-}
 
 
 #'
@@ -92,7 +39,7 @@ plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
 #' 
 #' @param data A data.frame with columns 'fc.raw.file', 'variable', 'value'
 #' @param name_contaminant Name of the contaminant shown in title
-#' @param extra_limit Horizontal position where a h-line is plotted (for visual guidance)
+#' @param extra_limit Position where a h-line is plotted (for visual guidance)
 #' @import ggplot2
 #' @return GGplot object
 #' 
@@ -168,6 +115,143 @@ plot_ContUserScore = function(data, raw.file, score) {
 
 
 #'
+#' Plot contaminants from evidence.txt, broken down into top5-proteins.
+#' 
+#' @param data A data.frame with columns 'fc.raw.file', 'contaminant', 'pname', 'intensity'
+#' @param top5 Name of the Top-5 Proteins (by relative intensity or whatever seems relevant)
+#' @return GGplot object
+#' 
+#' @import ggplot2
+#' @importFrom plyr summarize
+#'
+#' @examples 
+#' 
+#'  data = data.frame(intensity = 1:12, 
+#'                    pname = rep(letters[1:3], 4), 
+#'                    fc.raw.file = rep(paste("f", 1:4), each=3),
+#'                    contaminant = TRUE)
+#'  plot_ContEVD(data, top5 = letters[1:5]) ## providing more proteins than present... d,e will be ignored
+#'  plot_ContEVD(data, top5 = letters[1:2]) ## classify 'c' as 'other'
+#' 
+plot_ContEVD = function(data, top5) 
+{ 
+  #top5 = cont.top5.names
+  if (is.null(top5)) stop("Function plot_ContEVD() called with invalid argument. Please report this bug.")
+  if (length(top5) > 5) stop("Top5 protein list is longer than 5 (which is the maximum allowed).")
+  
+  intensity = NULL ## to make R CHECK happy...
+  data.sub = data[data$contaminant,]
+  ## rewrite prot names, and subsume 6th and below as 'other'
+  data.sub$pname = as.character(data.sub$pname)
+  data.sub[!(data.sub$pname %in% top5), "pname"] = 'other'
+  ## aggregate identical proteins
+  ##  use sum(as.numeric(.)) to prevent overflow
+  d_sum = ddply(data.sub[, c("intensity", "pname", "fc.raw.file")], c("pname", "fc.raw.file"), 
+                function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm = TRUE)))
+  ## normalize by total intensity of raw file
+  d_norm = ddply(data[, c("intensity", "fc.raw.file")],  "fc.raw.file", 
+                 function(x) summarise(x, total.intensity=sum(as.numeric(intensity), na.rm = TRUE)))
+  d_sum$total.intensity = d_norm$total.intensity[match(d_sum$fc.raw.file, d_norm$fc.raw.file)]
+  d_sum$Log10Diff = getAbundanceClass(log10(d_sum$total.intensity))
+  d_sum$s.intensity = d_sum$s.intensity / d_sum$total.intensity * 100
+  ## shorten protein-groups (at most two protein names)
+  d_sum$pname = sapply(d_sum$pname, function(x) {
+    p.split = unlist(strsplit(x, split=";"))
+    ## shorten entries as well (at most 15 characters)
+    p.split_s = sapply(p.split[1:(min(2, length(p.split)))], function(x) ifelse(nchar(x)>15, paste0(substr(x, start=1, stop=13), ".."), x))
+    r = paste(p.split_s, sep="", collapse=";")
+    if (length(p.split)>2) r=paste0(r, ";..")
+    return(r)
+  })
+  ## order of pname determines order of bars    
+  d_sum = rbind(d_sum[d_sum$pname!="other",], d_sum[d_sum$pname=="other",])
+
+    ## value of factors determines order in the legend
+  ## --> make proteins a factor, with 'other' being the first
+  d_sum$Protein = factor(d_sum$pname, levels=unique(c("other", d_sum$pname)), ordered = TRUE)
+  head(d_sum)
+  
+  ## plot
+  p = ggplot(d_sum, aes_string(   x = "factor(fc.raw.file)",
+                                  y = "s.intensity", 
+                               fill = "Protein")) +
+        geom_bar(aes_string(alpha = "Log10Diff"), 
+                 stat = "identity") +
+        scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(d_sum$Log10Diff))==1) + 1], 1.0),
+                             name = "Abundance\nclass") +
+        xlab("")  +
+        theme_bw() +
+        ggtitle("EVD: Contaminant per Raw file") +
+        ylab("contaminant (% intensity)") +
+        scale_fill_manual(values = brewer.pal(6,"Accent")) + 
+        scale_colour_manual(values = brewer.pal(6,"Accent")) +
+        geom_hline(aes_string(yintercept = "5"), linetype='dashed') +
+        #guides(alpha=NULL, fill = guide_legend(nrow = 2, ncol = 3, byrow = TRUE, reverse = TRUE)) +
+        #theme(legend.position="top", legend.title=element_blank()) +
+        coord_flip() +
+        scale_x_discrete_reverse(d_sum$fc.raw.file)
+  
+  #print(p)
+  return(p)  
+}
+
+
+
+#'
+#' Plot ratios of labeled data (e.g. SILAC) from proteinGroups.txt
+#'
+#' The 'x' values are expected to be log2() transformed already.
+#' 
+#' @param df_ratios A data.frame with columns 'x', 'y', 'col', 'ltype'
+#' @param d_range X-axis range of plot
+#' @param main_title Plot title
+#' @param main_col Color of title
+#' @param legend_title Legend text
+#' @return GGplot object
+#' 
+#' @import ggplot2
+#' @importFrom RColorBrewer brewer.pal
+#' 
+#' @examples 
+#' 
+#'  x1 = seq(-3, 3, by = 0.1)
+#'  y1 = dnorm(x1)
+#'  x2 = seq(-5, 1, by = 0.1)
+#'  y2 = dnorm(x2, mean = -1)
+#'  data = data.frame( x = c(x1,x2),
+#'                     y = c(y1,y2), 
+#'                     col = c(rep("ok", length(x1)), rep("shifted", length(x2))), 
+#'                     ltype = "dotted")
+#'  plot_RatiosPG(data, range(data$x), "Ratio plot", "red", "group")
+#' 
+plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
+{
+  br = c(2, 5, 10, 20);
+  
+  p =
+    ggplot(data = df_ratios, aes_string(x = "x", y = "y", colour = "col")) + 
+    facet_grid(col ~ ., scales = "free_y") +
+    geom_line(size = 1.2) +
+    geom_area(aes_string(alpha = "ltype", fill = "col")) +
+    xlab("ratio")  +
+    ylab("density")  +
+    scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide_legend(legend_title)) + 
+    scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=40)) +
+    scale_alpha_discrete(range = c(1, 0.2), 
+                         labels=c("dotted"="unimodal", "solid"="multimodal"),
+                         guide_legend("shape")
+    ) +
+    scale_x_continuous(limits = d_range, trans = "identity", breaks = c(-br, 0, br), labels=c(paste0("1/",2^(br)), 1, 2^br)) +
+    guides(colour = FALSE) +
+    theme(plot.title = element_text(colour = main_col)) +
+    theme_bw() +
+    geom_vline(alpha = 0.5, xintercept = 0, colour = "green", linetype = "dashed", size = 1.5) +
+    ggtitle(main_title)
+  #print(p)
+  return (p)
+}
+
+#'
 #' Plot Protein groups per Raw file
 #' 
 #' The input is a data.frame with protein/peptide counts, where 'category' designates
@@ -215,7 +299,6 @@ plot_CountData = function(data, y_max, thresh_line, title)
 #' @param x_lim Plot range of x-axis
 #' @param y_lim Plot range of y-axis
 #' @return GGplot object
-#' @importFrom RColorBrewer brewer.pal
 #'
 #' @import ggplot2
 #'
@@ -230,7 +313,7 @@ plot_RTPeakWidth = function(data, x_lim, y_lim)
 {
   p = ggplot(data) +
     geom_line(aes_string(x = "RT", y = "peakWidth", colour = "fc.raw.file"), size=1, alpha=0.7) +
-    scale_color_manual(values = brewer.pal(length(unique(data$fc.raw.file)), "Set1")) +
+    scale_color_manual(values = brewer.pal.Safe(length(unique(data$fc.raw.file)), "Set1")) +
     guides(color = guide_legend(title = "Raw file\n(avg. peak width)")) +
     xlab("retention time [min]") +
     ylab("peak width [min]") +
@@ -370,6 +453,7 @@ plot_MBRIDtransfer = function(data)
 #' where each row represents one peptide sequence.
 #' 
 #' @param data A data.frame with columns as described above
+#' @param title_sub Subtitle text
 #' @return GGplot object
 #'
 #' @import ggplot2
@@ -381,15 +465,15 @@ plot_MBRIDtransfer = function(data)
 #'                    pc = c(34, 32, 22, 2))
 #'  plot_MBRgain(data, "MBR gain: 18%")
 #' 
-plot_MBRgain = function(data, title_sub)
+plot_MBRgain = function(data, title_sub = "")
 {
   p = ggplot(data = data, aes_string(x = "abs", y = "pc", col = "fc.raw.file")) + 
     geom_point(size=2) + 
     addGGtitle("EVD: Peptides inferred by MBR", title_sub) +
     xlab("number of transferred ID's") +
     ylab("gain on top of genuine IDs [%]") +
-    xlim(0, max(mtr.df$abs, na.rm = TRUE)*1.1) + ## accounting for labels near the border
-    ylim(0, max(mtr.df$pc, na.rm = TRUE)*1.1)
+    xlim(0, max(data$abs, na.rm = TRUE)*1.1) + ## accounting for labels near the border
+    ylim(0, max(data$pc, na.rm = TRUE)*1.1)
   p = direct.label(p, list(cex=0.5, "smart.grid"))
   #print(p)
   return(p)
@@ -450,11 +534,16 @@ plot_Charge = function(data)
 #'   'fc.raw.file' - name of the Raw file
 #' where each row represents one bin in RT.
 #' 
+#' At most nine(!) Raw files can be plotted. If more are given,
+#' an error is thrown.
+#' 
+#' 
 #' @param data A data.frame with columns as described above
+#' @param x_lim Limits of the x-axis (2-tuple)
+#' @param y_max Maximum of the y-axis (single value)
 #' @return GGplot object
 #'
 #' @import ggplot2
-#' @importFrom RColorBrewer brewer.pal
 #' 
 #' @examples
 #'  data = data.frame(fc.raw.file = rep(paste('file', letters[1:3]), each=30),
@@ -474,7 +563,7 @@ plot_IDsOverRT = function(data, x_lim = range(data$RT), y_max = max(data$counts)
     ggtitle("EVD: IDs over RT") +
     guides(colour = guide_legend(title="Raw file"), linetype = FALSE) +
     scale_linetype_manual(values = rep_len(c("solid", "dashed"), nrOfRaws)) +
-    scale_color_manual(values = brewer.pal(nrOfRaws, "Set1")) 
+    scale_color_manual(values = brewer.pal.Safe(nrOfRaws, "Set1")) 
   #print(p)
   return(p)
 }
@@ -524,52 +613,514 @@ plot_IDRate = function(data, id_rate_bad, id_rate_great, label_ID)
 }
 
 
+
 #'
-#' Plot a table of Raw files which failed ID rate requirements.
+#' Colored table plot.
 #' 
-#' Just to have their names explicitly in the report.
+#' Code taken from http://stackoverflow.com/questions/23819209/change-text-color-for-cells-using-tablegrob-in-r
 #' 
-#' The input is a data.frame with two columns
-#'   1st column - name of the Raw file
-#'   2nd column - fraction of identified MS/MS spectra in percent
-#' where each row represents one Raw file.
+#' @param data Table as Data.frame
+#' @param colours Single or set of colours (col-wise)
+#' @param fill Cell fill (row-wise)
+#' @param just (ignored)
+#' @return gTable
+#'
+#' @import gtable
+#'
+plotTableRaw = function(data, colours="black", fill=NA, just="centre")
+{
+  
+  label_matrix <- as.matrix(data)
+  
+  nc <- ncol(label_matrix)
+  nr <- nrow(label_matrix)
+  n <- nc*nr
+  
+  colours <- rep(colours, length.out = n)
+  justs <- rep(just, length.out = n)
+  fill <- rep(fill, length.out = n)
+  
+  ## text for each cell
+  labels <- lapply(seq_len(n), function(ii)
+    textGrob(as.character(label_matrix[ii]), gp=gpar(fontsize=8, col=colours[ii]), just="left", x = unit(0.05, "npc")))
+  label_grobs <- matrix(labels, ncol=nc)
+  
+  ## define the fill background of cells
+  fill <- lapply(seq_len(n), function(ii) 
+    rectGrob(gp=gpar(fill=fill[ii])))
+  
+  ## some calculations of cell sizes
+  row_heights <- function(m){
+    do.call(unit.c, apply(m, 1, function(l)
+      max(do.call(unit.c, lapply(l, grobHeight)))))
+  }
+  col_widths <- function(m){
+    do.call(unit.c, apply(m, 2, function(l)
+      max(do.call(unit.c, lapply(l, grobWidth)))))
+  }
+  
+  ## place labels in a gtable
+  g <- gtable_matrix("table", grobs=label_grobs, 
+                     widths=col_widths(label_grobs) + unit(2,"mm"), 
+                     heights=row_heights(label_grobs) + unit(2,"mm"))
+  
+  ## add the background
+  xt <- rep(seq_len(nr), each=nc)
+  xl <- rep(seq_len(nc), times=nr)
+  g <- gtable_add_grob(g, fill, t=xt, l=xl, z=0, name="fill")
+  
+  return(g)
+}
+
+
+#'
+#' Plot a table with row names and title
+#' 
+#' Restriction: currently, the footer will be cropped at the table width.
 #' 
 #' @param data A data.frame with columns as described above
 #' @param title Table title
+#' @param footer Footer text
+#' @param col_names Column names for Table
+#' @param fill Fill pattern (by row)
+#' @param col Text color (by column)
+#' @param just (ignored)
 #' @return gTree object with class 'PTXQC_table'
 #'
 #' @import grid
 #' @import gridExtra
 #' @import gtable
 #'
+#' @export 
+#' 
 #' @examples
 #'   data = data.frame(raw.file = letters[1:4],
 #'                     id.rate = 3:6)
-#'   plot_IDRateBad(data, "Bad files")
+#'   plotTable(data, title = "Bad files", footer = "bottom", col_names = c("first col", "second col"), col=c("red", "green"))
 #' 
-plot_IDRateBad = function(data, title)
+plotTable = function(data, title = "", footer = "", col_names = colnames(data), fill = c("grey90", "grey70"), col = "black", just="centre")
 {
-  table = tableGrob(data, rows = NULL, cols = c("Raw file", "% identified"))
-  title = textGrob(title, gp = gpar(fontsize = 20))
-  padding = unit(0.5, "line")
-  table = gtable_add_rows(table, 
-                          heights = grobHeight(title) + padding,
-                          pos = 0)
-  table = gtable_add_grob(table, list(title), t = 1, l = 1, r = ncol(table))
+  ## add column names
+  data2 = rbind(col_names, apply(data, 2, function(x) as.character(x)))
+  ## create table
+  n = nrow(data2)*ncol(data2)
+  nd = nrow(data)*ncol(data)
+  table = plotTableRaw(data2, 
+                       fill = c(rep("grey50", ncol(data)), rep(fill, each=ncol(data), length.out=nd)), ## row-wise
+                       colours = unlist(lapply(col, function(cc) c("black", rep(cc, nrow(data))))), ## col-wise
+                       just = c(rep("centre", ncol(data)), rep(just, each=nrow(data), length.out=nd))) 
+  
+  colhead = lapply(col_names, function(ii) textGrob(ii, gp=gpar(fontsize=12, col="black", fontface="bold", fill="grey")))
+  ## replace column names
+  table = gtable_add_grob(table, colhead, t = 1, l = 1:ncol(data))
+
+  #table = tableGrob(data, rows = NULL, cols = c("Raw file", "% identified"))
+  if (nchar(title) > 0)
+  {
+    gtitle = textGrob(title, gp = gpar(fontsize = 14))
+    padding = unit(1.5, "line")
+    ## add heading (white space)
+    table = gtable_add_rows(table, heights = grobHeight(gtitle) + padding, pos = 0)
+    ## add heading (text as overlay)
+    table = gtable_add_grob(table, list(gtitle), t = 1, l = 1, r = ncol(table))
+  }
+  if (nchar(footer) > 0)
+  {
+    gfooter = textGrob(footer, gp = gpar(fontsize = 10))
+    padding = unit(1.5, "line")
+    ## add heading (white space)
+    table = gtable_add_rows(table, heights = grobHeight(gfooter) + padding, pos = -1) ## bottom
+    ## add heading (text as overlay)
+    table = gtable_add_grob(table, list(gfooter), t = nrow(table), l = 1, r = ncol(table))
+  }
+  
   
   ## neat trick to enable calling print(g), to mimic ggplot-behaviour on this object
   ## in combination with print.PTXQC_table() -- see below
   p = gTree(children = gList(table), cl = c("PTXQC_table"))
-  print(p)
+  
+  #print(p)
   return(p)
 }
 
 #' helper S3 class, enabling print(some-plot_Table-object)
 #' @import grid
 #' @param x Some Grid object to plot
+#' @return A function
+#' 
 print.PTXQC_table = function(x) {grid.newpage(); grid.draw(x)}
 
+#'
+#' A boxplot of uncalibrated mass errors for each Raw file.
+#'
+#' Boxes are optionally colored to indicate that a MQ bug was detected or 
+#' if PTXQC detected a too narrow search window.
+#' 
+#' @param data A data.frame with columns 'fc.raw.file', 'uncalibrated.mass.error..ppm.'
+#' @param MQBug_raw_files List of Raw files with invalid calibration values
+#' @param stats A data.frame with columns 'fc.raw.file', 'sd', 'outOfCal'
+#' @param y_lim Range of y-axis
+#' @param extra_limit Position where a v-line is plotted (for visual guidance) 
+#' @param title_sub Subtitle
+#' @return GGplot object
+#' 
+#' @import ggplot2
+#' @importFrom RColorBrewer brewer.pal
+#'
+#' @export
+#' 
+#' @examples
+#'   n = c(150, 1000, 1000, 1000)
+#'   data = data.frame(fc.raw.file = repEach(letters[4:1], n),
+#'                     uncalibrated.mass.error..ppm. = c(rnorm(n[1], 13, 2.4), rnorm(n[2], 4, 0.5), rnorm(n[3], 3, 0.7), rnorm(n[4], 4.5, 0.8)))
+#'   stats = data.frame(fc.raw.file = letters[4:1],
+#'                      sd = c(2.4, 0.5, 0.7, 0.8),
+#'                      outOfCal = c(TRUE, FALSE, FALSE, FALSE))           
+#'   plot_UncalibratedMSErr(data, MQBug_raw_files = letters[1], stats, y_lim = c(-20,20), 15, "subtitle")
+#' 
+plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit, title_sub)
+{
+  data$col = "default"
+  if (length(MQBug_raw_files) > 0) data$col = c("default", "MQ bug")[(data$fc.raw.file %in% MQBug_raw_files) + 1]
+  ## add 'out-of-calibration' Raw files:
+  data$col[data$fc.fc.raw.file %in% stats$fc.fc.raw.file[stats$outOfCal]] = "out-of-search-tol"
+  ## only show legend if special things happen  
+  showColLegend = ifelse(length(setdiff(data$col, "default")) > 0, "legend", "none")
+  
+  ## amend SD to fc.raw.file
+  data$fc.raw.file = paste0(data$fc.raw.file, " (sd = ", stats$sd[match(data$fc.raw.file, stats$fc.raw.file)], "ppm)")
+  data$fc.raw.file = factor(data$fc.raw.file, levels=unique(data$fc.raw.file), ordered = TRUE)
+  
+  p = ggplot(data, col=data$col) +
+        geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
+        scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide=showColLegend) +
+        ylab(expression(Delta~"mass [ppm]")) +
+        xlab("") +
+        ylim(y_lim) +
+        scale_x_discrete_reverse(data$fc.raw.file) +
+        geom_hline(yintercept = c(-extra_limit, extra_limit), 
+                   colour="red",
+                   linetype = "longdash") +  ## == vline for coord_flip
+        coord_flip() +
+        addGGtitle("EVD: Uncalibrated mass error", title_sub)
+
+  #print(p)
+  return(p)
+}
+
+#'
+#' Plot bargraph of uncalibrated mass errors for each Raw file.
+#'
+#' Boxes are optionally colored to indicate that a MQ bug was detected or 
+#' if PTXQC detected a too narrow search window.
+#' 
+#' @param data A data.frame with columns 'fc.raw.file', 'mass.error..ppm.'
+#' @param MQBug_raw_files List of Raw files with invalid calibration values
+#' @param stats A data.frame with columns 'fc.raw.file', 'outOfCal'
+#' @param y_lim Range of y-axis
+#' @param extra_limit Position where a v-line is plotted (for visual guidance) 
+#' @param title_sub Subtitle
+#' @return GGplot object
+#' 
+#' @import ggplot2
+#' @importFrom RColorBrewer brewer.pal
+#'
+#' @examples
+#'   n = c(150, 1000, 1000, 1000)
+#'   data = data.frame(fc.raw.file = repEach(letters[4:1], n),
+#'                     mass.error..ppm. = c(rnorm(n[1], 1, 2.4), rnorm(n[2], 0.5, 0.5), rnorm(n[3], 0.1, 0.7), rnorm(n[4], 0.3, 0.8)))
+#'   stats = data.frame(fc.raw.file = letters[4:1],
+#'                      sd = c(2.4, 0.5, 0.7, 0.8),
+#'                      outOfCal = c(TRUE, FALSE, FALSE, FALSE))           
+#'   plot_CalibratedMSErr(data, MQBug_raw_files = letters[1], stats, y_lim = c(-20,20), 15, "subtitle")
+#' 
+plot_CalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit = NA, title_sub = "")
+{
+  data$col = "default"
+  if (length(MQBug_raw_files) > 0) {
+    data$col = c("default", "MQ bug")[(data$fc.raw.file %in% MQBug_raw_files) + 1]
+    data$mass.error..ppm.[data$fc.raw.file %in% MQBug_raw_files] = 0
+    if (all(data$mass.error..ppm.==0)) data$mass.error..ppm. = rnorm(nrow(data), sd=0.0001, mean=mean(y_lim))
+  }
+  ## add 'out-of-calibration' Raw files:
+  data$col[data$fc.raw.file %in% stats$fc.raw.file[stats$outOfCal]] = "out-of-search-tol"
+  ## only show legend if special things happen  
+  showColLegend = ifelse(length(setdiff(data$col, "default")) > 0, "legend", "none")
+  
+  ## plot
+  p = ggplot(data, col=data$col) +
+    geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
+    scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide = showColLegend) +
+    ylab(expression(Delta~"mass [ppm]")) +
+    xlab("") +
+    ylim(y_lim) +
+    scale_x_discrete_reverse(data$fc.raw.file) +
+    coord_flip() +
+    addGGtitle("EVD: Calibrated mass error", title_sub)
+  if (!is.na(extra_limit)) {
+    p = p + geom_hline(yintercept = c(-extra_limit, extra_limit), colour="red", linetype = "longdash")  ## == vline for coord_flip
+  }
+  
+  #print(p)
+  return (p)
+}
 
 
+#'
+#' Plot bargraph of oversampled 3D-peaks.
+#'
+#' Per Raw file, at most three n's must be given, i.e.
+#' the fraction of 3D-peaks for n=1, n=2 and n=3(or more).
+#' The fractions must sum to 1 (=100%).
+#' 
+#' 
+#' @param data A data.frame with columns 'fc.raw.file', 'n', 'fraction'
+#' @return GGplot object
+#' 
+#' @import ggplot2
+#'
+#' @examples
+#'   data = data.frame(fc.raw.file = rep(letters[1:3], each=3),
+#'                     n = 1:3,
+#'                     fraction = c(0.8, 0.1, 0.1, 0.6, 0.3, 0.1, 0.7, 0.25, 0.05))
+#'   plot_MS2Oversampling(data)
+#'
+plot_MS2Oversampling = function(data)
+{
+  stopifnot(length(unique(data$n)) == 3)
+  
+  ## reorder factor, such that '10+' is last
+  data$n = as.character(data$n)
+  n_unique = sort(unique(data$n)) ## sort as character vector!
+  data$n = factor(data$n, levels=n_unique[order(nchar(n_unique))], ordered = TRUE)
+  
+  p = ggplot(data) + 
+        geom_bar(stat="identity", position="stack", aes_string(x = "fc.raw.file", y = "fraction", fill="n")) +
+        scale_fill_manual("MS/MS\ncounts", values =c("green", "blue", "red")) +
+        scale_x_discrete_reverse(data$fc.raw.file) +
+        xlab("") +
+        ylab("MS/MS counts per 3D-peak [%]") +
+        ggtitle(paste0("EVD: Oversampling (MS/MS counts per 3D-peak)")) + 
+        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+        coord_flip()
+  
+  #print(p)
+  return(p)
+}
 
 
+#'
+#' Plot bargraph of oversampled 3D-peaks.
+#'
+#' Per Raw file, at most three n's must be given, i.e.
+#' the fraction of 3D-peaks for n=1, n=2 and n=3(or more).
+#' The fractions must sum to 1 (=100%).
+#' 
+#' 
+#' @param data A data.frame with columns 'file', 'msErr', 'type'
+#' @return GGplot object
+#' 
+#' @import ggplot2
+#'
+#' @examples
+#'   n = c(100, 130, 50)
+#'   data = data.frame(file = repEach(paste(letters[1:3],"\nLTQ [Da]"), n),
+#'                     msErr = c(rnorm(n[1], 0.5), rnorm(n[2], 0.0), rnorm(n[3], -0.5)),
+#'                     type = c("forward", "decoy")[1+(runif(sum(n))>0.95)])
+#'   plot_MS2Decal(data)
+#'
+plot_MS2Decal = function(data)
+{
+  p = ggplot(data, aes_string(x = "msErr", fill="type")) + 
+        geom_histogram(binwidth = diff(range(data$msErr, na.rm=TRUE))/30) + ## explicit, to get rid of 'stat_bin: binwidth defaulted to range/30. Use 'binwidth = x' to adjust this.'
+        xlab("fragment mass delta") +  
+        ylab("count") + 
+        scale_fill_manual(values = c(forward = "#99d594", decoy = "#ff0000")) +
+        ggtitle("MSMS: Fragment mass errors per Raw file") +
+        facet_wrap(~file)
+      
+  #print(p)
+  return(p)
+}
+
+#'
+#' Plot bargraph of missed cleavages.
+#'
+#' Per Raw file, an arbitrary number of missed cleavage classes (one per column) can be given.
+#' The total fraction of 3D-peaks must sum to 1 (=100%).
+#' Columns are ordered by name.
+#' 
+#' A visual threshold line is drawn at 75% (expected MC0 count).
+#' 
+#' @param data A data.frame with columns 'fc.raw.file', '...' (missed cleavage classes)
+#' @param title_sub Plot's subtitle
+#' @return GGplot object
+#' 
+#' @import ggplot2
+#'
+#' @examples
+#'   data = data.frame(fc.raw.file = letters[1:5],
+#'                     MC0 = c(0.8, 0.5, 0.85, 0.2, 0.9),
+#'                     MC1 = c(0.1, 0.4, 0.05, 0.7, 0.0),
+#'                     "MS2+" =  c(0.1, 0.1, 0.1, 0.1, 0.1),
+#'                     check.names = FALSE)
+#'   plot_MissedCleavages(data, "contaminant inclusion unknown")
+#'
+plot_MissedCleavages = function(data, title_sub = "")
+{
+  st_bin.m = melt(data, id.vars = c("fc.raw.file"))
+  p = ggplot(data = st_bin.m, aes_string(x = "factor(fc.raw.file)", y = "value", fill = "variable")) + 
+        geom_bar(stat="identity") +
+        xlab("Raw file") +  
+        ylab("missed cleavages [%]") + 
+        theme(legend.title=element_blank()) +
+        scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000"), 10)) +
+        geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
+        coord_flip() +
+        scale_x_discrete_reverse(st_bin.m$fc.raw.file) +
+        addGGtitle("MSMS: Missed cleavages per Raw file", title_sub)
+  
+  #print(p)
+  return(p)
+}
+
+#'
+#' Plot line graph of TopN over Retention time.
+#'
+#' Number of Raw files must be 6 at most. Function will stop otherwise.
+#' 
+#' @param data A data.frame with columns 'fc.raw.file', 'rRT', 'topN'
+#' @return GGplot object
+#' 
+#' @import ggplot2
+#'
+#' @examples
+#'   data = data.frame(fc.raw.file = rep(letters[1:3], each=100),
+#'                     rRT = seq(20, 120, length.out = 100),
+#'                     topN = c(round(runif(100, min=3, max=5)), round(runif(100, min=5, max=8)), round(runif(100, min=1, max=3)))
+#'                     )
+#'   plot_TopNoverRT(data)
+#'
+plot_TopNoverRT = function(data)
+{
+  nrOfRaws = length(unique(data$fc.raw.file))
+  p = ggplot(data, aes_string(x = "rRT", y = "topN", col = "fc.raw.file")) +
+        geom_line() +
+        scale_color_manual(values = brewer.pal.Safe(nrOfRaws, "Set1")) +
+        xlab("retention time [min]") +
+        ylab("highest N [median per RT bin]") +
+        #stat_smooth(method = "loess", formula = y ~ x, se = FALSE, span = 0.1) +
+        guides(color=guide_legend(title="")) +
+        ggtitle("MSMSscans: TopN over RT")
+    
+  #print(p)
+  return (p)
+}
+
+#'
+#' Plot line graph of TopN over Retention time.
+#'
+#' Number of Raw files must be 6 at most. Function will stop otherwise.
+#' 
+#' @param data A data.frame with columns 'fc.raw.file', 'rRT', 'medIIT'
+#' @param stats A data.frame with columns 'fc.raw.file', 'mean'
+#' @param extra_limit Visual guidance line (maximum acceptable IIT)
+#' @return GGplot object
+#' 
+#' @import ggplot2
+#'
+#' @examples
+#'   data = data.frame(fc.raw.file = rep(c("d","a","x"), each=100),
+#'                     rRT = seq(20, 120, length.out = 100),
+#'                     medIIT = c(round(runif(100, min=3, max=5)), round(runif(100, min=5, max=8)), round(runif(100, min=1, max=3)))
+#'                     )
+#'   stats = data.frame(fc.raw.file = c("d","a","x"),
+#'                      mean = c(4, 6.5, 2))
+#'   plot_IonInjectionTimeOverRT(data, stats, 10)
+#'
+plot_IonInjectionTimeOverRT = function(data, stats, extra_limit)
+{
+  data$fc.raw.file = data$fc.raw.file[,drop = TRUE] ## drop unused factor levels
+  nrOfRaws = length(unique(data$fc.raw.file))
+  stats_sub = stats[stats$fc.raw.file %in% data$fc.raw.file, , drop = FALSE]
+  ## augment legend with average II-time[ms]
+  data$fc.raw.file = paste0(data$fc.raw.file, " (~", 
+                            round(stats_sub$mean[match(data$fc.raw.file, stats_sub$fc.raw.file)]),
+                            " ms)")
+  ## manually convert to factor to keep old ordering (otherwise ggplot will sort it, since its a string)
+  data$fc.raw.file = factor(data$fc.raw.file, levels = unique(data$fc.raw.file), ordered = TRUE)
+  stats_sub$fc.raw.file = paste0(stats_sub$fc.raw.file, " (~", 
+                                 round(stats_sub$mean[match(stats_sub$fc.raw.file, stats_sub$fc.raw.file)]),
+                                 " ms)")
+  p = ggplot(data) +
+        geom_line(aes_string(x = "rRT", y = "medIIT", col = "fc.raw.file")) +
+        scale_color_manual(values = brewer.pal.Safe(nrOfRaws, "Set1")) +
+        xlab("retention time [min]") +
+        ylab("ion injection time [ms]") +
+        geom_hline(yintercept = extra_limit, linetype = 'dashed') +
+        guides(color=guide_legend(title="Raw file with\naverage inj. time")) +
+        ggtitle("MSMSscans: Ion Injection Time over RT") +
+        pointsPutX(x_range=range(data$rRT), x_section=c(0.03,0.08), y=stats_sub$mean, col=stats_sub$fc.raw.file[,drop = TRUE])
+  
+  #print(p)
+  return(p)
+}
+
+#'
+#' Plot line graph of TopN over Retention time.
+#'
+#' Number of Raw files must be 6 at most. Function will stop otherwise.
+#' 
+#' @param data A data.frame with columns 'fc.raw.file', 'scan.event.number', 'n'
+#' @return GGplot object
+#' 
+#' @import ggplot2
+#'
+#' @examples
+#'   data = data.frame(fc.raw.file = rep(c("d","a","x"), each=10),
+#'                     scan.event.number = 1:10,
+#'                     n = 11:20)
+#'   plot_TopN(data)
+#'
+plot_TopN = function(data)
+{
+  
+  p = ggplot(data, aes_string(x = "scan.event.number", y = "n")) +
+        geom_bar(stat="identity") +
+        xlab("highest scan event") +
+        ylab("count") +
+        facet_wrap(~ fc.raw.file, scales = "free_y") +
+        ggtitle(paste0("MSMSscans: TopN"))
+  
+  #print(p)
+  return(p)
+}
+
+#'
+#' Plot line graph of TopN over Retention time.
+#'
+#' Number of Raw files must be 6 at most. Function will stop otherwise.
+#' 
+#' @param data A data.frame with columns 'fc.raw.file', 'scan.event.number', 'ratio', 'count'
+#' @return GGplot object
+#' 
+#' @import ggplot2
+#'
+#' @examples
+#'   data = data.frame(fc.raw.file = factor(rep(c("d","a","x"), each=10), levels = c("d","a","x")),
+#'                     scan.event.number = 1:10,
+#'                     ratio = seq(40, 20, length.out=10),
+#'                     count = seq(400, 200, length.out=10))
+#'   plot_ScanIDRate(data)
+#'
+plot_ScanIDRate = function(data)
+{
+  
+  p = ggplot(data, aes_string(x = "scan.event.number", y = "ratio", alpha = "count")) +
+        geom_bar(stat="identity") +
+        xlab("scan event") +
+        ylab("percent identified") +
+        facet_wrap(~ fc.raw.file) +
+        ggtitle(paste0("MSMSscans: TopN % identified over N"))
+  return (p)
+}

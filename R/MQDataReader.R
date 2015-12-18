@@ -384,7 +384,7 @@ MQDataReader$getShortNames = function(., raw.files, max_len, fallbackStartNr = 1
   if (max(nchar(df.mapping$to)) > max_len)
   { ## resort to short naming convention
     df.mapping[, "best effort"] = df.mapping$to
-    cat("Filenames are longer than the maximal allowed size of '" %+% add_fs_col %+% "'. Resorting to short versions 'file X'.\n\n")
+    cat("Filenames are longer than the maximal allowed size of '" %+% max_len %+% "'. Resorting to short versions 'file X'.\n\n")
     maxl = length(raw.files) - 1 + fallbackStartNr
     df.mapping$to = paste("file", sprintf(paste0("%0", nchar(maxl), "d"), fallbackStartNr:maxl)) ## with leading 0's if required
   }

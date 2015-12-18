@@ -595,6 +595,30 @@ del0 = function(x)
   return(x)
 }
 
+#'
+#' Repeat each element x_i in X, n_i times.
+#' 
+#' @param x Values to be repeated
+#' @param n Number of repeat for each x_i (same length as x)
+#' @return Vector with values from x, n times
+#' 
+#' @examples 
+#' 
+#'   repEach(1:3, 1:3)  ## 1, 2, 2, 3, 3, 3
+#' 
+#' @export
+#' 
+repEach = function(x, n)
+{
+  stopifnot(length(x) == length(n))
+  
+  r = unlist(
+        sapply(1:length(x), function(i) rep(x[i], each=n[i]))
+      )
+  
+  return(r)
+}
+
 
 #' Find the local maxima in a vector of numbers.
 #' 
@@ -659,6 +683,7 @@ getMaxima = function(x, thresh_rel = 0.2)
 #'                                rep(2, 30), rep(3, 7), rep(4, 3)))
 #'   mosaicize(data)                             
 #'   
+#' @export   
 #' 
 mosaicize = function(data)
 {
@@ -679,9 +704,7 @@ mosaicize = function(data)
 #' @param b Char vector
 #' @return Concatenated string (no separator)
 #'
-#' @export
-#'
-`%+%` <- function(a, b)
+`%+%` = function(a, b)
 {
   return (paste(a, b, sep=""))
 } 
@@ -751,8 +774,9 @@ thinOut = function(data, filterColname, binsize)
   nstart = nrow(data)
   ## first remove duplicates (they cannot possibly pass the filter)
   data = data[!duplicated(data[, filterColname]), ]
-  ##
-  data = data[order(data[, filterColname]), ]
+  ## sort (expensive)
+  if (is.unsorted(data[, filterColname])) data = data[order(data[, filterColname]), ]
+  ## binning...
   local_deltas = c(0, diff(data[, filterColname]))
   ld_cs = cumsum(local_deltas)
   data = data[!duplicated(round(ld_cs / binsize)),]
@@ -1033,6 +1057,8 @@ getECDF = function(samples, y_eval = (1:100)/100)
 #' @return Data.frame with columns 'bin', 'RT', 'peakWidth'
 #' 
 #' @importFrom plyr ddply
+#' 
+#' @export
 #' 
 #' @examples
 #'   data = data.frame(retention.time = seq(30,200, by=0.001)) ## one MS/MS per 0.1 sec

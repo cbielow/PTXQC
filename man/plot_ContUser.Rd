@@ -11,7 +11,7 @@ plot_ContUser(data, name_contaminant, extra_limit)
 
 \item{name_contaminant}{Name of the contaminant shown in title}
 
-\item{extra_limit}{Horizontal position where a h-line is plotted (for visual guidance)}
+\item{extra_limit}{Position where a h-line is plotted (for visual guidance)}
 }
 \value{
 GGplot object

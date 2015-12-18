@@ -8,6 +8,10 @@ plot_IDsOverRT(data, x_lim = range(data$RT), y_max = max(data$counts))
 }
 \arguments{
 \item{data}{A data.frame with columns as described above}
+
+\item{x_lim}{Limits of the x-axis (2-tuple)}
+
+\item{y_max}{Maximum of the y-axis (single value)}
 }
 \value{
 GGplot object
@@ -22,6 +26,9 @@ The input is a data.frame with columns
   'counts' - number of IDs at this bin
   'fc.raw.file' - name of the Raw file
 where each row represents one bin in RT.
+
+At most nine(!) Raw files can be plotted. If more are given,
+an error is thrown.
 }
 \examples{
  data = data.frame(fc.raw.file = rep(paste('file', letters[1:3]), each=30),

@@ -9,6 +9,9 @@
 \arguments{
 \item{x}{Some Grid object to plot}
 }
+\value{
+A function
+}
 \description{
 helper S3 class, enabling print(some-plot_Table-object)
 }
