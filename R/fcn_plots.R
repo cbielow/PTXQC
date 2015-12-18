@@ -10,6 +10,8 @@
 #' 
 #' @import ggplot2
 #'
+#' @export
+#' 
 #' @examples 
 #' 
 #'  data = data.frame( 'group' = letters[1:10], 'cont_pc' = 2:11, 'logAbdClass' = c("low","high"))
@@ -40,8 +42,10 @@ plot_ContsPG = function(data)
 #' @param data A data.frame with columns 'fc.raw.file', 'variable', 'value'
 #' @param name_contaminant Name of the contaminant shown in title
 #' @param extra_limit Position where a h-line is plotted (for visual guidance)
-#' @import ggplot2
 #' @return GGplot object
+#' 
+#' @import ggplot2
+#' @export
 #' 
 #' @examples 
 #' 
@@ -96,6 +100,7 @@ plot_ContUser = function(data, name_contaminant, extra_limit) {
 #' @return GGplot object
 #' 
 #' @import ggplot2
+#' @export
 #'
 #' @examples 
 #' 
@@ -123,7 +128,8 @@ plot_ContUserScore = function(data, raw.file, score) {
 #' 
 #' @import ggplot2
 #' @importFrom plyr summarize
-#'
+#' @export
+#' 
 #' @examples 
 #' 
 #'  data = data.frame(intensity = 1:12, 
@@ -211,6 +217,7 @@ plot_ContEVD = function(data, top5)
 #' 
 #' @import ggplot2
 #' @importFrom RColorBrewer brewer.pal
+#' @export
 #' 
 #' @examples 
 #' 
@@ -264,7 +271,8 @@ plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
 #' @return GGplot object
 #'
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples 
 #' 
 #'  data = data.frame(fc.raw.file = rep(c("file A", "file B"), each=3),
@@ -301,7 +309,8 @@ plot_CountData = function(data, y_max, thresh_line, title)
 #' @return GGplot object
 #'
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples 
 #' 
 #'  data = data.frame(fc.raw.file = rep(c("file A", "file B", "file C"), each=81),
@@ -350,7 +359,8 @@ plot_RTPeakWidth = function(data, x_lim, y_lim)
 #' @return GGplot object
 #'
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples 
 #' 
 #'  data = data.frame(fc.raw.file_ext = "file A", ## more than one would be possible
@@ -407,7 +417,8 @@ plot_MBRAlign = function(data, y_lim, title_sub, match_tol)
 #' @return GGplot object
 #'
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples 
 #'  data = data.frame(fc.raw.file = rep(c("file A", "file B"), each = 3),
 #'                    single = c(0.9853628, 0.8323160, 0.9438375, 0.9825538, 0.8003763, 0.9329961), 
@@ -458,8 +469,12 @@ plot_MBRIDtransfer = function(data)
 #'
 #' @import ggplot2
 #' @import directlabels
-#'
+#' @export
+#' 
 #' @examples
+#'  ## explicitly load directlabels, to avoid error 'could not find function "dlgrob"'
+#'  ## see https://github.com/jeroenooms/opencpu/issues/165 for details
+#'  library(directlabels) 
 #'  data = data.frame(fc.raw.file = paste("file", letters[1:4]),
 #'                    abs = c(5461, 5312, 3618, 502), 
 #'                    pc = c(34, 32, 22, 2))
@@ -498,7 +513,8 @@ plot_MBRgain = function(data, title_sub = "")
 #' @return GGplot object
 #'
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples
 #'  data = data.frame(raw.file = c(rep('file A', 100), rep('file B', 40)),
 #'                      charge = c(rep(2, 60), rep(3, 30), rep(4, 10),
@@ -544,6 +560,7 @@ plot_Charge = function(data)
 #' @return GGplot object
 #'
 #' @import ggplot2
+#' @export
 #' 
 #' @examples
 #'  data = data.frame(fc.raw.file = rep(paste('file', letters[1:3]), each=30),
@@ -586,7 +603,8 @@ plot_IDsOverRT = function(data, x_lim = range(data$RT), y_max = max(data$counts)
 #' @return GGplot object
 #'
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples
 #'  id_rate_bad = 20; id_rate_great = 35;
 #'  label_ID = c("bad (<20%)" = "red", "ok (...)" = "blue", "great (>35%)" = "green")
@@ -690,7 +708,6 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
 #' @import grid
 #' @import gridExtra
 #' @import gtable
-#'
 #' @export 
 #' 
 #' @examples
@@ -722,7 +739,7 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
     ## add heading (white space)
     table = gtable_add_rows(table, heights = grobHeight(gtitle) + padding, pos = 0)
     ## add heading (text as overlay)
-    table = gtable_add_grob(table, list(gtitle), t = 1, l = 1, r = ncol(table))
+    table = gtable_add_grob(table, list(gtitle), t = 1, l = 1, r = ncol(table), clip = "off")
   }
   if (nchar(footer) > 0)
   {
@@ -731,7 +748,7 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
     ## add heading (white space)
     table = gtable_add_rows(table, heights = grobHeight(gfooter) + padding, pos = -1) ## bottom
     ## add heading (text as overlay)
-    table = gtable_add_grob(table, list(gfooter), t = nrow(table), l = 1, r = ncol(table))
+    table = gtable_add_grob(table, list(gfooter), t = nrow(table), l = 1, r = ncol(table), clip = "off")
   }
   
   
@@ -766,7 +783,6 @@ print.PTXQC_table = function(x) {grid.newpage(); grid.draw(x)}
 #' 
 #' @import ggplot2
 #' @importFrom RColorBrewer brewer.pal
-#'
 #' @export
 #' 
 #' @examples
@@ -824,7 +840,8 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
 #' 
 #' @import ggplot2
 #' @importFrom RColorBrewer brewer.pal
-#'
+#' @export
+#' 
 #' @examples
 #'   n = c(150, 1000, 1000, 1000)
 #'   data = data.frame(fc.raw.file = repEach(letters[4:1], n),
@@ -878,7 +895,8 @@ plot_CalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples
 #'   data = data.frame(fc.raw.file = rep(letters[1:3], each=3),
 #'                     n = 1:3,
@@ -921,7 +939,8 @@ plot_MS2Oversampling = function(data)
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples
 #'   n = c(100, 130, 50)
 #'   data = data.frame(file = repEach(paste(letters[1:3],"\nLTQ [Da]"), n),
@@ -957,7 +976,8 @@ plot_MS2Decal = function(data)
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples
 #'   data = data.frame(fc.raw.file = letters[1:5],
 #'                     MC0 = c(0.8, 0.5, 0.85, 0.2, 0.9),
@@ -993,7 +1013,8 @@ plot_MissedCleavages = function(data, title_sub = "")
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples
 #'   data = data.frame(fc.raw.file = rep(letters[1:3], each=100),
 #'                     rRT = seq(20, 120, length.out = 100),
@@ -1028,7 +1049,8 @@ plot_TopNoverRT = function(data)
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples
 #'   data = data.frame(fc.raw.file = rep(c("d","a","x"), each=100),
 #'                     rRT = seq(20, 120, length.out = 100),
@@ -1075,7 +1097,8 @@ plot_IonInjectionTimeOverRT = function(data, stats, extra_limit)
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples
 #'   data = data.frame(fc.raw.file = rep(c("d","a","x"), each=10),
 #'                     scan.event.number = 1:10,
@@ -1105,7 +1128,8 @@ plot_TopN = function(data)
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#'
+#' @export
+#' 
 #' @examples
 #'   data = data.frame(fc.raw.file = factor(rep(c("d","a","x"), each=10), levels = c("d","a","x")),
 #'                     scan.event.number = 1:10,
