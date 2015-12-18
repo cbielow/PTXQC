@@ -30,7 +30,7 @@ ECHO.
 ECHO.
 REM Calling original bat file with two arguments
 REM We use %~dp0 to get the path of this bat file, since the working directory depends on the calling environment
-%~dp0\createQC_dragNdrop.bat %1 %yaml_file%
+"%~dp0\createQC_dragNdrop.bat" %1 "%yaml_file%"
 
 
 :end

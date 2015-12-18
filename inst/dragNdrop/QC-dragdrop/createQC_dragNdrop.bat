@@ -39,13 +39,15 @@ if %argC%==0 (
 )
 if !argC! gtr 2 (
   ECHO Too many arguments^^! (At most two are allowed^)
+  ECHO Args:
+  for %%x in (%*) do echo %%x
   ECHO !USAGE!
   goto end
 )
 
 
 
-set I=%~dp0\_internal
+set I="%~dp0\_internal"
 REM use drive+path of this .bat file 
 ECHO.
 ECHO Found QC directory at %I%
