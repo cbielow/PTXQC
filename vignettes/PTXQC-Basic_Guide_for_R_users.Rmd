@@ -36,9 +36,6 @@ require(PTXQC)
 ## error message is:
 ##    Error in Scales$new : could not find function "loadMethod"
 require(methods)
-## the next require() should not be needed, since PTXQC imports it, but on some systems it seems that a sub function 
-## dispatch within 'directlabels' is not working properly. If 'directlabels' is attached, all is well. So ...
-require(directlabels)
 
 ## specify a path to a MaxQuant txt folder
 ## Note: This folder needs to be complete (see 'vignette("PTXQC-InputData", package = "PTXQC")')
@@ -78,10 +75,6 @@ require(yaml)
 ## error message is:
 ##    Error in Scales$new : could not find function "loadMethod"
 require(methods)
-## the next require() should not be needed, since PTXQC imports it, but on some systems it seems that a subfunction 
-## dispatch within 'directlabels' is not working properly. If 'directlabels' is attached, all is well. So ...
-require(directlabels)
-
 
 ## specify a path to a MaxQuant txt folder
 ## Note: This folder can be incomplete, depending on your YAML config

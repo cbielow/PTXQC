@@ -29,9 +29,6 @@ The input is a data.frame with columns
 where each row represents one peptide sequence.
 }
 \examples{
- ## explicitly load directlabels, to avoid error 'could not find function "dlgrob"'
- ## see https://github.com/jeroenooms/opencpu/issues/165 for details
- library(directlabels) 
  data = data.frame(fc.raw.file = paste("file", letters[1:4]),
                    abs = c(5461, 5312, 3618, 502), 
                    pc = c(34, 32, 22, 2))

@@ -468,13 +468,9 @@ plot_MBRIDtransfer = function(data)
 #' @return GGplot object
 #'
 #' @import ggplot2
-#' @import directlabels
 #' @export
 #' 
 #' @examples
-#'  ## explicitly load directlabels, to avoid error 'could not find function "dlgrob"'
-#'  ## see https://github.com/jeroenooms/opencpu/issues/165 for details
-#'  library(directlabels) 
 #'  data = data.frame(fc.raw.file = paste("file", letters[1:4]),
 #'                    abs = c(5461, 5312, 3618, 502), 
 #'                    pc = c(34, 32, 22, 2))
@@ -483,13 +479,14 @@ plot_MBRIDtransfer = function(data)
 plot_MBRgain = function(data, title_sub = "")
 {
   p = ggplot(data = data, aes_string(x = "abs", y = "pc", col = "fc.raw.file")) + 
-    geom_point(size=2) + 
-    addGGtitle("EVD: Peptides inferred by MBR", title_sub) +
-    xlab("number of transferred ID's") +
-    ylab("gain on top of genuine IDs [%]") +
-    xlim(0, max(data$abs, na.rm = TRUE)*1.1) + ## accounting for labels near the border
-    ylim(0, max(data$pc, na.rm = TRUE)*1.1)
-  p = direct.label(p, list(cex=0.5, "smart.grid"))
+        geom_point(size=2) + 
+        addGGtitle("EVD: Peptides inferred by MBR", title_sub) +
+        xlab("number of transferred ID's") +
+        ylab("gain on top of genuine IDs [%]") +
+        xlim(0, max(data$abs, na.rm = TRUE)*1.1) + ## accounting for labels near the border
+        ylim(0, max(data$pc, na.rm = TRUE)*1.1) +
+        guides(color="none") +
+        geom_text(aes_string(hjust = -0.1, label = "fc.raw.file"), show.legend = FALSE, check_overlap = TRUE)
   #print(p)
   return(p)
 }

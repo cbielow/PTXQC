@@ -6,11 +6,6 @@ require(yaml)
 ##    Error in Scales$new : could not find function "loadMethod"
 require(methods)
 
-## the next require() should not be needed, since PTXQC imports it, but on some systems it seems that a subfunction 
-## dispatch within 'directlabels' is not working properly. If 'directlabels' is attached, all is well. So ...
-require(directlabels)
-
-
 argv = commandArgs(TRUE)
 #argv = c('C:\\projects\\QC\\data\\txt_SILAC')
 #cat("Command line args are:\n")

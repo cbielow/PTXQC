@@ -997,7 +997,9 @@ createReport = function(txt_folder, yaml_obj = list())
             match_count_pc  = round(100*match_count_abs/(nrow(x)-match_count_abs)) ## newIDs / oldIDs
             return (data.frame(abs = match_count_abs, pc = match_count_pc))
           })
-          rep_data$add(plot_MBRgain(data = mtr.df, title_sub = gain_text))
+          rep_data$add(
+            plot_MBRgain(data = mtr.df, title_sub = gain_text)
+          )
         }
       
       } ## MBR has data
