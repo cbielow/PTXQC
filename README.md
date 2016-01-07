@@ -105,7 +105,13 @@ For example input data and full reports, see the ['inst/examples' subfolder] [2]
   
 ### Citation
 
-The paper is currently under review. A DOI and link will be provided here (soon?)! :)
+PTXQC is published at JPR:
+**Proteomics Quality Control: Quality Control Software for MaxQuant Results**
+Chris Bielow, Guido Mastrobuoni, and Stefan Kempa
+*J. Proteome Res.*
+Publication Date (Web): December 14, 2015
+DOI: [https://doi.org/10.1021/acs.jproteome.5b00780](10.1021/acs.jproteome.5b00780)
+
 Use [PTXQC v0.69.3] [JPR_PTXQC] if you want the version which was used in the paper, i.e.
 use `install_github("cbielow/PTXQC", ref="v0.69.3", build_vignettes = TRUE)` when following the [Installation](#Installation) procedure.
 

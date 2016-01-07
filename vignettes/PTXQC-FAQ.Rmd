@@ -16,7 +16,7 @@ vignette: >
 
 ## Installation
 _______
-### Question: Some error occurred during installation. What do I do? ###
+### Q: Some error occurred during installation. What do I do? ###
 
 **Answer:** One common error is that the CRAN mirror hosting the R packages is incomplete/buggy and installation of packages fails.
    This **could** look like this:
@@ -38,11 +38,26 @@ _______
    If you're still stuck, please open a [ticket] [issuetracker] (see 'Bug Reporting' on the main PTXQC homepage for the details you should provide).
 _______
 
-## Report content
+## Report Creation
+
+### Q: A warning **"The file '<...>/mqpar.xml' was not found..."** in the console popped up. What does it mean? ###
+
+**Answer:** PTXQC uses the mqpar.xml file from MaxQuant to extract certain parameters (like mass accuracy search tolerances) automatically. By default the mqpar.xml is created by MaxQuant in the root folder of each analysis (where the Raw files reside). The warning now tells you to **copy this mqpar.xml into the combined/txt/ folder**, where PTXQC can read it.
+    
+The reason why PTXQC does not directly use the mqpar.xml from the root folder is two-fold:
+
+1. the mqpar.xml at the root folder might be outdated/changed, especially of you run MaxQuant multiple times, and rename the txt folders (to compare multiple parameter settings)
+2. users often copy the txt folder from the MaxQuant 'server' to a desktop machine 
+            for result interpretation. Usually only the txt folder is copied, but not the Raw files. 
+            If PTXQC (re)-should run on the 'desktop', the mqpar.xml needs to be within the txt folder.
+
+_______
+
+## Report Interpretation
 
 ### Q: How do I know what the figures in the report mean? ###
 
-**Answer:** Most metrics and figures are described in the publication (see 'Citation' on the main homepage of PTXQC). Updated and new metrics will be described in the documentation of the package.
+**Answer:** Most metrics and figures are described in the publication (see 'Citation' on the main homepage of PTXQC). Updated and new metrics will be described in the documentation of the package. We are currently working a on more interactive version of the report with detailed description for each figure -- soon to come.
 
 _______
    

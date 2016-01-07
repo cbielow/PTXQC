@@ -19,10 +19,10 @@ Reports rely on a small set of parameters, which do two things:
     (usually tighly connected to the data and MS instrument)
   - report length: number of metrics shown in the report or partial evaluation of the txt-folder
 
-The first point can partially be adressed via a mqpar.xml file (see below).
+The first point can partially be addressed via a mqpar.xml file (see below).
 
 However, not all thresholds are known or even interesting to MaxQuant, e.g. the number of expected proteins.
-For this, PTXQC comes with a YAML config file (see below). This file also adresses the report length.
+For this, PTXQC comes with a YAML config file (see below). This file also addresses the report length.
 
 ## Automatically importing MaxQuant parameters via mqpar.xml
 
@@ -30,10 +30,11 @@ Some settings in MaxQuant, e.g. the MS/MS search tolerance are important for PTX
 correctly score the mass recalibration or show expected error margins.
 
 So how does PTXQC know about the settings used during the MaxQuant run? 
-Copy the `mqpar.xml` which MaxQuant generated from the analysis directory 
+Copy the `mqpar.xml` which MaxQuant generated in the analysis directory 
 into your txt folder, e.g. `c:\MQ_Diabetes_study\mqpar.xml` -> `c:\MQ_Diabetes_study\combined\txt\mqpar.xml`. 
 This will enable PTXQC to extract some parameter settings and results in more accurate reports. 
 You will see a warning message during report generation if `mqpar.xml` is missing.
+The FAQ vignette has additional information on why this manual copying is sensefull.
 
 Alternatively, you can set the MaxQuant parameters manually in the YAML file (see next section) to match your MaxQuant configuration.
 
