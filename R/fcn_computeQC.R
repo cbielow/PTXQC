@@ -1512,7 +1512,7 @@ if (enabled_msmsscans)
     )
     
     ## QC measure for smoothness of TopN over RT
-    qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame("X012X_catLC_MS^2*Scans:~TopN~over~RT" = qualUniform(x$medSE), check.names = FALSE))
+    qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame("X012X_catLC_MS^2*Scans:~TopN~over~RT" = qualUniform(x$topN), check.names = FALSE))
     QCM[["MSMSscans.TopN_over_RT"]] = qc_TopNRT
     
     ##

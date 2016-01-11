@@ -81,7 +81,7 @@ getQCHeatMap = function(QCM, raw_file_mapping)
   QCM_final.m = melt(QCM_final, id.vars="fc.raw.file")
   QCM_final.m$variable = factor(QCM_final.m$variable, ordered = TRUE)
   
-  ## some files might not be in the original list (will give NA in table)
+  ## some files might not be in the original list (will receive 'bad' score in table)
   QCM_final.m$value[is.na(QCM_final.m$value)] = 0
   ## some other files might be missing on purpose
   QCM_final.m$value[is.infinite(QCM_final.m$value)] = NA

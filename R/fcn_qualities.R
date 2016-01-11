@@ -14,6 +14,8 @@
 #' 
 qualLinThresh = function(x, t = 1)
 {
+  if (length(x) == 0) stop("Error: qualLinThresh() received empty data!")
+  
   x[is.na(x)] = 0; ## replace NA with 0
   if (any(x < 0)) stop("qualLinThresh(): negative input 'x' not allowed!")
   if (t < 0) stop("qualLinThresh(): negative threshold 't' not allowed!")
@@ -40,6 +42,9 @@ qualLinThresh = function(x, t = 1)
 #' 
 qualCentered = function(x)
 {
+  if (length(x) == 0) stop("Error: qualCentered() received empty data!")
+  if (any(is.na(x))) stop("Error: qualCentered() received NA data!")
+  
   q = 1 - (abs(median(x)) / max(abs(x)))
   return (q)
 }
@@ -84,6 +89,8 @@ qualCenteredRef = function(x, tol)
 #'
 qualMedianDist = function(x)
 {
+  if (length(x) == 0) stop("Error: qualMedianDist() received empty data!")
+  if (any(is.na(x))) stop("Error: qualMedianDist() received NA data!")
   if (any(x < 0 | x > 1)) stop("qualMedianDist(): x values out of range [0,1]!")
   q = 1 - abs(x - median(x, na.rm = TRUE))
   return (q)
@@ -128,7 +135,7 @@ qualMedianDist = function(x)
 #'  
 qualUniform = function(x, weight=vector())
 {
-  if (any(is.na(x) | (x<0))) stop("Error: qualUniform() received negative or missing data!")
+  if (length(x) == 0 || any(is.na(x) | (x<0))) stop("Error: qualUniform() received negative or missing data!")
   
   if(length(weight)==0) {
     weight=rep(1, length(x)) 
@@ -200,6 +207,8 @@ qualGaussDev = function(mu, sd)
 #'  
 qualHighest = function(x, N)
 {
+  if (length(x) == 0) stop("Error: qualHighest() received empty data!")
+  if (any(is.na(x))) stop("Error: qualHighest() received NA data!")
   if (length(x)!=N) stop("Error in qualHighest(): length of x not equal to N")
   
   # normalize
@@ -229,7 +238,8 @@ qualHighest = function(x, N)
 qualBestKS = function(x) {
   
   if (class(x) != "list") stop("Function bestKS() expects a list!")
-  
+  if (length(x) == 0) stop("Error: qualBestKS() received empty data!")
+
   if (is.null(names(x))) names(x) = 1:length(x)
   
   ## result matrix
@@ -242,7 +252,7 @@ qualBestKS = function(x) {
       if (j>length(x)) next;
       rr[i,j] = 1 - suppressWarnings(  ## brags about '-value will be approximate in the presence of ties'
                       ks.test(x[[i]], x[[j]])$statistic
-                    )  
+                    )    
     }
   }
   ## fill diagonal with 1's
