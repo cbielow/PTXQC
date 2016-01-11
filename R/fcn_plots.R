@@ -729,7 +729,7 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
   table = gtable_add_grob(table, colhead, t = 1, l = 1:ncol(data))
 
   #table = tableGrob(data, rows = NULL, cols = c("Raw file", "% identified"))
-  if (nchar(title) > 0)
+  if (nchar(title[1]) > 0)
   {
     gtitle = textGrob(title, gp = gpar(fontsize = 14))
     padding = unit(1.5, "line")
@@ -738,7 +738,7 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
     ## add heading (text as overlay)
     table = gtable_add_grob(table, list(gtitle), t = 1, l = 1, r = ncol(table), clip = "off")
   }
-  if (nchar(footer) > 0)
+  if (nchar(footer[1]) > 0)
   {
     gfooter = textGrob(footer, gp = gpar(fontsize = 10))
     padding = unit(1.5, "line")
@@ -803,7 +803,7 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
   ## amend SD to fc.raw.file
   data$fc.raw.file = paste0(data$fc.raw.file, " (sd = ", stats$sd[match(data$fc.raw.file, stats$fc.raw.file)], "ppm)")
   data$fc.raw.file = factor(data$fc.raw.file, levels=unique(data$fc.raw.file), ordered = TRUE)
-  
+
   p = ggplot(data, col=data$col) +
         geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
         scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide=showColLegend) +

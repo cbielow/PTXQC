@@ -240,7 +240,9 @@ qualBestKS = function(x) {
     for (j in (i+1):length(x))
     {
       if (j>length(x)) next;
-      rr[i,j] = 1 - ks.test(x[[i]], x[[j]])$statistic
+      rr[i,j] = 1 - suppressWarnings(  ## brags about '-value will be approximate in the presence of ties'
+                      ks.test(x[[i]], x[[j]])$statistic
+                    )  
     }
   }
   ## fill diagonal with 1's

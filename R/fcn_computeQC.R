@@ -614,8 +614,13 @@ createReport = function(txt_folder, yaml_obj = list())
             r$condition = c("sample", "contaminant")[xx$idx_cont[1]+1]
             return(r)
           })
-          if (!any(x$idx_cont)) ks_p = NA else ## no contaminant peptide 
-            ks_p = ks.test(x$score[x$idx_cont], x$score[!x$idx_cont], alternative = "greater")$p.value
+          if (!any(x$idx_cont)){
+            ks_p = NA
+          } else { ## no contaminant peptide 
+            ks_p = suppressWarnings(  ## brags about '-value will be approximate in the presence of ties'
+                      ks.test(x$score[x$idx_cont], x$score[!x$idx_cont], alternative = "greater")$p.value
+                   )
+          }
           return (list(cont_data = data.frame(spectralCount = sc, intensity = int,
                                               above.thresh = above.thresh, fc.raw.file = x$fc.raw.file[1],
                                               score_KS = ks_p),

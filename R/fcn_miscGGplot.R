@@ -141,7 +141,7 @@ addGGtitle = function(main, sub=""){
   if(sub==""){
     pl = ggtitle(eval(parse(text=paste("expression(atop(\"",main,"\",","))", sep=""))))
   }else{
-    pl = ggtitle(eval(parse(text=paste("expression(atop(\"",main, "\",", " atop(\"", sub , "\",\"\")))", sep=""))))
+    pl = ggtitle(eval(parse(text=paste("expression(atop(\"",main, "\",", " scriptstyle(\"", sub , "\")))", sep=""))))
   }
   return (pl)
 }

@@ -51,7 +51,7 @@ MQDataReader <- proto()
 #' 
 MQDataReader$new <- function(.)
 {
-  proto(., raw_file_mapping = NULL, mq.data = NULL, mapping.creation = NULL)
+  proto(., raw_file_mapping = NULL, mq.data = NULL, mapping.creation = NULL, external.mapping.file = NULL)
 }
 
 
@@ -323,11 +323,12 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       {
         ## the user has re-run MaxQuant with more Raw files,
         ## but the old _filename_sort.txt file was used to read the (now incomplete mapping)
-        warning("Incomplete report_XXX_filename.sort.txt. Augmenting shortened Raw files: " %+% 
-                paste(missing, collapse=", ", sep="") %+% ". Edit the table if necessary and re-run PTXQC.")
+        warning("Incomplete mapping file '", .$external.mapping.file, "'.\nAugmenting shortened Raw files:\n  " %+% 
+                paste(missing, collapse="\n  ", sep="") %+% ".\nEdit the table if necessary and re-run PTXQC.")
         ## augment
+        addon = .$getShortNames(missing, add_fs_col, nrow(.$raw_file_mapping) + 1)
         .$raw_file_mapping = rbind(.$raw_file_mapping,
-                                   .$getShortNames(missing, add_fs_col, nrow(.$raw_file_mapping) + 1))
+                                   addon)
       } else {
         stop("Hithero unknown Raw files: " %+% paste(missing, collapse=", ", sep="") %+% " occurred in file '" %+% file %+% "' which were not present in previous txt files.")
       }
@@ -356,7 +357,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
 MQDataReader$getShortNames = function(., raw.files, max_len, fallbackStartNr = 1)
 {
   ##
-  ## mapping will have: $from, $to and optionally $best_effort (if shorting was unsuccessful and numbers had to be used)
+  ## mapping will have: $from, $to and optionally $best.effort (if shorting was unsuccessful and numbers had to be used)
   ##
   rf_name = raw.files
   ## remove prefix
@@ -380,10 +381,12 @@ MQDataReader$getShortNames = function(., raw.files, max_len, fallbackStartNr = 1
   }
   df.mapping = data.frame(from = rf_name, to = rf_name_s, stringsAsFactors = FALSE)
 
-  ## check if the minimal length was reached
+  ## always include 'best.effort' column
+  df.mapping[, "best.effort"] = df.mapping$to
+
+    ## check if the minimal length was reached
   if (max(nchar(df.mapping$to)) > max_len)
   { ## resort to short naming convention
-    df.mapping[, "best effort"] = df.mapping$to
     cat("Filenames are longer than the maximal allowed size of '" %+% max_len %+% "'. Resorting to short versions 'file X'.\n\n")
     maxl = length(raw.files) - 1 + fallbackStartNr
     df.mapping$to = paste("file", sprintf(paste0("%0", nchar(maxl), "d"), fallbackStartNr:maxl)) ## with leading 0's if required
@@ -408,10 +411,10 @@ MQDataReader$plotNameMapping <- function(.)
     table_header = c("original", "short\nname")
     xpos = c(9, 11)
     extra = ""
-    if ("best effort" %in% colnames(.$raw_file_mapping))
+    if ("best.effort" %in% colnames(.$raw_file_mapping))
     {
       extra = "\n(automatic shortening of names was not sufficiently short - see 'best effort')"
-      table_header = c(table_header, "best_effort")
+      table_header = c(table_header, "best\neffort")
       xpos = c(9, 11, 13)
     }
     
@@ -429,7 +432,7 @@ MQDataReader$plotNameMapping <- function(.)
       mq_mapping.long$col[mq_mapping.long$variable=="to"] = "#5F0000"
       mq_mapping.long$variable[mq_mapping.long$variable=="from"] = xpos[1]
       mq_mapping.long$variable[mq_mapping.long$variable=="to"] = xpos[2]
-      if (nchar(extra)) mq_mapping.long$variable[mq_mapping.long$variable=="best effort"] = xpos[3]
+      if (nchar(extra)) mq_mapping.long$variable[mq_mapping.long$variable=="best.effort"] = xpos[3]
       mq_mapping.long$variable = as.numeric(mq_mapping.long$variable)
       mq_mapping.long$size = 2;
       
@@ -475,8 +478,8 @@ MQDataReader$plotNameMapping <- function(.)
 MQDataReader$writeMappingFile = function(., filename)
 {
   dfs = data.frame(orig.Name = .$raw_file_mapping$from, new.Name = .$raw_file_mapping$to)
-  if ("best effort" %in% colnames(.$raw_file_mapping)) {
-    dfs$best_effort = .$raw_file_mapping[, "best effort"]
+  if ("best.effort" %in% colnames(.$raw_file_mapping)) {
+    dfs$best.effort = .$raw_file_mapping[, "best.effort"]
   }
     
   cat(file = filename,
@@ -513,13 +516,16 @@ MQDataReader$readMappingFile = function(., filename)
   if (file.exists(filename))
   {
     dfs = read.delim(filename, comment.char="#", stringsAsFactors = FALSE)
+    colnames(dfs) = gsub("_", ".", colnames(dfs)) ## legacy support for old "best_effort" column (now "best.effort")
     req_cols = c(from = "orig.Name", to = "new.Name")
     if (!all(req_cols %in% colnames(dfs)))
     {
       stop("Input file '", filename, "' does not contain the columns '", paste(req_cols, collapse="' and '"), "'.",
            " Please fix and re-run PTXQC!")
     }
-    colnames(dfs) = names(req_cols)[match(req_cols, colnames(dfs))]
+    req_cols = c(req_cols, best.effort = "best.effort") ## augment 
+    colnames(dfs) = names(req_cols)[match(colnames(dfs), req_cols)]
+    
     if (any(duplicated(dfs$from)) | any(duplicated(dfs$to)))
     {
       dups = c(dfs$from[duplicated(dfs$from)], dfs$to[duplicated(dfs$to)])
@@ -533,6 +539,7 @@ MQDataReader$readMappingFile = function(., filename)
     .$raw_file_mapping = dfs
     ## set who defined it
     .$mapping.creation = 'file (user-defined)'
+    .$external.mapping.file = filename; ## remember filename for later error messages
     return (TRUE)
   }
   return (FALSE)

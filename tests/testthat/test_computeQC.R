@@ -46,7 +46,7 @@ test_that("createReport", {
   
   expect_equal(file.exists(r[["filename_sorting"]]), TRUE)
   d_filenamesort = read.delim(r[["filename_sorting"]], comment.char="#")
-  expect_equal(dim(d_filenamesort), c(2, 2)) ## two files, two columns
+  expect_equal(dim(d_filenamesort), c(2, 3)) ## two files, three columns
   expect_equal(as.character(d_filenamesort$new.Name), c("..Ecoli_01", "..Ecoli_02"))
   
   
