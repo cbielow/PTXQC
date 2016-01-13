@@ -88,57 +88,8 @@ createReport = function(txt_folder, yaml_obj = list())
   if (enabled_parameters)
   {
     d_parAll = mq$readMQ(txt_files$param, type="par")
-    
-    line_break = "\n"; ## use space to make it work with table
-    ## remove AIF stuff
-    d_parAll = d_parAll[!grepl("^AIF ", d_parAll$parameter),]
-    d_parAll$value = gsub(";", line_break, d_parAll$value)
-    ## seperate FASTA files (usually they destroy the layout)
-    idx_fastafile = grepl("fasta file", d_parAll$parameter, ignore.case = TRUE)
-    d_par_file = d_parAll[idx_fastafile, ]
-    fasta_files = sapply(unlist(strsplit(d_par_file$value, "\n")), function(x) rev(strsplit(x,"\\", fixed = TRUE)[[1]])[1])
-    d_par = d_parAll[!idx_fastafile, ]
-    ## remove duplicates
-    d_par = d_par[!duplicated(d_par$parameter),]
-    rownames(d_par) = d_par$parameter
-    
-    ## trim long param names (the user should know what they mean)
-    d_par$parameter = sapply(d_par$parameter, function (s) {
-      allowed_len = nchar("Min. score for unmodified .."); 
-      if (nchar(s) > allowed_len) {
-        s = paste(substring(s, 1, allowed_len), "..", collapse = "", sep="")
-      }
-      return (s)
-    })
-    ## break long values into multiple lines (to preserve table width)
-    d_par$value = sapply(d_par$value, function (s) 
-    {
-      allowed_len = nchar("Use least modified peptide"); ## this is a typical entry -- everything which is longer gets split
-      r = paste(sapply(unlist(strsplit(s, line_break, fixed = TRUE)), function(s1) {
-        if (nchar(s1) > allowed_len) {
-          s_beg = seq(1, nchar(s1) - 1, allowed_len)
-          s1 = paste(unlist(substring(s1, s_beg, s_beg + allowed_len)), collapse = line_break)
-        }
-        return(s1)
-      }), collapse = line_break)
-      return (r)
-    })
-    
-    ## sort by name
-    d_par = d_par[order(d_par$parameter), ]
-    
-    ## two column layout
-    if (nrow(d_par) %% 2 != 0) d_par = rbind(d_par, "") ## make even number of rows
-    mid = nrow(d_par) / 2
-    d_par$page = 1
-    d_par$page[1:mid] = 0
-    
-    parC = c("parameter", "value")
-    d_par2 = cbind(d_par[d_par$page==0, parC], d_par[d_par$page==1, parC])
-
-    par_pl = plotTable(d_par2, title = "PAR: parameters", footer = fasta_files)
-    rep_data$add(par_pl, "params")
-    ##todo: read in mqpar.xml to get group information and ppm tolerances for all groups (parameters.txt just gives Group1)
+    qcMetric_param$setData(d_parAll)
+    rep_data$add(qcMetric_param$plots, "params")
   }
   
   add_fs_col = getYAML(yaml_obj, "PTXQC$NameLengthMax_num", 10)
@@ -158,45 +109,14 @@ createReport = function(txt_folder, yaml_obj = list())
     id_rate_great = getYAML(yaml_obj, "File$Summary$IDRate$Thresh_great_num", 35)
     
     ### MS/MS identified [%]
-    dms = d_smy$raw$"ms.ms.identified...."
-    dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was acquired
-    lab_IDd = c("red", 
-                "blue", 
-                "green")
-    names(lab_IDd) = c("bad (<" %+% id_rate_bad %+% "%)", 
-                       "ok (" %+% id_rate_bad %+% "-" %+% id_rate_great %+% "%)",
-                       "great (>" %+% id_rate_great %+% "%)")
-    d_smy[[1]]$cat = factor(cut(dms, breaks=c(-1, id_rate_bad, id_rate_great, 100), labels=names(lab_IDd)))
-    d_smy[[1]]$fc.raw.file = mq$raw_file_mapping$to[match(d_smy[[1]]$raw.file, mq$raw_file_mapping$from)]
-    ## needs to be a factor for 'scale_y_discrete_reverse' below, but lets do the sorting manually...
-    d_smy[[1]]$fc.raw.file = factor(d_smy[[1]]$fc.raw.file, levels=unique(d_smy[[1]]$fc.raw.file), ordered = TRUE)
-    rep_data$add(
-      plot_IDRate(d_smy[[1]], id_rate_bad, id_rate_great, lab_IDd)
-    )
-    
-    ## QC measure for contamination
-    qc_sm_id = d_smy[[1]][, c("raw.file", "ms.ms.identified....")]
+    qcMetric_MSMSIdRate$setData(d_smy$raw, id_rate_bad, id_rate_great)
+    rep_data$add(qcMetric_MSMSIdRate$plots)
+
+    ## QC measure for ID rate (threshold reached?)
+    qc_sm_id = d_smy$raw[, c("raw.file", "ms.ms.identified....")]
     cname = "X030X_catMS_SM:~MS^2~ID~rate (\">" %+% id_rate_great %+% "\")"
     qc_sm_id[, cname] = qualLinThresh(qc_sm_id$ms.ms.identified.... , id_rate_great)
     QCM[["SM.MS2_ID_rate"]] = qc_sm_id[,c("raw.file", cname)]
-    
-    ## table of files with 'bad' MS/MS id rate
-    bad_id_count = sum(d_smy[[1]]$cat==names(lab_IDd[1]))
-    if (bad_id_count>0)
-    {
-      sm_badID = d_smy[[1]][d_smy[[1]]$cat==names(lab_IDd[1]), c("raw.file","ms.ms.identified....")]
-      if (nrow(sm_badID) > 40)
-      {
-        sm_badID[40, "raw.file"] = paste(nrow(sm_badID) - 39, "more ...");
-        sm_badID[40, "ms.ms.identified...."] = ""
-        sm_badID = sm_badID[1:40, ]
-      }
-      p = plotTable(sm_badID, 
-                    title = paste0("SM: Files with '", lab_IDd[1],
-                                   "' ID rate (", round(bad_id_count*100/nrow(d_smy[[1]])), "% of samples)"),
-                    col_names = c("Raw file", "% identified"))
-      rep_data$add(p)
-    }
   }  
   
   
@@ -532,10 +452,6 @@ createReport = function(txt_folder, yaml_obj = list())
                                                                          "^fraction$",  ## only available when fractions were given
                                                                          "Raw.file", "^Protein.Group.IDs$", "Contaminant", "[RK]\\.Count", 
                                                                          "^Charge$", "modified.sequence", "^Mass$", "^protein.names$", "^ms.ms.count$"))
-    ##
-    ## write peptides to stats file (remnant from proteinGroups)
-    ##
-    
     ##
     ## sort by rawfile as shown in the summary.txt (or whatever the first txt file was)
     ##

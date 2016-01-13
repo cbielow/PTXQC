@@ -139,7 +139,7 @@ ggAxisLabels = function(x, n = 20)
 addGGtitle = function(main, sub=""){
   #require(ggplot2)
   if(sub==""){
-    pl = ggtitle(eval(parse(text=paste("expression(atop(\"",main,"\",","))", sep=""))))
+    pl = ggtitle(main)
   }else{
     pl = ggtitle(eval(parse(text=paste("expression(atop(\"",main, "\",", " scriptstyle(\"", sub , "\")))", sep=""))))
   }
