@@ -14,15 +14,15 @@
 #' @field qcName [placeholder] Name of the qcScore in the heatmap
 #' @field heatmapOrder [placeholder] column index during heatmap generation
 #'
-#' @exportClass
-#' @export
+#' @exportClass qcMetric
+#' @export qcMetric
 #' 
 #' @examples 
 #'
 #' require(ggplot2)
 #' dd = data.frame(x=1:10, y=11:20)
 #' a = qcMetric$new(helpText="small help text", 
-#'                  workerFcn=function(data, gtit) ## arbitrary arguments, matched during setData()
+#'                  workerFcn=function(.self, data, gtit) ## arbitrary arguments, matched during setData()
 #'                  {
 #'                    ## usually some code here to produce ggplots
 #'                    pl = lapply(1:2, function(xx) ggplot(data) + geom_point(aes(x=x*xx,y=y)) + ggtitle(gtit))
@@ -34,9 +34,9 @@
 #' ## test some output
 #' a$setData(dd, "my title")
 #' a$plots  ## the raw plots
-#' a$print(T) ## same as above
-#' a$print(F) ## plots without title
-#' a$getTitle()  ## get the title of the first plot (usually they are all identical)
+#' a$print(TRUE) ## same as above
+#' a$print(FALSE) ## plots without title
+#' a$getTitles()  ## get the titles of the all plots
 #' a$helpText
 #' a$qcName
 #' 
