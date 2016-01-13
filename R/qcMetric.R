@@ -15,7 +15,8 @@
 #' @field heatmapOrder [placeholder] column index during heatmap generation
 #'
 #' @exportClass
-#'  
+#' @export
+#' 
 #' @examples 
 #'
 #' require(ggplot2)
