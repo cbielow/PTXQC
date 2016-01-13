@@ -1480,7 +1480,16 @@ if (enabled_msmsscans)
     ##
     cat("MSMS-Scans: scan event counts ...\n")
     
-    DFc = ddply(d_msmsScan, c("scan.event.number", "fc.raw.file"), summarise, n = length(scan.event.number))
+    ## check if scan.event.number requires fixing
+    ## (e.g. when MS3 events are recorded between MS2 events, there are gaps in the numbering)
+    ## we close the gaps by requiring consecutive scan event numbers in MS2
+    scan.events = d_msmsScan[, c("scan.event.number", "fc.raw.file")]
+    while(TRUE) { ## should be at most max(scan.even.number) iterations
+      se_pos = 1 + which(diff(scan.events$scan.event.number) > 1) ## position of gaps>1
+      if (length(se_pos) == 0) break;
+      scan.events$scan.event.number[se_pos] = scan.events$scan.event.number[se_pos] - 1
+    }
+    DFc = ddply(scan.events, c("scan.event.number", "fc.raw.file"), summarise, n = length(scan.event.number))
     dfc.ratio = ddply(DFc, "fc.raw.file", function(x, maxn)
     {
       ## sort x by scan event
