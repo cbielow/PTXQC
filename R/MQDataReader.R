@@ -482,12 +482,16 @@ MQDataReader$writeMappingFile = function(., filename)
   if ("best.effort" %in% colnames(.$raw_file_mapping)) {
     dfs$best.effort = .$raw_file_mapping[, "best.effort"]
   }
-    
-  cat(file = filename,
+  
+  ## use a file handle to avoid warning from write.table() when appending
+  ## a table with column names 'Warning(): appending column names to file'
+  FH = file(filename, "w")
+  cat(file = FH,
       "# This file can be used to manually substitute Raw file names within the report.",
       "# The ordering of Raw files in the report can be changed by re-arranging the rows.",
       sep = "\n")
-  write.table(x = dfs, file = filename, append = TRUE, quote = FALSE, sep="\t", row.names = FALSE)
+  write.table(x = dfs, file = FH, quote = FALSE, sep="\t", row.names = FALSE)
+  close(FH) ## flush
   return(NULL)
 }
 
