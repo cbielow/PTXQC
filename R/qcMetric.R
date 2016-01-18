@@ -93,9 +93,9 @@ qcMetric = setRefClass("qcMetric",
        },
        
        getTitles = function(stopOnMissing = TRUE) {
-         labels = sapply(1:length(.self$.self$plots), 
+         labels = sapply(1:length(.self$plots), 
                          function(idx) {
-                           if ("title" %in% names(.self$.self$plots[[idx]]$labels)){
+                           if ("title" %in% names(.self$plots[[idx]]$labels)){
                              return (.self$plots[[idx]]$labels$title)
                            } else if (stopOnMissing) {
                              stop(c("getTitles(): No title found in ggplot object at index ", idx, "!"))

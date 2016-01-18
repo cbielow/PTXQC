@@ -901,7 +901,7 @@ getReportFilenames = function(txt_folder)
 #' plus an 'MBRgain' column, which will give the extra MBR evidence in percent.
 #' 
 #' @param d_evidence Data.frame of evidence.txt as read by MQDataReader
-#' @return Data.frame with columns 'proteinCounts', 'peptideCounts', 'category', 'MBRgain'
+#' @return Data.frame with columns 'fc.raw.file', 'proteinCounts', 'peptideCounts', 'category', 'MBRgain'
 #'
 #'
 getProteinAndPeptideCounts = function(d_evidence) {
@@ -911,6 +911,14 @@ getProteinAndPeptideCounts = function(d_evidence) {
     stop("getProteinAndPeptideCounts(): Missing columns!")
   }
   
+  
+  ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
+  #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
+  #head(dsub[is.na(dsub[,2]),])
+  #sum(0==(dsub[,1]) & is.na(dsub[,2]))
+  ##
+  ## MQ1.4 MTD is either: NA or a number
+  ##
   d_evidence$hasMTD = !is.na(d_evidence$match.time.difference)
   
   ## report Match-between-runs data only if if it was enabled
@@ -963,6 +971,7 @@ getProteinAndPeptideCounts = function(d_evidence) {
     
     return (df)
   }, reportMTD = reportMTD)
+  
   
   return (prot_pep_counts)
 }

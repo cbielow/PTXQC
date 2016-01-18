@@ -88,8 +88,8 @@ createReport = function(txt_folder, yaml_obj = list())
   if (enabled_parameters)
   {
     d_parAll = mq$readMQ(txt_files$param, type="par")
-    qcMetric_param$setData(d_parAll)
-    rep_data$add(qcMetric_param$plots, "params")
+    qcMetric_PAR$setData(d_parAll)
+    rep_data$add(qcMetric_PAR$plots, "params")
   }
   
   add_fs_col = getYAML(yaml_obj, "PTXQC$NameLengthMax_num", 10)
@@ -109,14 +109,10 @@ createReport = function(txt_folder, yaml_obj = list())
     id_rate_great = getYAML(yaml_obj, "File$Summary$IDRate$Thresh_great_num", 35)
     
     ### MS/MS identified [%]
-    qcMetric_MSMSIdRate$setData(d_smy$raw, id_rate_bad, id_rate_great)
-    rep_data$add(qcMetric_MSMSIdRate$plots)
+    qcMetric_SM_MSMSIdRate$setData(d_smy$raw, id_rate_bad, id_rate_great)
+    rep_data$add(qcMetric_SM_MSMSIdRate$plots)
 
-    ## QC measure for ID rate (threshold reached?)
-    qc_sm_id = d_smy$raw[, c("raw.file", "ms.ms.identified....")]
-    cname = "X030X_catMS_SM:~MS^2~ID~rate (\">" %+% id_rate_great %+% "\")"
-    qc_sm_id[, cname] = qualLinThresh(qc_sm_id$ms.ms.identified.... , id_rate_great)
-    QCM[["SM.MS2_ID_rate"]] = qc_sm_id[,c("raw.file", cname)]
+    QCM[["SM.MS2_ID_rate"]] = qcMetric_SM_MSMSIdRate$qcScores
   }  
   
   
@@ -133,10 +129,6 @@ createReport = function(txt_folder, yaml_obj = list())
     
     d_pg = mq$readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")
       
-    clusterCols = list()
-    ##
-    ## intensity boxplots
-    ##
     param_name_PG_intThresh = "File$ProteinGroups$IntensityThreshLog2_num"
     param_def_PG_intThresh = 25 ## default median intensity in log2 scale
     param_PG_intThresh = getYAML(yaml_obj, param_name_PG_intThresh, param_def_PG_intThresh)
@@ -146,6 +138,10 @@ createReport = function(txt_folder, yaml_obj = list())
       param_PG_intThresh = param_def_PG_intThresh
     }
     
+    ##
+    ## Raw/LFQ/Reporter intensity boxplots
+    ##
+    clusterCols = list()
     
     colsSIL = grepv("^intensity\\.[hlm](\\.|$)", colnames(d_pg))
     colsLF = grepv("^intensity\\..", colnames(d_pg))
@@ -167,55 +163,20 @@ createReport = function(txt_folder, yaml_obj = list())
                                                               add_dots = TRUE), 
                                                        min_out_length = GL_name_min_length))
     ##
-    ## Contaminants plots
+    ## Contaminants plots on Raw intensity
     ##
-    df.con_stats = adply(colsW, .margins=1, function(group) {
-      #cat(group)
-      return(data.frame(group_long = as.character(group),
-                        log10_int  = log10(sum(as.numeric(d_pg[, group]), na.rm = TRUE)),
-                        cont_pc    = sum(as.numeric(d_pg[d_pg$contaminant, group]), na.rm = TRUE) /
-                          sum(as.numeric(d_pg[, group], na.rm = TRUE))*100
-      ))
-    })
-    df.con_stats$group = MAP_pg_groups$short[match(df.con_stats$group_long, MAP_pg_groups$long)]
-    df.con_stats$logAbdClass = getAbundanceClass(df.con_stats$log10_int)
-    df.con_stats
+    qcMetric_PG_Cont$setData(d_pg, colsW, MAP_pg_groups)
+    rep_data$add(qcMetric_PG_Cont$plots)
     
-    pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 90, plot_ContsPG, sort_indices = FALSE)
-    for (p in pg_plots_cont) rep_data$add(p);
-    
-    ##
-    ## stats file
-    ##
-    con_stats_smry = quantile(df.con_stats$cont_pc, probs=c(0,0.5,1))
-    cat(pastet("contamination(min,median,max) [%]", paste(con_stats_smry, collapse=",")), file=fh_out$stats_file, append = TRUE, sep="\n")  
-    
+
     ###
-    ### intensity boxplot
+    ### Raw intensity boxplot
     ###
     
     clusterCols$raw.intensity = colsW ## cluster using intensity
-    #cat("colsW:\n")
-    #cat(paste0(colsW, collapse=","))
-    ## some stats (for plot title)
-    medians_no0 = sort(apply(log2(d_pg[, colsW, drop = FALSE]), 2, function(x) quantile(x[x>0], probs=0.5, na.rm = TRUE))) # + c(0,0,0,0,0,0))
-    int_dev_no0 = RSD(medians_no0)
-    ## do not remove zeros (but add +1 since RSD is 'NA' when 'inf' is included in log-data)
-    medians = sort(apply(log2(d_pg[, colsW, drop = FALSE]+1), 2, quantile, na.rm = TRUE, probs=0.5)) # + c(0,0,0,0,0,0))
-    int_dev = RSD(medians)
-    int_dev.s = pastet("INT RSD [%]", round(int_dev, 3))
-    lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
-                            log2 = TRUE, 
-                         mainlab = "PG: intensity distribution",
-                            ylab = expression(log[2]*" intensity"),
-                          sublab = paste0("RSD ", round(int_dev_no0, 1),"% (w/o zero int.; expected < 5%)\n",
-                                          "RSD ", round(int_dev, 1),"% [high RSD --> few peptides])"),
-                          abline = param_PG_intThresh,
-                           names = MAP_pg_groups)
-    #for (pl in lpl) print(pl)
-    for (pl in lpl) rep_data$add(pl)
-    rm("lpl")          
-    cat(int_dev.s, file=fh_out$stats_file, append = TRUE, sep="\n")
+    
+    qcMetric_PG_RawInt$setData(d_pg, colsW, MAP_pg_groups, param_PG_intThresh)
+    rep_data$add(qcMetric_PG_RawInt$plots)
     
     ##
     ## LFQ boxplots
@@ -238,24 +199,9 @@ createReport = function(txt_folder, yaml_obj = list())
                                                              min_out_length = GL_name_min_length))
 
       clusterCols$lfq.intensity = colsW ## cluster using LFQ
-      ## some stats (for plot title)
-      medians_no0 = sort(apply(log2(d_pg[, colsW, drop = FALSE]), 2, function(x) quantile(x[x>0], probs=0.5, na.rm = TRUE))) # + c(0,0,0,0,0,0))
-      lfq_dev_no0 = RSD(medians_no0)
-      ## do not remove zeros (but add +1 since RSD is 'NA' when 'inf' is included in log-data)
-      medians = sort(apply(log2(d_pg[, colsW, drop = FALSE]+1), 2, quantile, probs=0.5, na.rm = TRUE)) # + c(0,0,0,0,0,0))
-      lfq_dev = RSD(medians)
-      lfq_dev.s = pastet("LFQ RSD [%]", round(lfq_dev, 3))
-      lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
-                              log2 = TRUE, 
-                           mainlab = "PG: LFQ intensity distribution", 
-                              ylab = expression(log[2]*" LFQ intensity"),
-                            sublab = paste0("RSD ", round(lfq_dev_no0, 1),"% (w/o zero int.; expected < 5%)\n",
-                                            "RSD ", round(lfq_dev, 1),"% [high RSD --> few peptides])"),
-                            abline = param_PG_intThresh,
-                             names = MAP_pg_groups_LFQ)
-      #for (pl in lpl) print(pl)
-      for (pl in lpl) rep_data$add(pl)
-      cat(lfq_dev.s, file=fh_out$stats_file, append = TRUE, sep="\n")
+      
+      qcMetric_PG_LFQInt$setData(d_pg, colsW, MAP_pg_groups_LFQ, param_PG_intThresh)
+      rep_data$add(qcMetric_PG_LFQInt$plots)
     }
     
     ##
@@ -273,26 +219,10 @@ createReport = function(txt_folder, yaml_obj = list())
                                                                       add_dots = TRUE), 
                                                                min_out_length = GL_name_min_length))
 
-      colsW = colsITRAQ
-      clusterCols$reporter.intensity = colsW ## cluster using reporters
-      ## some stats (for plot title)
-      medians_no0 = sort(apply(log2(d_pg[, colsW, drop = FALSE]), 2, function(x) quantile(x[x>0], probs=0.5, na.rm = TRUE))) # + c(0,0,0,0,0,0))
-      reprt_dev_no0 = RSD(medians_no0)
-      ## do not remove zeros (but add +1 since RSD is 'NA' when 'inf' is included in log-data)
-      medians = sort(apply(log2(d_pg[, colsW, drop = FALSE]+1), 2, quantile, probs=0.5, na.rm = TRUE)) # + c(0,0,0,0,0,0))
-      reprt_dev = RSD(medians)
-      reprt_dev.s = pastet("Reporter RSD [%]", round(reprt_dev, 3))
-      lpl = boxplotCompare(   data = melt(d_pg[, c(colsW, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
-                              log2 = TRUE, 
-                              ylab = expression(log[2]*" reporter intensity"),
-                           mainlab = "PG: reporter intensity distribution",
-                            sublab = paste0("RSD ", round(reprt_dev_no0, 1),"% (w/o zero int.; expected < 5%)\n",
-                                            "RSD ", round(reprt_dev, 1),"% [high RSD --> few peptides])"),
-                            abline = param_PG_intThresh,
-                             names = MAP_pg_groups_ITRAQ)
-      #for (pl in lpl) print(pl)
-      for (pl in lpl) rep_data$add(pl)
-      cat(reprt_dev.s, file=fh_out$stats_file, append = TRUE, sep="\n")
+      clusterCols$reporter.intensity = colsITRAQ ## cluster using reporters
+      
+      qcMetric_PG_ITRAQInt$setData(d_pg, colsITRAQ, MAP_pg_groups_ITRAQ, param_PG_intThresh)
+      rep_data$add(qcMetric_PG_ITRAQInt$plots)
     }
     
     
@@ -302,26 +232,9 @@ createReport = function(txt_folder, yaml_obj = list())
     ## some clustering (its based on intensity / lfq.intensity columns..)
     ## todo: maybe add ratios -- requires loading from txt though..
     MAP_pg_groups_ALL = rbind(MAP_pg_groups, MAP_pg_groups_LFQ, MAP_pg_groups_ITRAQ)
-    for (cond in names(clusterCols))
-    {
-      #cond = names(clusterCols)[3]
-      #print(clusterCols[cond])
-      if (length(clusterCols[[cond]]) <= 1) 
-      { ## only one condition.. PCA does not make sense (and will not work)
-        next;
-      }
-      ## remove contaminants
-      data = t(d_pg[!d_pg$contaminant, unlist(clusterCols[cond]), drop = FALSE])
-      ## remove constant/zero columns (== dimensions == proteins)
-      data = data[, colSums(data, na.rm = TRUE) > 0, drop = FALSE]
-      rownames(data) = MAP_pg_groups_ALL$short[match(rownames(data), MAP_pg_groups_ALL$long)]
-      lpl = try(getPCA(data = data,
-                       gg_layer = addGGtitle(paste0("PG: PCA of '", sub(".", " ", cond, fixed = TRUE), "'"), "(excludes contaminants)")
-      )[["plots"]]
-      )
-      #print(lpl)
-      if (!inherits(lpl, "try-error")) for (pl in lpl) rep_data$add(pl);
-    }
+    
+    qcMetric_PG_PCA$setData(d_pg, clusterCols, MAP_pg_groups_ALL)
+    rep_data$add(qcMetric_PG_PCA$plots)
     
     
     ##################################
@@ -342,92 +255,9 @@ createReport = function(txt_folder, yaml_obj = list())
     
     if (length(ratio_cols) > 0)
     {
-      colnames(d_pg)
-      
-      ## remove reverse and contaminants (might skew the picture)
-      idx_row = !d_pg$contaminant & !d_pg$reverse
-      d_sub = log2(d_pg[idx_row, ratio_cols, drop = FALSE])
-      ## rename "ratio.h.l" to "h.l" (same for m.l in tripleSILAC)
-      idx_globalRatio = grep("ratio\\.[hm]\\.l$", colnames(d_sub))
-      if (length(idx_globalRatio)) colnames(d_sub)[idx_globalRatio] = gsub("^ratio\\.", "", colnames(d_sub)[idx_globalRatio])
-      ## simplify the rest
-      if (ncol(d_sub) > length(idx_globalRatio))
-      {
-        idx_other = setdiff(1:ncol(d_sub), idx_globalRatio)
-        colnames(d_sub)[idx_other] = shortenStrings(simplifyNames(delLCP(colnames(d_sub)[idx_other], 
-                                                                         min_out_length = GL_name_min_length, 
-                                                                         add_dots = TRUE), 
-                                                                  min_out_length = GL_name_min_length))
-      }
-      #summary(d_sub)
-      # 
-      # plot(density(d_sub[,1], bw = "SJ", adjust=1, na.rm = TRUE, n=128))
-      # plot(d_sub[,1])
-      # h = density(d_sub[,1], bw = "SJ", adjust=1, na.rm = TRUE, n=128)
-      
-      
-      ## get ranges to fix breaks for density intervals
-      # breaks = seq(min(d_sub, na.rm = TRUE), max(d_sub, na.rm = TRUE), length.out=(max(dd, na.rm = TRUE)-min(dd, na.rm = TRUE))/0.5)
-      # mid = hist(d_sub[, 1], breaks = breaks)$mids
-      ratio.densities = do.call(rbind, (lapply(1:ncol(d_sub), function(x) {
-        name = colnames(d_sub)[x]
-        ## density estimation can fail if not enough data
-        h = try(density(na.omit(d_sub[ ,x]), bw = "SJ", adjust=2, na.rm = TRUE))
-        if (inherits(h, "try-error")) return (data.frame(x = 1, y = 1, col = name, multimodal = FALSE))
-        count = sum(getMaxima(h$y))
-        if (count > 1) name = paste(name, "*")
-        df = data.frame(x = h$x, y = h$y, col = name, multimodal = (count>1))
-        return (df)
-      })))
-      ratio.densities$alpha = c(0.8, 1)[ratio.densities$multimodal+1]
-      ratio.densities$ltype = c("dotted", "solid")[ratio.densities$multimodal+1]
-      #head((ratio.densities))
-      
-      
-      ## compute label incorporation?
-      ratio.mode = ddply(ratio.densities, "col", .fun = function(x) {
-        mode = x$x[which.max(x$y)]
-        return (data.frame(mode = mode))
-      })
-      
-      ## on more than ratio 1:8 or 8:1 ratio, report label incorporation
-      # enabled_pg_ratioLabIncThresh == 8 by default
-      if (max(abs(ratio.mode$mode)) > abs(log2(enabled_pg_ratioLabIncThresh))) {
-        cat(paste0("Maximum ratio (log2) was ", round(max(abs(ratio.mode$mode)),1) , ", reaching the threshold of ", abs(log2(enabled_pg_ratioLabIncThresh)), " for label-incorporation computation.\nComputing ratios ...\n"))
-        ## back to normal scale
-        ratio.norm = 2^ratio.mode$mode
-        ## compute incorporation
-        ratio.inc =  ratio.norm / (ratio.norm+1) * 100
-        ## round
-        ratio.mode$li = round(ratio.inc)
-        ## new label
-        ratio.mode$col_new = ratio.mode$col %+% " (" %+% ratio.mode$li %+% "%)"
-        ## replace column names in data.frame
-        ratio.densities$col = ratio.mode$col_new[match(ratio.densities$col, ratio.mode$col)]
-        ## notify user via legend title
-        legend_title = "group\n(with label inc)"
-      } else
-      {
-        cat(paste0("Maximum ratio (log2) was ", max(abs(ratio.mode$mode)), ", NOT reaching the threshold of ", abs(log2(enabled_pg_ratioLabIncThresh)), " for label-incorporation computation.\nSkipping ratios ...\n"))
-        legend_title = "group"
-      }
-      
-      main_title = "PG: ratio density\n(w/o contaminants)"
-      main_col = "black"
-      if (any(ratio.densities$multimodal))
-      {
-        main_title = paste0(main_title, "\nWarning: multimodal densities detected")
-        main_col = "red"
-      }
-      ##
-      ## plot ratios
-      ##
-      rep_data$add(
-        byXflex(ratio.densities, ratio.densities$col, 5, plot_RatiosPG, sort_indices = FALSE, d_range = range(d_sub, na.rm=TRUE), main_title, main_col, legend_title)
-      )
-      
+      qcMetric_PG_Ratio$setData(d_pg, ratio_cols, enabled_pg_ratioLabIncThresh)
+      rep_data$add(qcMetric_PG_Ratio$plots)
     }
-    ## rm("d_pg") required in evidence....
   }
   
   ######
@@ -435,15 +265,38 @@ createReport = function(txt_folder, yaml_obj = list())
   ######
   
   enabled_evidence = getYAML(yaml_obj, "File$Evidence$enabled", TRUE)
+  
+  ## get scoring threshold (upper limit)
+  param_name_EV_protThresh = "File$Evidence$ProteinCountThresh_num"
+  param_def_EV_protThresh = 3500
+  param_EV_protThresh = getYAML(yaml_obj, param_name_EV_protThresh, param_def_EV_protThresh)
+  if (!is.numeric(param_EV_protThresh) || !(param_EV_protThresh %in% 1:1e5))
+  { ## reset if value is weird
+    cat("YAML value for '" %+% param_name_EV_protThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_protThresh %+% ".")
+    param_EV_protThresh = param_def_EV_protThresh
+  }
+  
+  param_name_EV_intThresh = "File$Evidence$IntensityThreshLog2_num"
+  param_def_EV_intThresh = 23 ## default median intensity in log2 scale
+  param_EV_intThresh = getYAML(yaml_obj, param_name_EV_intThresh, param_def_EV_intThresh)
+  if (!is.numeric(param_EV_intThresh) || !(param_EV_intThresh %in% 1:100))
+  { ## reset if value is weird
+    cat("YAML value for '" %+% param_name_EV_intThresh %+% "' is invalid ('" %+% param_EV_intThresh %+% "'). Using default of " %+% param_def_EV_intThresh %+% ".")
+    param_EV_intThresh = param_def_EV_intThresh
+  }
+  
+  ## get scoring threshold (upper limit)
+  param_name_EV_pepThresh = "File$Evidence$PeptideCountThresh_num"
+  param_def_EV_pepThresh = 15000
+  param_EV_pepThresh = getYAML(yaml_obj, param_name_EV_pepThresh, param_def_EV_pepThresh)
+  if (!is.numeric(param_EV_pepThresh) || !(param_EV_pepThresh %in% 1:1e6))
+  { ## reset if value is weird
+    cat("YAML value for '" %+% param_name_EV_pepThresh %+% "' is invalid ('" %+% param_EV_pepThresh %+% "'). Using default of " %+% param_def_EV_pepThresh %+% ".")
+    param_EV_pepThresh = param_def_EV_pepThresh
+  }
+  
   if (enabled_evidence)
   {
-    #d_evd_s = mq$readMQ(txt_files$evd, type="ev", filter = "", nrows=100)
-    #d_evd_s = mq$readMQ(txt_files$evd, type="ev", filter = "")
-    #head(d_evd_s)
-    #colnames(d_evd_s)
-    #table(d_evd_s$reverse)
-    #[grep("ount", colnames(d_evd))]
-    
     ## protein.names is only available from MQ 1.4 onwards
     d_evd = mq$readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration", 
                                                                          "Retention.time$", "Match.Time.Difference", "^intensity$", "^Type$",
@@ -452,17 +305,6 @@ createReport = function(txt_folder, yaml_obj = list())
                                                                          "^fraction$",  ## only available when fractions were given
                                                                          "Raw.file", "^Protein.Group.IDs$", "Contaminant", "[RK]\\.Count", 
                                                                          "^Charge$", "modified.sequence", "^Mass$", "^protein.names$", "^ms.ms.count$"))
-    ##
-    ## sort by rawfile as shown in the summary.txt (or whatever the first txt file was)
-    ##
-    d_evd = d_evd[order(match(as.character(d_evd$fc.raw.file), mq$raw_file_mapping$to)),]
-    ## sort fc.raw.file's factor values as well
-    d_evd$fc.raw.file = factor(d_evd$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
-    
-    #d_evd = mq$readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("labeling.state", "Match.Time.Difference", "fasta.headers", "^intensity$", "Raw.file", "^Protein.Group.IDs$"))
-    #summary(head(d_evd))
-    #head(d_evd)
-    #colnames(d_evd)
 
     ### warn of special contaminants!
     ## these need to be in FASTA headers (description is not enough)!
@@ -473,192 +315,56 @@ createReport = function(txt_folder, yaml_obj = list())
     ##  is set, then 'yaml_contaminants' will be 'FALSE'
     ##
     contaminant_default = list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
-    ## contaminant_default = FALSE ## to switch it off by default
+    ##yaml_obj = list()
+    ##contaminant_default = FALSE ## to switch it off by default
     yaml_contaminants = getYAML(yaml_obj, "File$Evidence$SpecialContaminants", contaminant_default)
     
-    #stop(yaml_contaminants)
-    
-    for (ca_entry in yaml_contaminants)
+    if (!enabled_proteingroups && class(yaml_contaminants) == "list")
     {
-      ca = ca_entry[1]
-      ## 
-      if (ca == FALSE) {
-        cat("No special contaminants requested!\n")
-        break;
-      }
-      
-      ca_thresh = as.numeric(ca_entry[2])
-      
-      not_found = TRUE
-      
-      if (enabled_proteingroups)
-      {
-        pg_id = d_pg$id[grep(ca, d_pg$fasta.headers, ignore.case = TRUE)]
-      } else {
-        ## fail hard; we could hack around this (e.g. by loading fasta headers from evidence.txt), but it
-        ## wastes a lot of memory and time
-        stop(paste0("Error: reporting of special contaminants (", ca, ") requires loading of proteinGroups.txt.",
-                    "If you don't have this file, please disable contaminant lookup in the YAML file and re-run."))
-      } 
-      
-      
-      if (length(pg_id) > 0)
-      {
-        
-        ## we might or might not have found something... we plot it anyways, so the user can be sure that we searched for it
-        
-        ## find peptides which only have one group (ignoring razor peptides where we cannot be sure)
-        evd_uniqueGroup = !grepl(";", d_evd$protein.group.ids)
-        ## do not trust MBR here. We want real evidence!
-        evd_realMS = !grepl("MATCH", d_evd$type)
-        ## for each Raw file: find unique peptides of our contaminant
-        cont_data.l = dlply(d_evd[evd_uniqueGroup & evd_realMS, 
-                                c("score", "intensity", "fc.raw.file", "protein.group.ids")],
-                          "fc.raw.file",
-                          function(x) {
-          if (length(grep(";", x$protein.group.ids))) stop("more than one proteinGroup for supposedly unique peptide...")
-          
-          x$idx_cont = x$protein.group.ids %in% pg_id
-          
-          sc = sum(x$idx_cont) / nrow(x) * 100
-          int = sum(as.numeric(x$intensity[x$idx_cont]), na.rm = TRUE) / sum(as.numeric(x$intensity), na.rm = TRUE) * 100
-          
-          above.thresh = (sc > ca_thresh) | (int > ca_thresh)
-          cont_scoreECDF = ddply(x, "idx_cont", function(xx) {
-            if (length(unique(xx$score)) < 2) return(NULL) ## not enough data for ECDF
-            r = getECDF(xx$score)
-            r$condition = c("sample", "contaminant")[xx$idx_cont[1]+1]
-            return(r)
-          })
-          if (!any(x$idx_cont)){
-            ks_p = NA
-          } else { ## no contaminant peptide 
-            ks_p = suppressWarnings(  ## brags about '-value will be approximate in the presence of ties'
-                      ks.test(x$score[x$idx_cont], x$score[!x$idx_cont], alternative = "greater")$p.value
-                   )
-          }
-          return (list(cont_data = data.frame(spectralCount = sc, intensity = int,
-                                              above.thresh = above.thresh, fc.raw.file = x$fc.raw.file[1],
-                                              score_KS = ks_p),
-                       cont_scoreECDF = cont_scoreECDF))
-        })
-        head(cont_data.l)
-        
-        ## melt
-        cont_data = ldply(cont_data.l, function(l) { l$cont_data })
-        cont_data.long = melt(cont_data, id.vars="fc.raw.file")
-        
-        not_found = all(cont_data.long$value[cont_data.long$variable == "above.thresh"] == FALSE)
-      }
-      
-      if (not_found)
-      { ## identifier was not found in any sample
-        pl_cont = ggText("PG: Contaminants",
-                         paste0("Contaminant '", ca, "' was not found in any sample.\n\nDid you use the correct database?"),
-                         "red")
-        rep_data$add(pl_cont)
-      } else {
-        ## plot User-Contaminants
-        rep_data$add(
-          byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, 
-                FUN = plot_ContUser, sort_indices = FALSE, name_contaminant = ca, extra_limit = ca_thresh)
-        )
-        
-        ## plot Andromeda score distribution of contaminant vs. sample
-        llply(cont_data.l, function(l)
-        {
-          if (l$cont_data$above.thresh == FALSE) return(NULL)
-          p = plot_ContUserScore(l$cont_scoreECDF, l$cont_data$fc.raw.file, l$cont_data$score_KS)
-          rep_data$add(p)
-          #print(p)
-          return(NULL)
-        })
-        
-        ## add heatmap column
-        cname = paste0("X002X_catPrep_EVD:Contaminant~(", ca, ")")
-        cont_data[,cname] = as.numeric(!cont_data$above.thresh) ## inverse (0 is 'bad')
-        QCM[[paste0("EVD.Contaminant_",ca)]] = cont_data[, c("fc.raw.file", cname)]
-        
-        
-        report_short = pastet("Contaminant:", ca, paste0(sum(cont_data$above.thres),"/",nrow(cont_data)," Raw files"))
-        report_samples  = pastet("Contaminant-details (name, raw.file, spectralCount%): " , ca, paste(cont_data$fc.raw.file, collapse=";"), paste(cont_data$spectralCount, collapse=";"))
-        report_samples2 = pastet("Contaminant-details (name, raw.file, intensity%): " , ca, paste(cont_data$fc.raw.file, collapse=";"), paste(cont_data$intensity, collapse=";"))
-        cat(pasten(report_short, report_samples, report_samples2), file=fh_out$stats_file, append=TRUE, sep="\n")
-        cat(pastet("contamination-proteins:", ca, paste((d_pg$majority.protein.ids[pg_id]), collapse=",")), file=fh_out$stats_file, append=TRUE, sep="\n") 
-      }
-      
-    } ## contaminant loop
+      ## fail hard; we could hack around this (e.g. by loading fasta headers from evidence.txt), but it wastes a lot of memory and time
+      stop(paste0("Error: reporting of special contaminants requires loading of proteinGroups.txt.",
+                  "If you don't have this file, please disable contaminant lookup in the YAML file and re-run."))
+    } 
     
-    ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
-    #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
-    #head(dsub[is.na(dsub[,2]),])
-    #sum(0==(dsub[,1]) & is.na(dsub[,2]))
-    ##
-    ## MQ1.4 MTD is either: NA or a number
-    ##
     
+    qcMetric_EVD_UserContaminant$setData(d_evd, d_pg, yaml_contaminants)
+    rep_data$add(qcMetric_EVD_UserContaminant$plots)
+    ## add heatmap column
+    QCM[["EVD.UserContaminant"]] = qcMetric_EVD_UserContaminant$qcScores
+
+    ##
     ## intensity of peptides
-    param_name_EV_intThresh = "File$Evidence$IntensityThreshLog2_num"
-    param_def_EV_intThresh = 23 ## default median intensity in log2 scale
-    param_EV_intThresh = getYAML(yaml_obj, param_name_EV_intThresh, param_def_EV_intThresh)
-    if (!is.numeric(param_EV_intThresh) || !(param_EV_intThresh %in% 1:100))
-    { ## reset if value is weird
-      cat("YAML value for '" %+% param_name_EV_intThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_intThresh %+% ".")
-      param_EV_intThresh = param_def_EV_intThresh
-    }
+    ##
+
+    qcMetric_EVD_PeptideInt$setData(d_evd, param_EV_intThresh)
+    rep_data$add(qcMetric_EVD_PeptideInt$plots)
+    ## add heatmap column
+    QCM[["EVD.PepIntensity"]] = qcMetric_EVD_PeptideInt$qcScores
     
-    colnames(d_evd)
-    medians_pep = ddply(d_evd[ ,c("fc.raw.file", "intensity")], "fc.raw.file",
-                        function(x) data.frame(med = log2(quantile(x$intensity, probs=0.5, na.rm = TRUE))))
+
+    ##
+    ## peptide & protein counts
+    ##
     
-    int_dev_pep = RSD((medians_pep$med))
-    int_dev.s = pastet("INT RSD [%]", round(int_dev_pep, 3))
-    lpl = boxplotCompare(data = d_evd[, c("fc.raw.file", "intensity", "contaminant")],
-                         log2 = TRUE, 
-                         mainlab="EVD: peptide intensity distribution",
-                         ylab = expression(log[2]*" intensity"),
-                         sublab=paste0("RSD ", round(int_dev_pep, 1),"% (expected < 5%)\n"),
-                         abline = param_EV_intThresh)
-    #for (pl in lpl) print(pl)
-    for (pl in lpl) rep_data$add(pl)
-    ## QC measure for peptide intensity
-    qc_pepint = medians_pep
-    cname = "X003X_catPrep_EVD:~Pep~Intensity~(\">" %+% param_def_EV_intThresh %+% "\")"
-    qc_pepint[,cname] = qualLinThresh(2^qc_pepint$med, 2^param_def_EV_intThresh) ## use non-log space 
-    QCM[["EVD.PepIntensity"]] = qc_pepint[, c("fc.raw.file", cname)]
-    
-    ## only count protein groups from non-inferred evidence
-    # get only the column without MTDs
-    #   contains NA if 'genuine' ID
+    ## contains NA if 'genuine' ID
     d_evd$hasMTD = !is.na(d_evd$match.time.difference)
-    
-    pgc = getProteinAndPeptideCounts(d_evd[, c("protein.group.ids", "fc.raw.file", "modified.sequence", "match.time.difference")])
-    head(pgc)
-    
-    ## re-order (ddply somehow reorders, even if we use ordered factors...)
-    pgc$fc.raw.file = factor(pgc$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
-    #levels(pgc$fc.raw.file)
     ## report Match-between-runs data only if if it was enabled
     reportMTD = any(d_evd$hasMTD)
     
-    ## show Prot & Pep stats
+    pgc = getProteinAndPeptideCounts(d_evd[, c("protein.group.ids", "fc.raw.file", "modified.sequence", "match.time.difference")])
+    ## re-order (ddply somehow reorders, even if we use ordered factors...)
+    pgc$fc.raw.file = factor(pgc$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
+    #levels(pgc$fc.raw.file)
     pgc$block = factor(assignBlocks(pgc$fc.raw.file, 30))
-    max_prot = max(unlist(dlply(pgc, "fc.raw.file", function(x) sum(x$proteinCounts))))
-    ## average gain in percent
-    gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pgc$proteinMBRgain, na.rm = TRUE)), "")
     
-    ## get scoring threshold (upper limit)
-    param_name_EV_protThresh = "File$Evidence$ProteinCountThresh_num"
-    param_def_EV_protThresh = 3500
-    param_EV_protThresh = getYAML(yaml_obj, param_name_EV_protThresh, param_def_EV_protThresh)
-    if (!is.numeric(param_EV_protThresh) || !(param_EV_protThresh %in% 1:1e5))
-    { ## reset if value is weird
-      cat("YAML value for '" %+% param_name_EV_protThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_protThresh %+% ".")
-      param_EV_protThresh = param_def_EV_protThresh
-    }
+    
     ##
     ## PROTEIN counts
     ##
+    max_prot = max(unlist(dlply(pgc, "fc.raw.file", function(x) sum(x$proteinCounts))))
+    ## average gain in percent
+    gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pgc$proteinMBRgain, na.rm = TRUE)), "")
+
     ddply(pgc, "block", .fun = function(x)
     {
       x$counts = x$proteinCounts
@@ -683,18 +389,7 @@ createReport = function(txt_folder, yaml_obj = list())
     max_pep = max(unlist(dlply(pgc, "fc.raw.file", function(x) sum(x$peptideCounts))))
     ## average gain in percent
     gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pgc$peptideMBRgain, na.rm = TRUE)), "")
-          
-    ## get scoring threshold (upper limit)
-    param_name_EV_pepThresh = "File$Evidence$PeptideCountThresh_num"
-    param_def_EV_pepThresh = 15000
-    param_EV_pepThresh = getYAML(yaml_obj, param_name_EV_pepThresh, param_def_EV_pepThresh)
-    if (!is.numeric(param_EV_pepThresh) || !(param_EV_pepThresh %in% 1:1e6))
-    { ## reset if value is weird
-      cat("YAML value for '" %+% param_name_EV_pepThresh %+% "' is invalid ('" %+% param_EV_pepThresh %+% "'). Using default of " %+% param_def_EV_pepThresh %+% ".")
-      param_EV_pepThresh = param_def_EV_pepThresh
-    }
-    
-    #require(RColorBrewer)
+
     ddply(pgc, "block", .fun = function(x)
     {
       x$counts = x$peptideCounts
@@ -1594,6 +1289,13 @@ param_def_PTXQC_PageNumbers = "on"
 param_PageNumbers = getYAML(yaml_obj, param_name_PTXQC_PageNumbers, param_def_PTXQC_PageNumbers)
 
 cat("Creating Report file ...")
+
+
+
+
+#####################################################################
+## list of qcMetric objects
+lst_qcMetrics = ls(pattern="qcMetric_.*")
 
 
 #
