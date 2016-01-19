@@ -4,10 +4,12 @@
 \alias{print.PTXQC_table}
 \title{helper S3 class, enabling print(some-plot_Table-object)}
 \usage{
-\method{print}{PTXQC_table}(x)
+\method{print}{PTXQC_table}(x, ...)
 }
 \arguments{
 \item{x}{Some Grid object to plot}
+
+\item{...}{further arguments (not used, but required for consistency with other print methods)}
 }
 \value{
 A function

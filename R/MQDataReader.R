@@ -403,6 +403,8 @@ MQDataReader$getShortNames = function(., raw.files, max_len, fallbackStartNr = 1
 #'
 #' @return Returns a list of mapping plots if mapping is available, 'NULL' otherwise.
 #'
+#' @import ggplot2
+#'
 #' @name MQDataReader$plotNameMapping
 #' 
 MQDataReader$plotNameMapping <- function(.)
@@ -448,7 +450,7 @@ MQDataReader$plotNameMapping <- function(.)
         geom_text(aes_string(label="value"), color = mq_mapping.long2$col, hjust=mq_mapping.long2$hpos, size=mq_mapping.long2$size) +
         coord_cartesian(xlim=c(0,20)) +
         theme_bw() +
-        theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), 
+        theme(plot.margin = grid::unit(c(1,1,1,1), "cm"), line = element_blank(), 
               axis.title = element_blank(), panel.border = element_blank(),
               axis.text = element_blank(), strip.text = element_blank(), legend.position = "none") +
         ggtitle("Mapping of Raw files to their short names\nMapping source: " %+% .$mapping.creation %+% extra)
