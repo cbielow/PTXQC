@@ -52,6 +52,10 @@ See [drag'n'drop] [1] for details. It takes 10 minutes and you are done!
 
 **If you just want the package to use (and maybe even modify) it:**
 
+If you want to build the vignettes which come with this package, you need to install [pandoc](https://github.com/jgm/pandoc/releases).
+Alternatively, you can skip vignette building and read the [vignettes] [Ref_Vign] online from the PTXQC GitHub page.
+**If you install pandoc later while your R session is already open, you need to close and re-open R in order to make R aware of pandoc!**
+
 The following lines will install the PTXQC package.
 Direct installation from GitHub requires the 'devtools' package.
 Run **each line** separately in your R console, i.e. do not copy and paste the whole block.
@@ -62,7 +66,7 @@ how to resolve them.
     library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
     source("http://bioconductor.org/biocLite.R")
     biocLite("Biobase")
-    install_github("cbielow/PTXQC", build_vignettes = TRUE) 
+    install_github("cbielow/PTXQC", build_vignettes = TRUE)    ## use build_vignettes = FALSE if you did not install pandoc!
     
 To get started, see the help and/or vignettes:
 
@@ -127,3 +131,6 @@ We recommend to use the most recent PTXQC for the best user experience.
   [issuetracker]: https://github.com/cbielow/PTXQC/issues
   [JPR_PTXQC]: https://github.com/cbielow/PTXQC/releases/tag/v0.69.3
   [Ref_VignFAQ]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-FAQ.Rmd
+  [Ref_Vign]: https://github.com/cbielow/PTXQC/tree/master/vignettes
+
+
