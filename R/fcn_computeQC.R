@@ -497,7 +497,7 @@ createReport = function(txt_folder, yaml_obj = list())
       } else {
         ## fail hard; we could hack around this (e.g. by loading fasta headers from evidence.txt), but it
         ## wastes a lot of memory and time
-        stop(paste0("Error: reporting of special contaminants (", ca, ") requires loading of proteinGroups.txt.",
+        stop(paste0("Error: reporting of special contaminants (", ca, ") requires loading of proteinGroups.txt. ",
                     "If you don't have this file, please disable contaminant lookup in the YAML file and re-run."))
       } 
       
