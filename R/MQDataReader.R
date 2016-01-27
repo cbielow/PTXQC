@@ -144,7 +144,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
         colClasses[idx_new] = NA  ## auto
         if (nchar(names(col_subset)[idx]) > 0) {
           colClasses[idx_new] = names(col_subset)[idx]
-          cat(paste0("Requiring column(s) ", paste(colnames(data_header)[idx_new], sep="", collapse=","), " to be of type ", names(col_subset)[idx], "!\n"))
+          cat(paste0("Requiring column(s) '", paste(colnames(data_header)[idx_new], sep="", collapse="', '"), "' to be of type '", names(col_subset)[idx], "'!\n"))
         } 
       }
       
@@ -166,7 +166,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   #)
   #colnames(.$mq.data) = make.names(colnames(.$mq.data), unique = TRUE)
   ## comment.char should be "", since lines will be TRUNCATED starting at the comment char.. and a protein identifier might contain just anything...
-  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def."), comment.char="", stringsAsFactors = FALSE, colClasses = colClasses, ...))
+  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def.", "非数字"), encoding="UTF-8", comment.char="", stringsAsFactors = FALSE, colClasses = colClasses, ...))
   if (inherits(.$mq.data, 'try-error')) stop(msg_parse_error, call. = FALSE);
   
   #colnames(.$mq.data)

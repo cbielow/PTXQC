@@ -41,6 +41,10 @@ You will find documentation on
   - (for MaxQuant users) Usage of Drag'n'drop
   - (for R users) code examples in R
   - ...
+
+### Change log
+
+See NEWS file.
   
 ### Installation
 
