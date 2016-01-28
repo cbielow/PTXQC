@@ -53,7 +53,8 @@ qcMetric = setRefClass("qcMetric",
                  qcScores = "data.frame", ## with columns "raw.file", "score"
                  qcCat = "character", ## one of "prep", "LC", "MS" or empty (e.g. for PG)
                  qcName = "character", ## expression e.g. "MS^2~ID~Rate"
-                 heatmapOrder = "numeric" ## column index in heatmap (gaps are ignored)
+                 heatmapOrder = "numeric", ## column index in heatmap (gaps are ignored)
+                 outData = "list" ## optional auxiliary output data generated in workerFcn
                  ),
    methods = list(
        initialize=function(helpText,
@@ -68,7 +69,8 @@ qcMetric = setRefClass("qcMetric",
            .self$qcCat = qcCat;
            .self$qcName = qcName;
            .self$heatmapOrder = heatmapOrder;
-           .self
+           .self$outData = list();
+           return(.self)
        },
        setData = function(...) { ## fill with MQ data and compute results
          

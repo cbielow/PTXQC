@@ -422,70 +422,26 @@ createReport = function(txt_folder, yaml_obj = list())
 ### 
 ###     MBR: ID transfer
 ###
-
-        ## increase of segmentation by MBR:
-        ## three values returned: single peaks(%) in genuine, transferred and all(combined)
-        qMBR = peakSegmentation(d_evd)
-        head(qMBR)
-        ## for groups: get their RT-spans
-        ## ... genuine ID's only (as 'rtdiff_genuine') 
-        ##  or genuine+transferred (as 'rtdiff_mixed'))
-        ## Could be empty (i.e. no groups, just singlets) if data is really sparse ..
-        qMBRSeg_Dist = idTransferCheck(d_evd)
-        #head(qMBRSeg_Dist)
-        #head(qMBRSeg_Dist[qMBRSeg_Dist$fc.raw.file=="file 13",])
+        #debug (restore data): qcMetric_EVD_RTPeakWidth$setData(d_evd)
+        avg_peak_width = qcMetric_EVD_RTPeakWidth$outData[["avg_peak_width"]]
+        if (is.null(avg_peak_width)) {
+          stop("RT peak width module did not run, but is required for MBR metrics. Enable it and try again or switch off MBR metrics!")
+        } 
+        qcMetric_EVD_MBRIdTransfer$setData(d_evd, avg_peak_width)
+        rep_data$add(qcMetric_EVD_MBRIdTransfer$plots)
+        ## add heatmap column
+        QCM[["EVD.MBRIdTransfer"]] = qcMetric_EVD_MBRIdTransfer$qcScores
         
-
-        ## Check which fraction of ID-pairs belong to the 'in-width' group.
-        ## The allowed RT delta is given in 'd_evd.m.d_med' (estimated from global peak width for each file)
-        qMBRSeg_Dist_inGroup = inMatchWindow(qMBRSeg_Dist, df.allowed.deltaRT = d_evd.m.d_avg)
-        ## puzzle together final picture
-        scoreMBRMatch = computeMatchRTFractions(qMBR, qMBRSeg_Dist_inGroup)
-        #head(scoreMBRMatch)
-        #scoreMBRMatch[scoreMBRMatch$fc.raw.file=="file 3",]
-        
-        qualMBR.m = merge(scoreMBRMatch[scoreMBRMatch$sample=="genuine",], 
-                          scoreMBRMatch[scoreMBRMatch$sample=="transferred",], by="fc.raw.file")
-        qualMBR.m = merge(qualMBR.m, scoreMBRMatch[scoreMBRMatch$sample=="all",], by="fc.raw.file")
-        cname = "X022X_catLC_EVD:~MBR~ID-Transfer"
-        qualMBR.m[, cname] = 1 - qualMBR.m$multi.outRT.y # could be NaN if: no-transfer at all, or: no groups but only singlets transferred
-        qualMBR.m[is.na(qualMBR.m$multi.outRT.y) & !is.na(qualMBR.m$single.y), cname] = 1 ## only singlets transferred, wow...
-        qualMBR.m[is.na(qualMBR.m[, cname]), cname] = HEATMAP_NA_VALUE
-        QCM[["EVD.MBR_IDTransfer"]] = qualMBR.m[, c("fc.raw.file", cname)]
-        QCM[["EVD.MBR_IDTransfer"]]
-       
-        ## plot ID-transfer
-        rep_data$add(
-          byX(scoreMBRMatch, scoreMBRMatch$fc.raw.file, 12, plot_MBRIDtransfer, sort_indices = FALSE)
-        )
         
         ##
         ## MBR: Tree Clustering (experimental)
-        ##
-        rep_data$add(
-        #print(  
-          RTalignmentTree(d_evd[(d_evd$type %in% c("MULTI-MSMS")), 
-                                c("calibrated.retention.time", "fc.raw.file", col_fraction, "modified.sequence", "charge")],
-                          col_fraction = col_fraction)
-        )
-        
-        ##
+        ##  and
         ## MBR: additional evidence by matching MS1 by AMT across files
         ##
-        if (any(!is.na(d_evd$match.time.difference))) {
-          ## gain for each raw file: absolute gain, and percent gain
-          mtr.df = ddply(d_evd, "fc.raw.file", function(x) {
-            match_count_abs = sum(!is.na(x$match.time.difference))
-            match_count_pc  = round(100*match_count_abs/(nrow(x)-match_count_abs)) ## newIDs / oldIDs
-            return (data.frame(abs = match_count_abs, pc = match_count_pc))
-          })
-          rep_data$add(
-            plot_MBRgain(data = mtr.df, title_sub = gain_text)
-          )
-        }
-      
-      } ## MBR has data
+        qcMetric_EVD_MBRaux$setData(d_evd)
+        rep_data$add(qcMetric_EVD_MBRaux$plots)
 
+      } ## MBR has data
     } ## retention.time.difference column exists
     
     

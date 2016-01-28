@@ -280,6 +280,8 @@ qcMetric_EVD_RTPeakWidth = qcMetric$new(
       return(data.frame(median = m))
     })
     df_evd.m.d_avg$fc.raw.file_aug = paste0(df_evd.m.d_avg$fc.raw.file, " (~", round(df_evd.m.d_avg$median, 1)," min)")
+    .self$outData[["avg_peak_width"]] = df_evd.m.d_avg
+    
     ## augment Raw filename with avg. RT peak width
     df_evd.m.d$fc.raw.file = mapvalues(df_evd.m.d$fc.raw.file, df_evd.m.d_avg$fc.raw.file, df_evd.m.d_avg$fc.raw.file_aug)
     df_evd.m.d$block = factor(assignBlocks(df_evd.m.d$fc.raw.file, 6)) ## color set is 9, so do not increase this (6*150%)
@@ -400,6 +402,102 @@ qcMetric_EVD_MBRAlign = qcMetric$new(
   qcCat = "LC", 
   qcName = "X021X_catLC_EVD:~MBR~Align", 
   heatmapOrder = 0210)
+
+
+#####################################################################
+
+qcMetric_EVD_MBRIdTransfer = qcMetric$new(
+  helpText = 
+    "...",
+  workerFcn=function(.self, df_evd, avg_peak_width)
+  {
+    ## completeness check
+    #stopifnot(c("...") %in% colnames(df_evd))
+
+    ## increase of segmentation by MBR:
+    ## three values returned: single peaks(%) in genuine, transferred and all(combined)
+    qMBR = peakSegmentation(df_evd)
+    head(qMBR)
+    ## for groups: get their RT-spans
+    ## ... genuine ID's only (as 'rtdiff_genuine') 
+    ##  or genuine+transferred (as 'rtdiff_mixed'))
+    ## Could be empty (i.e. no groups, just singlets) if data is really sparse ..
+    qMBRSeg_Dist = idTransferCheck(df_evd)
+    #head(qMBRSeg_Dist)
+    #head(qMBRSeg_Dist[qMBRSeg_Dist$fc.raw.file=="file 13",])
+    
+    
+    ## Check which fraction of ID-pairs belong to the 'in-width' group.
+    ## The allowed RT delta is given in 'd_evd.m.d_med' (estimated from global peak width for each file)
+    qMBRSeg_Dist_inGroup = inMatchWindow(qMBRSeg_Dist, df.allowed.deltaRT = avg_peak_width)
+    ## puzzle together final picture
+    scoreMBRMatch = computeMatchRTFractions(qMBR, qMBRSeg_Dist_inGroup)
+    #head(scoreMBRMatch)
+    #scoreMBRMatch[scoreMBRMatch$fc.raw.file=="file 3",]
+
+    ## plot ID-transfer
+    lpl =
+      byX(scoreMBRMatch, scoreMBRMatch$fc.raw.file, 12, plot_MBRIDtransfer, sort_indices = FALSE)
+    
+    ##
+    ##  Quality
+    ##
+    qualMBR.m = merge(scoreMBRMatch[scoreMBRMatch$sample=="genuine",], 
+                      scoreMBRMatch[scoreMBRMatch$sample=="transferred",], by="fc.raw.file")
+    qualMBR.m = merge(qualMBR.m, scoreMBRMatch[scoreMBRMatch$sample=="all",], by="fc.raw.file")
+    cname = .self$qcName
+    qualMBR.m[, cname] = 1 - qualMBR.m$multi.outRT.y # could be NaN if: no-transfer at all, or: no groups but only singlets transferred
+    qualMBR.m[is.na(qualMBR.m$multi.outRT.y) & !is.na(qualMBR.m$single.y), cname] = 1 ## only singlets transferred, wow...
+    qualMBR.m[is.na(qualMBR.m[, cname]), cname] = HEATMAP_NA_VALUE
+    qcScore = qualMBR.m[, c("fc.raw.file", cname)]
+
+    return(list(plots = lpl, qcScores = qcScore))
+  }, 
+  qcCat = "LC", 
+  qcName = "X022X_catLC_EVD:~MBR~ID-Transfer", 
+  heatmapOrder = 0220)
+
+
+#####################################################################
+
+qcMetric_EVD_MBRaux = qcMetric$new(
+  helpText = 
+    "Auxililiary plots without scores ...",
+  workerFcn=function(.self, df_evd)
+  {
+    ## completeness check
+    stopifnot(c("type", "match.time.difference", "calibrated.retention.time", "fc.raw.file", "modified.sequence", "charge") %in% colnames(df_evd))
+    
+    if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
+      ## fractions: there must be more than one, otherwise MQ will treat the samples as unfractionated
+      col_fraction = "fraction"
+    } else {
+      col_fraction = c()
+    }
+
+    lpl = list()
+    lpl[["tree"]] =
+      RTalignmentTree(df_evd[(df_evd$type %in% c("MULTI-MSMS")), 
+                            c("calibrated.retention.time", "fc.raw.file", col_fraction, "modified.sequence", "charge")],
+                      col_fraction = col_fraction)
+
+    ## MBR: additional evidence by matching MS1 by AMT across files
+    if (any(!is.na(df_evd$match.time.difference))) {
+      ## gain for each raw file: absolute gain, and percent gain
+      mtr.df = ddply(df_evd, "fc.raw.file", function(x) {
+        match_count_abs = sum(!is.na(x$match.time.difference))
+        match_count_pc  = round(100*match_count_abs/(nrow(x)-match_count_abs)) ## newIDs / oldIDs
+        return (data.frame(abs = match_count_abs, pc = match_count_pc))
+      })
+      lpl[["gain"]] =
+        plot_MBRgain(data = mtr.df, title_sub = gain_text)
+    }
+    
+    return(list(plots = lpl))
+  }, 
+  qcCat = "LC", 
+  qcName = NA_character_, 
+  heatmapOrder = NaN)
 
 
 #####################################################################
