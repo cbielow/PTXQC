@@ -261,6 +261,55 @@ qcMetric_EVD_PeptideCount = qcMetric$new(
 
 #####################################################################
 
+qcMetric_EVD_RTPeakWidth = qcMetric$new(
+  helpText = 
+    "RT peak width distribution ...",
+  workerFcn=function(.self, df_evd)
+  {
+    ## completeness check
+    stopifnot(c("retention.time", "retention.length", "fc.raw.file") %in% colnames(df_evd))
+    
+    ## compute some summary stats before passing data to ggplot (performance issue for large experiments) 
+    d_evd.m.d = ddply(df_evd[,c("retention.time", "retention.length", "fc.raw.file")], "fc.raw.file", .fun = peakWidthOverTime)
+    head(d_evd.m.d)
+    ## median peak width
+    d_evd.m.d_avg = ddply(df_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = function(x) {
+      #fcr = as.character(x$fc.raw.file[1])
+      #cat(fcr)
+      m = median(x$retention.length, na.rm = TRUE);
+      return(data.frame(median = m))
+    })
+    d_evd.m.d_avg$fc.raw.file_aug = paste0(d_evd.m.d_avg$fc.raw.file, " (~", round(d_evd.m.d_avg$median, 1)," min)")
+    ## augment Raw filename with avg. RT peak width
+    d_evd.m.d$fc.raw.file = mapvalues(d_evd.m.d$fc.raw.file, d_evd.m.d_avg$fc.raw.file, d_evd.m.d_avg$fc.raw.file_aug)
+    d_evd.m.d$block = factor(assignBlocks(d_evd.m.d$fc.raw.file, 6)) ## color set is 9, so do not increase this (6*150%)
+    ## identical limits for all plots
+    d_evd.xlim = range(d_evd.m.d$RT, na.rm = TRUE)
+    ## ignore top peaks, since they are usually early non-peptide eluents
+    d_evd.ylim = c(0, quantile(d_evd.m.d$peakWidth, 0.99, na.rm = TRUE))
+    
+    ## plot peak width
+    lpl = list()
+    for (bl in unique(d_evd.m.d$block))
+    { ## needs to be within a function, otherwise rep_data$add and print() somehow have delayed eval's which confused ggplot...
+      lpl[[bl]] = plot_RTPeakWidth(data = d_evd.m.d[d_evd.m.d$block==bl,], x_lim = d_evd.xlim, y_lim = d_evd.ylim)
+    }
+    
+    ## QC measure for reproducibility of peak shape
+    ##.. create a list of distributions
+    l_dists = dlply(df_evd[,c("retention.length", "fc.raw.file")], "fc.raw.file", function(x) return(x$retention.length))
+    qc_evd_PeakShape = qualBestKS(l_dists)
+    colnames(qc_evd_PeakShape) = c("fc.raw.file", .self$qcName)
+
+    return(list(plots = lpl, qcScores = qc_evd_PeakShape))
+  }, 
+  qcCat = "LC", 
+  qcName = "X017X_catLC_EVD:~RT~Peak~Width", 
+  heatmapOrder = NaN)
+
+
+#####################################################################
+
 qcMetric_EVD_... = qcMetric$new(
   helpText = 
     "...",
@@ -270,7 +319,7 @@ qcMetric_EVD_... = qcMetric$new(
     stopifnot(c(int_cols, "contaminant") %in% colnames(df_pg))
     
     
-    return(list(plots = pg_plots_cont))
+    return(list(plots = pg_plots_cont, qcScores = qcScore))
   }, 
   qcCat = NA_character_, 
   qcName = NA_character_, 

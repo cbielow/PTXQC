@@ -379,36 +379,10 @@ createReport = function(txt_folder, yaml_obj = list())
     
     if ("retention.length" %in% colnames(d_evd))  
     {
-      ## compute some summary stats before passing data to ggplot (performance issue for large experiments) 
-      d_evd.m.d = ddply(d_evd[,c("retention.time", "retention.length", "fc.raw.file")], "fc.raw.file", .fun = peakWidthOverTime)
-      head(d_evd.m.d)
-      ## median peak width
-      d_evd.m.d_avg = ddply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = function(x) {
-        #fcr = as.character(x$fc.raw.file[1])
-        #cat(fcr)
-        m = median(x$retention.length, na.rm = TRUE);
-        return(data.frame(median = m))
-      })
-      d_evd.m.d_avg$fc.raw.file_aug = paste0(d_evd.m.d_avg$fc.raw.file, " (~", round(d_evd.m.d_avg$median, 1)," min)")
-      ## augment Raw filename with avg. RT peak width
-      d_evd.m.d$fc.raw.file = mapvalues(d_evd.m.d$fc.raw.file, d_evd.m.d_avg$fc.raw.file, d_evd.m.d_avg$fc.raw.file_aug)
-      d_evd.m.d$block = factor(assignBlocks(d_evd.m.d$fc.raw.file, 6)) ## color set is 9, so do not increase this (6*150%)
-      ## identical limits for all plots
-      d_evd.xlim = range(d_evd.m.d$RT, na.rm = TRUE)
-      d_evd.ylim = c(0, quantile(d_evd.m.d$peakWidth, 0.99, na.rm = TRUE)) ## ignore top peaks, since they are usually early non-peptide eluents
-      
-      ## plot peak width        
-      for (bl in unique(d_evd.m.d$block))
-      { ## needs to be within a function, otherwise rep_data$add and print() somehow have delayed eval's which confused ggplot...
-        rep_data$add(plot_RTPeakWidth(data = d_evd.m.d[d_evd.m.d$block==bl,], x_lim = d_evd.xlim, y_lim = d_evd.ylim))
-      }
-      
-      ## QC measure for reproducibility of peak shape
-      ##.. create a list of distributions
-      l_dists = dlply(d_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", function(x) return(x$retention.length))
-      qc_evd_PeakShape = qualBestKS(l_dists)
-      colnames(qc_evd_PeakShape) = c("fc.raw.file", "X017X_catLC_EVD:~RT~Peak~Width")
-      QCM[["EVD.PeakShape"]] = qc_evd_PeakShape
+      qcMetric_EVD_RTPeakWidth$setData(d_evd)
+      rep_data$add(qcMetric_EVD_RTPeakWidth$plots)
+      ## add heatmap column
+      QCM[["EVD.PeakShape"]] = qcMetric_EVD_RTPeakWidth$qcScores
     } ## end retention length (aka peak width)
     
     ##
