@@ -390,106 +390,34 @@ createReport = function(txt_folder, yaml_obj = list())
     ## (not supported in MQ 1.0.13)  
     ## Even if MBR=off, this column always contains numbers (usually 0, or very small)
     ##
-    cat("EVD: Match-between-runs ...\n")
+    
+    ## param
+    param_name_EV_MatchingTolerance = "File$Evidence$MQpar_MatchingTimeWindow_num"
+    param_def_EV_MatchingTolerance = 1
+    param_EV_MatchingTolerance = getYAML(yaml_obj, param_name_EV_MatchingTolerance, param_def_EV_MatchingTolerance)
+    if (param_useMQPAR) {
+      v = getMQPARValue(txt_files$mqpar, "matchingTimeWindow") ## will also warn() if file is missing
+      if (!is.null(v)) {
+        param_EV_MatchingTolerance = setYAML(yaml_obj, param_name_EV_MatchingTolerance, as.numeric(v))
+      }
+    }
+    param_name_mbr = "File$Evidence$MatchBetweenRuns_wA"
+    param_evd_mbr = getYAML(yaml_obj, param_name_mbr, "auto")
+    
     if ("retention.time.calibration" %in% colnames(d_evd))
     {
       ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
       MBR_HAS_DATA = (sum(d_evd$type == "MULTI-MATCH") > 0)
-      
-      param_name_mbr = "File$Evidence$MatchBetweenRuns_wA"
-      param_evd_mbr = getYAML(yaml_obj, param_name_mbr, "auto")
+
       if ((param_evd_mbr == FALSE) || (MBR_HAS_DATA == FALSE))
       {
         ## MBR is not evaluated
       } else
       {
-        ## find reference
-        if (('fraction' %in% colnames(d_evd)) && (length(unique(d_evd$fraction)) > 1)) {
-          ## fractions: there must be more than one, otherwise MQ will treat the samples as unfractionated
-          refRaw = NA
-          col_fraction = "fraction"
-          txt_subtitle = "fraction: neighbour comparison"
-          evd_has_fractions = TRUE
-          d_evd$fraction[is.na(d_evd$fraction)] = 32000
-        } else {
-          refRaw = findAlignReference(d_evd)
-          col_fraction = c()
-          txt_subtitle = paste("alignment reference:", refRaw)
-          evd_has_fractions = FALSE
-        } 
-        if (length(refRaw) != 1) {
-          ggText("EVD: Alignment check", paste0("Cannot find a unique reference Raw file (files: ",paste(refRaw, collapse=", "), ")"))
-        } else {
-          
-          ## find RT curve based on genuine 3D peaks (should be flat)
-          d_alignQ = alignmentCheck(d_evd[(d_evd$type %in% c("MULTI-MSMS")), 
-                                          c("calibrated.retention.time", 
-                                            "id", "raw.file", col_fraction, "modified.sequence", "charge")], 
-                                    referenceFile = refRaw)
-          ## augment more columns
-          d_alignQ$retention.time.calibration = d_evd$retention.time.calibration[match(d_alignQ$id, d_evd$id)]
-          
-          if (nrow(d_alignQ)==0)
-          { ## very unusual case: reference contains no evidence -- e.g. pull-down experiment
-            rep_data$add(
-              ggText("EVD: RT Distance of peptides from reference after alignment", "Alignment cannot be verfied -- no data.")
-            )
-          } else {
-            ## filter data (reduce PDF file size)
-            evd_RT_t = thinOutBatch(d_alignQ,
-                                    "calibrated.retention.time",
-                                    "raw.file")
-            
-            evd_RT_t$fc.raw.file = renameFile(evd_RT_t$raw.file, mq$raw_file_mapping)
-            
-            ## param
-            param_name_EV_MatchingTolerance = "File$Evidence$MQpar_MatchingTimeWindow_num"
-            param_def_EV_MatchingTolerance = 1
-            param_EV_MatchingTolerance = getYAML(yaml_obj, param_name_EV_MatchingTolerance, param_def_EV_MatchingTolerance)
-            if (param_useMQPAR) {
-              v = getMQPARValue(txt_files$mqpar, "matchingTimeWindow") ## will also warn() if file is missing
-              if (!is.null(v)) {
-                param_EV_MatchingTolerance = setYAML(yaml_obj, param_name_EV_MatchingTolerance, as.numeric(v))
-              }
-            }
-                       
-            ## QC measure for alignment quality
-            ## compute % of matches within matching boundary (1 min by default)
-            qcAlign = ScoreInAlignWindow(d_alignQ, param_EV_MatchingTolerance)
-            if (!is.na(refRaw)) { ## rescue reference file (it will not show up in fraction-less data, and would otherwise be scored 'red')
-              qcAlign = rbind(qcAlign, data.frame(raw.file=refRaw, withinRT=1))
-            }
-            cname = "X021X_catLC_EVD:~MBR~Align"
-            qcAlign[, cname] = qcAlign$withinRT
-            QCM[["EVD.MBR_Align"]] = qcAlign[, c("raw.file", cname)]
-            
-            qcAlign$fc.raw.file = renameFile(qcAlign$raw.file, mq$raw_file_mapping)
-            qcAlign$newlabel = qcAlign$fc.raw.file
-            if (evd_has_fractions)
-            { ## amend fc.raw.file with fraction number
-              qcAlign$fraction = d_evd$fraction[match(qcAlign$fc.raw.file, d_evd$fc.raw.file)]
-              qcAlign$newlabel = paste0(qcAlign$fc.raw.file, " - frc", qcAlign$fraction)
-            }
-            ## amend fc.raw.file with % good ID pairs
-            qcAlign$newlabel = paste0(qcAlign$newlabel, " (", round(qcAlign$withinRT*100), "% good)")
-            evd_RT_t$fc.raw.file_ext = mapvalues(evd_RT_t$fc.raw.file, qcAlign$fc.raw.file, qcAlign$newlabel)
-
-            evd_RT_t$RTdiff_in = c("green", "red")[(abs(evd_RT_t$rtdiff) > param_EV_MatchingTolerance)+1]
-            
-            ## plot alignment result
-            y_lim = quantile(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), probs = c(0.01,0.99), na.rm = TRUE) * 1.1
-            rep_data$add(
-              byX(evd_RT_t, evd_RT_t$fc.raw.file, 3*3, plot_MBRAlign, sort_indices = FALSE, 
-                  y_lim = y_lim, title_sub = txt_subtitle, match_tol = param_EV_MatchingTolerance)
-            )
-
-            ## save some memory
-            if (!exists("DEBUG_PTXQC")) {
-              rm("evd_RT_t")
-              rm("proj_align_h")
-            }
-          } ## no data
-        } ## ambigous reference file
+        qcMetric_EVD_MBRAlign$setData(d_evd, param_EV_MatchingTolerance, mq$raw_file_mapping)
+        rep_data$add(qcMetric_EVD_MBRAlign$plots)
+        ## add heatmap column
+        QCM[["EVD.MBRAlign"]] = qcMetric_EVD_MBRAlign$qcScores
 
 ### 
 ###     MBR: ID transfer
