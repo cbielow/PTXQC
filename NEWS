@@ -5,6 +5,9 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+0.70.3
+  - internal restructuring
+
 0.70.2
   - faster loading of txt files / better consistency checking
   - support for Chinese "NA" entries in Txt files

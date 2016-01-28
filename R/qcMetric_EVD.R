@@ -165,6 +165,102 @@ qcMetric_EVD_PeptideInt = qcMetric$new(
 
 #####################################################################
 
+qcMetric_EVD_ProteinCount = qcMetric$new(
+  helpText = 
+"Number of Protein groups (after FDR) per Raw file. If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
+ are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad,
+MBR should be switched off for the Raw files which are affected (could be a few or all).",
+  workerFcn=function(.self, df_evd, thresh_intensity)
+  {
+    ## completeness check
+    stopifnot(c("fc.raw.file", "protein.group.ids", "match.time.difference") %in% colnames(df_evd))
+
+    protC = getProteinCounts(df_evd[, c("fc.raw.file", "protein.group.ids", "match.time.difference")])
+    protC$block = factor(assignBlocks(protC$fc.raw.file, 30))
+    
+    max_prot = max(unlist(dlply(protC, "fc.raw.file", function(x) sum(x$counts))))
+    ## average gain in percent
+    gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(protC$MBRgain, na.rm = TRUE)), "")
+    
+    lpl = dlply(protC, "block", .fun = function(x)
+    {
+      p = plot_CountData(data = x, 
+                         y_max = max(thresh_intensity, max_prot)*1.1,
+                         thresh_line = thresh_intensity,
+                         title = c("EVD: ProteinGroups count", gain_text))
+      #print(p)
+      return (p)
+    })
+    
+    ## QC measure for protein ID performance
+    qc_protc = ddply(protC, "fc.raw.file", function(x){
+      if (nrow(x) == 3 && length(grep("^genuine", x$category))!= 2){
+        stop("expected two categories to start with 'genuine...'")
+      }
+      r = data.frame(genuineAll = sum(x$counts[grep("^genuine", x$category)]))
+      return (r)
+    })
+    cname = sprintf(.self$qcName, thresh_intensity)
+    qc_protc[,cname] = qualLinThresh(qc_protc$genuineAll, thresh_intensity)
+    qcScore = qc_protc[, c("fc.raw.file", cname)]
+
+    return(list(plots = lpl, qcScores = qcScore))
+  }, 
+  qcCat = 'general', 
+  qcName = "X045X_catGen_EVD:~Prot~Count~(\">%1.0f\")", 
+  heatmapOrder = NaN)
+
+
+#####################################################################
+
+qcMetric_EVD_PeptideCount = qcMetric$new(
+  helpText = 
+    "Number of peptides (after FDR) per Raw file. If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
+  are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad,
+  MBR should be switched off for the Raw files which are affected (could be a few or all).",
+  workerFcn=function(.self, df_evd, thresh_intensity)
+  {
+    ## completeness check
+    stopifnot(c("fc.raw.file", "modified.sequence", "match.time.difference") %in% colnames(df_evd))
+    
+    pepC = getPeptideCounts(d_evd[, c("fc.raw.file", "modified.sequence", "match.time.difference")])
+    pepC$block = factor(assignBlocks(pepC$fc.raw.file, 30))
+    
+    max_pep = max(unlist(dlply(pepC, "fc.raw.file", function(x) sum(x$counts))))
+    ## average gain in percent
+    gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pepC$MBRgain, na.rm = TRUE)), "")
+    
+    lpl = dlply(pepC, "block", .fun = function(x)
+    {
+      p = plot_CountData(data = x, 
+                         y_max = max(param_EV_pepThresh, max_pep)*1.1,
+                         thresh_line = param_EV_pepThresh,
+                         title = c("EVD: Peptide ID count", gain_text))
+      #print(p)
+      return (p)
+    })
+
+    ## QC measure for peptide ID performance
+    qc_pepc = ddply(pepC, "fc.raw.file", function(x){
+      if (nrow(x) == 3 && length(grep("^genuine", x$category))!= 2){
+        stop("expected two categories to start with 'genuine...'")
+      }
+      r = data.frame(genuineAll = sum(x$counts[grep("^genuine", x$category)]))
+      return (r)
+    })
+    cname = sprintf(.self$qcName, thresh_intensity)
+    qc_pepc[,cname] = qualLinThresh(qc_pepc$genuineAll, thresh_intensity)
+    qcScore = qc_pepc[, c("fc.raw.file", cname)]
+    
+    return(list(plots = lpl, qcScores = qcScore))
+  }, 
+  qcCat = 'general', 
+  qcName = "X040X_catGen_EVD:~Pep~Count~(\">%1.0f\")", 
+  heatmapOrder = NaN)
+
+
+#####################################################################
+
 qcMetric_EVD_... = qcMetric$new(
   helpText = 
     "...",

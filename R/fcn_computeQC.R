@@ -328,18 +328,21 @@ createReport = function(txt_folder, yaml_obj = list())
     ##contaminant_default = FALSE ## to switch it off by default
     yaml_contaminants = getYAML(yaml_obj, "File$Evidence$SpecialContaminants", contaminant_default)
     
-    if (!enabled_proteingroups && class(yaml_contaminants) == "list")
+    if (class(yaml_contaminants) == "list")  ## SC are requested
     {
-      ## fail hard; we could hack around this (e.g. by loading fasta headers from evidence.txt), but it wastes a lot of memory and time
-      stop(paste0("Error: reporting of special contaminants requires loading of proteinGroups.txt.",
-                  "If you don't have this file, please disable contaminant lookup in the YAML file and re-run."))
-    } 
-
-    qcMetric_EVD_UserContaminant$setData(d_evd, d_pg, yaml_contaminants)
-    rep_data$add(qcMetric_EVD_UserContaminant$plots)
-    ## add heatmap column
-    QCM[["EVD.UserContaminant"]] = qcMetric_EVD_UserContaminant$qcScores
-
+      if (!enabled_proteingroups)
+      {
+        ## fail hard; we could hack around this (e.g. by loading fasta headers from evidence.txt), but it wastes a lot of memory and time
+        stop(paste0("Error: reporting of special contaminants requires loading of proteinGroups.txt.",
+                    "If you don't have this file, please disable contaminant lookup in the YAML file and re-run."))
+      } else {
+        qcMetric_EVD_UserContaminant$setData(d_evd, d_pg, yaml_contaminants)
+        rep_data$add(qcMetric_EVD_UserContaminant$plots)
+        ## add heatmap column
+        QCM[["EVD.UserContaminant"]] = qcMetric_EVD_UserContaminant$qcScores
+      }
+    }
+    
     ##
     ## intensity of peptides
     ##
@@ -358,64 +361,17 @@ createReport = function(txt_folder, yaml_obj = list())
     d_evd$hasMTD = !is.na(d_evd$match.time.difference)
     ## report Match-between-runs data only if if it was enabled
     reportMTD = any(d_evd$hasMTD)
-    
-    pgc = getProteinAndPeptideCounts(d_evd[, c("protein.group.ids", "fc.raw.file", "modified.sequence", "match.time.difference")])
-    ## re-order (ddply somehow reorders, even if we use ordered factors...)
-    pgc$fc.raw.file = factor(pgc$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
-    #levels(pgc$fc.raw.file)
-    pgc$block = factor(assignBlocks(pgc$fc.raw.file, 30))
-    
-    
-    ##
-    ## PROTEIN counts
-    ##
-    max_prot = max(unlist(dlply(pgc, "fc.raw.file", function(x) sum(x$proteinCounts))))
-    ## average gain in percent
-    gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pgc$proteinMBRgain, na.rm = TRUE)), "")
 
-    ddply(pgc, "block", .fun = function(x)
-    {
-      x$counts = x$proteinCounts
-      p = plot_CountData(data = x, 
-                         y_max = max(param_EV_protThresh, max_prot)*1.1,
-                         thresh_line = param_EV_protThresh,
-                         title = c("EVD: ProteinGroups count", gain_text))
-      #print(p)
-      rep_data$add(p)
-      return (NULL)
-    })
-    ## QC measure for protein ID performance
-    qc_protc = ddply(pgc[grep("^genuine", pgc$category), ], "fc.raw.file", function(x){data.frame(genuineAll = sum(x$proteinCounts))})
-    cname = "X045X_catGen_EVD:~Prot~Count~(\">" %+% param_EV_protThresh %+% "\")"
-    qc_protc[,cname] = qualLinThresh(qc_protc$genuineAll, param_EV_protThresh)
-    QCM[["EVD.ProtCount"]] = qc_protc[, c("fc.raw.file", cname)]
+    qcMetric_EVD_ProteinCount$setData(d_evd, param_EV_protThresh)
+    rep_data$add(qcMetric_EVD_ProteinCount$plots)
+    ## add heatmap column
+    QCM[["EVD.protCount"]] = qcMetric_EVD_ProteinCount$qcScores
     
-    
-    ##
-    ## EVD: peptide count
-    ##
-    max_pep = max(unlist(dlply(pgc, "fc.raw.file", function(x) sum(x$peptideCounts))))
-    ## average gain in percent
-    gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pgc$peptideMBRgain, na.rm = TRUE)), "")
+    qcMetric_EVD_PeptideCount$setData(d_evd, param_EV_pepThresh)
+    rep_data$add(qcMetric_EVD_PeptideCount$plots)
+    ## add heatmap column
+    QCM[["EVD.pepCount"]] = qcMetric_EVD_PeptideCount$qcScores
 
-    ddply(pgc, "block", .fun = function(x)
-    {
-      x$counts = x$peptideCounts
-      p = plot_CountData(data = x, 
-                         y_max = max(param_EV_pepThresh, max_pep)*1.1,
-                         thresh_line = param_EV_pepThresh,
-                         title = c("EVD: Peptide ID count", gain_text))
-      #print(p)
-      rep_data$add(p)
-      return (1)
-    })
-    
-    ## QC measure for peptide ID performance
-    qc_pepc = ddply(pgc[grep("^genuine", pgc$category), ], "fc.raw.file", function(x){data.frame(genuineAll = sum(x$peptideCounts))})
-    cname = "X040X_catGen_EVD:~Pep~Count~(\">" %+% param_EV_pepThresh %+% "\")"
-    qc_pepc[,cname] = qualLinThresh(qc_pepc$genuineAll, param_EV_pepThresh)
-    QCM[["EVD.PepCount"]] = qc_pepc[, c("fc.raw.file", cname)]
-    
     ####
     #### peak length (not supported in MQ 1.0.13)
     ####
