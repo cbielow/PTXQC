@@ -500,6 +500,50 @@ qcMetric_EVD_MBRaux = qcMetric$new(
   heatmapOrder = NaN)
 
 
+
+#####################################################################
+
+qcMetric_EVD_Charge = qcMetric$new(
+  helpText = 
+    "Charge distribution per Raw file. Should be dominated by charge 2 and have the same fraction in each Raw file.",
+  workerFcn=function(.self, df_evd, int_cols, MAP_pg_groups)
+  {
+    ## completeness check
+    stopifnot(c("hasMTD", "fc.raw.file", "charge") %in% colnames(df_evd))
+    
+    d_charge = mosaicize(df_evd[!df_evd$hasMTD, c("fc.raw.file", "charge")])
+    lpl =
+      byXflex(d_charge, d_charge$Var1, 30, plot_Charge, sort_indices = FALSE)
+
+    ## QC measure for charge centeredness
+    qc_charge = ddply(df_evd[!df_evd$hasMTD, c("charge",  "fc.raw.file")], "fc.raw.file", function(x) data.frame(c = (sum(x$charge==2)/nrow(x))))
+    qc_charge[, .self$qcName] = qualMedianDist(qc_charge$c)
+
+    return(list(plots = lpl, qcScores = qc_charge[, c("fc.raw.file", .self$qcName)]))
+  }, 
+  qcCat = "prep", 
+  qcName = "X010X_catPrep_EVD:~Charge", 
+  heatmapOrder = 0100)
+
+
+#####################################################################
+
+qcMetric_EVD_... = qcMetric$new(
+  helpText = 
+    "...",
+  workerFcn=function(.self, df_pg, int_cols, MAP_pg_groups)
+  {
+    ## completeness check
+    stopifnot(c(int_cols, "contaminant") %in% colnames(df_pg))
+    
+    
+    return(list(plots = pg_plots_cont, qcScores = qcScore))
+  }, 
+  qcCat = NA_character_, 
+  qcName = NA_character_, 
+  heatmapOrder = NaN)
+
+
 #####################################################################
 
 qcMetric_EVD_... = qcMetric$new(

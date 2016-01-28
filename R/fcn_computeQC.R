@@ -419,9 +419,9 @@ createReport = function(txt_folder, yaml_obj = list())
         ## add heatmap column
         QCM[["EVD.MBRAlign"]] = qcMetric_EVD_MBRAlign$qcScores
 
-### 
-###     MBR: ID transfer
-###
+        ### 
+        ###     MBR: ID transfer
+        ###
         #debug (restore data): qcMetric_EVD_RTPeakWidth$setData(d_evd)
         avg_peak_width = qcMetric_EVD_RTPeakWidth$outData[["avg_peak_width"]]
         if (is.null(avg_peak_width)) {
@@ -450,21 +450,13 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     ##  (this uses genuine peptides only -- no MBR!)
     ## 
-    d_charge = mosaicize(d_evd[!d_evd$hasMTD, c("fc.raw.file", "charge")])
-    rep_data$add(
-      byXflex(d_charge, d_charge$Var1, 30, plot_Charge, sort_indices = FALSE)
-    )
-    
-    ## QC measure for charge centeredness
-    qc_charge = ddply(d_evd[!d_evd$hasMTD, c("charge",  "raw.file")], "raw.file", function(x) data.frame(c = (sum(x$charge==2)/nrow(x))))
-    cname = "X010X_catPrep_EVD:~Charge"
-    qc_charge[, cname] = qualMedianDist(qc_charge$c)
-    QCM[["EVD.charge2"]] = qc_charge[, c("raw.file", cname)]
-    
+    qcMetric_EVD_Charge$setData(d_evd)
+    rep_data$add(qcMetric_EVD_Charge$plots)
+    QCM[["EVD.charge2"]] = qcMetric_EVD_Charge$qcScores
+      
     ##
     ## peptides per RT
     ##
-    cat("EVD: Peptides over RT ...\n")
     raws_perPlot = 6
     
     rt_range = range(d_evd$retention.time, na.rm = TRUE)
