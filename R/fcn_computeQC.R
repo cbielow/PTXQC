@@ -457,23 +457,10 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     ## peptides per RT
     ##
-    raws_perPlot = 6
-    
-    rt_range = range(d_evd$retention.time, na.rm = TRUE)
-    df_idRT = ddply(d_evd, "fc.raw.file", function(x) {
-      h = hist(x$retention.time, breaks=seq(from=rt_range[1]-3, to=rt_range[2]+3, by=3), plot = FALSE)
-      return(data.frame(RT = h$mid, counts = h$counts))
-    })
-    rep_data$add(
-      byXflex(df_idRT, df_idRT$fc.raw.file, raws_perPlot, plot_IDsOverRT, sort_indices = FALSE)
-    )
-    
-    ## QC measure for uniform-ness
-    QCM[["ID_rate_over_RT"]] = ddply(d_evd[, c("retention.time",  "raw.file")], "raw.file", 
-                                     function(x) data.frame("X015X_catLC_EVD:~ID~rate~over~RT" = qualUniform(x$retention.time), 
-                                                            check.names = FALSE))
-    
-          
+    qcMetric_EVD_IDoverRT$setData(d_evd)
+    rep_data$add(qcMetric_EVD_IDoverRT$plots)
+    QCM[["ID_rate_over_RT"]] = qcMetric_EVD_IDoverRT$qcScores
+
     ##
     ## barplots of mass error
     ##

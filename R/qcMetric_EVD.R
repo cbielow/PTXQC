@@ -528,20 +528,34 @@ qcMetric_EVD_Charge = qcMetric$new(
 
 #####################################################################
 
-qcMetric_EVD_... = qcMetric$new(
+qcMetric_EVD_IDoverRT = qcMetric$new(
   helpText = 
-    "...",
-  workerFcn=function(.self, df_pg, int_cols, MAP_pg_groups)
+    "Number of peptide identifications over time. Constant numbers receive high scores.",
+  workerFcn=function(.self, df_evd)
   {
     ## completeness check
-    stopifnot(c(int_cols, "contaminant") %in% colnames(df_pg))
+    stopifnot(c("retention.time", "fc.raw.file") %in% colnames(df_evd))
     
+    raws_perPlot = 6
     
-    return(list(plots = pg_plots_cont, qcScores = qcScore))
+    rt_range = range(df_evd$retention.time, na.rm = TRUE)
+    df_idRT = ddply(df_evd, "fc.raw.file", function(x) {
+      h = hist(x$retention.time, breaks=seq(from=rt_range[1]-3, to=rt_range[2]+3, by=3), plot = FALSE)
+      return(data.frame(RT = h$mid, counts = h$counts))
+    })
+    lpl =
+      byXflex(df_idRT, df_idRT$fc.raw.file, raws_perPlot, plot_IDsOverRT, sort_indices = FALSE)
+
+    ## QC measure for uniform-ness
+    qcScore = ddply(df_evd[, c("retention.time",  "fc.raw.file")], "fc.raw.file", 
+                    function(x) data.frame(metric = qualUniform(x$retention.time)))
+    colnames(qcScore)[colnames(qcScore)=="metric"] = .self$qcName
+    
+    return(list(plots = lpl, qcScores = qcScore))
   }, 
-  qcCat = NA_character_, 
-  qcName = NA_character_, 
-  heatmapOrder = NaN)
+  qcCat = "LC", 
+  qcName = "X015X_catLC_EVD:~ID~rate~over~RT", 
+  heatmapOrder = 0150)
 
 
 #####################################################################
