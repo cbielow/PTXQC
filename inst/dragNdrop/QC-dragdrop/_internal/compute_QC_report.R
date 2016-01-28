@@ -38,6 +38,8 @@ if (length(argv)==2 && nchar(argv[2])>0)
   }
 }
 
-r = createReport(PATH_TO_TXT, YAML_CONFIG)
+r = try(createReport(PATH_TO_TXT, YAML_CONFIG))
+
+
 
 

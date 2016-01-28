@@ -8,14 +8,13 @@
 #' @return ggplot object
 #' 
 #' @import ggplot2
-#' @import grid
 #'
 ggText = function(title, text, col = "black") {
   pl = ggplot(data.frame(text = text, ypos=1, xpos=1), 
               aes_string(x = "xpos", y = "ypos"))  +
     geom_text(aes_string(label = "text"), colour = col, family="mono") +
     theme_bw() +
-    theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
+    theme(plot.margin = grid::unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
           axis.text = element_blank(), strip.text = element_blank(), legend.position="none") +
     ggtitle(title)
   return(pl)
@@ -30,7 +29,7 @@ ggText = function(title, text, col = "black") {
 #' @return -
 #' 
 #' @import ggplot2
-#' @import grid
+#' @importFrom grid textGrob gpar grid.draw
 #'
 printWithFooter = function(gg_obj, bottom_left = NULL, bottom_right = NULL) 
 {

@@ -298,13 +298,22 @@ createReport = function(txt_folder, yaml_obj = list())
   if (enabled_evidence)
   {
     ## protein.names is only available from MQ 1.4 onwards
-    d_evd = mq$readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration", 
-                                                                         "Retention.time$", "Match.Time.Difference", "^intensity$", "^Type$",
-                                                                         "Mass\\.Error", "^uncalibrated...calibrated." , "^m.z$",
-                                                                         "^score$", 
-                                                                         "^fraction$",  ## only available when fractions were given
-                                                                         "Raw.file", "^Protein.Group.IDs$", "Contaminant", "[RK]\\.Count", 
-                                                                         "^Charge$", "modified.sequence", "^Mass$", "^protein.names$", "^ms.ms.count$"))
+    d_evd = mq$readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins",
+                                                                         numeric = "Retention.Length",
+                                                                         numeric = "retention.time.calibration", 
+                                                                         numeric = "Retention.time$", 
+                                                                         numeric = "Match.Time.Difference",
+                                                                         numeric = "^intensity$", "^Type$",
+                                                                         numeric = "Mass\\.Error", 
+                                                                         numeric = "^uncalibrated...calibrated." ,
+                                                                         numeric = "^m.z$",
+                                                                         numeric = "^score$", 
+                                                                         numeric = "^fraction$",  ## only available when fractions were given
+                                                                         "Raw.file", "^Protein.Group.IDs$", "Contaminant",
+                                                                         numeric = "[RK]\\.Count", 
+                                                                         numeric = "^Charge$", "modified.sequence",
+                                                                         numeric = "^Mass$", "^protein.names$",
+                                                                         numeric = "^ms.ms.count$"))
 
     ### warn of special contaminants!
     ## these need to be in FASTA headers (description is not enough)!
@@ -325,8 +334,7 @@ createReport = function(txt_folder, yaml_obj = list())
       stop(paste0("Error: reporting of special contaminants requires loading of proteinGroups.txt.",
                   "If you don't have this file, please disable contaminant lookup in the YAML file and re-run."))
     } 
-    
-    
+
     qcMetric_EVD_UserContaminant$setData(d_evd, d_pg, yaml_contaminants)
     rep_data$add(qcMetric_EVD_UserContaminant$plots)
     ## add heatmap column
@@ -940,7 +948,11 @@ if (enabled_msms)
   #d_msms_s = mq$readMQ(txt_files$msms, type="msms", filter = "", nrows=10)
   #colnames(d_msms_s)
   #head(d_msms)
-  d_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c("Missed\\.cleavages", "^Raw.file$", "^mass.deviations", "^masses$", "^mass.analyzer$", "fragmentation", "reverse", "^evidence.id$"), check_invalid_lines = FALSE)
+  d_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c(numeric = "Missed\\.cleavages",
+                                                                            "^Raw.file$",
+                                                                            "^mass.deviations",
+                                                                            "^masses$", "^mass.analyzer$", "fragmentation", "reverse",
+                                                                            numeric = "^evidence.id$"), check_invalid_lines = FALSE)
   
   d_msms = d_msms[order(match(as.character(d_msms$fc.raw.file), mq$raw_file_mapping$to)),]
   ## sort fc.raw.file's factor values as well
@@ -1074,8 +1086,8 @@ if (enabled_msmsscans)
   #colnames(d_msmsScan_h)
   #head(d_msmsScan_h)
   d_msmsScan = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", 
-                         col_subset = c("^ion.injection.time", 
-                                        "^retention.time$", 
+                         col_subset = c(numeric = "^ion.injection.time", 
+                                        numeric = "^retention.time$", 
                                         "^Identified", 
                                         "^Scan.event.number", 
                                         "^Raw.file"),

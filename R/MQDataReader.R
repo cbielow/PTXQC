@@ -121,36 +121,38 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   # ... = NULL
   cat(paste("Reading file", file,"...\n"))
   ## error message if failure should occur below
-  msg_parse_error = paste0("\n\nParsing the file '", file, "' failed. See message above why. If the file is not usable but other files are ok, disable the corresponding section in the YAML config.")
+  msg_parse_error = paste0("\n\nParsing the file '", file, "' failed. See message above why. If the file is not usable but other files are ok, disable the corresponding section in the YAML config. You might also be running a foreign locale (e.g. Chinese) - switch to an English locale and make sure that txt files are encoded in ASCII (Latin-1)!")
   
   ## resolve set of columns which we want to keep
   #example: col_subset = c("Multi.*", "^Peaks$")
-  idx_keep = NULL
-  if (sum(sapply(col_subset, function(x) !is.na(x))) > 0)
+  colClasses = NA ## read.table: keep all columns by default
+  if (sum(!is.na(col_subset)) > 0)
   { ## just read a tiny bit to get column names
     ## do not use data.table::fread for this, since it will read the WHOLE file and takes ages...
     data_header = try(read.delim(file, na.strings=c("NA", "n. def."), comment.char="", nrows=2))
     if (inherits(data_header, 'try-error')) stop(msg_parse_error, call. = FALSE);
     
     colnames(data_header) = tolower(colnames(data_header))
-    idx_keep = rep(FALSE, ncol(data_header))    
-    for (valid in col_subset)
+    colClasses = rep("NULL", ncol(data_header)) ## either "NULL" (discard), NA (auto-detect), or specific, i.e. "numeric", ...
+    for (idx in 1:length(col_subset))
     {
-      idx_new = grepl(valid, colnames(data_header), ignore.case = TRUE)
-      if (sum(idx_new) == 0) cat(paste0("WARNING: Could not find column regex '", valid, "' using case-INsensitive matching.\n"))
-      idx_keep = idx_keep | idx_new
+      idx_new = grepl(col_subset[idx], colnames(data_header), ignore.case = TRUE)
+      if (sum(idx_new) == 0)
+      {
+        cat(paste0("WARNING: Could not find column regex '", col_subset[idx], "' using case-INsensitive matching.\n"))
+      } else {
+        colClasses[idx_new] = NA  ## auto
+        if (nchar(names(col_subset)[idx]) > 0) {
+          colClasses[idx_new] = names(col_subset)[idx]
+          cat(paste0("Requiring column(s) '", paste(colnames(data_header)[idx_new], sep="", collapse="', '"), "' to be of type '", names(col_subset)[idx], "'!\n"))
+        } 
+      }
+      
     }
-    #summary(idx_keep)
     ## keep the 'id' column if available (for checking data integrity: invalid line-breaks)
-    if ("id" %in% colnames(data_header) & check_invalid_lines == TRUE) idx_keep[which("id"==colnames(data_header))] = TRUE
-    cat(paste("Keeping", sum(idx_keep),"of",length(idx_keep),"columns!\n"))
-    #print (colnames(data_header))
-    col_subset = colnames(data_header)
-    col_subset[ idx_keep] = NA     ## default action for selected columns
-    col_subset[!idx_keep] = "NULL"
-    
-    idx_keep = which(idx_keep)
-    if (sum(idx_keep) == 0) {
+    if ("id" %in% colnames(data_header) & check_invalid_lines == TRUE) colClasses[which("id"==colnames(data_header))] = NA
+    cat(paste("Keeping", sum(colClasses != "NULL", na.rm=TRUE), "of", ncol(data_header), "columns!\n"))
+    if (sum(colClasses != "NULL", na.rm=TRUE) == 0) {
       ## can happen for very old MQ files without header, or if the user just gave the wrong colClasses
       .$mq.data = data.frame()
       return (.$mq.data)
@@ -164,7 +166,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   #)
   #colnames(.$mq.data) = make.names(colnames(.$mq.data), unique = TRUE)
   ## comment.char should be "", since lines will be TRUNCATED starting at the comment char.. and a protein identifier might contain just anything...
-  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def."), comment.char="", stringsAsFactors = FALSE, colClasses = col_subset, ...))
+  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def.", "非数字"), encoding="UTF-8", comment.char="", stringsAsFactors = FALSE, colClasses = colClasses, ...))
   if (inherits(.$mq.data, 'try-error')) stop(msg_parse_error, call. = FALSE);
   
   #colnames(.$mq.data)
@@ -403,6 +405,8 @@ MQDataReader$getShortNames = function(., raw.files, max_len, fallbackStartNr = 1
 #'
 #' @return Returns a list of mapping plots if mapping is available, 'NULL' otherwise.
 #'
+#' @import ggplot2
+#'
 #' @name MQDataReader$plotNameMapping
 #' 
 MQDataReader$plotNameMapping <- function(.)
@@ -448,7 +452,7 @@ MQDataReader$plotNameMapping <- function(.)
         geom_text(aes_string(label="value"), color = mq_mapping.long2$col, hjust=mq_mapping.long2$hpos, size=mq_mapping.long2$size) +
         coord_cartesian(xlim=c(0,20)) +
         theme_bw() +
-        theme(plot.margin = unit(c(1,1,1,1), "cm"), line = element_blank(), 
+        theme(plot.margin = grid::unit(c(1,1,1,1), "cm"), line = element_blank(), 
               axis.title = element_blank(), panel.border = element_blank(),
               axis.text = element_blank(), strip.text = element_blank(), legend.position = "none") +
         ggtitle("Mapping of Raw files to their short names\nMapping source: " %+% .$mapping.creation %+% extra)
@@ -482,12 +486,16 @@ MQDataReader$writeMappingFile = function(., filename)
   if ("best.effort" %in% colnames(.$raw_file_mapping)) {
     dfs$best.effort = .$raw_file_mapping[, "best.effort"]
   }
-    
-  cat(file = filename,
+  
+  ## use a file handle to avoid warning from write.table() when appending
+  ## a table with column names 'Warning(): appending column names to file'
+  FH = file(filename, "w")
+  cat(file = FH,
       "# This file can be used to manually substitute Raw file names within the report.",
       "# The ordering of Raw files in the report can be changed by re-arranging the rows.",
       sep = "\n")
-  write.table(x = dfs, file = filename, append = TRUE, quote = FALSE, sep="\t", row.names = FALSE)
+  write.table(x = dfs, file = FH, quote = FALSE, sep="\t", row.names = FALSE)
+  close(FH) ## flush
   return(NULL)
 }
 

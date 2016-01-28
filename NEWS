@@ -1,0 +1,16 @@
+This NEWS file mainly serves as a changelog file,
+i.e. a list of new features / bugfixes by version number.
+
+#################################
+#########   CHANGELOG  ##########
+#################################
+
+0.70.2
+  - faster loading of txt files / better consistency checking
+  - support for Chinese "NA" entries in Txt files
+  
+0.70.1
+  - fix empty parameter page (bug in 0.70.0)
+  
+0.70.0
+  - support for data containing MS3 scans  

@@ -103,4 +103,6 @@ By default, the order of Raw files in the report is _identical_ to the order spe
 
 You already read about the `report_vXXX_filename_sort.txt` file above.
 It can not only be used to assign custom names, but also to re-arrange the order in which Raw files are shown in the plots and heatmap.
-Open it with a text editor and simply rearrange the rows in the file. Easy!    
+Open it with a text editor and simply rearrange the rows in the file. Easy!
+
+

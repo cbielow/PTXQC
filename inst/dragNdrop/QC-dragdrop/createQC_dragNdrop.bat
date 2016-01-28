@@ -115,11 +115,18 @@ REM report error, if any
 if ERRORLEVEL 1 (
   ECHO Failed folder %txt%. Does it exist and is writeable?!
   ECHO Failed folder %txt%. Does it exist and is writeable?! >> \error.log
-  ECHO Make sure rscript.exe is present in the folder mentioned above and that your R installation is 64bit.
-  ECHO Also, the file '%I%\compute_QC_report.R' must be present.
+  ECHO.
+  ECHO The error should be indicated above.
+  ECHO Common errors are (yours might be different):
+  ECHO  - rscript.exe is not present in the folder mentioned above
+  ECHO  - your R installation is not 64bit and runs out of memory
+  ECHO  - the file '%I%\compute_QC_report.R' is missing
   ECHO.
   ECHO If the error persists, please make a screenshot of this window and the folders mentioned above and open an issue ticket
-  ECHO on https://github.com/cbielow/PTXQC. Thanks!
+  ECHO on https://github.com/cbielow/PTXQC. 
+  ECHO You can also copy the text from this window by 1) right-clicking here, 2) choose 'Select all', 3) press the 'Enter' key, 4) paste it somewhere (issue ticket, email).
+  ECHO This ensures that all text is available to debug the problem.
+  ECHO Thanks!
 )
 
 goto end

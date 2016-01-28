@@ -641,6 +641,7 @@ plot_IDRate = function(data, id_rate_bad, id_rate_great, label_ID)
 #' @return gTable
 #'
 #' @import gtable
+#' @importFrom grid rectGrob textGrob unit.c grobHeight grobWidth
 #'
 plotTableRaw = function(data, colours="black", fill=NA, just="centre")
 {
@@ -657,7 +658,7 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
   
   ## text for each cell
   labels <- lapply(seq_len(n), function(ii)
-    textGrob(as.character(label_matrix[ii]), gp=gpar(fontsize=8, col=colours[ii]), just="left", x = unit(0.05, "npc")))
+    textGrob(as.character(label_matrix[ii]), gp=gpar(fontsize=8, col=colours[ii]), just="left", x = grid::unit(0.05, "npc")))
   label_grobs <- matrix(labels, ncol=nc)
   
   ## define the fill background of cells
@@ -676,8 +677,8 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
   
   ## place labels in a gtable
   g <- gtable_matrix("table", grobs=label_grobs, 
-                     widths=col_widths(label_grobs) + unit(2,"mm"), 
-                     heights=row_heights(label_grobs) + unit(2,"mm"))
+                     widths=col_widths(label_grobs) + grid::unit(2,"mm"), 
+                     heights=row_heights(label_grobs) + grid::unit(2,"mm"))
   
   ## add the background
   xt <- rep(seq_len(nr), each=nc)
@@ -702,7 +703,7 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
 #' @param just (ignored)
 #' @return gTree object with class 'PTXQC_table'
 #'
-#' @import grid
+#' @importFrom grid textGrob gTree gList grobHeight
 #' @import gridExtra
 #' @import gtable
 #' @export 
@@ -732,7 +733,7 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
   if (nchar(title[1]) > 0)
   {
     gtitle = textGrob(title, gp = gpar(fontsize = 14))
-    padding = unit(1.5, "line")
+    padding = grid::unit(1.5, "line")
     ## add heading (white space)
     table = gtable_add_rows(table, heights = grobHeight(gtitle) + padding, pos = 0)
     ## add heading (text as overlay)
@@ -741,7 +742,7 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
   if (nchar(footer[1]) > 0)
   {
     gfooter = textGrob(footer, gp = gpar(fontsize = 10))
-    padding = unit(1.5, "line")
+    padding = grid::unit(1.5, "line")
     ## add heading (white space)
     table = gtable_add_rows(table, heights = grobHeight(gfooter) + padding, pos = -1) ## bottom
     ## add heading (text as overlay)
@@ -758,11 +759,18 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
 }
 
 #' helper S3 class, enabling print(some-plot_Table-object)
-#' @import grid
+#' @importFrom grid grid.newpage grid.draw
 #' @param x Some Grid object to plot
+#' @param ... further arguments (not used, but required for consistency with other print methods)
 #' @return A function
 #' 
-print.PTXQC_table = function(x) {grid.newpage(); grid.draw(x)}
+#' @export
+#' 
+print.PTXQC_table = function(x, ...) {
+  grid.newpage();
+  grid.draw(x)
+  return(NULL)
+}
 
 #'
 #' A boxplot of uncalibrated mass errors for each Raw file.
