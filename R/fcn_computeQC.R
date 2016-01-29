@@ -577,7 +577,7 @@ if (enabled_msms)
   ## missed cleavages per Raw file
   ##
   if (exists("d_evd")) qcMetric_MSMS_MissedCleavages$setData(d_msms, d_evd) else
-                      qcMetric_MSMS_MissedCleavages$setData(d_msms)
+                       qcMetric_MSMS_MissedCleavages$setData(d_msms)
   rep_data$add(qcMetric_MSMS_MissedCleavages$plots)
   QCM[["MSMS.MC"]] = qcMetric_MSMS_MissedCleavages$qcScores
 }
@@ -599,19 +599,21 @@ if (enabled_msmsscans)
                                         "^Scan.event.number", 
                                         "^Raw.file"),
                          check_invalid_lines = FALSE)
+  
+  param_name_MSMSScans_ionInjThresh = "File$MsMsScans$IonInjectionThresh_num"
+  param_def_MSMSScans_ionInjThresh = 10 ## default ion injection threshold in milliseconds
+  param_MSMSScans_ionInjThresh = getYAML(yaml_obj, param_name_MSMSScans_ionInjThresh, param_def_MSMSScans_ionInjThresh)
+  if (!is.numeric(param_MSMSScans_ionInjThresh))
+  { ## reset if value is weird
+    cat("YAML value for '" %+% param_name_MSMSScans_ionInjThresh %+% "' is invalid ('" %+% param_MSMSScans_ionInjThresh %+% "'). Using default of " %+% param_def_MSMSScans_ionInjThresh %+% ".")
+    param_MSMSScans_ionInjThresh = param_def_MSMSScans_ionInjThresh
+  }
+  
   ##
   ## MQ version 1.0.13 has very rudimentary MSMSscans.txt, with no header, so we need to skip the metrics of this file
   ##
   if (ncol(d_msmsScan) > 3)
   {
-    #colnames(d_msmsScan)
-    #head(d_msmsScan)
-    #unique(d_msmsScan$Identified)
-    
-    d_msmsScan = d_msmsScan[order(match(d_msmsScan$fc.raw.file, mq$raw_file_mapping$to)),]
-    ## sort fc.raw.file's factor values as well
-    d_msmsScan$fc.raw.file = factor(d_msmsScan$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
-    
     # round RT to 2 min intervals
     d_msmsScan$rRT = round(d_msmsScan$retention.time/2)*2
     
@@ -619,168 +621,32 @@ if (enabled_msmsscans)
     ## TopN over RT
     ##
     cat("MSMS-Scans: TopN over RT ...\n")
-    
-    ## maximum scan event over time
-    scan.event.number = NULL ## make R check happy
-    DFmse = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
-      ## sort by RT
-      if (is.unsorted(x$retention.time))
-      { ## should not happen, but just to make sure
-        x = x[, order(x$retention.time)]
-      }
-      ## only take the highest scan event (SE) in a series
-      maxN = getMaxima(x$scan.event.number, thresh_rel = 0.0)
-      df.max = x[maxN,]
-      ## use median of that within one RT bin
-      meanN = ddply(df.max, c("rRT"), summarise, topN = median(scan.event.number))
-      return (meanN)    
-    })
-    
-    head(DFmse)
-    rep_data$add(
-      byXflex(DFmse, DFmse$fc.raw.file, 6, plot_TopNoverRT, sort_indices = FALSE)
-    )
-    
-    ## QC measure for smoothness of TopN over RT
-    qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame("X012X_catLC_MS^2*Scans:~TopN~over~RT" = qualUniform(x$topN), check.names = FALSE))
-    QCM[["MSMSscans.TopN_over_RT"]] = qc_TopNRT
+    qcMetric_MSMSScans_TopNoverRT$setData(d_msmsScan)
+    rep_data$add(qcMetric_MSMSScans_TopNoverRT$plots)
+    QCM[["MSMSscans.TopN_over_RT"]] = qcMetric_MSMSScans_TopNoverRT$qcScores
+
     
     ##
     ## Injection time over RT
     ##
-    cat("MSMS-Scans: Injection time over RT ...\n")
-    
-    param_name_MSMSScans_ionInjThresh = "File$MsMsScans$IonInjectionThresh_num"
-    param_def_MSMSScans_ionInjThresh = 10 ## default ion injection threshold in milliseconds
-    param_MSMSScans_ionInjThresh = getYAML(yaml_obj, param_name_MSMSScans_ionInjThresh, param_def_MSMSScans_ionInjThresh)
-    if (!is.numeric(param_MSMSScans_ionInjThresh))
-    { ## reset if value is weird
-      cat("YAML value for '" %+% param_name_MSMSScans_ionInjThresh %+% "' is invalid ('" %+% param_MSMSScans_ionInjThresh %+% "'). Using default of " %+% param_def_MSMSScans_ionInjThresh %+% ".")
-      param_MSMSScans_ionInjThresh = param_def_MSMSScans_ionInjThresh
-    }
-    
-    ## average injection time over RT
-    DFmIIT = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
-      meanN = ddply(x, c("rRT"), function(x) data.frame(medIIT = median(x$ion.injection.time)))
-      return (meanN) 
-    })
-    head(DFmIIT)
-    ## average injection time overall
-    DFmIITglob = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
-      return (data.frame(mean = mean(x$ion.injection.time)))
-    })
-    head(DFmIITglob)
-    
-    
-    rep_data$add(
-      byXflex(DFmIIT, DFmIIT$fc.raw.file, 6, plot_IonInjectionTimeOverRT, sort_indices = FALSE,
-              stats = DFmIITglob,
-              extra_limit = param_MSMSScans_ionInjThresh)
-    )
-    
-    
-    ## QC measure for injection times below expected threshold
-    DFmIIT_belowThresh = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
-      return (data.frame(belowThresh_IIT = sum(x$ion.injection.time < param_MSMSScans_ionInjThresh, na.rm = TRUE) / nrow(x)))
-    })
-    head(DFmIIT_belowThresh)
-    qc_IIT = ddply(DFmIIT_belowThresh, "fc.raw.file", function(x) data.frame("X024X_catMS_MS^2*Scans:~Ion~Inj~Time" = qualLinThresh(x$belowThresh_IIT, t = 1),
-                                                                             check.names = FALSE))
-    QCM[["MSMSscans.Ion_Inj_Time"]] = qc_IIT
-    
-    
+    qcMetric_MSMSScans_IonInjTime$setData(d_msmsScan, param_MSMSScans_ionInjThresh)
+    rep_data$add(qcMetric_MSMSScans_IonInjTime$plots)
+    QCM[["MSMSscans.Ion_Inj_Time"]] = qcMetric_MSMSScans_IonInjTime$qcScores
+
     ##
     ## TopN counts
     ##
-    cat("MSMS-Scans: scan event counts ...\n")
-    
-    ## check if scan.event.number requires fixing
-    ## (e.g. when MS3 events are recorded between MS2 events, there are gaps in the numbering)
-    ## we close the gaps by requiring consecutive scan event numbers in MS2
-    scan.events = d_msmsScan[, c("scan.event.number", "fc.raw.file")]
-    while(TRUE) { ## should be at most max(scan.even.number) iterations
-      se_pos = 1 + which(diff(scan.events$scan.event.number) > 1) ## position of gaps>1
-      if (length(se_pos) == 0) break;
-      scan.events$scan.event.number[se_pos] = scan.events$scan.event.number[se_pos] - 1
-    }
-    DFc = ddply(scan.events, c("scan.event.number", "fc.raw.file"), summarise, n = length(scan.event.number))
-    dfc.ratio = ddply(DFc, "fc.raw.file", function(x, maxn)
-    {
-      ## sort x by scan event
-      event_count = x$n
-      ## verify its monotonically increasing
-      if (is.unsorted(rev(event_count))) {
-        #print(x)
-        stop("Scan event distribution is not monotonically increasing!")
-      } 
-      ## verify that there are no gaps
-      if (max(x$scan.event.number) != nrow(x)) {
-        #print(x)
-        stop("Scan event distribution has unexpected holes...!")
-      }
-      
-      event_pre = c(event_count[-1], 0)
-      event_diff = event_count - event_pre
-      
-      ## build new DF of fixed length
-      sn = x$scan.event.number
-      if (max(sn) < maxn) 
-      {
-        event_diff = c(event_diff, rep(0, maxn-max(sn)))
-        sn = c(sn, (max(sn)+1):maxn)
-      }
-      DF.new = data.frame(scan.event.number = sn, n = event_diff)
-      return (DF.new)
-    }, maxn = max(DFc$scan.event.number))
-    head(dfc.ratio)
-    
-    rep_data$add(
-      byXflex(dfc.ratio, dfc.ratio$fc.raw.file, 9, plot_TopN, sort_indices = FALSE)
-    )
-    
-    ## QC measure for always reaching the maximum TopN
-    maxTopN = max(dfc.ratio$scan.event.number)
-    qc_TopN = ddply(dfc.ratio, "fc.raw.file", function(x) data.frame("X035X_catMS_MS^2*Scans:~TopN~high" = qualHighest(x$n, maxTopN),
-                                                                     check.names = FALSE))
-    QCM[["MSMSscans.TopN"]] = qc_TopN
-    
+    qcMetric_MSMSScans_TopN$setData(d_msmsScan)
+    rep_data$add(qcMetric_MSMSScans_TopN$plots)
+    QCM[["MSMSscans.SSECounts"]] = qcMetric_MSMSScans_TopN$qcScores
     
     ##
     ## Scan event: % identified
     ##
-    cat("MSMS-Scans: TopN % identified ...\n")
-    
-    DF = ddply(d_msmsScan, c("scan.event.number", "identified", "fc.raw.file"), summarise, n = length(scan.event.number))
-    
-    # try KS on underlying data instead of using qualUniform()
-    #   DF2= ddply(d_msmsScan, "fc.raw.file", function(rf){
-    #     cat(class(rf))
-    #     cat(rf$fc.raw.file[1])
-    #     idx_p = rf$identified=="+"
-    #     cat(length(idx_p) %+% "\n")
-    #     kk = ks.test(rf$scan.event.number[idx_p], rf$scan.event.number[-idx_p])
-    #     cat(kk$p.value)
-    #     kk$statistic  # = 'D' ,,  p.value is much smaller (~0)
-    #   })
-    #   --> fail, 'D' and p-values are too low
-    df.ratio = ddply(DF, c("scan.event.number", "fc.raw.file"), function(x)
-    {
-      xp = xm = 0
-      if ("+" %in% x$identified) xp = x$n[x$identified=="+"]
-      if ("-" %in% x$identified) xm = x$n[x$identified=="-"]
-      ratio = xp * 100 / sum(xp, xm)
-      return (data.frame(ratio = ratio, count = sum(x$n)))
-    })
-    head(df.ratio)
-    
-    pl = byXflex(df.ratio, df.ratio$fc.raw.file, 9, plot_ScanIDRate, sort_indices = FALSE)
-    for (p in pl) rep_data$add(p)
-    
-    ## QC measure for constantly identifiying peptides, irrespective of scan event number
-    ## -- we weight scan events by their number of occurence
-    qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame("X038X_catMS_MS^2*Scans:~TopN~ID~over~N" = qualUniform(x$ratio, x$count),
-                                                                       check.names = FALSE))
-    QCM[["MSMSscans.TopN_ID_over_N"]] = qc_TopN_ID
+    qcMetric_MSMSScans_TopNID$setData(d_msmsScan)
+    rep_data$add(qcMetric_MSMSScans_TopNID$plots)
+    QCM[["MSMSscans.TopN_ID_over_N"]] = qcMetric_MSMSScans_TopNID$qcScores
+
   } ## end MSMSscan from MQ > 1.0.13
 }
 

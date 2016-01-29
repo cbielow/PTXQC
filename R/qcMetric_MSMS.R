@@ -90,7 +90,7 @@ the same peptide species, enabling a more accurate comparison.",
   workerFcn = function(.self, df_msms, df_evd = NULL)
   {
     ## completeness check
-    stopifnot(.self$checkInput(c("fc.raw.file", "contaminant"), colnames(df_msms)))
+    stopifnot(.self$checkInput(c("fc.raw.file"), colnames(df_msms)))
     if (!is.null(df_evd)) stopifnot(.self$checkInput(c("contaminant", "id"), colnames(df_evd)))
     
     max_mc = max(-Inf, df_msms$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
@@ -100,7 +100,7 @@ the same peptide species, enabling a more accurate comparison.",
       msg_cont_removed = "(includes contaminants -- no evidence.txt read)"
       if (!is.null(df_evd)) {
         msg_cont_removed = "(excludes contaminants)"
-        df_msms$contaminant = d_evd$contaminant[match(df_msms$evidence.id, d_evd$id)]
+        df_msms$contaminant = df_evd$contaminant[match(df_msms$evidence.id, df_evd$id)]
         summary(df_msms$contaminant)
       }
       
