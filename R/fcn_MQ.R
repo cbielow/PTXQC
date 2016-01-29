@@ -239,7 +239,7 @@ fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2,
     recal_message = "MQ bug: data rescued"
     recal_message_post = 'MQ bug: data cannot be rescued'
     
-    MS1_decal_smr$hasMassErrorBug[ MS1_decal_smr$fc.raw.file %in% de_cal$fc.raw.file[de_cal$q > 0] ] = TRUE
+    MS1_decal_smr$hasMassErrorBug[ MS1_decal_smr$fc.raw.file %in% MS1_decal_smr$fc.raw.file[MS1_decal_smr$decal > 0] ] = TRUE
     
     ## re-compute 'uncalibrated.mass.error..ppm.' and 'mass.error..ppm.'
     df_evd$theomz = df_evd$mass / df_evd$charge + 1.00726
