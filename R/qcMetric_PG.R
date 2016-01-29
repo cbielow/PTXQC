@@ -202,7 +202,7 @@ qcMetric_PG_Ratio = qcMetric$new(
 If the ratio is not centered around zero, but exceeds a certain extreme (i.e. 1:8 or 8:1), PTXQC will
 assume a time series or pulsed experiment and hence label incorporation
 will automatically be computed and shown as part of the legend.",
-  workerFcn=function(.self, df_pg, ratio_cols, thresh_LabelIncorp)
+  workerFcn=function(.self, df_pg, ratio_cols, thresh_LabelIncorp, GL_name_min_length)
   {
     ## completeness check
     stopifnot(c(ratio_cols, "contaminant", "reverse") %in% colnames(df_pg))

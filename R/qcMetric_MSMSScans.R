@@ -13,7 +13,7 @@ liquid chromatography, Proteomics (Impact Factor: 3.81). 06/2014; 14(12). DOI: 1
     stopifnot(.self$checkInput(c("fc.raw.file", "retention.time", "scan.event.number"), colnames(df_msmsScans)))
     
     ## maximum scan event over time
-    DFmse = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
+    DFmse = ddply(df_msmsScans, c("fc.raw.file"), function(x) {
       ## sort by RT
       if (is.unsorted(x$retention.time))
       { ## should not happen, but just to make sure
@@ -51,13 +51,13 @@ qcMetric_MSMSScans_IonInjTime = qcMetric$new(
     stopifnot(.self$checkInput(c("fc.raw.file", "ion.injection.time"), colnames(df_msmsScans)))
     
     ## average injection time over RT
-    DFmIIT = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
+    DFmIIT = ddply(df_msmsScans, c("fc.raw.file"), function(x) {
       meanN = ddply(x, c("rRT"), function(x) data.frame(medIIT = median(x$ion.injection.time)))
       return (meanN) 
     })
     head(DFmIIT)
     ## average injection time overall
-    DFmIITglob = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
+    DFmIITglob = ddply(df_msmsScans, c("fc.raw.file"), function(x) {
       return (data.frame(mean = mean(x$ion.injection.time)))
     })
     head(DFmIITglob)
@@ -70,7 +70,7 @@ qcMetric_MSMSScans_IonInjTime = qcMetric$new(
 
     
     ## QC measure for injection times below expected threshold
-    DFmIIT_belowThresh = ddply(d_msmsScan, c("fc.raw.file"), function(x) {
+    DFmIIT_belowThresh = ddply(df_msmsScans, c("fc.raw.file"), function(x) {
       return (data.frame(belowThresh_IIT = sum(x$ion.injection.time < threshold_iit, na.rm = TRUE) / nrow(x)))
     })
     head(DFmIIT_belowThresh)
@@ -97,7 +97,7 @@ qcMetric_MSMSScans_TopN = qcMetric$new(
     ## check if scan.event.number requires fixing
     ## (e.g. when MS3 events are recorded between MS2 events, there are gaps in the numbering)
     ## we close the gaps by requiring consecutive scan event numbers in MS2
-    scan.events = d_msmsScan[, c("scan.event.number", "fc.raw.file")]
+    scan.events = df_msmsScans[, c("scan.event.number", "fc.raw.file")]
     while (TRUE) { ## should be at most max(scan.even.number) iterations
       se_pos = 1 + which(diff(scan.events$scan.event.number) > 1) ## position of gaps>1
       if (length(se_pos) == 0) break;
@@ -141,9 +141,7 @@ qcMetric_MSMSScans_TopN = qcMetric$new(
     maxTopN = max(dfc.ratio$scan.event.number)
     qc_TopN = ddply(dfc.ratio, "fc.raw.file", function(x) data.frame(val = qualHighest(x$n, maxTopN)))
     colnames(qc_TopN)[colnames(qc_TopN) == "val"] = .self$qcName
-    QCM[["MSMSscans.TopN"]] = qc_TopN
-    
-    
+
     return(list(plots = lpl, qcScores = qc_TopN))
   }, 
   qcCat = "MS", 
@@ -160,9 +158,9 @@ qcMetric_MSMSScans_TopNID = qcMetric$new(
     ## completeness check
     stopifnot(.self$checkInput(c("fc.raw.file", "scan.event.number", "identified"), colnames(df_msmsScans)))
     
-    DF = ddply(d_msmsScan, c("scan.event.number", "identified", "fc.raw.file"), summarise, n = length(scan.event.number))
+    DF = ddply(df_msmsScans, c("scan.event.number", "identified", "fc.raw.file"), summarise, n = length(scan.event.number))
     # try KS on underlying data instead of using qualUniform()
-    #   DF2= ddply(d_msmsScan, "fc.raw.file", function(rf){
+    #   DF2= ddply(df_msmsScans, "fc.raw.file", function(rf){
     #     cat(class(rf))
     #     cat(rf$fc.raw.file[1])
     #     idx_p = rf$identified=="+"

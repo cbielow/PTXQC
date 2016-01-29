@@ -255,7 +255,7 @@ createReport = function(txt_folder, yaml_obj = list())
     
     if (length(ratio_cols) > 0)
     {
-      qcMetric_PG_Ratio$setData(d_pg, ratio_cols, enabled_pg_ratioLabIncThresh)
+      qcMetric_PG_Ratio$setData(d_pg, ratio_cols, enabled_pg_ratioLabIncThresh, GL_name_min_length)
       rep_data$add(qcMetric_PG_Ratio$plots)
     }
   }

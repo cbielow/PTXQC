@@ -106,7 +106,7 @@ Two abundance measures are computed per Raw file:
         })
         
         ## add heatmap column
-        cname = sprintf(qcName, ca)
+        cname = sprintf(.self$qcName, ca)
         cont_data[,cname] = as.numeric(!cont_data$above.thresh) ## inverse (0 is 'bad')
         
         qcScore = cont_data[, c("fc.raw.file", cname)]
@@ -180,6 +180,7 @@ MBR should be switched off for the Raw files which are affected (could be a few 
     
     max_prot = max(unlist(dlply(protC, "fc.raw.file", function(x) sum(x$counts))))
     ## average gain in percent
+    reportMTD = any(!is.na(df_evd$match.time.difference))
     gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(protC$MBRgain, na.rm = TRUE)), "")
     
     lpl = dlply(protC, "block", .fun = function(x)
@@ -228,6 +229,7 @@ qcMetric_EVD_PeptideCount = qcMetric$new(
     
     max_pep = max(unlist(dlply(pepC, "fc.raw.file", function(x) sum(x$counts))))
     ## average gain in percent
+    reportMTD = any(!is.na(df_evd$match.time.difference))
     gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pepC$MBRgain, na.rm = TRUE)), "")
     
     lpl = dlply(pepC, "block", .fun = function(x)
