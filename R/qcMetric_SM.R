@@ -9,6 +9,8 @@ The thresholds for the bins are
 %s.",
   workerFcn = function(.self, df_summary, id_rate_bad, id_rate_great)
   {
+    stopifnot(.self$checkInput(c("fc.raw.file", "ms.ms.identified...."), colnames(df_summary)))
+    
     dms = df_summary$"ms.ms.identified...."
     dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was acquired
     lab_IDd = c("red", 
@@ -47,10 +49,10 @@ The thresholds for the bins are
     ## QC measure for ID rate (threshold reached?)
     ## update QC name based on parameter values
     ## QC measure for ID rate (threshold reached?)
-    qc_sm_id = d_smy$raw[, c("raw.file", "ms.ms.identified....")]
+    qc_sm_id = df_summary[, c("fc.raw.file", "ms.ms.identified....")]
     cname = sprintf(.self$qcName, id_rate_great)
     qc_sm_id[, cname] = qualLinThresh(qc_sm_id$ms.ms.identified.... , id_rate_great)
-    qcScore = qc_sm_id[,c("raw.file", cname)]
+    qcScore = qc_sm_id[,c("fc.raw.file", cname)]
     
     return(list(plots = plots, qcScores = qcScore))
   }, 
