@@ -346,7 +346,6 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     ## intensity of peptides
     ##
-
     qcMetric_EVD_PeptideInt$setData(d_evd, param_EV_intThresh)
     rep_data$add(qcMetric_EVD_PeptideInt$plots)
     ## add heatmap column
@@ -356,7 +355,6 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     ## peptide & protein counts
     ##
-    
     ## contains NA if 'genuine' ID
     d_evd$hasMTD = !is.na(d_evd$match.time.difference)
     ## report Match-between-runs data only if if it was enabled
@@ -568,125 +566,20 @@ if (enabled_msms)
                                                                             "^masses$", "^mass.analyzer$", "fragmentation", "reverse",
                                                                             numeric = "^evidence.id$"), check_invalid_lines = FALSE)
   
-  d_msms = d_msms[order(match(as.character(d_msms$fc.raw.file), mq$raw_file_mapping$to)),]
-  ## sort fc.raw.file's factor values as well
-  d_msms$fc.raw.file = factor(d_msms$fc.raw.file, levels = mq$raw_file_mapping$to, ordered = TRUE)
-  
   ##
   ##  MS2 fragment decalibration
   ##
-  cat("MSMS: MS2 fragment decalibration ...\n")
-  ## older MQ versions do not have 'mass.analyzer' or 'mass.deviations..ppm.'
-  ## , so we use fragmentation instead (this is a little risky, since you could to CID fragmentation and forward to Orbi, but hey...)
-  if (!("mass.analyzer" %in% colnames(d_msms))) d_msms$mass.analyzer = d_msms$fragmentation
-  
-  
-  ms2_decal = ddply(d_msms, c("fc.raw.file", "mass.analyzer"), .fun = function(x) {
-    idx_nr = which(!x$reverse)
-    ## select a representative subset, otherwise the number of datapoints is just too large
-    idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=ceiling(length(idx_nr)/1000))]
-    df.ms = getFragmentErrors(x[idx_nr_subset,])
-    df.ms$type="forward"
-    
-    if (any(x$reverse))
-    {
-      idx_nr = which(x$reverse)
-      ## select a representative subset, otherwise the number of datapoints is just too large
-      idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=ceiling(length(idx_nr)/1000))]
-      df.ms_r = getFragmentErrors(x[idx_nr_subset,])
-      df.ms_r$type="decoy"
-      
-      ## only merge if we have hits (reverse hits might be few and $mass.deviations..da. might be empty)
-      if (nrow(df.ms_r)) df.ms = rbind(df.ms, df.ms_r)
-    }
-    
-    return (df.ms)
-  })
-  
-  head(ms2_decal)
-  class(ms2_decal$msErr)
-  ms2_decal$msErr = as.numeric(as.character(ms2_decal$msErr))
-  #ms2_range = diff(range(ms2_decal$msErr, na.rm = TRUE))
-  #ms2_binwidth = ms2_range/20
-  ## precision (plotting is just so much quicker, despite using a fixed binwidth)
-  #ms2_decal$msErr = round(ms2_decal$msErr, digits=ceiling(-log10(ms2_binwidth)+1))
-  tail(ms2_decal)
-  ms2_decal$file = paste(ms2_decal$fc.raw.file, paste(ms2_decal$mass.analyzer, ms2_decal$unit), sep="\n")
-  
-  ## separate plots for each mass analyzer, since we want to keep 'fixed' scales for all raw.files (comparability)
-  ddply(ms2_decal, "mass.analyzer", function(ms2_decal) {
-    rep_data$add(
-      byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, plot_MS2Decal, sort_indices = FALSE)
-    )
-    return(1)
-    })
-  
-  ##
-  ## QC measure for centered-ness of MS2-calibration
-  ##
-  head(ms2_decal)
-  for (analyzer in unique(ms2_decal$mass.analyzer)) {
-    qc_name = paste0("X028X_catMS_", "MSMS:~MS^2~Cal~(", analyzer, ")")
-    qc_MS2_decal = ddply(ms2_decal[ms2_decal$mass.analyzer==analyzer, ], "fc.raw.file", 
-                         function(x)
-                         {
-                           xx = na.omit(x$msErr);
-                           data.frame(X1 = qualCentered(xx), check.names = FALSE)
-                         })
-    ## augment fragmentation methods with -Inf for missing raw files (otherwise they would become 'red'=fail)
-    if (length( setdiff(mq$raw_file_mapping$to, qc_MS2_decal$fc.raw.file) )) {
-      frag_missing = data.frame(fc.raw.file = setdiff(mq$raw_file_mapping$to, qc_MS2_decal$fc.raw.file), X1=-Inf)
-      qc_MS2_decal = rbind(qc_MS2_decal, frag_missing)
-    }
-    colnames(qc_MS2_decal)[colnames(qc_MS2_decal)=="X1"] = qc_name
-    QCM[[qc_name]] = qc_MS2_decal[, c("fc.raw.file", qc_name)]
-  }
-  if (!exists("DEBUG_PTXQC")) rm("ms2_decal")
-  
+  qcMetric_MSMS_MSMSDecal$setData(d_msms, mq$raw_file_mapping$to)
+  rep_data$add(qcMetric_MSMS_MSMSDecal$plots)
+  QCM[["MSMS.Decal"]] = qcMetric_MSMS_MSMSDecal$qcScores
+
   ##
   ## missed cleavages per Raw file
   ##
-  cat("MSMS: missed cleavages per Raw file ...\n")
-  
-  max_mc = max(-Inf, d_msms$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
-  if (!is.infinite(max_mc))
-  { ## MC's require an enzyme to be set
-    ## remove contaminants
-    msg_cont_removed = "(includes contaminants -- no evidence.txt read)"
-    if (exists("d_evd")) {
-      msg_cont_removed = "(excludes contaminants)"
-      d_msms$contaminant = d_evd$contaminant[match(d_msms$evidence.id, d_evd$id)]
-      summary(d_msms$contaminant)
-    }
-    
-    st_bin = ddply(d_msms[!d_msms$contaminant, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
-      t = table(x$missed.cleavages)/nrow(x)
-      r = rep(0, max_mc + 1)
-      names(r) = as.character(0:max_mc)
-      r[names(t)] = t
-      return (r)
-    })
-    rep_data$add(
-      byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, title_sub = msg_cont_removed, sort_indices = FALSE)
-    )
-    
-    mcZero = st_bin[, "0"] * 100
-    mcZero_stat = 100 - rev(quantile(mcZero, probs=c(0,0.5,1)))
-    cat(pastet("missedCleavages>0 (min,median,max) [%]", paste0(mcZero_stat, collapse=",")), file=fh_out$stats_file, append = TRUE, sep="\n")
-    
-    ## QC measure for missed-cleavages variation
-    qc_mc = data.frame(fc.raw.file = st_bin$fc.raw.file, XXX = st_bin[, "0"], check.names = FALSE)
-    cname = "X004X_catPrep_MSMS:~MC"
-    colnames(qc_mc)[grep("XXX", colnames(qc_mc))] = cname
-    QCM[["MSMS.MC"]] = qc_mc
-    qc_mc$"X007X_catPrep_MSMS:~MC~Var" = qualMedianDist(qc_mc[, cname])
-    QCM[["MSMS.MC_Var"]] = qc_mc
-    
-    
-  } ## end MC check
-  
-  
-  if (!exists("DEBUG_PTXQC")) rm("d_msms")
+  if (exists("d_evd")) qcMetric_MSMS_MissedCleavages$setData(d_msms, d_evd) else
+                      qcMetric_MSMS_MissedCleavages$setData(d_msms)
+  rep_data$add(qcMetric_MSMS_MissedCleavages$plots)
+  QCM[["MSMS.MC"]] = qcMetric_MSMS_MissedCleavages$qcScores
 }
 
 ######
@@ -917,12 +810,9 @@ param_PageNumbers = getYAML(yaml_obj, param_name_PTXQC_PageNumbers, param_def_PT
 cat("Creating Report file ...")
 
 
-
-
 #####################################################################
 ## list of qcMetric objects
 lst_qcMetrics = ls(pattern="qcMetric_.*")
-
 
 #
 #param_OutputFormats = "html pdf"

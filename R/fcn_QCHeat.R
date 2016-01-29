@@ -25,6 +25,7 @@ HEATMAP_NA_VALUE = -Inf
 #'
 #' @importFrom reshape2 melt
 #' @importFrom reshape2 dcast
+#' @importFrom plyr empty
 #'
 #' @export
 #'
@@ -44,11 +45,13 @@ HEATMAP_NA_VALUE = -Inf
 getQCHeatMap = function(QCM, raw_file_mapping)
 {
   QCM_shortNames = lapply(QCM, function(x) {
+    if (empty(x)) return(NULL) ## if metric was not computed, default DF is empty
     if ("raw.file" %in% colnames(x)) {
       x$fc.raw.file = renameFile(x$raw.file, raw_file_mapping)  ## create short name column
       x = x[, !(colnames(x) %in% "raw.file")]  ## remove raw.file column
     }
     if (!("fc.raw.file" %in% colnames(x))) {
+      cat(paste("columns:", paste0(colnames(x), collapse=", ", sep="")))
       stop("Internal error in getQCHeatMap(): 'fc.raw.file' column missing from QC measure.")
     } 
     ## check if fc.raw.filenames are known (e.g. when column was named fc.raw.file but values are from raw.file)
