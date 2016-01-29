@@ -189,3 +189,93 @@ getFragmentErrors = function(x)
   return(data.frame(msErr = as.character(err), unit = ms2_unit))
 }
 
+#'
+#' Detect (and fix) MaxQuant mass recalibration columns, since they
+#' sometimes report wrong values.
+#' 
+#' Returns a list of items for both diagnostics and possibly a fixed evidence data.frame.
+#' Also two strings with messages are returned, which can serve as user message for
+#' pre and post calibration status. 
+#' 
+#' @param df_evd Evidence data.frame with columns ()
+#' @param df_idrate Data.frame from summary.txt, giving ID rates for each raw file (cols: "ms.ms.identified....", "fc.raw.file"). Can also be NULL.
+#' @param tolerance_sd_PCoutOfCal Maximal standard deviation allowed before considered 'failed'
+#' @param low_id_rate Minimum ID rate in Percent before a Raw file is considered 'failed'
+#' @return list of data (stats, affected_raw_files, df_evd, recal_message, recal_message_post)
+#'  
+#'
+fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2, low_id_rate = 1)
+{
+  
+  stopifnot(c("fc.raw.file", "mass", "charge", "m.z", "mass.error..ppm.", "uncalibrated.mass.error..ppm.") %in% colnames(df_evd))
+  
+  ## heuristic to determine if the instrument is completely out of calibration, 
+  ## i.e. all ID's are false positives, since the Precursor mass is wrong
+  ## -- we use the SD; if larger than 2ppm, 
+  ## then ID's are supposedly random
+  ## -- alt: we use the 1%-to-99% quantile range: if > 10ppm
+  ## -- uninformative for detection is the distribution (it's still Gaussian for a strange reason)
+  MS1_decal_smr = ddply(df_evd, "fc.raw.file", function(x) 
+    data.frame(n = nrow(x), 
+               sd = round(sd(x$mass.error..ppm., na.rm = TRUE), 1), 
+               range = diff(quantile(x$mass.error..ppm., c(0.01, 0.99), na.rm = TRUE)),
+               decal = (median(abs(x$uncalibrated.mass.error..ppm.), na.rm = TRUE) > 1e3),
+               hasMassErrorBug = FALSE,
+               hasMassErrorBug_unfixable = FALSE)
+  )
+  ## additionally use MS2-ID rate (should be below 1%)
+  if (is.null(df_idrate)) {
+    MS1_decal_smr$ms.ms.identified.... = 0 ## upon no info: assume low IDrate
+  } else {
+    MS1_decal_smr = merge(MS1_decal_smr, df_idrate)
+  }
+  MS1_decal_smr$lowIDRate = MS1_decal_smr$ms.ms.identified.... < low_id_rate
+  
+  recal_message = ""
+  recal_message_post = ""
+  ## check each raw file individually (usually its just a few who are affected)
+  if (any(MS1_decal_smr$decal, na.rm = TRUE))
+  {
+    recal_message = "MQ bug: data rescued"
+    recal_message_post = 'MQ bug: data cannot be rescued'
+    
+    MS1_decal_smr$hasMassErrorBug[ MS1_decal_smr$fc.raw.file %in% de_cal$fc.raw.file[de_cal$q > 0] ] = TRUE
+    
+    ## re-compute 'uncalibrated.mass.error..ppm.' and 'mass.error..ppm.'
+    df_evd$theomz = df_evd$mass / df_evd$charge + 1.00726
+    df_evd$mass.error..ppm.2 = (df_evd$theomz - df_evd$m.z) / df_evd$theomz * 1e6
+    df_evd$uncalibrated.mass.error..ppm.2 = df_evd$mass.error..ppm.2 + df_evd$uncalibrated...calibrated.m.z..ppm.
+    
+    ## check if fix worked
+    de_cal2 = ddply(df_evd, "fc.raw.file", .fun = function(x)  data.frame(q = (median(abs(x$uncalibrated.mass.error..ppm.2), na.rm = TRUE) > 1e3)))
+    if (any(de_cal2$q, na.rm = TRUE))
+    { ## fix did not work
+      MS1_decal_smr$hasMassErrorBug_unfixable[ MS1_decal_smr$fc.raw.file %in% de_cal2$fc.raw.file[de_cal2$q] ] = TRUE
+      recal_message = "m/z recalibration bugfix applied but failed\n(there are still large numbers)"
+    }
+    
+    idx_overwrite = (df_evd$fc.raw.file %in% MS1_decal_smr$fc.raw.file[MS1_decal_smr$decal > 0])
+    ## overwrite original values
+    df_evd$mass.error..ppm.[idx_overwrite] = df_evd$mass.error..ppm.2[idx_overwrite]
+    df_evd$uncalibrated.mass.error..ppm.[idx_overwrite] = df_evd$uncalibrated.mass.error..ppm.2[idx_overwrite]
+  }
+  
+  MS1_decal_smr$outOfCal = (MS1_decal_smr$sd > tolerance_sd_PCoutOfCal) & 
+    (MS1_decal_smr$lowIDRate) & 
+    (MS1_decal_smr$sd < 100)  ## upper bound, to distinguish from MQ bug (which has much larger SD's)
+  
+  ## report too small search tolerance
+  if (any(MS1_decal_smr$outOfCal)) recal_message = "search tolerance too small"
+  
+  
+  ## Raw files where the mass error is obviously wrong (PSM's not substracted etc...)
+  affected_raw_files = MS1_decal_smr$fc.raw.file[MS1_decal_smr$outOfCal | MS1_decal_smr$hasMassErrorBug]
+  
+  
+  return(list(stats = MS1_decal_smr,
+              affected_raw_files = affected_raw_files,
+              df_evd = df_evd[, c("mass.error..ppm.", "uncalibrated.mass.error..ppm.", "fc.raw.file")],
+              recal_message = recal_message,
+              recal_message_post = recal_message_post
+              ))
+}

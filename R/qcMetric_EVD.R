@@ -7,7 +7,7 @@ Two abundance measures are computed per Raw file:
   - fraction of intensity
   - fraction of spectral counts
 ",
-  workerFcn=function(.self, df_evd, df_pg, lst_contaminants)
+  workerFcn = function(.self, df_evd, df_pg, lst_contaminants)
   {
     ## completeness check
     stopifnot(c("id", "fasta.headers") %in% colnames(df_pg))
@@ -131,7 +131,7 @@ Two abundance measures are computed per Raw file:
 qcMetric_EVD_PeptideInt = qcMetric$new(
   helpText = 
 "Peptide intensity ...",
-  workerFcn=function(.self, df_evd, thresh_intensity)
+  workerFcn = function(.self, df_evd, thresh_intensity)
   {
     ## completeness check
     stopifnot(c("fc.raw.file", "intensity") %in% colnames(df_evd))
@@ -170,7 +170,7 @@ qcMetric_EVD_ProteinCount = qcMetric$new(
 "Number of Protein groups (after FDR) per Raw file. If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
  are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad,
 MBR should be switched off for the Raw files which are affected (could be a few or all).",
-  workerFcn=function(.self, df_evd, thresh_intensity)
+  workerFcn = function(.self, df_evd, thresh_protCount)
   {
     ## completeness check
     stopifnot(c("fc.raw.file", "protein.group.ids", "match.time.difference") %in% colnames(df_evd))
@@ -185,8 +185,8 @@ MBR should be switched off for the Raw files which are affected (could be a few 
     lpl = dlply(protC, "block", .fun = function(x)
     {
       p = plot_CountData(data = x, 
-                         y_max = max(thresh_intensity, max_prot)*1.1,
-                         thresh_line = thresh_intensity,
+                         y_max = max(thresh_protCount, max_prot)*1.1,
+                         thresh_line = thresh_protCount,
                          title = c("EVD: ProteinGroups count", gain_text))
       #print(p)
       return (p)
@@ -218,7 +218,7 @@ qcMetric_EVD_PeptideCount = qcMetric$new(
     "Number of peptides (after FDR) per Raw file. If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
   are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad,
   MBR should be switched off for the Raw files which are affected (could be a few or all).",
-  workerFcn=function(.self, df_evd, thresh_intensity)
+  workerFcn = function(.self, df_evd, thresh_pepCount)
   {
     ## completeness check
     stopifnot(c("fc.raw.file", "modified.sequence", "match.time.difference") %in% colnames(df_evd))
@@ -233,8 +233,8 @@ qcMetric_EVD_PeptideCount = qcMetric$new(
     lpl = dlply(pepC, "block", .fun = function(x)
     {
       p = plot_CountData(data = x, 
-                         y_max = max(param_EV_pepThresh, max_pep)*1.1,
-                         thresh_line = param_EV_pepThresh,
+                         y_max = max(thresh_pepCount, max_pep)*1.1,
+                         thresh_line = thresh_pepCount,
                          title = c("EVD: Peptide ID count", gain_text))
       #print(p)
       return (p)
@@ -264,7 +264,7 @@ qcMetric_EVD_PeptideCount = qcMetric$new(
 qcMetric_EVD_RTPeakWidth = qcMetric$new(
   helpText = 
     "RT peak width distribution ...",
-  workerFcn=function(.self, df_evd)
+  workerFcn = function(.self, df_evd)
   {
     ## completeness check
     stopifnot(c("retention.time", "retention.length", "fc.raw.file") %in% colnames(df_evd))
@@ -315,7 +315,7 @@ qcMetric_EVD_RTPeakWidth = qcMetric$new(
 qcMetric_EVD_MBRAlign = qcMetric$new(
   helpText = 
     "Match-between-runs Alignment (step 1/2, 1=align, 2=transfer) ...",
-  workerFcn=function(.self, df_evd, tolerance_matching, raw_file_mapping)
+  workerFcn = function(.self, df_evd, tolerance_matching, raw_file_mapping)
   {
     ## completeness check
     stopifnot(c("type", "calibrated.retention.time", "id", "raw.file", "modified.sequence", "charge") %in% colnames(df_evd))
@@ -409,7 +409,7 @@ qcMetric_EVD_MBRAlign = qcMetric$new(
 qcMetric_EVD_MBRIdTransfer = qcMetric$new(
   helpText = 
     "...",
-  workerFcn=function(.self, df_evd, avg_peak_width)
+  workerFcn = function(.self, df_evd, avg_peak_width)
   {
     ## completeness check
     #stopifnot(c("...") %in% colnames(df_evd))
@@ -428,7 +428,7 @@ qcMetric_EVD_MBRIdTransfer = qcMetric$new(
     
     
     ## Check which fraction of ID-pairs belong to the 'in-width' group.
-    ## The allowed RT delta is given in 'd_evd.m.d_med' (estimated from global peak width for each file)
+    ## The allowed RT delta is given in 'avg_peak_width' (estimated from global peak width for each file)
     qMBRSeg_Dist_inGroup = inMatchWindow(qMBRSeg_Dist, df.allowed.deltaRT = avg_peak_width)
     ## puzzle together final picture
     scoreMBRMatch = computeMatchRTFractions(qMBR, qMBRSeg_Dist_inGroup)
@@ -463,7 +463,7 @@ qcMetric_EVD_MBRIdTransfer = qcMetric$new(
 qcMetric_EVD_MBRaux = qcMetric$new(
   helpText = 
     "Auxililiary plots without scores ...",
-  workerFcn=function(.self, df_evd)
+  workerFcn = function(.self, df_evd)
   {
     ## completeness check
     stopifnot(c("type", "match.time.difference", "calibrated.retention.time", "fc.raw.file", "modified.sequence", "charge") %in% colnames(df_evd))
@@ -506,7 +506,7 @@ qcMetric_EVD_MBRaux = qcMetric$new(
 qcMetric_EVD_Charge = qcMetric$new(
   helpText = 
     "Charge distribution per Raw file. Should be dominated by charge 2 and have the same fraction in each Raw file.",
-  workerFcn=function(.self, df_evd, int_cols, MAP_pg_groups)
+  workerFcn = function(.self, df_evd, int_cols, MAP_pg_groups)
   {
     ## completeness check
     stopifnot(c("hasMTD", "fc.raw.file", "charge") %in% colnames(df_evd))
@@ -531,7 +531,7 @@ qcMetric_EVD_Charge = qcMetric$new(
 qcMetric_EVD_IDoverRT = qcMetric$new(
   helpText = 
     "Number of peptide identifications over time. Constant numbers receive high scores.",
-  workerFcn=function(.self, df_evd)
+  workerFcn = function(.self, df_evd)
   {
     ## completeness check
     stopifnot(c("retention.time", "fc.raw.file") %in% colnames(df_evd))
@@ -558,22 +558,204 @@ qcMetric_EVD_IDoverRT = qcMetric$new(
   heatmapOrder = 0150)
 
 
+
 #####################################################################
 
-qcMetric_EVD_... = qcMetric$new(
+qcMetric_EVD_PreCal = qcMetric$new(
   helpText = 
-    "...",
-  workerFcn=function(.self, df_pg, int_cols, MAP_pg_groups)
+    "Mass accurary before calibration. Outliers are marked as such using .. as additional information (if available).",
+workerFcn = function(.self, df_evd, df_idrate, tolerance_pc_ppm, tolerance_sd_PCoutOfCal)
   {
     ## completeness check
-    stopifnot(c(int_cols, "contaminant") %in% colnames(df_pg))
+    #stopifnot(c("...") %in% colnames(df_pg))
+
+    fix_cal = fixCalibration(df_evd, df_idrate, tolerance_sd_PCoutOfCal)
     
+    ## some outliers can have ~5000ppm, blowing up the plot margins
+    ## --> remove outliers 
+    ylim_g = range(boxplot.stats(fix_cal$df_evd$uncalibrated.mass.error..ppm.)$stats[c(1, 5)], c(-tolerance_pc_ppm, tolerance_pc_ppm) * 1.05)
+    ## PLOT
+    lpl =
+      byXflex(fix_cal$df_evd, fix_cal$df_evd$fc.raw.file, 20, plot_UncalibratedMSErr, sort_indices = FALSE, 
+              MQBug_raw_files = fix_cal$affected_raw_files, 
+              y_lim = ylim_g,
+              stats = fix_cal$stats,
+              extra_limit = tolerance_pc_ppm,
+              title_sub = fix_cal$recal_message)
+
+    ## scores
+    qc_MS1deCal = ddply(fix_cal$df_evd, "fc.raw.file", 
+                        function(x) {
+                          xd = na.omit(x$uncalibrated.mass.error..ppm.)
+                          if (length(xd)==0) {
+                            r = HEATMAP_NA_VALUE ## if empty, give the Raw file an 'NA' score
+                          } else if (fix_cal$stats$outOfCal[fix_cal$stats$fc.raw.file == x$fc.raw.file[1]]) {
+                            r = 0 ## if we suspect out-of-calibration, give lowest score
+                          } else {
+                            r = qualCenteredRef(xd, tolerance_pc)
+                          } 
+                          return (data.frame(med_rat = r))
+                        })
     
-    return(list(plots = pg_plots_cont, qcScores = qcScore))
+    cname = sprintf(.self$qcName, tolerance_pc)
+    colnames(qc_MS1deCal) = c("fc.raw.file", cname)
+
+    
+    return(list(plots = lpl, qcScores = qc_MS1deCal))
   }, 
-  qcCat = NA_character_, 
-  qcName = NA_character_, 
-  heatmapOrder = NaN)
+  qcCat = "MS", 
+  qcName = "X026X_catMS_EVD:~MS~Cal-Pre~(%1.1f)", 
+  heatmapOrder = 0260)
+
+
+#####################################################################
+
+qcMetric_EVD_PostCal = qcMetric$new(
+  helpText = 
+    "...",
+  workerFcn = function(.self, df_evd, df_idrate, tolerance_pc_ppm, tolerance_sd_PCoutOfCal, tol_ppm_mainSearch)
+  {
+    ## completeness check
+    #stopifnot(c("...") %in% colnames(df_pg))
+    
+    fix_cal = fixCalibration(df_evd, df_idrate, tolerance_sd_PCoutOfCal)
+    
+    ylim_g = range(na.rm = TRUE, boxplot.stats(fix_cal$df_evd$mass.error..ppm.)$stats[c(1, 5)], c(-tol_ppm_mainSearch, tol_ppm_mainSearch) * 1.05)
+    ## PLOT
+    lpl =
+      byXflex(fix_cal$df_evd, fix_cal$df_evd$fc.raw.file, 20, plot_CalibratedMSErr, sort_indices = FALSE,
+              MQBug_raw_files = fix_cal$affected_raw_files,
+              y_lim = ylim_g,
+              stats = fix_cal$stats,
+              extra_limit = tol_ppm_mainSearch,
+              title_sub = fix_cal$recal_message_post)
+
+    ## QC measure for post-calibration ppm error
+    ## .. assume 0 centered and StdDev of observed data
+    obs_par = ddply(fix_cal$df_evd[, c("mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
+                    function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm = TRUE), 
+                                           sd = sd(x$mass.error..ppm., na.rm = TRUE)))
+    qc_MS1Cal = data.frame(fc.raw.file = obs_par$fc.raw.file, 
+                           val = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
+    ## if we suspect out-of-calibration, give lowest score
+    qc_MS1Cal$val[qc_MS1Cal$fc.raw.file %in% fix_cal$stats$fc.raw.file[ fix_cal$stats$outOfCal ]] = 0 
+    ## MQ mass bugfix will not work for postCalibration, since values are always too low
+    qc_MS1Cal$val[qc_MS1Cal$fc.raw.file %in% fix_cal$stats$fc.raw.file[ fix_cal$stats$hasMassErrorBug ]] = HEATMAP_NA_VALUE
+    colnames(qc_MS1Cal)[colnames(qc_MS1Cal) == "val"] = .self$qcName
+
+    return(list(plots = lpl, qcScores = qc_MS1Cal))
+  }, 
+  qcCat = "MS", 
+  qcName = "X027X_catMS_EVD:~MS~Cal-Post", 
+  heatmapOrder = 0270)
+
+#####################################################################
+
+qcMetric_EVD_Top5Cont = qcMetric$new(
+  helpText = 
+    "...",
+  workerFcn = function(.self, df_evd)
+  {
+    ## completeness check
+    stopifnot(c("intensity", "contaminant", "fc.raw.file") %in% colnames(df_evd))
+    
+    ##
+    ## elaborate contaminant fraction per Raw.file (this is not possible from PG, since raw files could be merged)
+    ## find top 5 contaminants (globally)
+    ##
+    ## if possible, work on protein names (since MQ1.4), else use proteinIDs
+    if ("protein.names" %in% colnames(df_evd))
+    {
+      evd_pname = "protein.names"        
+    } else if ("proteins" %in% colnames(df_evd)) {
+      evd_pname = "proteins" 
+    } else {
+      stop("Top5-Contaminants: Neither 'protein.names' nor 'proteins' column was found in data but is required.")
+    }
+      
+    ## protein.names are sometimes not unique, e.g. if a contaminant is involved:
+    ## "P02768;CON__P02768-1" and "P02768" will both give the same name (since contaminant name is empty)
+    ## Thus, the distribution of bars will look slightly different (but summed percentages are identical)
+    
+    ## some protein.names are empty (usually the CON__ ones) ... so we substitute with ID
+    df_evd$pname = df_evd[, evd_pname];
+    df_evd$pname[df_evd$pname==""] = df_evd$proteins[df_evd$pname==""] ## a NOP if it already is 'proteins', but ok
+    
+    df_evd.totalInt = sum(as.numeric(df_evd$intensity), na.rm = TRUE)
+    df_evd.cont.only = df_evd[df_evd$contaminant,]
+    cont.top = by(df_evd.cont.only, df_evd.cont.only$pname, function(x) sum(as.numeric(x$intensity), na.rm = TRUE) / df_evd.totalInt*100)
+    cont.top.sort = sort(cont.top, decreasing = TRUE)
+    #head(cont.top.sort)
+    cont.top5.names = names(cont.top.sort)[1:5]
+    
+    lpl = list()
+    if (is.null(cont.top5.names))
+    {
+      lpl[["noCont"]] = ggText("EVD: Contaminant per Raw file",
+                               "No contaminants found in any sample.\n\nIncorporating contaminants during search is highly recommended!",
+                               "red")
+    } else {
+      lpl =
+        byXflex(df_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], df_evd$fc.raw.file, 40, sort_indices = FALSE, 
+                plot_ContEVD, top5=cont.top5.names)
+    }
+    
+    ## QC measure for contamination
+    qc_cont = ddply(df_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
+                    function(x) {
+                        val = ifelse(is.null(cont.top5.names), 
+                                     HEATMAP_NA_VALUE, ## use NA in heatmap if there are no contaminants
+                                     1-qualLinThresh(sum(as.numeric(x$intensity[x$contaminant]), na.rm = TRUE)/
+                                                     sum(as.numeric(x$intensity), na.rm = TRUE)))
+                        return(data.frame(val = val, check.names = FALSE))
+                    }
+                  )
+    colnames(qc_cont)[colnames(qc_cont) == "val"] = .self$qcName
+
+    return(list(plots = lpl, qcScores = qc_contaminants))
+  }, 
+  qcCat = "Prep", 
+  qcName = "X001X_catPrep_EVD:~Contaminants", 
+  heatmapOrder = 0010)
+
+#####################################################################
+
+qcMetric_EVD_MS2OverSampling = qcMetric$new(
+  helpText = 
+    "...",
+  workerFcn = function(.self, df_evd)
+  {
+    ## completeness check
+    stopifnot(c("fc.raw.file", "ms.ms.count") %in% colnames(df_evd))
+    
+    d_dups = ddply(df_evd, "fc.raw.file", function(x) {
+      tt = as.data.frame(table(x$ms.ms.count), stringsAsFactors = FALSE)
+      tt$Count = as.numeric(tt$Var1)
+      ## remove "0", since this would be MBR-features
+      tt = tt[tt$Count!=0,]
+      ## summarize everything above 3 counts
+      if (any(tt$Count >= 3)) {
+        tt$Count[tt$Count >= 3] = "3+"
+        tt = ddply(tt, "Count", function(x) data.frame(Freq=sum(x$Freq)))
+      }
+      ## make counts relative
+      fraction = tt$Freq / sum(tt$Freq) * 100
+      return (data.frame(n=as.character(tt$Count), fraction = fraction))
+    })
+    
+    lpl =
+      byXflex(d_dups, d_dups$fc.raw.file, 30, plot_MS2Oversampling, sort_indices = FALSE)
+
+    ## QC measure for how many peaks were fragmented only once
+    qc_evd_twin = d_dups[d_dups$n==1,]
+    cname = .self$qcName
+    qc_evd_twin[, cname] = qualLinThresh(qc_evd_twin$fraction/100)
+
+    return(list(plots = lpl, qcScores = qc_evd_twin[, c("fc.raw.file", cname)]))
+  }, 
+  qcCat = "MS", 
+  qcName = "X025X_catMS_EVD:~MS^2~Oversampling", 
+  heatmapOrder = 0250)
 
 
 

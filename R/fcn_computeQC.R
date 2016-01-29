@@ -464,8 +464,6 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     ## barplots of mass error
     ##
-    cat("EVD: Precursor Mass Error ...\n")
-    
     ## MQ seems to mess up mass recal on some (iTRAQ/TMT) samples, by reporting ppm errors which include modifications
     ## , thus one sees >1e5 ppm, e.g. 144.10 Da
     ##  this affects both 'uncalibrated.mass.error..ppm.'   and
@@ -497,102 +495,23 @@ createReport = function(txt_folder, yaml_obj = list())
     param_EV_PrecursorOutOfCalSD = getYAML(yaml_obj, param_name_EV_PrecursorOutOfCalSD, param_def_EV_PrecursorOutOfCalSD)
     
     ##
-    ## check for MS1-out-of-calibration (i.e. the tol-window being too small)
+    ## MS1-out-of-calibration (i.e. the tol-window being too small)
     ##
-    ## heuristic to determine if the instrument is completely out of calibration, 
-    ## i.e. all ID's are false positives, since the Precursor mass is wrong
-    ## -- we use the SD; if larger than 2ppm, 
-    ## then ID's are supposedly random
-    ## -- alt: we use the 1%-to-99% quantile range: if > 10ppm
-    ## -- uninformative for detection is the distribution (it's still Gaussian for a strange reason)
-    MS1_decal_smr = ddply(d_evd, "fc.raw.file", function(x) 
-      data.frame(n = nrow(x), 
-                 sd = round(sd(x$mass.error..ppm., na.rm = TRUE), 1), 
-                 range = diff(quantile(x$mass.error..ppm., c(0.01, 0.99), na.rm = TRUE))))
     ## additionally use MS2-ID rate (should be below 1%)
     if (enabled_summary) {
-      MS1_decal_smr = merge(MS1_decal_smr, d_smy$raw[, c("fc.raw.file", "ms.ms.identified....")])
+      df_idrate = d_smy$raw[, c("fc.raw.file", "ms.ms.identified....")]
     } else {
-      MS1_decal_smr$ms.ms.identified.... = 0 ## upon no info: assume low IDrate
+      df_idrate = NULL
     }
     
-    MS1_decal_smr$lowIDRate = MS1_decal_smr$ms.ms.identified.... < 1
-    MS1_decal_smr$hasMassErrorBug = FALSE
-    MS1_decal_smr$hasMassErrorBug_unfixable = FALSE
-    recal_message = ""
-    recal_message_post = ""
-    ## check each raw file individually (usually its just a few who are affected)
-    de_cal = ddply(d_evd, "fc.raw.file", .fun = function(x) data.frame(q = (quantile(abs(x$uncalibrated.mass.error..ppm.), probs = 0.5, na.rm = TRUE) > 1e3)))
-    if (any(de_cal$q, na.rm = TRUE))
-    {
-      recal_message = "MQ bug: data rescued"
-      recal_message_post = 'MQ bug: data cannot be rescued'
-      
-      MS1_decal_smr$hasMassErrorBug[ MS1_decal_smr$fc.raw.file %in% de_cal$fc.raw.file[de_cal$q > 0] ] = TRUE
-      
-      ## re-compute 'uncalibrated.mass.error..ppm.' and 'mass.error..ppm.'
-      d_evd$theomz = d_evd$mass / d_evd$charge + 1.00726
-      d_evd$mass.error..ppm.2 = (d_evd$theomz - d_evd$m.z) / d_evd$theomz * 1e6
-      d_evd$uncalibrated.mass.error..ppm.2 = d_evd$mass.error..ppm.2 + d_evd$uncalibrated...calibrated.m.z..ppm.
-    
-      
-      ## check if fix worked
-      de_cal2 = ddply(d_evd, "raw.file", .fun = function(x)  data.frame(q = (median(abs(x$uncalibrated.mass.error..ppm.2), na.rm = TRUE) > 1e3)))
-      if (any(de_cal2$q, na.rm = TRUE))
-      { ## fix did not work
-        MS1_decal_smr$hasMassErrorBug_unfixable[ MS1_decal_smr$fc.raw.file %in% de_cal2$fc.raw.file[de_cal2$q] ] = TRUE
-        recal_message = "m/z recalibration bugfix applied but failed\n(there are still large numbers)"
-      }
-      
-      idx_overwrite = (d_evd$fc.raw.file %in% de_cal$fc.raw.file[de_cal$q > 0])
-      ## overwrite original values
-      d_evd$mass.error..ppm.[idx_overwrite] = d_evd$mass.error..ppm.2[idx_overwrite]
-      d_evd$uncalibrated.mass.error..ppm.[idx_overwrite] = d_evd$uncalibrated.mass.error..ppm.2[idx_overwrite]
-    }
-    
-    MS1_decal_smr$outOfCal = (MS1_decal_smr$sd > param_EV_PrecursorOutOfCalSD) & MS1_decal_smr$lowIDRate & 
-                             (MS1_decal_smr$sd < 100)  ## upper bound, to distinguish from MQ bug (which has much larger SD's)
-    
-    ## report too small search tolerance
-    if (any(MS1_decal_smr$outOfCal)) recal_message = "search tolerance too small"
-    
-    
-    ## Raw files where the mass error is obviously wrong (PSM's not substracted etc...)
-    affected_raw_files = MS1_decal_smr$fc.raw.file[MS1_decal_smr$outOfCal | MS1_decal_smr$hasMassErrorBug]
-    ## some outliers can have ~5000ppm, blowing up the plot margins
-    ## --> remove outliers 
-    ylim_g = range(boxplot.stats(d_evd$uncalibrated.mass.error..ppm.)$stats[c(1, 5)], c(-param_EV_PrecursorTolPPM, param_EV_PrecursorTolPPM) * 1.05)
-    ## PLOT
-    rep_data$add(
-      byXflex(d_evd, d_evd$fc.raw.file, 20, plot_UncalibratedMSErr, sort_indices = FALSE, 
-              MQBug_raw_files = affected_raw_files, 
-              y_lim = ylim_g,
-              stats = MS1_decal_smr,
-              extra_limit = param_EV_PrecursorTolPPM,
-              title_sub = recal_message)
-    )
-    
-    ## scores
-    qc_MS1deCal = ddply(d_evd[, c("uncalibrated.mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
-                        function(x) {
-                          xd = na.omit(x$uncalibrated.mass.error..ppm.)
-                          if (length(xd)==0) {
-                            r = HEATMAP_NA_VALUE ## if empty, give the Raw file an 'NA' score
-                          } else if (MS1_decal_smr$outOfCal[MS1_decal_smr$fc.raw.file == x$fc.raw.file[1]]) {
-                            r = 0 ## if we suspect out-of-calibration, give lowest score
-                          } else r = qualCenteredRef(xd, param_EV_PrecursorTolPPM)
-                          return (data.frame(med_rat = r))
-                        })
-    
-    colnames(qc_MS1deCal) = c("fc.raw.file", "X026X_catMS_EVD:~MS~Cal-Pre~(" %+% param_EV_PrecursorTolPPM %+% ")")
-    QCM[["X026X.EVD.MS_Cal-Pre"]] = qc_MS1deCal
+    qcMetric_EVD_PreCal$setData(d_evd, df_idrate, param_EV_PrecursorTolPPM, param_EV_PrecursorOutOfCalSD)
+    rep_data$add(qcMetric_EVD_PreCal$plots)
+    QCM[["X026X.EVD.MS_Cal-Pre"]] = qcMetric_EVD_PreCal$qcScores
     
     
     ##
-    ## post calibration
+    ## MS1 post calibration
     ##
-    cat("EVD: Precursor Mass Error (post calibration) ...\n")
-    
     param_name_EV_PrecursorTolPPMmainSearch = "File$Evidence$MQpar_mainSearchTol_num"
     param_def_EV_PrecursorTolPPMmainSearch = NA  ## we do not dare to have a default, since it ranges from 6 - 4.5 ppm across MQ versions
     param_EV_PrecursorTolPPMmainSearch = getYAML(yaml_obj, param_name_EV_PrecursorTolPPMmainSearch, param_def_EV_PrecursorTolPPMmainSearch)
@@ -606,126 +525,28 @@ createReport = function(txt_folder, yaml_obj = list())
     {
       warning("PTXQC: Cannot draw borders for calibrated mass error, since neither 'File$Evidence$MQpar_mainSearchTol_num' is set nor a mqpar.xml file is present!", immediate. = TRUE)
     }
-    
-    ylim_g = range(na.rm = TRUE, boxplot.stats(d_evd$mass.error..ppm.)$stats[c(1, 5)], c(-param_EV_PrecursorTolPPMmainSearch, param_EV_PrecursorTolPPMmainSearch) * 1.05)
-    ## PLOT
-    rep_data$add(
-      byXflex(d_evd, d_evd$fc.raw.file, 20, plot_CalibratedMSErr, sort_indices = FALSE,
-              MQBug_raw_files = affected_raw_files,
-              y_lim = ylim_g,
-              stats = MS1_decal_smr,
-              extra_limit = param_EV_PrecursorTolPPMmainSearch,
-              title_sub = recal_message_post
-              )
-    )
-    
-    ## QC measure for post-calibration ppm error
-    ## .. assume 0 centered and StdDev of observed data
-    obs_par = ddply(d_evd[, c("mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
-                    function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm = TRUE), sd = sd(x$mass.error..ppm., na.rm = TRUE)))
-    qc_MS1Cal = data.frame(fc.raw.file = obs_par$fc.raw.file, 
-                           val = sapply(1:nrow(obs_par), function(x) qualGaussDev(obs_par$mu[x], obs_par$sd[x])))
-    ## if we suspect out-of-calibration, give lowest score
-    qc_MS1Cal$val[qc_MS1Cal$fc.raw.file %in% MS1_decal_smr$fc.raw.file[ MS1_decal_smr$outOfCal ]] = 0 
-    ## MQ mass bugfix will not work for postCalibration, since values are always too low
-    qc_MS1Cal$val[qc_MS1Cal$fc.raw.file %in% MS1_decal_smr$fc.raw.file[ MS1_decal_smr$hasMassErrorBug ]] = HEATMAP_NA_VALUE
-    cname = "X027X_catMS_EVD:~MS~Cal-Post"
-    colnames(qc_MS1Cal)[colnames(qc_MS1Cal) == "val"] = cname
-    QCM[["X027X.EVD.MS_Cal-Post"]] = qc_MS1Cal
-    
-    
-    
-    
-    ## compute how well calibration worked
-    cal_medians = as.vector(by(d_evd$mass.error..ppm., d_evd$raw.file, median, na.rm = TRUE))
-    cal_stats = quantile(cal_medians, probs=c(0,0.5,1))
-    cat(pastet("medianCalibratedMassError(min,median,max) [ppm]", paste(cal_stats, collapse=",")), file=fh_out$stats_file, append = TRUE, sep="\n") 
-    
-    ##
-    ## elaborate contaminant fraction per Raw.file (this is not possible from PG, since raw files could be merged)
-    ## find top 5 contaminants (globally)
-    ##
-    cat("EVD: Contaminants per Raw file ...\n")
-    
-    
-    ## if possible, work on protein names (since MQ1.4), else use proteinIDs
-    if ("protein.names" %in% colnames(d_evd))
-    {
-      evd_pname = "protein.names"        
-    } else {
-      evd_pname = "proteins" 
-    }
-    ## protein.names are sometimes not unique, e.g. if a contaminant is involved:
-    ## "P02768;CON__P02768-1" and "P02768" will both give the same name (since contaminant name is empty)
-    ## Thus, the distribution of bars will look slightly different (but summed percentages are identical)
-    
-    ## some protein.names are empty (usually the CON__ ones) ... so we substitute with ID
-    d_evd$pname = d_evd[, evd_pname];
-    d_evd$pname[d_evd$pname==""] = d_evd$proteins[d_evd$pname==""] ## a NOP if it already is 'proteins', but ok
-    
-    d_evd.totalInt = sum(as.numeric(d_evd$intensity), na.rm = TRUE)
-    d_evd.cont.only = d_evd[d_evd$contaminant,]
-    cont.top = by(d_evd.cont.only, d_evd.cont.only$pname, function(x) sum(as.numeric(x$intensity), na.rm = TRUE) / d_evd.totalInt*100)
-    cont.top.sort = sort(cont.top, decreasing = TRUE)
-    #head(cont.top.sort)
-    cont.top5.names = names(cont.top.sort)[1:5]
-    
-    
-    if (is.null(cont.top5.names))
-    {
-      pl_cont = ggText("EVD: Contaminant per Raw file",
-                       paste0("No contaminants found in any sample.\n\nIncorporating contaminants during search is highly recommended!"),
-                       "red")
-      rep_data$add(pl_cont)  
-    } else {
-      rep_data$add(
-        byXflex(d_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], d_evd$fc.raw.file, 40, sort_indices = FALSE, 
-                plot_ContEVD, top5=cont.top5.names)
-      )
-    }
-    
-    ## QC measure for contamination
-    qc_contaminants = ddply(d_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
-                            function(x) {
-                              v = ifelse(is.null(cont.top5.names), 
-                                         HEATMAP_NA_VALUE, ## use NA in heatmap if there are no contaminants
-                                         1-qualLinThresh(sum(as.numeric(x$intensity[x$contaminant]), na.rm = TRUE)/
-                                                           sum(as.numeric(x$intensity), na.rm = TRUE)))
-                              data.frame("X001X_catPrep_EVD:~Contaminants" = v, check.names = FALSE)})
-    QCM[["EVD.Contaminants"]] = qc_contaminants
 
+    qcMetric_EVD_PostCal$setData(d_evd, df_idrate, param_EV_PrecursorTolPPM, param_EV_PrecursorOutOfCalSD, param_EV_PrecursorTolPPMmainSearch)
+    rep_data$add(qcMetric_EVD_PostCal$plots)
+    QCM[["X027X.EVD.MS_Cal-Post"]] = qcMetric_EVD_PostCal$qcScores
+    
+
+    ##
+    ## Top5 contaminants
+    ##
+    qcMetric_EVD_Top5Cont$setData(d_evd)
+    rep_data$add(qcMetric_EVD_Top5Cont$plots)
+    QCM[["Cont-Top5"]] = qcMetric_EVD_Top5Cont$qcScores
+    
     ##
     ## Oversampling: determine peaks repeatedly sequenced
     ##
-    cat("EVD: MS2 oversampling ...\n")
-    
-    d_dups = ddply(d_evd, "fc.raw.file", function(x) {
-      tt = as.data.frame(table(x$ms.ms.count), stringsAsFactors = FALSE)
-      tt$Count = as.numeric(tt$Var1)
-      ## remove "0", since this would be MBR-features
-      tt = tt[tt$Count!=0,]
-      ## summarize everything above 3 counts
-      if (any(tt$Count >= 3)) {
-        tt$Count[tt$Count >= 3] = "3+"
-        tt = ddply(tt, "Count", function(x) data.frame(Freq=sum(x$Freq)))
-      }
-      ## make counts relative
-      fraction = tt$Freq / sum(tt$Freq) * 100
-      return (data.frame(n=as.character(tt$Count), fraction = fraction))
-    })
-    
-    rep_data$add(
-      byXflex(d_dups, d_dups$fc.raw.file, 30, plot_MS2Oversampling, sort_indices = FALSE)
-    )
-    ## QC measure for centered-ness of MS2-calibration
-    qc_evd_twin = d_dups[d_dups$n==1,]
-    cname = "X025X_catMS_EVD:~MS^2~Oversampling"
-    qc_evd_twin[, cname] = qualLinThresh(qc_evd_twin$fraction/100)
-    QCM[["EVD.Oversampling"]] = qc_evd_twin[, c("fc.raw.file", cname)]
-    
+    qcMetric_EVD_MS2OverSampling$setData(d_evd)
+    rep_data$add(qcMetric_EVD_MS2OverSampling$plots)
+    QCM[["EVD.Oversampling"]] = qcMetric_EVD_MS2OverSampling$qcScores
+
     ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
     if (!exists("DEBUG_PTXQC")) d_evd = d_evd[, c("id", "contaminant")]
-    
 }
 
 
