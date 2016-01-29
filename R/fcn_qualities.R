@@ -11,6 +11,7 @@
 #' @param t Threshold value, which indicates 100\%
 #' @return Value between [0, 1]
 #' 
+#' @export
 #' 
 qualLinThresh = function(x, t = 1)
 {
@@ -39,6 +40,7 @@ qualLinThresh = function(x, t = 1)
 #' @param x Numeric values (e.g. ppm errors)
 #' @return Value between [0, 1]
 #' 
+#' @export
 #' 
 qualCentered = function(x)
 {
@@ -62,7 +64,8 @@ qualCentered = function(x)
 #' @param x  Vector of values (hopefully in interval [-tol, tol])
 #' @param tol Border of interval (must be positive)
 #' @return Value between [0, 1]
-#' 
+#'
+#' @export
 #' 
 qualCenteredRef = function(x, tol)
 {
@@ -86,6 +89,8 @@ qualCenteredRef = function(x, tol)
 #' 
 #' @param x A vector numeric values between [0,1]
 #' @return A vector of the same size as x, with quality values between [0, 1]
+#'
+#' @export
 #'
 qualMedianDist = function(x)
 {
@@ -176,6 +181,8 @@ qualUniform = function(x, weight=vector())
 #' @param sd SD of Gaussian
 #' @return quality, ranging from 0 (bad agreement) to 1 (perfect, i.e. centered at 0)
 #' 
+#' @export
+#' 
 qualGaussDev = function(mu, sd)
 {
   q = dnorm(0, mean = mu, sd = sd) / dnorm(mu, mean = mu, sd = sd)
@@ -234,6 +241,8 @@ qualHighest = function(x, N)
 #' @return A data.frame with ks-test values of the "reference" to all other distributions (see Details)
 #'
 #' @import stats
+#'
+#' @export
 #'
 qualBestKS = function(x) {
   
