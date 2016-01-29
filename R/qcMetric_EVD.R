@@ -1,6 +1,6 @@
 
 qcMetric_EVD_UserContaminant = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
 "User defined contaminant search (usually used for Mycoplasma detection, but can be used for an arbitrary (set of) proteins.
 
 Two abundance measures are computed per Raw file:
@@ -129,7 +129,7 @@ Two abundance measures are computed per Raw file:
 #####################################################################
 
 qcMetric_EVD_PeptideInt = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
 "Peptide intensity ...",
   workerFcn = function(.self, df_evd, thresh_intensity)
   {
@@ -166,7 +166,7 @@ qcMetric_EVD_PeptideInt = qcMetric$new(
 #####################################################################
 
 qcMetric_EVD_ProteinCount = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
 "Number of Protein groups (after FDR) per Raw file. If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
  are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad,
 MBR should be switched off for the Raw files which are affected (could be a few or all).",
@@ -200,8 +200,8 @@ MBR should be switched off for the Raw files which are affected (could be a few 
       r = data.frame(genuineAll = sum(x$counts[grep("^genuine", x$category)]))
       return (r)
     })
-    cname = sprintf(.self$qcName, thresh_intensity)
-    qc_protc[,cname] = qualLinThresh(qc_protc$genuineAll, thresh_intensity)
+    cname = sprintf(.self$qcName, thresh_protCount)
+    qc_protc[,cname] = qualLinThresh(qc_protc$genuineAll, thresh_protCount)
     qcScore = qc_protc[, c("fc.raw.file", cname)]
 
     return(list(plots = lpl, qcScores = qcScore))
@@ -214,7 +214,7 @@ MBR should be switched off for the Raw files which are affected (could be a few 
 #####################################################################
 
 qcMetric_EVD_PeptideCount = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
     "Number of peptides (after FDR) per Raw file. If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
   are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad,
   MBR should be switched off for the Raw files which are affected (could be a few or all).",
@@ -248,8 +248,8 @@ qcMetric_EVD_PeptideCount = qcMetric$new(
       r = data.frame(genuineAll = sum(x$counts[grep("^genuine", x$category)]))
       return (r)
     })
-    cname = sprintf(.self$qcName, thresh_intensity)
-    qc_pepc[,cname] = qualLinThresh(qc_pepc$genuineAll, thresh_intensity)
+    cname = sprintf(.self$qcName, thresh_pepCount)
+    qc_pepc[,cname] = qualLinThresh(qc_pepc$genuineAll, thresh_pepCount)
     qcScore = qc_pepc[, c("fc.raw.file", cname)]
     
     return(list(plots = lpl, qcScores = qcScore))
@@ -262,7 +262,7 @@ qcMetric_EVD_PeptideCount = qcMetric$new(
 #####################################################################
 
 qcMetric_EVD_RTPeakWidth = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
     "RT peak width distribution ...",
   workerFcn = function(.self, df_evd)
   {
@@ -313,7 +313,7 @@ qcMetric_EVD_RTPeakWidth = qcMetric$new(
 #####################################################################
 
 qcMetric_EVD_MBRAlign = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
     "Match-between-runs Alignment (step 1/2, 1=align, 2=transfer) ...",
   workerFcn = function(.self, df_evd, tolerance_matching, raw_file_mapping)
   {
@@ -407,7 +407,7 @@ qcMetric_EVD_MBRAlign = qcMetric$new(
 #####################################################################
 
 qcMetric_EVD_MBRIdTransfer = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
     "...",
   workerFcn = function(.self, df_evd, avg_peak_width)
   {
@@ -461,7 +461,7 @@ qcMetric_EVD_MBRIdTransfer = qcMetric$new(
 #####################################################################
 
 qcMetric_EVD_MBRaux = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
     "Auxililiary plots without scores ...",
   workerFcn = function(.self, df_evd)
   {
@@ -490,7 +490,7 @@ qcMetric_EVD_MBRaux = qcMetric$new(
         return (data.frame(abs = match_count_abs, pc = match_count_pc))
       })
       lpl[["gain"]] =
-        plot_MBRgain(data = mtr.df, title_sub = gain_text)
+        plot_MBRgain(data = mtr.df, title_sub = "")
     }
     
     return(list(plots = lpl))
@@ -504,7 +504,7 @@ qcMetric_EVD_MBRaux = qcMetric$new(
 #####################################################################
 
 qcMetric_EVD_Charge = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
     "Charge distribution per Raw file. Should be dominated by charge 2 and have the same fraction in each Raw file.",
   workerFcn = function(.self, df_evd, int_cols, MAP_pg_groups)
   {
@@ -529,7 +529,7 @@ qcMetric_EVD_Charge = qcMetric$new(
 #####################################################################
 
 qcMetric_EVD_IDoverRT = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
     "Number of peptide identifications over time. Constant numbers receive high scores.",
   workerFcn = function(.self, df_evd)
   {
@@ -562,7 +562,7 @@ qcMetric_EVD_IDoverRT = qcMetric$new(
 #####################################################################
 
 qcMetric_EVD_PreCal = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
     "Mass accurary before calibration. Outliers are marked as such using .. as additional information (if available).",
 workerFcn = function(.self, df_evd, df_idrate, tolerance_pc_ppm, tolerance_sd_PCoutOfCal)
   {
@@ -592,12 +592,12 @@ workerFcn = function(.self, df_evd, df_idrate, tolerance_pc_ppm, tolerance_sd_PC
                           } else if (fix_cal$stats$outOfCal[fix_cal$stats$fc.raw.file == x$fc.raw.file[1]]) {
                             r = 0 ## if we suspect out-of-calibration, give lowest score
                           } else {
-                            r = qualCenteredRef(xd, tolerance_pc)
+                            r = qualCenteredRef(xd, tolerance_pc_ppm)
                           } 
                           return (data.frame(med_rat = r))
                         })
     
-    cname = sprintf(.self$qcName, tolerance_pc)
+    cname = sprintf(.self$qcName, tolerance_pc_ppm)
     colnames(qc_MS1deCal) = c("fc.raw.file", cname)
 
     
@@ -611,7 +611,7 @@ workerFcn = function(.self, df_evd, df_idrate, tolerance_pc_ppm, tolerance_sd_PC
 #####################################################################
 
 qcMetric_EVD_PostCal = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
     "...",
   workerFcn = function(.self, df_evd, df_idrate, tolerance_pc_ppm, tolerance_sd_PCoutOfCal, tol_ppm_mainSearch)
   {
@@ -652,7 +652,7 @@ qcMetric_EVD_PostCal = qcMetric$new(
 #####################################################################
 
 qcMetric_EVD_Top5Cont = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
     "...",
   workerFcn = function(.self, df_evd)
   {
@@ -712,7 +712,7 @@ qcMetric_EVD_Top5Cont = qcMetric$new(
                   )
     colnames(qc_cont)[colnames(qc_cont) == "val"] = .self$qcName
 
-    return(list(plots = lpl, qcScores = qc_contaminants))
+    return(list(plots = lpl, qcScores = qc_cont))
   }, 
   qcCat = "Prep", 
   qcName = "X001X_catPrep_EVD:~Contaminants", 
@@ -721,7 +721,7 @@ qcMetric_EVD_Top5Cont = qcMetric$new(
 #####################################################################
 
 qcMetric_EVD_MS2OverSampling = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
     "...",
   workerFcn = function(.self, df_evd)
   {

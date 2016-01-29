@@ -46,7 +46,8 @@
 #' 
 qcMetric = setRefClass("qcMetric",
                        
-   fields = list(helpText = "character",
+   fields = list(helpText = "character",         ## identical to helpTextTemplate by default, but can be modified in workerFcn() if desired
+                 helpTextTemplate = "character", ## a template (with placeholders for update at runtime) or a static text
                  workerFcn = "function",  ## returns list(plots =, [qcScores=])
                  plots = "list",
                  ## the following members are related to the heatmap only
@@ -57,12 +58,13 @@ qcMetric = setRefClass("qcMetric",
                  outData = "list" ## optional auxiliary output data generated in workerFcn
                  ),
    methods = list(
-       initialize=function(helpText,
+       initialize=function(helpTextTemplate,
                            workerFcn,
                            qcCat = NA_character_,
                            qcName = NA_character_,
                            heatmapOrder = NaN) {
-           .self$helpText = helpText;
+           .self$helpText = helpTextTemplate;
+           .self$helpTextTemplate = helpTextTemplate;
            .self$workerFcn = workerFcn;
            .self$plots = list();  ## obtained from worker
            .self$qcScores = data.frame();  ## obtained from worker
@@ -71,6 +73,18 @@ qcMetric = setRefClass("qcMetric",
            .self$heatmapOrder = heatmapOrder;
            .self$outData = list();
            return(.self)
+       },
+       checkInput = function(required_columns, given_columns)
+       {
+         if (!all(required_columns %in% given_columns))
+         {
+           warning(paste0("Input check failed: columns '", 
+                          paste(setdiff(required_columns, given_columns), collapse="', '", sep=""),
+                          "' are not present in input data!"),
+                   immediate. = TRUE)
+           return (FALSE)
+         }
+         return (TRUE)
        },
        setData = function(...) { ## fill with MQ data and compute results
          

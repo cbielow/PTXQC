@@ -1,13 +1,13 @@
 
 
 qcMetric_SM_MSMSIdRate = qcMetric$new(
-  helpText = 
+  helpTextTemplate = 
 "MS/MS identification rate per Raw file from summary.txt. Each Raw file is colored
 according to its ID rate and categorized into performance bins as 'bad', 'ok' and 'great'. 
 
 The thresholds for the bins are
 %s.",
-  workerFcn=function(.self, df_summary, id_rate_bad, id_rate_great)
+  workerFcn = function(.self, df_summary, id_rate_bad, id_rate_great)
   {
     dms = df_summary$"ms.ms.identified...."
     dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was acquired
@@ -41,7 +41,8 @@ The thresholds for the bins are
     }
     
     ## update help text according to actual limits
-    .self$helpText = sprintf(.self$helpText, paste(paste0(" - ", names(lab_IDd)), collapse="\n", sep=""))
+    inText = paste(paste0(" - ", names(lab_IDd)), collapse="\n", sep="")
+    .self$helpText = sprintf(.self$helpTextTemplate, inText)
     
     ## QC measure for ID rate (threshold reached?)
     ## update QC name based on parameter values
