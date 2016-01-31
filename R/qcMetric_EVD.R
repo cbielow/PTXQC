@@ -390,11 +390,6 @@ qcMetric_EVD_MBRAlign = qcMetric$new(
           byX(evd_RT_t, evd_RT_t$fc.raw.file, 3*3, plot_MBRAlign, sort_indices = FALSE, 
               y_lim = y_lim, title_sub = txt_subtitle, match_tol = tolerance_matching)
 
-        ## save some memory
-        if (!exists("DEBUG_PTXQC")) {
-          rm("evd_RT_t")
-          rm("proj_align_h")
-        }
       } ## no data
     } ## ambigous reference file
     
@@ -759,7 +754,21 @@ qcMetric_EVD_MS2OverSampling = qcMetric$new(
   qcName = "X025X_catMS_EVD:~MS^2~Oversampling", 
   heatmapOrder = 0250)
 
-
-
-
 #####################################################################
+
+lst_qcMetrics_EVD = list(qcMetric_EVD_Charge, 
+                         qcMetric_EVD_IDoverRT,
+                         qcMetric_EVD_MBRAlign,
+                         qcMetric_EVD_MBRaux,
+                         qcMetric_EVD_MBRIdTransfer,
+                         qcMetric_EVD_MS2OverSampling,
+                         qcMetric_EVD_PeptideCount,
+                         qcMetric_EVD_PeptideInt,
+                         qcMetric_EVD_PostCal,
+                         qcMetric_EVD_PreCal,
+                         qcMetric_EVD_ProteinCount,
+                         qcMetric_EVD_RTPeakWidth,
+                         qcMetric_EVD_Top5Cont,
+                         qcMetric_EVD_UserContaminant)
+
+
