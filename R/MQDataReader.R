@@ -165,8 +165,10 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   #  fread(file, header = TRUE, sep='\t', na.strings=c("NA", "n. def."), verbose = TRUE, select = idx_keep, data.table = FALSE, ...)
   #)
   #colnames(.$mq.data) = make.names(colnames(.$mq.data), unique = TRUE)
+
   ## comment.char should be "", since lines will be TRUNCATED starting at the comment char.. and a protein identifier might contain just anything...
-  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def.", "非数字"), encoding="UTF-8", comment.char="", stringsAsFactors = FALSE, colClasses = colClasses, ...))
+  ## the '\u975E\u6570\u5B57' na-string is the chinese UTF-8 representation of "NA"
+  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def.", "\u975E\u6570\u5B57"), encoding="UTF-8", comment.char="", stringsAsFactors = FALSE, colClasses = colClasses, ...))
   if (inherits(.$mq.data, 'try-error')) stop(msg_parse_error, call. = FALSE);
   
   #colnames(.$mq.data)
@@ -181,7 +183,8 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     {
       stop(paste0("\n\nError: file '", file, "' seems to have been edited in Microsoft Excel and",
                                              " has artificial line-breaks which destroy the data at lines (roughly):\n",
-                                             paste(inv_lines, collapse="\n"), "\nPlease fix (e.g. try LibreOffice 4.0.x or above)!"))
+                                             paste(inv_lines, collapse="\n"), "\nPlease fix (e.g. try LibreOffice 4.0.x or above)!",
+                                             "You might also have unknown UTF-8 characters (Asian?) in your file which PTXQC does not recognize. Try running MaxQuant on an english locale!"))
     }
   }
   
