@@ -5,82 +5,101 @@
 #yamlObj
 #useP = getYAML(yamlObj, "SEC_Parameters$use", TRUE)
 
+#' 
 #' Query a YAML object for a certain parameter.
 #' 
 #' If the object has the param, then return it.
 #' If the param is unknown, create it with the given default value and return the default.
 #' 
-#' @note This function has a side-effect: it updates the parameter passed as 'config' in the calling environment!!!
-#' 
-#' @param config     A Yaml object as created by \code{\link[yaml]{yaml.load}}
-#' @param param_name A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"
-#' @param default    If seeked value is unknown, this will be used as new value
-#' 
-#' @return The stored value (might be the default, if no value was present)
+#' @field yamlObj A Yaml object as created by \code{\link[yaml]{yaml.load}}
 #'
-#' @export
-#'
-getYAML = function(config, param_name, default)
-{
-  orig_var = deparse(substitute(config)) ## do this BEFORE accessing 'config'
-  #print(orig_var)
-  pval = eval(parse(text=paste0("config$", param_name))) 
-  if (is.null(pval))
-  { ## param not known yet --> add
-    expr = paste0("config$", param_name, " = ", quote(default))
-    #cat("parsing expr: ", expr)
-    eval(parse(text=expr)) 
-    #print("new obj:");  #print(config)
-    assign(x=orig_var, value=config, pos=parent.frame(1))
-    return (default)
-  } else
-  {
-    return (pval)
-  }
-}
-
-
-#' Set a YAML parameter to a certain value.
-#' 
-#' @note This function has a side-effect: it updates the parameter passed as 'config' in the calling environment!!!
-#' 
-#' @param config     A Yaml object as created by \code{\link[yaml]{yaml.load}}
-#' @param param_name A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"
-#' @param value      New value to set
-#' 
-#' @return The value
-#'
-#' @export
-#'
-setYAML = function(config, param_name, value)
-{
-  orig_var = deparse(substitute(config)) ## do this BEFORE accessing 'config'
-  #print(orig_var)
-  expr = paste0("config$", param_name, " = ", quote(value))
-  #cat("parsing expr: ", expr)
-  eval(parse(text=expr)) 
-  #print("new obj:");  #print(config)
-  assign(x=orig_var, value=config, pos=parent.frame(1))
-  cat("Setting parameter '", param_name, "' using external data to '", value, "'.\n", sep="")
-  return (value)
-}
-
-
-#'
-#' Write YAML config (including some documentation) to a YAML file
-#' 
-#' @param filename File to write
-#' @param yaml_obj A nested list object with configuration parameters for the report.
-#'                 Useful to switch off certain plots or skip entire sections.
-#'                 Will be converted via 'as.yaml()'
-#' @return TRUE on success
-#' 
 #' @importFrom yaml as.yaml
 #' 
-writeYAML = function(filename, yaml_obj)
-{
-  yaml.user.warning = 
-"# This is a configuration file for PTXQC reporting.
+#' @exportClass YAMLClass
+#' @export YAMLClass
+#' 
+#' @examples 
+#'     yc = YAMLClass$new(list())
+#'     val = yc$getYAML("cat$subCat", "someDefault")
+#'     val  ## someDefault
+#'     val = yc$setYAML("cat$subCat", "someValue")
+#'     val  ## someValue
+#'     yc$getYAML("cat$subCat", "someDefault") ## still 'someValue' (since its set already)
+#' 
+YAMLClass = setRefClass(
+  "YAMLClass",
+  
+  fields = list(yamlObj = "list" # A Yaml object as created by \code{\link[yaml]{yaml.load}}
+  ),
+  
+  methods = list(
+    
+    ##
+    ##  ctor
+    ##
+    initialize = function(yamlObj = list()) {
+      .self$yamlObj = yamlObj;
+      return(.self)
+    },
+    
+    
+    #' Query a YAML object for a certain parameter.
+    #' 
+    #' If the object has the param, then return it.
+    #' If the param is unknown, create it with the given default value and return the default.
+    #' 
+    #' @param param_name A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"
+    #' @param default    If seeked value is unknown, this will be used as new value
+    #' 
+    #' @return The stored value (might be the default, if no value was present)
+    #'
+    getYAML = function(param_name, default)
+    {
+      cat(paste("getYAML with:", param_name, " default:", default, "\n"))
+      pval = eval(parse(text=paste0(".self$yamlObj$", param_name))) 
+      if (is.null(pval))
+      { ## param not known yet --> add
+        expr = paste0(".self$yamlObj$", param_name, " = ", quote(default))
+        eval(parse(text=expr)) 
+        cat(paste(" .. return default:", default, "\n"))
+        return (default)
+      } else {
+        cat(paste(" .. return val:", pval, "\n"))
+        return (pval)
+      }
+    },
+    
+    
+    #' Set a YAML parameter to a certain value.
+    #' 
+    #' @param param_name A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"
+    #' @param value      New value to set
+    #' 
+    #' @return The value
+    #'
+    setYAML = function(param_name, value)
+    {
+      expr = paste0(".self$yamlObj$", param_name, " = ", quote(value))
+      eval(parse(text=expr)) 
+      return (value)
+    },
+    
+    
+    #'
+    #' Write YAML config (including some documentation) to a YAML file
+    #' 
+    #' @param filename File to write
+    #' @param yaml_obj A nested list object with configuration parameters for the report.
+    #'                 Useful to switch off certain plots or skip entire sections.
+    #'                 Will be converted via 'as.yaml()'
+    #' @return TRUE on success
+    #' 
+    #' @importFrom yaml as.yaml
+    #' 
+    writeYAML = function(filename)
+    {
+      yaml.user.warning = 
+        "# This is a configuration file for PTXQC reporting.
 # One such file is generated automatically every time a report PDF is created.
 # You can make a copy of this file, then modify its values and use the copy as an input to another round of report generation,
 # e.g., to exclude/include certain plots or change some global settings.
@@ -101,6 +120,10 @@ writeYAML = function(filename, yaml_obj)
 # By default (no special ending) parameters are BINARY (yes or no).
 # Parameters ending in 'wA' (== 'withAuto') offer a heuristic to decide if something should be plotted.
 # Finally, numerical parameters... well... are numerical (usually integer).
+#
+#
+# The subsection 'order' enables reordering of metrics by assigning other numbers.
+# The order affects both the order of columns in the heatmap, and the order of plots in the report.
 #
 # Parameters whose name starts with 'MQpar_' should be matched to the parameters set in MaxQuant.
 # E.g. 'File$Evidence$MQpar_MatchingTimeWindow_num' is the matching (not alignment!) tolerance
@@ -128,7 +151,10 @@ writeYAML = function(filename, yaml_obj)
 #
 #
 "
-  cat(paste0(yaml.user.warning, as.yaml(yaml_obj)), file=filename)
-  
-  return (TRUE);
-}
+      cat(paste0(yaml.user.warning, as.yaml(.self$yamlObj)), file=filename)
+      
+      return (TRUE);
+    }
+    
+  )
+)

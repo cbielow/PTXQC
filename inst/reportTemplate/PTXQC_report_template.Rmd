@@ -40,31 +40,40 @@ jQuery(document).ready(function()
 
 ```{r setup, include=FALSE}
 ## global options
-knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(echo=FALSE, warning=TRUE, error=TRUE, message=TRUE, fig.width=8)
 ```
 
 # Overview
-## Parameters
-```{r MQparams}
-rep_data$get("params")
+## HeatMap
+```{r MQparams, echo=FALSE, results="asis"}
+hm[["plot"]]
 ```
 
 ## Name Mapping
-```{r nameMapping}
-rep_data$get("name_mapping")
+```{r nameMapping, echo=FALSE, results="asis"}
+pl_nameMapping[[1]]
 ```
 
-## Heatmap
-```{r heatmap}
-rep_data$get("heatmap")
+
+# Metrics
+```{r metrics, echo=FALSE, results="asis"}
+  for (qcm in lst_qcMetrics_ord[1:5])
+  {
+    if (length(qcm$plots) == 0) next; ## skip empty metrics
+    cat(paste0("\n## ", qcm$getTitles(), "\n"))
+    cat(paste0("\n<div>", qcm$helpText, "</div>\n"))
+    plots = qcm$getPlots(withTitle = FALSE)
+    lapply(plots, print)
+    cat("\n\n")
+  }
 ```
 
-## Metrics
-```{r metrics}
-GPL_lst = rep_data$get("metric")
-for (idx in sort(names(GPL_lst))) #[1:3])
-{
-  print(GPL_lst[[idx]] + ggtitle(""))
-}
-```
+
+
+
+
+
+
+
+
 

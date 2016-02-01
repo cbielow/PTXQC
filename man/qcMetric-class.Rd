@@ -25,7 +25,7 @@ and can produce plots (at runtime, when data is provided) using setData().
 
 \item{\code{qcName}}{[placeholder] Name of the qcScore in the heatmap}
 
-\item{\code{heatmapOrder}}{[placeholder] column index during heatmap generation}
+\item{\code{orderNr}}{[placeholder] column index during heatmap generation and for the general order of plots}
 }}
 \examples{
 
@@ -40,12 +40,12 @@ a = qcMetric$new(helpText="small help text",
                  }, 
                  qcCat="LC", 
                  qcName="MS/MS Peak shape", 
-                 heatmapOrder = 30)
+                 orderNr = 30)
 ## test some output
 a$setData(dd, "my title")
 a$plots  ## the raw plots
-a$print(TRUE) ## same as above
-a$print(FALSE) ## plots without title
+a$getPlots(TRUE) ## same as above
+a$getPlots(FALSE) ## plots without title
 a$getTitles()  ## get the titles of the all plots
 a$helpText
 a$qcName

@@ -17,7 +17,7 @@ test_that("qcMetric", {
                    }, 
                    qcCat="LC", 
                    qcName="MS/MS Peak shape", 
-                   heatmapOrder = 30)
+                   orderNr = 30)
   
   a$setData(dd, "title assigned by worker")
   s = a$qcScores
@@ -25,13 +25,13 @@ test_that("qcMetric", {
 
   p = a$plots
   expect_equal(length(p), 2)
-  a$print(TRUE) ## just check if it works
-  a$print(FALSE) ## just check if it works
+  a$getPlots(TRUE) ## just check if it works
+  a$getPlots(FALSE) ## just check if it works
   expect_equal(paste("title assigned by worker", 1:2), a$getTitles())
   
   expect_equal("small help text", a$helpText)
   expect_equal("MS/MS Peak shape", a$qcName)
   
-  expect_equal(30, a$heatmapOrder)
+  expect_equal(30, a$orderNr)
 })
 

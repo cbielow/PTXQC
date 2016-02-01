@@ -12,7 +12,7 @@
 #' @field qcScores [placeholder] Data.frame of scores from a qcMetric (computed within workerFcn())
 #' @field qcCat [placeholder] QC category (LC, MS, or prep)
 #' @field qcName [placeholder] Name of the qcScore in the heatmap
-#' @field heatmapOrder [placeholder] column index during heatmap generation
+#' @field orderNr [placeholder] column index during heatmap generation and for the general order of plots
 #'
 #' @import methods
 #' 
@@ -32,12 +32,12 @@
 #'                  }, 
 #'                  qcCat="LC", 
 #'                  qcName="MS/MS Peak shape", 
-#'                  heatmapOrder = 30)
+#'                  orderNr = 30)
 #' ## test some output
 #' a$setData(dd, "my title")
 #' a$plots  ## the raw plots
-#' a$print(TRUE) ## same as above
-#' a$print(FALSE) ## plots without title
+#' a$getPlots(TRUE) ## same as above
+#' a$getPlots(FALSE) ## plots without title
 #' a$getTitles()  ## get the titles of the all plots
 #' a$helpText
 #' a$qcName
@@ -54,23 +54,23 @@ qcMetric = setRefClass("qcMetric",
                  qcScores = "data.frame", ## with columns "raw.file", "score"
                  qcCat = "character", ## one of "prep", "LC", "MS" or empty (e.g. for PG)
                  qcName = "character", ## expression e.g. "MS^2~ID~Rate"
-                 heatmapOrder = "numeric", ## column index in heatmap (gaps are ignored)
+                 orderNr = "numeric", ## ordering of plots -- also applies to Heatmap; gaps are ignored
                  outData = "list" ## optional auxiliary output data generated in workerFcn
                  ),
    methods = list(
-       initialize=function(helpTextTemplate,
-                           workerFcn,
+       initialize=function(helpTextTemplate = NA_character_,
+                           workerFcn = function(){},
                            qcCat = NA_character_,
                            qcName = NA_character_,
-                           heatmapOrder = NaN) {
-           .self$helpText = helpTextTemplate;
+                           orderNr = NaN) {
            .self$helpTextTemplate = helpTextTemplate;
+           .self$helpText = helpTextTemplate;
            .self$workerFcn = workerFcn;
            .self$plots = list();  ## obtained from worker
            .self$qcScores = data.frame();  ## obtained from worker
            .self$qcCat = qcCat;
            .self$qcName = qcName;
-           .self$heatmapOrder = heatmapOrder;
+           .self$orderNr = orderNr;
            .self$outData = list();
            return(.self)
        },
@@ -87,7 +87,12 @@ qcMetric = setRefClass("qcMetric",
          return (TRUE)
        },
        setData = function(...) { ## fill with MQ data and compute results
-         
+         cat("Starting to work on", .self$qcName, "...\n")
+         if (.self$orderNr < 0)
+         {
+           cat("  Metric disabled. Skipping...\n")
+           return(NULL)
+         }
          r = workerFcn(.self, ...)
 
          if (!("plots" %in% names(r))) stop(c("Worker of '", .self$qcName, "' did not return valid result format!"))
@@ -96,14 +101,12 @@ qcMetric = setRefClass("qcMetric",
          
          if ("qcScores" %in% names(r)) .self$qcScores = r[["qcScores"]];
          
-         ##if ("") TODO: extract title?!
-         #l = list(...)
-         
+         cat("... [", .self$qcName,"] done\n")
          return(NULL)
        },
        
-       print = function(withTitle = TRUE) {
-         if (!withTitle) {
+       getPlots = function(withTitle = TRUE) {
+         if (!withTitle) { ## no title
            r = lapply(.self$plots, function(p) p + ggtitle(NULL))
            return(r)
          };
@@ -114,7 +117,17 @@ qcMetric = setRefClass("qcMetric",
          labels = sapply(1:length(.self$plots), 
                          function(idx) {
                            if ("title" %in% names(.self$plots[[idx]]$labels)){
-                             return (.self$plots[[idx]]$labels$title)
+                             title = .self$plots[[idx]]$labels$title
+                             #title = 'atop("PG: PCA of 'reporter intensity'", scriptstyle("(excludes contaminants)"))'
+                             title
+                             regex = "atop\\(\"(.*)\", scriptstyle\\(\"(.*)\"\\)\\)"
+                             m = regexpr(regex, title, perl=T)
+                             if (m == 1) { ## hit!
+                               text = substring(title, attr(m, "capture.start"), attr(m, "capture.start") + attr(m, "capture.length") - 1)
+                               title = paste(text[1],"-", text[2])
+                               title
+                             }
+                             return (title)
                            } else if (stopOnMissing) {
                              stop(c("getTitles(): No title found in ggplot object at index ", idx, "!"))
                            } else return("")
@@ -125,8 +138,38 @@ qcMetric = setRefClass("qcMetric",
      )
    ) ## refClass
 
+#########################################################################################
 
+qcMetric_AverageQualOverall = 
+  setRefClass("qcMetric_AverageQualOverall",
+              contains = "qcMetric",
+              methods = list(
+                initialize=function() {
+                  callSuper(
+                    helpTextTemplate = "Internal metric to compute the average quality across all other metrics",
+                    workerFcn = function(.self, df.QCM)
+                    {
+                      if (empty(df.QCM)) stop("AverageQual_qc::workerFcn(): input empty!")
+                      lpl = list() ## empty...
+                      qcScore = ddply(df.QCM, "fc.raw.file", function(df.row) {
+                        df.row.raw = unlist(df.row[,!grepl("fc.raw.file", colnames(df.row))])
+                        df.row.raw[is.infinite(df.row.raw)] = NA  ## mask explicitly missing values, since it will bias the mean otherwise
+                        return (data.frame(val = mean(df.row.raw, na.rm = TRUE)))
+                      })
+                      colnames(qcScore)[colnames(qcScore)=="val"] = .self$qcName
+                      
+                      return(list(plots = lpl, qcScores = qcScore))
+                    },
+                    qcCat = "General",
+                    qcName = "Average~Overall~Quality",
+                    orderNr = 9999
+                  )
+                  return(.self)
+                })
+              )
 
-
-
+#qcA = qcMetric_AverageQualOverall_$new()
+#qcA$setData(data.frame(fc.raw.file = letters[1:5], qual1 = 1:5, qual2 = 5:9))
+#qcA$qcScores
+#qcA$helpText
 

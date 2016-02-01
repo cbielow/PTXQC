@@ -507,6 +507,7 @@ computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_inGroup)
 #' 
 #' @import ggplot2
 #' @import ggdendro
+#' @importFrom reshape2 dcast
 #' 
 #' @export
 #'

@@ -4,10 +4,10 @@
 \alias{getQCHeatMap}
 \title{Generate a Heatmap from a list of QC measurements.}
 \usage{
-getQCHeatMap(QCM, raw_file_mapping)
+getQCHeatMap(lst_qcMetrics, raw_file_mapping)
 }
 \arguments{
-\item{QCM}{List of data.frames, each having a 'raw.file' or 'fc.raw.file' column and a metric column with numeric values}
+\item{lst_qcMetrics}{List of QCMetric objects}
 
 \item{raw_file_mapping}{Data.frame with 'from' and 'to' columns for name mapping to unify names from list entries}
 }
@@ -30,19 +30,5 @@ E.g. parse(text = <colname>)
 \details{
 To judge the overall quality of each raw file a summary column is added, 
 values being the mean of all other columns per row.
-}
-\examples{
-  mapping = data.frame(from=c("A.raw","B.raw"), to=c("A","B"))
-  QC_data = list(
-               somedata  = data.frame(raw.file=c("A.raw", "B.raw"),
-                                      "X005X.EVD:~Some~later~MS^2" = 1:2),
-               someother = data.frame(raw.file=c("A.raw", "B.raw"),
-                                      "X002X.EVD:~First~col" = 5:6),
-                  middle = data.frame(raw.file=c("A.raw", "B.raw"),
-                                      "X003X.EVD:~Middle_col" = 3:4))
-  getQCHeatMap(QC_data, mapping)
-
-
-
 }
 
