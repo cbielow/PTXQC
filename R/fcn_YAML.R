@@ -41,20 +41,10 @@ YAMLClass = setRefClass(
       .self$yamlObj = yamlObj;
       return(.self)
     },
-    
-    
-    #' Query a YAML object for a certain parameter.
-    #' 
-    #' If the object has the param, then return it.
-    #' If the param is unknown, create it with the given default value and return the default.
-    #' 
-    #' @param param_name A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"
-    #' @param default    If seeked value is unknown, this will be used as new value
-    #' 
-    #' @return The stored value (might be the default, if no value was present)
-    #'
+
     getYAML = function(param_name, default)
     {
+      "Query this YAML object for a certain parameter and return its value. If it does not exist it is created with a default value."
       cat(paste("getYAML with:", param_name, " default:", default, "\n"))
       pval = eval(parse(text=paste0(".self$yamlObj$", param_name))) 
       if (is.null(pval))
@@ -69,35 +59,18 @@ YAMLClass = setRefClass(
       }
     },
     
-    
-    #' Set a YAML parameter to a certain value.
-    #' 
-    #' @param param_name A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"
-    #' @param value      New value to set
-    #' 
-    #' @return The value
-    #'
     setYAML = function(param_name, value)
     {
+      "Set a YAML parameter to a certain value. Overwrites the old value or creates a new entry if hithero unknown."
       expr = paste0(".self$yamlObj$", param_name, " = ", quote(value))
       eval(parse(text=expr)) 
       return (value)
     },
     
     
-    #'
-    #' Write YAML config (including some documentation) to a YAML file
-    #' 
-    #' @param filename File to write
-    #' @param yaml_obj A nested list object with configuration parameters for the report.
-    #'                 Useful to switch off certain plots or skip entire sections.
-    #'                 Will be converted via 'as.yaml()'
-    #' @return TRUE on success
-    #' 
-    #' @importFrom yaml as.yaml
-    #' 
     writeYAML = function(filename)
     {
+      "Write YAML config (including some documentation) to a YAML file. Returns TRUE on success (always), unless writing the file generates an error."
       yaml.user.warning = 
         "# This is a configuration file for PTXQC reporting.
 # One such file is generated automatically every time a report PDF is created.

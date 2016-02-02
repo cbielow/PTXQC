@@ -52,7 +52,9 @@ The scoring function rewards centeredness around 0 ppm/Da.",
       lpl = dlply(ms2_decal, "mass.analyzer", function(ms2_decal) {
         byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, plot_MS2Decal, sort_indices = FALSE)
       })
-      
+      ## currently lpl is a list of lists() -- flatten
+      lpl = Reduce(append, lpl)
+
       ##
       ## QC measure for centered-ness of MS2-calibration
       ##

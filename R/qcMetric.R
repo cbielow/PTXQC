@@ -113,7 +113,7 @@ qcMetric = setRefClass("qcMetric",
          return(.self$plots)
        },
        
-       getTitles = function(stopOnMissing = TRUE) {
+       getTitles = function(stopOnMissing = TRUE, subtitle_sep = " - ") {
          labels = sapply(1:length(.self$plots), 
                          function(idx) {
                            if ("title" %in% names(.self$plots[[idx]]$labels)){
@@ -121,15 +121,15 @@ qcMetric = setRefClass("qcMetric",
                              #title = 'atop("PG: PCA of 'reporter intensity'", scriptstyle("(excludes contaminants)"))'
                              title
                              regex = "atop\\(\"(.*)\", scriptstyle\\(\"(.*)\"\\)\\)"
-                             m = regexpr(regex, title, perl=T)
+                             m = regexpr(regex, title, perl = TRUE)
                              if (m == 1) { ## hit!
                                text = substring(title, attr(m, "capture.start"), attr(m, "capture.start") + attr(m, "capture.length") - 1)
-                               title = paste(text[1],"-", text[2])
+                               title = paste0(text[1], subtitle_sep, text[2])
                                title
                              }
                              return (title)
                            } else if (stopOnMissing) {
-                             stop(c("getTitles(): No title found in ggplot object at index ", idx, "!"))
+                             stop(c("getTitles() for ", .self$qcName, ": No title found in ggplot object at index ", idx, "!"))
                            } else return("")
                          })
          return(labels)

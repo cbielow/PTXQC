@@ -5,33 +5,6 @@
 \alias{YAMLClass}
 \alias{YAMLClass-class}
 \title{Query a YAML object for a certain parameter.}
-\arguments{
-\item{param_name}{A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"}
-
-\item{default}{If seeked value is unknown, this will be used as new value}
-
-\item{param_name}{A string which holds the param name, i.e. referring to a variable within 'config', e.g. "proteinGroup$doPlot"}
-
-\item{value}{New value to set}
-
-\item{filename}{File to write}
-
-\item{yaml_obj}{A nested list object with configuration parameters for the report.
-Useful to switch off certain plots or skip entire sections.
-Will be converted via 'as.yaml()'}
-}
-\value{
-The stored value (might be the default, if no value was present)
-
-Set a YAML parameter to a certain value.
-
-The value
-
-
-Write YAML config (including some documentation) to a YAML file
-
-TRUE on success
-}
 \description{
 If the object has the param, then return it.
 If the param is unknown, create it with the given default value and return the default.
@@ -41,6 +14,15 @@ If the param is unknown, create it with the given default value and return the d
 \describe{
 \item{\code{yamlObj}}{A Yaml object as created by \code{\link[yaml]{yaml.load}}}
 }}
+\section{Methods}{
+
+\describe{
+\item{\code{getYAML(param_name, default)}}{Query this YAML object for a certain parameter and return its value. If it does not exist it is created with a default value.}
+
+\item{\code{setYAML(param_name, value)}}{Set a YAML parameter to a certain value. Overwrites the old value or creates a new entry if hithero unknown.}
+
+\item{\code{writeYAML(filename)}}{Write YAML config (including some documentation) to a YAML file. Returns TRUE on success (always), unless writing the file generates an error.}
+}}
 \examples{
     yc = YAMLClass$new(list())
     val = yc$getYAML("cat$subCat", "someDefault")
@@ -48,11 +30,6 @@ If the param is unknown, create it with the given default value and return the d
     val = yc$setYAML("cat$subCat", "someValue")
     val  ## someValue
     yc$getYAML("cat$subCat", "someDefault") ## still 'someValue' (since its set already)
-
-Query a YAML object for a certain parameter.
-
-If the object has the param, then return it.
-If the param is unknown, create it with the given default value and return the default.
 
 }
 

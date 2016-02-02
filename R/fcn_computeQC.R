@@ -79,7 +79,7 @@ createReport = function(txt_folder, yaml_obj = list())
   ####
   ####  prepare the metrics
   ####
-  lst_qcMetrics_str = ls(pattern="qcMetric_", sys.frame(which = 0))
+  lst_qcMetrics_str = ls(name = getNamespace("PTXQC"), pattern="qcMetric_")
   if (length(lst_qcMetrics_str) == 0) stop("computeReport(): No metrics found! Very weird!")
   lst_qcMetrics = sapply(lst_qcMetrics_str, function(m) {
     q = get(m)
@@ -674,11 +674,11 @@ if ("html" %in% out_format_requested)
   fh_out$report_file_extension = c(fh_out$report_file_extension, ".html")
   
   #template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
-  #knit2html(template, output = paste0(fh_out$report_file, ".html"))
   template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
   template
   ## Rmarkdown: convert to Markdown, and then to HTML or PDF...
   render(template, output_file = paste0(fh_out$report_file, ".html"))
+  #knit2html(template, output = paste0(fh_out$report_file, ".html"))
   ##render(template, output_file = paste0(fh_out$report_file, ".pdf"))
 }
 
