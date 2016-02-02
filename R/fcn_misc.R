@@ -1,6 +1,72 @@
-#install.packages('Biobase')
-#source("http://bioconductor.org/biocLite.R")
-#biocLite("Biobase")
+
+#'
+#' Get the longest common prefix from a set of strings.
+#' 
+#' Input is converted to character (e.g. from factor) first.
+#' 
+#' 
+#' @param strings Vector of strings
+#' @return Single string - might be empty ("")
+#' 
+#' @export
+#' 
+#' @examples 
+#'   longestCommonPrefix(c("CBA.321", "CBA.77654", ""))    ## ""
+#'   longestCommonPrefix(c("CBA.321", "CBA.77654", "CB"))  ## "CB"
+#'   longestCommonPrefix(c("ABC.123", "ABC.456"))          ## "ABC."
+#'   longestCommonPrefix(c("nothing", "in", "common"))     ## ""
+#' 
+#' 
+longestCommonPrefix = function(strings) {
+  strings = as.character(strings)
+  
+  if (length(strings) == 0) return("")
+  if (length(strings) == 1) return(strings[1])
+  
+  min_len = min(sapply(strings, nchar))
+  
+  if (min_len == 0) return ("")
+  i = 2
+  for(i in 1:(min_len+1)) ## +1 is required to gauge match for last char
+  {
+    if (i > min_len) next; ## passed the end
+    chars = substring(strings, i, i)
+    if (length(unique(chars)) > 1) {
+      ## mismatch at pos i
+      break;
+    }
+  }
+  if (i==1) return("")
+  
+  return(substr(strings[1], 1, i-1))
+}
+
+
+#'
+#' Like longestCommonPrefix(), but on the suffix.
+#' 
+#' @param strings Vector of strings
+#' @return Single string - might be empty ("")
+#' 
+#' @export
+#' 
+#' @examples 
+#' 
+#'  longestCommonSuffix(c("123.ABC", "45677.ABC", "BC"))  ## "BC"
+#'  longestCommonSuffix(c("123.ABC", "", "BC"))           ## ""
+#'  longestCommonSuffix(c("123.ABC", "45677.ABC"))        ## ".ABC"
+#'  longestCommonSuffix(c("nothing", "in", "common"))     ## ""
+#'  
+longestCommonSuffix = function(strings)
+{
+  strings_rev = sapply(lapply(strsplit(strings, NULL), rev), paste, collapse="")
+  r = longestCommonPrefix(strings_rev)
+  r_rev = sapply(lapply(strsplit(r, NULL), rev), paste, collapse="")
+  return (r_rev)
+}
+
+
+
 
 
 #' Removes the longest common prefix (LCP) from a vector of strings.
@@ -41,15 +107,12 @@
 #'   delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=60, add_dots = TRUE)
 #'   ## "TK12345_H1", "TK12345_H2" (unchanged)
 #' 
-#' @importFrom Biobase lcPrefix
-#' 
 #' 
 #' @export
 delLCP <- function(x, min_out_length = 0, add_dots = FALSE)
 {
   x = as.character(x)
-  #require(Biobase)
-  lcp = nchar(lcPrefix( x ))   # shorten string (remove common prefix)
+  lcp = nchar(longestCommonPrefix( x ))   # shorten string (remove common prefix)
   
   if (min_out_length > 0)
   {
@@ -76,13 +139,10 @@ delLCP <- function(x, min_out_length = 0, add_dots = FALSE)
 #' delLCS(c("TK12345_H1", "TK12345_H2"))       ## "TK12345_H1" "TK12345_H2" 
 #' delLCS(c("TK12345_H1", "TK12!45_H1"))       ## "TK123"    "TK12!" 
 #'  
-#' @importFrom Biobase lcSuffix
-#' 
 #' @export
 delLCS <- function(x)
 {
-  #require(Biobase)
-  lcs = nchar(lcSuffix( x ))   # shorten string (remove common suffix)
+  lcs = nchar(longestCommonSuffix( x ))   # shorten string (remove common suffix)
   x = sapply(x, function(v) substr(v, 1, nchar(v)-lcs))
   return (x)
 }
@@ -92,13 +152,10 @@ delLCS <- function(x)
 #' @param x Vector of strings with common prefix
 #' @return Length of LCP
 #' 
-#' @importFrom Biobase lcPrefix
-#' 
 #' @export
 lcpCount <- function(x)
 {
-  #require(Biobase)
-  lcp = nchar(lcPrefix( x ))   # number of common prefix chars
+  lcp = nchar(longestCommonPrefix( x ))   # number of common prefix chars
   return (lcp)
 }
 
@@ -107,13 +164,10 @@ lcpCount <- function(x)
 #' @param x Vector of strings with common suffix
 #' @return Length of LCS
 #' 
-#' @importFrom Biobase lcSuffix
-#' 
 #' @export
 lcsCount <- function(x)
 {
-  #require(Biobase)
-  lcs = nchar(lcSuffix( x ))   # number of common suffix chars
+  lcs = nchar(longestCommonSuffix( x ))   # number of common suffix chars
   return(lcs)
 }
 

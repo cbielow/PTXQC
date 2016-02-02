@@ -36,8 +36,8 @@ test_that("createReport", {
                  "report_file_simple", "report_file_extended", "report_file", "report_file_extension"), names(r))
   rep_file = paste0(r[["report_file"]], r[["report_file_extension"]])
   
-  expect_equal(file.exists(rep_file), TRUE)
-  expect_gt(file.info(rep_file)$size, 100*1024) ## ~119kb PDF
+  expect_equal(all(file.exists(rep_file)), TRUE)
+  expect_equal(all(file.info(rep_file)$size > rep(100*1024, 2)), TRUE) ## ~119kb PDF & HTML
   
   expect_equal(file.exists(r[["heatmap_values_file"]]), TRUE)
   d_heatmap = read.delim(r[["heatmap_values_file"]])

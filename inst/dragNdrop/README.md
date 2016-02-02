@@ -37,8 +37,6 @@ this is out of scope of this manual).
         ##
         if (!require(devtools, quietly = TRUE)) install.packages("devtools")
         library("devtools")             ## if you see a warning like 'WARNING: Rtools is required ...': ignore it.
-        source("http://bioconductor.org/biocLite.R")
-        biocLite("Biobase")
         install_github("cbielow/PTXQC", build_vignettes = TRUE)   ## use build_vignettes = FALSE if you did not install pandoc!
 
         cat(paste0("\nPTXQC was installed to '", .libPaths()[1], "'.\n\n"))

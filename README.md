@@ -68,8 +68,6 @@ how to resolve them.
    
     if (!require(devtools, quietly = TRUE)) install.packages("devtools")
     library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
-    source("http://bioconductor.org/biocLite.R")
-    biocLite("Biobase")
     install_github("cbielow/PTXQC", build_vignettes = TRUE)    ## use build_vignettes = FALSE if you did not install pandoc!
     
 To get started, see the help and/or vignettes:

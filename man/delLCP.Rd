@@ -48,5 +48,6 @@ If only a single string is given, the empty string will be returned unless \code
   delLCP(c("TK12345_H1", "TK12345_H2"), min_out_length=60, add_dots = TRUE)
   ## "TK12345_H1", "TK12345_H2" (unchanged)
 
+
 }
 

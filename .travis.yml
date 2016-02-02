@@ -2,4 +2,3 @@ language: r
 sudo: required
 
 bioc_packages:
- - Biobase

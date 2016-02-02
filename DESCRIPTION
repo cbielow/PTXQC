@@ -1,7 +1,7 @@
 Package: PTXQC
 Type: Package
 Title: Quality Report Generation for MaxQuant Results
-Version: 0.70.4
+Version: 0.80.0
 Date: 2015-10-29
 Author: Chris Bielow <chris.bielow@mdc-berlin.de>
 Maintainer: Chris Bielow <chris.bielow@mdc-berlin.de>
@@ -10,7 +10,6 @@ Description: An R-package to generate comprehensive quality control reports from
 Depends:
     R (>= 3.0.0)
 Imports:
-    Biobase,
     ggplot2,
     ggdendro,
     graphics,

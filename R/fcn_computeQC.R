@@ -28,7 +28,7 @@
 #'           
 createReport = function(txt_folder, yaml_obj = list())
 {
-  
+  DEBUG_PTXQC = FALSE
   ###
   ###  prepare the YAML config
   ###
@@ -82,7 +82,7 @@ createReport = function(txt_folder, yaml_obj = list())
   if (!DEBUG_PTXQC) {
     lst_qcMetrics_str = ls(name = getNamespace("PTXQC"), pattern="qcMetric_") 
   } else {
-    lst_qcMetrics_str = ls(pattern="qcMetric_") ## executed outside of package, i.e. not loaded...
+    lst_qcMetrics_str = ls(sys.frame(which = 0), pattern="qcMetric_") ## executed outside of package, i.e. not loaded...
   }
   if (length(lst_qcMetrics_str) == 0) stop("computeReport(): No metrics found! Very weird!")
   lst_qcMetrics = sapply(lst_qcMetrics_str, function(m) {
@@ -651,7 +651,7 @@ pl_nameMapping = mq$plotNameMapping()
 out_formats_supported = c("html", "plainPDF")
 
 param_name_PTXQC_OutputFormats = "PTXQC$OutputFormats"
-param_def_PTXQC_OutputFormats = out_formats_supported[2]
+param_def_PTXQC_OutputFormats =  out_formats_supported
 param_OutputFormats = yc$getYAML(param_name_PTXQC_OutputFormats, param_def_PTXQC_OutputFormats)
 
 param_name_PTXQC_PageNumbers = "PTXQC$PlainPDF$AddPageNumbers"
@@ -670,22 +670,6 @@ out_format_requested = out_formats_supported[match(out_formats, out_formats_supp
 if (any(is.na(out_format_requested)))
 {
   stop("Output format(s) not supported: '", paste(out_formats[is.na(out_format_requested)], collapse="', '"), "'")
-}
-
-if ("html" %in% out_format_requested)
-{
-  fh_out$report_file_extension = c(fh_out$report_file_extension, ".html")
-  
-  if (DEBUG_PTXQC) {
-    template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
-  } else {
-    template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
-  }
-  template
-  ## Rmarkdown: convert to Markdown, and then to HTML or PDF...
-  render(template, output_file = paste0(fh_out$report_file, ".html"))
-  #knit2html(template, output = paste0(fh_out$report_file, ".html"))
-  ##render(template, output_file = paste0(fh_out$report_file, ".pdf"))
 }
 
   
@@ -724,6 +708,22 @@ if ("plainPDF" %in% out_format_requested)
   }
   dev.off();
   cat(" done\n")
+}
+
+if ("html" %in% out_format_requested)
+{
+  fh_out$report_file_extension = c(fh_out$report_file_extension, ".html")
+  
+  if (DEBUG_PTXQC) {
+    template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
+  } else {
+    template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
+  }
+  template
+  ## Rmarkdown: convert to Markdown, and then to HTML or PDF...
+  render(template, output_file = paste0(fh_out$report_file, ".html"))
+  #knit2html(template, output = paste0(fh_out$report_file, ".html"))
+  ##render(template, output_file = paste0(fh_out$report_file, ".pdf"))
 }
 
 ## save plot object (for easier access, in case someone wants high-res plots)
