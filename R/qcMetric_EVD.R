@@ -19,7 +19,6 @@ Two abundance measures are computed per Raw file:
       
       local_qcScores = data.frame()
       
-      idx_pl = 1
       lpl = list()
       
       for (ca_entry in lst_contaminants)
@@ -89,21 +88,19 @@ Two abundance measures are computed per Raw file:
           pl_cont = ggText("PG: Contaminants",
                            paste0("Contaminant '", ca, "' was not found in any sample.\n\nDid you use the correct database?"),
                            "red")
-          lpl[[idx_pl]] = pl_cont
-          idx_pl = idx_pl + 1
+          lpl = append(lpl, pl_cont)
         } else {
           ## plot User-Contaminants
-          lpl[[idx_pl]] = byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, 
-                                    FUN = plot_ContUser, sort_indices = FALSE, name_contaminant = ca, extra_limit = ca_thresh)
-          idx_pl = idx_pl + 1
+          lpl_i = byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, 
+                          FUN = plot_ContUser, sort_indices = FALSE, name_contaminant = ca, extra_limit = ca_thresh)
+          lpl = append(lpl, lpl_i)
           
           ## plot Andromeda score distribution of contaminant vs. sample
           llply(cont_data.l, function(l)
           {
             if (l$cont_data$above.thresh == FALSE) return(NULL)
             p = plot_ContUserScore(l$cont_scoreECDF, l$cont_data$fc.raw.file, l$cont_data$score_KS)
-            lpl[[idx_pl]] = p
-            idx_pl = idx_pl + 1
+            lpl = append(lpl, list(p))
             #print(p)
             return(NULL)
           })
