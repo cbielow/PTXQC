@@ -79,7 +79,11 @@ createReport = function(txt_folder, yaml_obj = list())
   ####
   ####  prepare the metrics
   ####
-  lst_qcMetrics_str = ls(name = getNamespace("PTXQC"), pattern="qcMetric_")
+  if (!DEBUG_PTXQC) {
+    lst_qcMetrics_str = ls(name = getNamespace("PTXQC"), pattern="qcMetric_") 
+  } else {
+    lst_qcMetrics_str = ls(pattern="qcMetric_") ## executed outside of package, i.e. not loaded...
+  }
   if (length(lst_qcMetrics_str) == 0) stop("computeReport(): No metrics found! Very weird!")
   lst_qcMetrics = sapply(lst_qcMetrics_str, function(m) {
     q = get(m)
@@ -95,7 +99,6 @@ createReport = function(txt_folder, yaml_obj = list())
   
   ## write/update order from YAML
   i = 1
-  print(df.meta)
   for (i in 1:nrow(df.meta))
   {
     cat(paste("meta id: ", df.meta$.id[i], "\n"))
@@ -673,8 +676,11 @@ if ("html" %in% out_format_requested)
 {
   fh_out$report_file_extension = c(fh_out$report_file_extension, ".html")
   
-  #template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
-  template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
+  if (DEBUG_PTXQC) {
+    template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
+  } else {
+    template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
+  }
   template
   ## Rmarkdown: convert to Markdown, and then to HTML or PDF...
   render(template, output_file = paste0(fh_out$report_file, ".html"))

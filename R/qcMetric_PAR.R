@@ -55,7 +55,8 @@ qcMetric_PAR =  setRefClass(
       parC = c("parameter", "value")
       d_par2 = cbind(d_par[d_par$page==0, parC], d_par[d_par$page==1, parC])
       
-      par_pl = plotTable(d_par2, title = "PAR: parameters", footer = fasta_files)
+      plot_title = "PAR: parameters"
+      par_pl = plotTable(d_par2, title = plot_title, footer = fasta_files)
       
       return(list(plots = list(par_pl)))
     }, 

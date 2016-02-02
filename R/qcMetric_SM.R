@@ -37,9 +37,10 @@ The thresholds for the bins are
           sm_badID[40, "ms.ms.identified...."] = ""
           sm_badID = sm_badID[1:40, ]
         }
+        plot_title = paste0("SM: Files with '", lab_IDd[1], "' ID rate ")
         p_tbl = plotTable(sm_badID, 
-                          title = paste0("SM: Files with '", lab_IDd[1],
-                                         "' ID rate (", round(bad_id_count*100/nrow(df_summary)), "% of samples)"),
+                          title = plot_title,
+                          footer = paste0(round(bad_id_count*100/nrow(df_summary)), "% of samples)"),
                           col_names = c("Raw file", "% identified"))
         lpl[["bad_id_table"]] =  p_tbl
       }

@@ -754,6 +754,9 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
   ## in combination with print.PTXQC_table() -- see below
   p = gTree(children = gList(table), cl = c("PTXQC_table"))
   
+  ## hide the table name inside (for qcMetric::getTitles())
+  p$labels$title = title
+    
   #print(p)
   return(p)
 }

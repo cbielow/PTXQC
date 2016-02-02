@@ -107,7 +107,11 @@ qcMetric = setRefClass("qcMetric",
        
        getPlots = function(withTitle = TRUE) {
          if (!withTitle) { ## no title
-           r = lapply(.self$plots, function(p) p + ggtitle(NULL))
+           r = lapply(.self$plots, function(p) {
+             ## delete title 
+             if ("ggplot" %in% class(p)) p = p + ggtitle(NULL)
+             return (p)
+           })
            return(r)
          };
          return(.self$plots)
