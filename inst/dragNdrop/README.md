@@ -18,12 +18,12 @@ and install R from scratch, such that you do not end up copying useless packages
 If you are a knowledgeable R user already, you can probably find other ways around it (e.g. a temporary library, or selective copying of packages, but
 this is out of scope of this manual).
 
- - if you want to build the vignettes which come with this package, you need to install [pandoc](https://github.com/jgm/pandoc/releases).
-   Alternatively, you can skip vignette building and read the [vignettes] [Ref_Vign] online from the PTXQC GitHub page.
-   **If you install pandoc later while your R session is already open, you need to close and re-open R in order to make R aware of pandoc!**
-
  - create a clean R installation by downloading R from [http://www.r-project.org] and installing it. Make sure to install the x64 version for 64bit support.
    If you already have R installed, you may skip this step.
+ - install [pandoc](https://github.com/jgm/pandoc/releases). Pandoc is required in order to build the package vignettes (documentation) and PTXQC reports in HTML format.
+   In theory you can skip vignette building (see below) and read the [vignettes] [Ref_Vign] online from the PTXQC GitHub page.
+   The reports can also be configured to be printed as PDF instead of HTML, but HTML just looks nicer and is interactive.
+   **If you install Pandoc later while your R session is already open, you need to close and re-open R in order to make R aware of Pandoc!**
  - Now, we install PTXQC and its dependency packages.
    Start the R GUI (64bit!) and execute the following commands to install the `PTXQC` package (dependencies are installed automatically).
    
@@ -57,9 +57,11 @@ Almost done, we just need to copy some folders.
     Usually, that's some network or local drive (e.g. **`<QCdir>`** = `Z:\my-proteomics`)
  3. **Copy** the whole R installation directory (e.g. `c:\program files\R\R-3.1.0`) into the `<QCdir>\QC-dragdrop\_internal` sub-folder,
     such that you end up with `<QCdir>\QC-dragdrop\_internal\R-3.1.0\` (your R version number might differ)
- 4. If your newly copied R installation directory is _not_ named `R-3.1.0`, **rename** it to `R-3.1.0` 
+ 4. **Copy** the Pandoc.exe (which you installed earlier) to `<QCdir>\QC-dragdrop\_internal\R-3.1.0\bin\pandoc\pandoc.exe` (you will need to create the pandoc folder).
+    The batch file expects to find Pandoc there and will throw an error if Pandoc is missing.
+ 5. If your newly copied R installation directory is _not_ named `R-3.1.0`, **rename** it to `R-3.1.0` 
     (or edit the `<QCdir>\QC-dragdrop\createQC_dragNdrop.bat` to match your R version)
- 5. If the `<libR>` folder was not your default R library (see step 1), but a user library, then **copy** the packages it contains (PTXQC among others),
+ 6. If the `<libR>` folder was not your default R library (see step 1), but a user library, then **copy** the packages it contains (PTXQC among others),
     into `<QCdir>\QC-dragdrop\_internal\R-3.1.0\library\`.
  
 Now, you should have the following structure

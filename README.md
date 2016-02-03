@@ -56,10 +56,11 @@ See [drag'n'drop] [1] for details. It takes 10 minutes and you are done!
 
 **If you just want the package to use (and maybe even modify) it:**
 
-If you want to build the vignettes which come with this package, you need to install [pandoc](https://github.com/jgm/pandoc/releases).
-Alternatively, you can skip vignette building and read the [vignettes] [Ref_Vign] online from the PTXQC GitHub page.
-**If you install pandoc later while your R session is already open, you need to close and re-open R in order to make R aware of pandoc!**
-
+First, install [pandoc](https://github.com/jgm/pandoc/releases). Pandoc is required in order to build the package vignettes (documentation) and PTXQC reports in HTML format.
+In theory you can skip vignette building (see below) and read the [vignettes] [Ref_Vign] online from the PTXQC GitHub page.
+The reports can also be configured to be printed as PDF instead of HTML, but HTML just looks nicer and is interactive.
+**If you install Pandoc later while your R session is already open, you need to close and re-open R in order to make R aware of Pandoc!**
+   
 The following lines will install the PTXQC package.
 Direct installation from GitHub requires the 'devtools' package.
 Run **each line** separately in your R console, i.e. do not copy and paste the whole block.
