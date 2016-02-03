@@ -20,13 +20,20 @@ The scoring function rewards centeredness around 0 ppm/Da.",
       
       
       ms2_decal = ddply(df_msms, c("fc.raw.file", "mass.analyzer"), .fun = function(x) {
-        idx_nr = which(!x$reverse)
-        ## select a representative subset, otherwise the number of datapoints is just too large
-        idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=ceiling(length(idx_nr)/1000))]
-        df.ms = getFragmentErrors(x[idx_nr_subset,])
-        df.ms$type="forward"
+        df.ms = NULL
+        ##
+        ##  Forwards
+        ##
+        if (sum(!x$reverse) > 2)
+        {
+          idx_nr = which(!x$reverse)
+          ## select a representative subset, otherwise the number of datapoints is just too large
+          idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=ceiling(length(idx_nr)/1000))]
+          df.ms = getFragmentErrors(x[idx_nr_subset, , drop=FALSE])
+          df.ms$type="forward"
+        } 
         
-        if (any(x$reverse))
+        if (sum(x$reverse) > 2)
         {
           idx_nr = which(x$reverse)
           ## select a representative subset, otherwise the number of datapoints is just too large

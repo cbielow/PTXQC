@@ -88,7 +88,7 @@ Two abundance measures are computed per Raw file:
           pl_cont = ggText("PG: Contaminants",
                            paste0("Contaminant '", ca, "' was not found in any sample.\n\nDid you use the correct database?"),
                            "red")
-          lpl = append(lpl, pl_cont)
+          lpl = append(lpl, list(pl_cont))
         } else {
           ## plot User-Contaminants
           lpl_i = byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, 

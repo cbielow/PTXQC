@@ -97,7 +97,11 @@ qcMetric = setRefClass("qcMetric",
 
          if (!("plots" %in% names(r))) stop(c("Worker of '", .self$qcName, "' did not return valid result format!"))
          if (!class(r[["plots"]]) == "list") stop(c("Worker of '", .self$qcName, "' did not return plots in list format!"))
-         .self$plots = r[["plots"]];
+         
+
+         lpl = flattenList(r[["plots"]])
+         .self$plots = lpl;
+         #.self$plots = r[["plots"]]
          
          if ("qcScores" %in% names(r)) .self$qcScores = r[["qcScores"]];
          
@@ -143,6 +147,26 @@ qcMetric = setRefClass("qcMetric",
    ) ## refClass
 
 #########################################################################################
+
+
+#'
+#' Flatten lists of lists with irregular depths to just a list of items,
+#' i.e. a list of the leaves (if you consider the input as a tree).
+#' 
+#' @param x List of 'stuff' (could be lists or items or a mix)
+#' @return A flat list
+#'
+#'
+#'
+flattenList = function(x) {
+  repeat {
+    idx_list = sapply(x, function(arg) {return(all(class(arg) == "list"))})
+    if(!any(idx_list)) return(x)
+    r_list = Reduce(append, x[idx_list])
+    items = x[!idx_list]
+    x = Reduce(append, list(r_list, items))
+  }
+}
 
 qcMetric_AverageQualOverall = 
   setRefClass("qcMetric_AverageQualOverall",
