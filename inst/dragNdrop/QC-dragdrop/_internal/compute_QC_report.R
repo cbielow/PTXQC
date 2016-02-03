@@ -14,7 +14,9 @@ argv = commandArgs(TRUE)
 
 if(!(length(argv) %in% 1:2))
 {
-  stop("Wrong number of parameters!\nUsage: <thisScript.R> <PATH_TO_TXT> [<PATH_TO_YAML_CONFIG>]\n");
+  stop("Wrong number of parameters!\n",
+    "Received: \n - ", paste(argv, collapse="\n - ", sep=""),
+    "\n\nUsage: <thisScript.R> <PATH_TO_TXT> [<PATH_TO_YAML_CONFIG>]\n");
 }
 
 PATH_TO_TXT = argv[1]
