@@ -75,6 +75,7 @@ if %is_dir%==1 (
   set txt=%1
 ) else ( 
   echo -- '%1' is a file
+  REM the \ is required!
   set txt=%~dp1\
 ) 
 
@@ -82,7 +83,9 @@ ECHO Txt folder is at '%txt%'
 
 if %argC%==2 (
   REM we use %~dpnx2 instead of %2 to get rid of potential extra surrounding quotes
-  set yaml_file="%~dpnx2"
+  set yaml_file=%~dpnx2
+  ECHO.
+  ECHO Yaml file is '!yaml_file!'
   ECHO.
   REM check file extension. We could also use %~x2 to get the file extension
   if !yaml_file:~-5! NEQ .yaml (
@@ -123,12 +126,20 @@ if ERRORLEVEL 1 (
 REM works WITH and WITHOUT spaces in !txt!
 if "%yaml_file%" NEQ "" (
   ECHO Using YAML '!yaml_file!' file and calling R now ...
-)
   ECHO.
-  ECHO Calling '%I%\R-3.1.0\bin\x64\rscript.exe --vanilla %I%\compute_QC_report.R !txt! !yaml_file!'
+  ECHO Calling '%Iqt%\R-3.1.0\bin\x64\rscript.exe --vanilla %Iqt%\compute_QC_report.R !txt! !yaml_file!'
   REM using Iqt to guard against path with spaces. Note that using a manually quoted !I!, i.e. "!I!", does not work
-  CMD /C "!Iqt!\R-3.1.0\bin\x64\rscript --vanilla !Iqt!\compute_QC_report.R !txt! !yaml_file!"
+  REM However, quoting the arguments is ok.
+  !Iqt!\R-3.1.0\bin\x64\rscript --vanilla !Iqt!\compute_QC_report.R "!txt!" "!yaml_file!"
+) else (
+REM 
+  ECHO.
+  ECHO Calling '%Iqt%\R-3.1.0\bin\x64\rscript.exe --vanilla %Iqt%\compute_QC_report.R !txt!'
+  REM using Iqt to guard against path with spaces. Note that using a manually quoted !I!, i.e. "!I!", does not work
+  REM However, quoting the arguments is ok.
+  !Iqt!\R-3.1.0\bin\x64\rscript --vanilla !Iqt!\compute_QC_report.R "!txt!"
 )
+
 
 set myscriptEL=%errorlevel%
 REM report error, if any
