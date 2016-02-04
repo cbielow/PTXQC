@@ -24,25 +24,26 @@ The scoring function rewards centeredness around 0 ppm/Da.",
         ##
         ##  Forwards
         ##
-        if (sum(!x$reverse) > 2)
+        if (any(!x$reverse))
         {
           idx_nr = which(!x$reverse)
           ## select a representative subset, otherwise the number of datapoints is just too large
           idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=ceiling(length(idx_nr)/1000))]
           df.ms = getFragmentErrors(x[idx_nr_subset, , drop=FALSE])
-          df.ms$type="forward"
+          if (!is.null(df.ms)) df.ms$type="forward"
         } 
         
-        if (sum(x$reverse) > 2)
+        if (any(x$reverse))
         {
           idx_nr = which(x$reverse)
           ## select a representative subset, otherwise the number of datapoints is just too large
           idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=ceiling(length(idx_nr)/1000))]
-          df.ms_r = getFragmentErrors(x[idx_nr_subset,])
-          df.ms_r$type="decoy"
-          
-          ## only merge if we have hits (reverse hits might be few and $mass.deviations..da. might be empty)
-          if (nrow(df.ms_r)) df.ms = rbind(df.ms, df.ms_r)
+          df.ms_r = getFragmentErrors(x[idx_nr_subset, , drop=FALSE])
+          if (!is.null(df.ms)) {
+            df.ms_r$type="decoy"
+            ## only merge if we have hits
+            df.ms = rbind(df.ms, df.ms_r)
+          }
         }
         
         return (df.ms)

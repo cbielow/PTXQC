@@ -150,10 +150,12 @@ boxplotCompare = function(data,
 #' ITMS or FTMS data). Also the fragmentation type can be used: CID indicates ITMS, HCD to FTMS.
 #' This is not 100% safe, but older MQ versions do not report the mass analyzer properly.
 #' 
+#' Sometimes, peptides are identified purely based on MS1, i.e. have no fragments. These will be ignored.
+#' 
 #' If ppm mass deviations are not available, errors in Da will be converted to ppm using the corresponding mass values.
 #' 
 #' @param x Data frame in long format with numerical expression data
-#' @return  Data frame with mass errors ('msErr') and their 'unit' (Da or ppm)
+#' @return  Data frame with mass errors ('msErr') and their 'unit' (Da or ppm) or NULL (if no fragments were given)
 #' 
 #' @export
 #' 
@@ -167,18 +169,20 @@ getFragmentErrors = function(x)
   if (grepl("ITMS|TOF|CID", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x)))
   {
     ms2_unit = "[Da]"; ms2_col = "mass.deviations..da."
-  } else
-    if (grepl("FTMS|HCD", x$mass.analyzer[1]) & ("mass.deviations..ppm." %in% colnames(x)))
-    {
-      ms2_unit = "[ppm]"; ms2_col = "mass.deviations..ppm."
-    } else
-      if (grepl("FTMS|HCD", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x)))
-      {
-        ## we know its high resolution, but this MQ version only gave us Dalton mass deviations
-        ## --> convert back to ppm
-        ms2_unit = "[ppm]"; ms2_col = "mass.deviations..da."
-        convert_Da2PPM = TRUE
-      }
+  } else if (grepl("FTMS|HCD", x$mass.analyzer[1]) & ("mass.deviations..ppm." %in% colnames(x))) {
+    ms2_unit = "[ppm]"; ms2_col = "mass.deviations..ppm."
+  } else if (grepl("FTMS|HCD", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x))) {
+    ## we know its high resolution, but this MQ version only gave us Dalton mass deviations
+    ## --> convert back to ppm
+    ms2_unit = "[ppm]"; ms2_col = "mass.deviations..da."
+    convert_Da2PPM = TRUE
+  }
+
+  ## sometimes, peptides are identified purely based on MS1, i.e. have no fragments
+  ## if only those peptides are present here in 'x', then 'err' below will be empty
+  ## and no data.frame can be constructed, so...
+  if (all(nchar(x[, ms2_col]) == 0)) return(NULL)
+    
   err = unlist(strsplit(paste(x[, ms2_col], sep="", collapse=";"), split=";", fixed = TRUE))
   if (convert_Da2PPM) {
     stopifnot("masses" %in% colnames(x))

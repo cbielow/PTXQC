@@ -10,7 +10,7 @@ getFragmentErrors(x)
 \item{x}{Data frame in long format with numerical expression data}
 }
 \value{
-Data frame with mass errors ('msErr') and their 'unit' (Da or ppm)
+Data frame with mass errors ('msErr') and their 'unit' (Da or ppm) or NULL (if no fragments were given)
 }
 \description{
 Given a data.frame as obtainable from a msms.txt with 
@@ -24,6 +24,8 @@ Mass deviations are extracted from the columns, e.g. each cell containing values
 semicolons is split into single values. The appropriate unit is chosen (Da or ppm, depending on
 ITMS or FTMS data). Also the fragmentation type can be used: CID indicates ITMS, HCD to FTMS.
 This is not 100% safe, but older MQ versions do not report the mass analyzer properly.
+
+Sometimes, peptides are identified purely based on MS1, i.e. have no fragments. These will be ignored.
 
 If ppm mass deviations are not available, errors in Da will be converted to ppm using the corresponding mass values.
 }

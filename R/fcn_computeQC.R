@@ -556,12 +556,13 @@ if (enabled_msms)
                                                                             "^Raw.file$",
                                                                             "^mass.deviations",
                                                                             "^masses$", "^mass.analyzer$", "fragmentation", "reverse",
-                                                                            numeric = "^evidence.id$"), check_invalid_lines = FALSE)
+                                                                            numeric = "^evidence.id$"
+                                                                            ), check_invalid_lines = FALSE)
   
   ##
   ##  MS2 fragment decalibration
   ##
-  lst_qcMetrics[["qcMetric_MSMS_MSMSDecal"]]$setData(d_msms, mq$raw_file_mapping$to)
+  lst_qcMetrics[["qcMetric_MSMS_MSMSDecal"]]$setData(df_msms = d_msms, fc_raw_files = mq$raw_file_mapping$to)
 
   ##
   ## missed cleavages per Raw file
