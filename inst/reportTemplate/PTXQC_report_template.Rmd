@@ -10,18 +10,21 @@ output:
 ---
 
 
-<!-- the TOC will go here -->
+<!-- the TOC (table of content) will go here - use 'toc: no' above to disable the TOC -->
 
 
 <style type="text/css">
-  .content {
-  padding: 5px 10px;
-  background-color:#fafafa;
+  p { 
+    padding: 5px 0;
   }
-  p { padding: 5px 0; }
 
+  .helpSymbol {
+    border: 1px solid black;
+    padding: 5px;
+    width: 20px;
+  }
   .helpText {
-    max-width: 600px;
+    clear: left;
   }
   
 </style>
@@ -40,14 +43,16 @@ knitr::opts_chunk$set(echo=FALSE, warning=TRUE, error=TRUE, message=TRUE, fig.wi
   - navigate using the 'Table of Content' above or just scroll
   - collapse sections by just clicking their name
   - report bugs via [GitHub issue tracker](https://github.com/cbielow/PTXQC/issues)
-  - editing the config `r paste0("file:///", gsub("\\\\", "/", fh_out$yaml_file))` allows to
+  - edit the config `r paste0("file:///", gsub("\\\\", "/", fh_out$yaml_file))` to
      - set the report format (HTML, plainPDF, or both)
      - disable metrics
      - customize the order of metrics
      - set individual target thresholds
-  - editing `r paste0("file:///", gsub("\\\\", "/", fh_out$filename_sorting))` allows to customize
+  - edit `r paste0("file:///", gsub("\\\\", "/", fh_out$filename_sorting))` to customize
      - the order of Raw files in plots and heatmap
-     - name abbreviations of Raw files
+     - abbreviations of Raw file names
+  - edit the Html template `r paste0("file:///", gsub("\\\\", "/", html_template))` to
+     - alter the look and feel of this report (e.g. colors, font sizes, help texts, etc.)
   - full manual available [here](https://github.com/cbielow/PTXQC)
 
 ## HeatMap
@@ -77,10 +82,14 @@ pl_nameMapping[[1]]
     for (i in 1:length(v_titles))
     {
       if (last_title != v_titles[i]) {  ## print only new titles
-        cat(paste0("\n\n### ", v_titles[i], "</b>\n\n"))
+        cat(paste0("\n\n### ", gsub("\n", "\n<br>", v_titles[i]), "</b>\n\n"))
       }
       if (i == 1) { ## print helpText only once
-        cat(paste0('\n<div class="helpText">', qcm$helpText, "</div>\n"))
+        cat(paste0('\n
+<div>
+  <div class="helpSymbol">?</div>
+  <div class="helpText">', qcm$helpText, "</div>
+</div>"))
       }
       print(plots[[i]])
       cat("\n<br>\n")
@@ -95,8 +104,22 @@ pl_nameMapping[[1]]
 <script type="text/javascript">
 jQuery(document).ready(function()
 {
-  // initially hide the content (todo)
-  jQuery(".content").hide();
+ // initially hide the help text
+  jQuery(".helpText").hide();
+  
+  // toggle help text by clicking on the symbol
+  jQuery(".helpSymbol").click(function(event)
+  {
+    var target = $( event.target );
+    // "?" is the first item in a <div> which encloses their section
+    // so toggling its sibling (the actual text) will just leave the "?" visible
+    if ( target.is( "div" ) )
+    {
+      target.siblings().slideToggle(200);
+      event.stopPropagation()
+    }
+  });
+  
   
   // enable shortening the report
   jQuery(".section").click(function(event)
@@ -106,7 +129,7 @@ jQuery(document).ready(function()
     // so toggling their siblings will just leave the heading visible
     if ( target.is( "h1, h2, h3, h4" ) )
     {
-      target.siblings().slideToggle(500);
+      target.siblings().slideToggle(200);
       event.stopPropagation()
     }
   });

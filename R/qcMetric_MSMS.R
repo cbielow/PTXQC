@@ -6,10 +6,13 @@ qcMetric_MSMS_MSMSDecal =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(
     helpTextTemplate = 
-      "MS/MS decalibration metric. Use it to judge if your MS/MS tolerance has the correct
-interval, i.e. can you narrow it more while still capturing most of the true (green) hits or does it need
-widening because you are truncating the distribution (Gaussian) too much, thus loosing fragments?
-The scoring function rewards centeredness around 0 ppm/Da.",
+      "MS/MS decalibration metric. If most of the fragments are within tighter bounds, 
+you can reduce the fragment mass tolerance to obtain more 
+identifications under the same FDR. On the other hand, if the fragment mass errors are not centered on 
+zero (and the distribution is cut by the search tolerance), a recalibration of the instrument should be performed.
+
+Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around 0 ppm/Da (function Centered).
+",
     workerFcn = function(.self, df_msms, fc_raw_files)
     {
       ## completeness check
@@ -103,9 +106,21 @@ qcMetric_MSMS_MissedCleavages =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "Metric for digestion efficiency. Fewer missed cleavages are better.
-Also, the fraction of MC's across Raw files should be comparable (to ensure that we see
-the same peptide species, enabling a more accurate comparison.",
+      "Under optimal digestion conditions (high enzyme grade etc.), only few missed cleavages (MC) are expected. In 
+general, increased MC counts also increase the number of peptide signals, thus cluttering the available 
+space and potentially provoking overlapping peptide signals, biasing peptide quantification.
+Thus, low MC counts should be favored. Interestingly, it has been shown recently that 
+incorporation of peptides with missed cleavages does not negatively influence protein quantification (see 
+[http://pubs.acs.org/doi/abs/10.1021/pr500294d](Chiva, C., Ortega, M., and Sabidó, E. Influence of the Digestion Technique, Protease, and Missed 
+Cleavage Peptides in Protein Quantitation. J. Proteome Res. 2014, 13, 3979-86) ). 
+However this is true only if all samples show the same degree of digestion. High missed cleavage values 
+can indicate for example, either a) failed digestion, b) a high (post-digestion) protein contamination, or 
+c) a sample with high amounts of unspecifically degraded peptides which are not digested by trypsin. 
+
+Heatmap score [MSMS: MC]: the fraction (0% - 100%) of fully cleaved peptides per Raw file
+
+Heatmap score [MSMS: MC Var]: each Raw file is scored for its deviation (score: MedianDist) from the 'average' digestion state of the 
+current study. ",
     workerFcn = function(.self, df_msms, df_evd = NULL)
     {
       ## completeness check

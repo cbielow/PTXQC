@@ -7,16 +7,20 @@ qcMetric_EVD_UserContaminant =  setRefClass(
       "User defined contaminant search (usually used for Mycoplasma detection, but can be used for an arbitrary (set of) proteins.
 
 Two abundance measures are computed per Raw file:
-  - fraction of intensity
-  - fraction of spectral counts
+  - fraction of intensity (used for score)
+  - fraction of spectral counts (as comparison for user)
+
+An additional plot with peptide score distributions will be shown if the threshold was reached (i.e. suspected contamination).
+This allows to decide if the contamination is true, i.e. achieves good MS/MS Andromeda scores.
+
+Heatmap score [EVD: Pep Intensity (>thresh)]: boolean, i.e. 0% (fail) if the threshold was reached. 100% (pass) otherwise.
 ",
     workerFcn = function(.self, df_evd, df_pg, lst_contaminants)
     {
       ## completeness check
       stopifnot(c("id", "fasta.headers") %in% colnames(df_pg))
       stopifnot(c("protein.group.ids", "type", "score", "intensity", "fc.raw.file") %in% colnames(df_evd))
-      
-      
+
       local_qcScores = data.frame()
       
       lpl = list()
@@ -137,11 +141,22 @@ qcMetric_EVD_PeptideInt =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "Peptide intensity ...",
+      "Peptide intensity per Raw file from evidence.txt.
+Failing to reach the intensity threshold is usually due to unfavorable column conditions, inadequate 
+column loading or ionization issues. If the study is not a dilution series or pulsed SILAC experiment, we 
+would expect every condition to have about the same median log-intensity (of 2<sup>%1.1f</sup>).
+The relative standard deviation (RSD) gives an indication about reproducibility across files and should be below 5pc.
+
+Heatmap score [EVD: Pep Intensity (>%1.1f)]: 
+  Linear scale of the median intensity reaching the threshold, i.e. reaching 2<sup>21</sup> of 2<sup>23</sup> gives score 0.25.
+",
     workerFcn = function(.self, df_evd, thresh_intensity)
     {
       ## completeness check
       stopifnot(c("fc.raw.file", "intensity") %in% colnames(df_evd))
+      
+      ## update helpText
+      .self$helpText = sprintf(.self$helpTextTemplate, thresh_intensity, thresh_intensity)
       
       medians_pep = ddply(df_evd[ , c("fc.raw.file", "intensity")], "fc.raw.file",
                           function(x) data.frame(med = log2(quantile(x$intensity, probs=0.5, na.rm = TRUE))))
@@ -181,13 +196,20 @@ qcMetric_EVD_ProteinCount =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "Number of Protein groups (after FDR) per Raw file. If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
- are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad,
-MBR should be switched off for the Raw files which are affected (could be a few or all).",
+      "Number of Protein groups (after FDR) per Raw file. A configurable target threshold is indicated as dashed line.
+
+If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
+are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad (see other metrics),
+MBR should be switched off for the Raw files which are affected (could be a few or all). 
+
+Heatmap score [EVD: Prot Count (>%1.0f)]: Reaching the target threshold gives a score of 100pc.
+",
     workerFcn = function(.self, df_evd, thresh_protCount)
     {
       ## completeness check
       stopifnot(c("fc.raw.file", "protein.group.ids", "match.time.difference") %in% colnames(df_evd))
+      
+      .self$helpText = sprintf(.self$helpTextTemplate, thresh_protCount)
       
       protC = getProteinCounts(df_evd[, c("fc.raw.file", "protein.group.ids", "match.time.difference")])
       protC$block = factor(assignBlocks(protC$fc.raw.file, 30))
@@ -237,13 +259,20 @@ qcMetric_EVD_PeptideCount =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "Number of peptides (after FDR) per Raw file. If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
-  are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad,
-  MBR should be switched off for the Raw files which are affected (could be a few or all).",
+      "Number of peptides (after FDR) per Raw file. A configurable target threshold is indicated as dashed line.
+
+If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
+are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad (see other metrics),
+MBR should be switched off for the Raw files which are affected (could be a few or all). 
+
+Heatmap score [EVD: Pep Count (>%1.0f)]: Reaching the target threshold gives a score of 100pc.
+",
     workerFcn = function(.self, df_evd, thresh_pepCount)
     {
       ## completeness check
       stopifnot(c("fc.raw.file", "modified.sequence", "match.time.difference") %in% colnames(df_evd))
+      
+      .self$helpText = sprintf(.self$helpTextTemplate, thresh_pepCount)
       
       pepC = getPeptideCounts(df_evd[, c("fc.raw.file", "modified.sequence", "match.time.difference")])
       pepC$block = factor(assignBlocks(pepC$fc.raw.file, 30))
@@ -293,7 +322,13 @@ qcMetric_EVD_RTPeakWidth =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "RT peak width distribution ...",
+      "One parameter of optimal and reproducible chromatographic separation is the distribution of widths of 
+peptide elution peaks, derived from the evidence table. Ideally, all Raw files show a similar 
+distribution, e.g. to allow for equal conditions during dynamic precursor exclusion, RT alignment or 
+peptide quantification. 
+    
+Heatmap score [EVD: RT Peak Width]: Scored using BestKS function, i.e. the D statistic of a Kolmogoriv-Smirnoff test.
+",
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
@@ -351,7 +386,21 @@ qcMetric_EVD_MBRAlign =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "Match-between-runs Alignment (step 1/2, 1=align, 2=transfer) ...",
+      "MBR Alignment: First of two steps (1=align, 2=transfer) during Match-between-runs.
+This plot is based purely on real MS/MS ids. Ideally, RTs of identical peptides should be equal (i.e. very small residual RT delta)
+across Raw files after alignment.
+
+MaxQuants RT correction is shown in blue -- it should be well within the alignment search window (20min by default) set
+during MaxQuant configuration.
+The resulting residual RT delta after RT alignment (compared to a reference Raw file), is shown as green/red dots. One dot represents
+one peptide (incl. charge). Every dot (peptide) outside an allowed residual delta RT (1min by default) is colored red.
+All others are green.
+
+If moving 'red' dots to the horizontal zero-line (to make them green) requires large RT shifts, then increasing the alignment
+search window might help MaxQuant to find a better alignment.
+
+Heatmap score [EVD: MBR Align]: fraction of 'green' vs. 'green+red' peptides.
+",
     workerFcn = function(.self, df_evd, tolerance_matching, raw_file_mapping)
     {
       ## completeness check
@@ -447,7 +496,27 @@ qcMetric_EVD_MBRIdTransfer =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "...",
+      "MBR Transfer: Last of two steps (1=align, 2=transfer) during Match-between-runs.
+If MaxQuant only transfers peptide ID's which are not present in the target file, then
+each Raw file should not have any duplicates of identical peptides (incl. charge).
+Sometimes, a single or split 3D-peak gets annotated multiple times, that's ok. However, the same peptide should not
+be annotated twice (or more) at vastly different points in RT.
+
+This plot shows three columns:
+ - left: the 'genuine' situation (pretending that no MBR was computed)
+ - middle: looking only at transferred IDs
+ - right: combined picture (a mixture of left+middle, usually)
+
+Each peptide falls into three categories (the colors):
+ - single (good, because it has either one genuine OR a transferred ID).
+ - in-group (also good, because all ID's are very close in RT)
+ - out-group (bad, spread across the RT gradient -- should not be possible; a false ID)
+
+Heatmap score [EVD: MBR ID-Transfer]: The fraction of non-out-group peptides (i.e. good peptides) in the middle column.
+This score is 'pessimistic' because if few ID's were transferred, but all of them are bad, the score is bad, even though
+the majority of peptides is still ok (because they are genuine). However, in this case MBR
+provides few (and wrong) additional information, and should be disabled.
+",
     workerFcn = function(.self, df_evd, avg_peak_width)
     {
       ## completeness check
@@ -508,7 +577,10 @@ qcMetric_EVD_MBRaux =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "Auxililiary plots without scores ...",
+      "Auxililiary plots -- experimental -- without scores.
+
+Heatmap score: none.
+",
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
@@ -558,7 +630,12 @@ qcMetric_EVD_Charge =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "Charge distribution per Raw file. Should be dominated by charge 2 and have the same fraction in each Raw file.",
+      "Charge distribution per Raw file. Should be dominated by charge 2 
+(one N-terminal and one at tryptic C-terminal R or K residue) and have the same fraction in each Raw file.
+Consistent charge distribution is paramount for comparable 3D-peak intensities across samples.
+
+Heatmap score [EVD: Charge]: Deviation of the charge 2 proportion from a representative Raw file ('qualMedianDist' function).
+",
     workerFcn = function(.self, df_evd, int_cols, MAP_pg_groups)
     {
       ## completeness check
@@ -590,7 +667,15 @@ qcMetric_EVD_IDoverRT =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "Number of peptide identifications over time. Constant numbers receive high scores.",
+      "Judge column occupancy over retention time. 
+Ideally, the LC gradient is chosen such that the number of identifications (here, after FDR filtering) is 
+uniform over time, to ensure consistent instrument duty cycles. Sharp peaks and uneven distribution of 
+identifications over time indicate potential for LC gradient optimization. 
+See [http://www.ncbi.nlm.nih.gov/pubmed/24700534](Moruz et al., GradientOptimizer: An open-source graphical environment for calculating optimized gradients in reversed-phase
+liquid chromatography, Proteomics, 06/2014; 14) for details.
+
+Heatmap score [EVD: ID rate over RT]: Scored using 'Uniform' scoring function, i.e. constant receives good score, extreme shapes are bad.
+",
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
@@ -630,11 +715,21 @@ qcMetric_EVD_PreCal =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "Mass accurary before calibration. Outliers are marked as such using .. as additional information (if available).",
+      "Mass accurary before calibration. Outliers are marked as such ('out-of-search-tol') using ID rate and standard deviation as additional information (if available).
+If any Raw file is flagged 'failed', increasing MaxQuant's first-search tolerance (20ppm by default, here: %1.1f ppm) might help
+to enable successful recalibration.
+A bug in MaxQuant sometimes leads to excessively high ppm mass errors (>10<sup>4</sup>) reported in the output 
+data. However, this can sometimes be corrected for by re-computing the delta mass error from other data. If this is 
+the case, a warning ('bugfix applied') will be shown.
+
+Heatmap score [EVD: MS Cal Pre (%1.1f)]: the centeredness (function CenteredRef) of uncalibrated masses in relation to the search window size.
+",
     workerFcn = function(.self, df_evd, df_idrate, tolerance_pc_ppm, tolerance_sd_PCoutOfCal)
     {
       ## completeness check
       #stopifnot(c("...") %in% colnames(df_pg))
+      
+      .self$helpText = sprintf(.self$helpTextTemplate, tolerance_pc_ppm, tolerance_pc_ppm)
       
       fix_cal = fixCalibration(df_evd, df_idrate, tolerance_sd_PCoutOfCal)
       
@@ -686,7 +781,11 @@ qcMetric_EVD_PostCal =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "...",
+      "Precursor mass accuracy after calibration. Failed samples from precalibration data are still marked here.
+Ppm errors should be centered on zero and their spread is expected to be significantly smaller than before calibration.
+
+Heatmap score [EVD: MS Cal-Post]: The variance and centeredness around zero of the calibrated distribution (function GaussDev).
+",
     workerFcn = function(.self, df_evd, df_idrate, tolerance_pc_ppm, tolerance_sd_PCoutOfCal, tol_ppm_mainSearch)
     {
       ## completeness check
@@ -734,7 +833,18 @@ qcMetric_EVD_Top5Cont =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "...",
+      "PTXQC will explicitly show the five most abundant external protein contaminants
+(as detected via MaxQuant's contaminants FASTA file) by Raw file, and summarize the 
+remaining contaminants as 'other'. This allows to track down which proteins exactly contaminate your sample.
+Low contamination is obviously better.
+Transparency indicates the average peptide intensity in each Raw file. It is
+not unusual to see samples with low sample content to have higher contamination.
+    
+Heatmap score [EVD: Contaminants]: as fraction of summed intensity
+ - 0 = sample full of contaminants
+ - 1 = no contaminants
+
+",
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
@@ -810,7 +920,15 @@ qcMetric_EVD_MS2OverSampling =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "...",
+      "An oversampled 3D-peak is defined as a peak whose peptide ion (same sequence and same charge 
+state) was identified by at least two distinct MS<sup>2</sup> spectra in the same Raw file. 
+    For high complexity samples, oversampling of individual 3D-peaks automatically leads to undersampling 
+    or even omission of other 3D-peaks, reducing the number of identified peptides. Oversampling occurs in 
+    low-complexity samples or long LC gradients, as well as undersized dynamic exclusion windows for data 
+    independent acquisitions. 
+
+Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversampled 3D-peaks. 
+",
     workerFcn = function(.self, df_evd)
     {
       ## completeness check

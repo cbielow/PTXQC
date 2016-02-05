@@ -4,11 +4,14 @@ qcMetric_SM_MSMSIdRate =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "MS/MS identification rate per Raw file from summary.txt. Each Raw file is colored
+      "MS/MS identification rate per Raw file from summary.txt (SM). Each Raw file is colored
 according to its ID rate and categorized into performance bins as 'bad', 'ok' and 'great'. 
+Raw files below 'ok', are listed separately on the next page of the report for convenient follow-up.
 
 The thresholds for the bins are
-%s.",
+%s.
+
+Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (100pc) if the threshold for 'great' is reached or exceeded. ",
     workerFcn = function(.self, df_summary, id_rate_bad, id_rate_great)
     {
       stopifnot(.self$checkInput(c("fc.raw.file", "ms.ms.identified...."), colnames(df_summary)))
@@ -47,7 +50,8 @@ The thresholds for the bins are
       
       ## update help text according to actual limits
       inText = paste(paste0(" - ", names(lab_IDd)), collapse="\n", sep="")
-      .self$helpText = sprintf(.self$helpTextTemplate, inText)
+      
+      .self$helpText = sprintf(.self$helpTextTemplate, inText, id_rate_great)
       
       ## QC measure for ID rate (threshold reached?)
       ## update QC name based on parameter values

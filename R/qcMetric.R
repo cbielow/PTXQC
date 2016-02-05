@@ -87,7 +87,7 @@ qcMetric = setRefClass("qcMetric",
          return (TRUE)
        },
        setData = function(...) { ## fill with MQ data and compute results
-         cat("Starting to work on", .self$qcName, "...\n")
+         cat("Starting to work on ", gsub("~", " ", .self$qcName), "...\n")
          if (.self$orderNr < 0)
          {
            cat("  Metric disabled. Skipping...\n")
@@ -105,7 +105,7 @@ qcMetric = setRefClass("qcMetric",
          
          if ("qcScores" %in% names(r)) .self$qcScores = r[["qcScores"]];
          
-         cat("... [", .self$qcName,"] done\n")
+         cat("...", gsub("~", " ", .self$qcName), " done\n")
          return(NULL)
        },
        

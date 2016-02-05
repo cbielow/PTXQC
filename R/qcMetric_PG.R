@@ -4,7 +4,16 @@ qcMetric_PG_Cont =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(
     helpText = 
-      "Protein contamination in [%] by total summed intensity per Raw file. Lower values are better.",
+      "External protein contamination should be controlled for, therefore MaxQuant ships with a 
+comprehensive, yet customizable protein contamination database, which is enabled by default. PTXQC 
+generates a contamination plot derived from the proteinGroups (PG) table showing the fraction of total 
+protein intensity attributable to contaminants. The plot employs transparency to indicate the total 
+intensity to delineate a high contamination in high complexity samples from a high 
+contamination in low complexity samples (e.g. from in-gel digestion).
+Note that this plot is based on experimental groups, and therefore may not correspond 1:1 to Raw files. 
+    
+Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
+",
     workerFcn=function(.self, df_pg, int_cols, MAP_pg_groups)
     {
       ## completeness check
@@ -50,7 +59,10 @@ of total protein.
 The height of the bar correlates to the number of non-zero protein abundance.
 
 Contaminants are shown as overlayed yellow boxes, whose height corresponds to the number of contaminant proteins.
-The position of the box is their intensity distribution.",
+The position of the box is their intensity distribution.
+
+Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
+",
     workerFcn=function(.self, df_pg, int_cols, MAP_pg_groups, thresh_intensity)
     {
       ## completeness check
@@ -98,7 +110,10 @@ are likely to receive an LFQ value of 0 (i.e. do not contribute to the distribut
 The height of the bar correlates to the number of non-zero protein abundance.
 
 Contaminants are shown as overlayed yellow boxes, whose height corresponds to the number of contaminant proteins.
-The position of the box is their intensity distribution.",
+The position of the box is their intensity distribution.
+
+Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
+",
     workerFcn=function(.self, df_pg, int_cols, MAP_pg_groups, thresh_intensity)
     {
       ## completeness check
@@ -142,8 +157,10 @@ This plot displays a (customizable) threshold line for the desired mean of repor
 The height of the bar correlates to the number of non-zero protein abundance.
   
 Contaminants are shown as overlayed yellow boxes, whose height corresponds to the number of contaminant proteins.
-The position of the box is their intensity distribution.",
-    
+The position of the box is their intensity distribution.
+
+Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
+",
     workerFcn=function(.self, df_pg, int_cols, MAP_pg_groups, thresh_intensity)
     {
       ## completeness check
@@ -186,7 +203,10 @@ qcMetric_PG_PCA =  setRefClass(
 
 This plot is shown only if more than one group was defined.
 If LFQ was activated in MaxQuant, an additional PCA plot for LFQ intensities is shown. Similarly, if iTRAQ/TMT
-reporter intensities are detected.",
+reporter intensities are detected.
+
+Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
+",
     workerFcn=function(.self, df_pg, lst_cols, MAP_pg_groups)
     {
       ## completeness check
@@ -230,10 +250,15 @@ qcMetric_PG_Ratio =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(
     helpText = 
-      "This plot shows log2 ratios for SILAC-like experiments (whenever MaxQuant reports a set of 'ratio.*' columns).
-If the ratio is not centered around zero, but exceeds a certain extreme (i.e. 1:8 or 8:1), PTXQC will
-assume a time series or pulsed experiment and hence label incorporation
-will automatically be computed and shown as part of the legend.",
+      "This plot shows log<sub>2</sub> ratios for SILAC-like experiments (whenever MaxQuant reports a set of 'ratio.*' columns).
+Useful to spot unequal channel mixing during sample preparation. If equal mixing is expected, the 
+distribution should be unimodal and its mode close to 1 (i.e., a 1:1 ratio), as indicated by a visual 
+guidance line. Multimodal distributions are flagged as such automatically. If PTXQC detects ratios 
+deviating strongly from 1:1 (parameterized by default beyond the range between 1:4 and 4:1), PTXQC 
+automatically assumes a pulsed experiment and reports the label incorporation in percent for all groups. 
+
+Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
+",
     workerFcn=function(.self, df_pg, ratio_cols, thresh_LabelIncorp, GL_name_min_length)
     {
       ## completeness check

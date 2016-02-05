@@ -716,15 +716,13 @@ if ("html" %in% out_format_requested)
   fh_out$report_file_extension = c(fh_out$report_file_extension, ".html")
   
   if (DEBUG_PTXQC) {
-    template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
+    html_template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
   } else {
-    template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
+    html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
   }
-  template
+  html_template
   ## Rmarkdown: convert to Markdown, and then to HTML or PDF...
-  render(template, output_file = paste0(fh_out$report_file, ".html"))
-  #knit2html(template, output = paste0(fh_out$report_file, ".html"))
-  ##render(template, output_file = paste0(fh_out$report_file, ".pdf"))
+  render(html_template, output_file = paste0(fh_out$report_file, ".html"))
 }
 
 ## save plot object (for easier access, in case someone wants high-res plots)

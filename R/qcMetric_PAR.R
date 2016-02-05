@@ -3,7 +3,10 @@ qcMetric_PAR =  setRefClass(
   "qcMetric_PAR",
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(
-    helpText="MaxQuant parameters, extracted from parameters.txt.", 
+    helpText="MaxQuant parameters, extracted from parameters.txt (abbreviated as 'PAR'), summarizes the settings used for the MaxQuant analysis. 
+Key parameters are MaxQuant version, Re-quantify, Match-between-runs and mass search tolerances. 
+A list of protein database files is also provided, allowing to 
+track database completeness and database version information (if given in the filename).", 
     workerFcn=function(.self, df_mqpar)
     {
       ##todo: read in mqpar.xml to get group information and ppm tolerances for all groups (parameters.txt just gives Group1)

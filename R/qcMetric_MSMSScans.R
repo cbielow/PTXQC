@@ -8,8 +8,11 @@ qcMetric_MSMSScans_TopNoverRT =  setRefClass(
     helpTextTemplate = 
       "TopN over retention time. Similar to ID over RT, this metric reflects the complexity of the sample
 at any point in time. Ideally complexity should be made roughly equal (constant) by choosing a proper (non-linear) LC gradient.
-A nice paper by Moruz et al. (GradientOptimizer: An open-source graphical environment for calculating optimized gradients in reversed-phase
-liquid chromatography, Proteomics (Impact Factor: 3.81). 06/2014; 14(12). DOI: 10.1002/pmic.201400036) provides some nice insights.",
+See [http://www.ncbi.nlm.nih.gov/pubmed/24700534](Moruz et al., GradientOptimizer: An open-source graphical environment for calculating optimized gradients in reversed-phase
+liquid chromatography, Proteomics, 06/2014; 14) for details.
+    
+Heatmap score [MS<sup>2</sup> Scans: TopN over RT]: Rewards uniform (function Uniform) TopN events over time.
+",
     workerFcn = function(.self, df_msmsScans)
     {
       ## completeness check
@@ -54,7 +57,11 @@ qcMetric_MSMSScans_IonInjTime =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(
     helpTextTemplate = 
-      "...",
+      "Ion injection time score - should be as low as possible to allow fast cycles. Correlated with peptide intensity.
+Note that this threshold needs customization depending on the instrument used (e.g., ITMS vs. FTMS).
+
+Heatmap score [MS<sup>2</sup> Scans: Ion Inj Time]: Linear score as fraction of MS/MS below the threshold. 
+",
     workerFcn = function(.self, df_msmsScans, threshold_iit)
     {
       ## completeness check
@@ -105,7 +112,11 @@ qcMetric_MSMSScans_TopN =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(
     helpTextTemplate = 
-      "...",
+      "Reaching TopN on a regular basis indicates that all sections of the LC gradient
+deliver a sufficient number of peptides to keep the instrument busy. This metric somewhat summarizes 'TopN over RT'.
+
+Heatmap score [MS<sup>2</sup> Scans: TopN high]: rewards if TopN was reached on a regular basis (function qualHighest)
+",
     workerFcn = function(.self, df_msmsScans)
     {
       ## completeness check
@@ -176,7 +187,15 @@ qcMetric_MSMSScans_TopNID =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(
     helpTextTemplate = 
-      "...",
+      "Looking at the 
+identification rates per scan event (i.e. the MS/MS scans after a survey scan) can give 
+hints on how well scheduled precursor peaks could be fragmented and identified.
+If performance drops for the later MS/MS scans, then the LC peaks are probably not wide enough to deliver
+enough eluent or the intensity threshold to trigger the MS/MS event should be lowered (if LC peak is already over),
+or increased (if LC peak is still to weak to collect enough ions).
+
+Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identification performance across all scan events.
+",
     workerFcn = function(.self, df_msmsScans)
     {
       ## completeness check
