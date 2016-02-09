@@ -21,7 +21,7 @@ boxplotCompare(data, log2 = TRUE, ylab = "intensity", mainlab = ylab,
 
 \item{boxes_per_page}{Maximum number of boxplots per plot. Yields multiple plots if more groups are given.}
 
-\item{abline}{Draw a horziontal green line at the specified y-position (e.g. to indicate target median values)}
+\item{abline}{Draw a horizontal green line at the specified y-position (e.g. to indicate target median values)}
 
 \item{coord_flip}{Exchange Y and X-axis for better readability}
 
@@ -33,7 +33,7 @@ List of ggplot objects
 \description{
 Given a data.frame with two/three columns in long format (name, value, [contaminant]; in that order), each group (given from 1st column)
 is plotted as a bar.
-Contaminants (if given) are seperated and plotted as yellow bars.
+Contaminants (if given) are separated and plotted as yellow bars.
 }
 \details{
 Boxes are shaded: many NA or Inf lead to more transparency. Allows to easily spot sparse groups

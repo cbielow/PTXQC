@@ -178,7 +178,7 @@ plot_ContEVD = function(data, top5)
   head(d_sum)
   
   ## plot
-  p = ggplot(d_sum, aes_string(   x = "factor(fc.raw.file)",
+  p = ggplot(d_sum, aes_string(   x = "fc.raw.file",
                                   y = "s.intensity", 
                                fill = "Protein")) +
         geom_bar(aes_string(alpha = "Log10Diff"), 
@@ -187,7 +187,7 @@ plot_ContEVD = function(data, top5)
                              name = "Abundance\nclass") +
         xlab("")  +
         theme_bw() +
-        ggtitle("EVD: Contaminant per Raw file") +
+        ggtitle("EVD: Top5 Contaminants per Raw file") +
         ylab("contaminant (% intensity)") +
         scale_fill_manual(values = brewer.pal(6,"Accent")) + 
         scale_colour_manual(values = brewer.pal(6,"Accent")) +
@@ -812,11 +812,12 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
   showColLegend = ifelse(length(setdiff(data$col, "default")) > 0, "legend", "none")
   
   ## amend SD to fc.raw.file
-  data$fc.raw.file = paste0(data$fc.raw.file, " (sd = ", stats$sd[match(data$fc.raw.file, stats$fc.raw.file)], "ppm)")
-  data$fc.raw.file = factor(data$fc.raw.file, levels=unique(data$fc.raw.file), ordered = TRUE)
+  stats$fcr_new_lvl = paste0(stats$fc.raw.file, " (sd = ", stats$sd, "ppm)")
+  ## i.e. change name without underlying value
+  levels(data$fc.raw.file) = stats$fcr_new_lvl[ match(levels(data$fc.raw.file), stats$fc.raw.file) ]
 
   p = ggplot(data, col=data$col) +
-        geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
+        geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth = TRUE, outlier.shape = NA) +
         scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide=showColLegend) +
         ylab(expression(Delta~"mass [ppm]")) +
         xlab("") +

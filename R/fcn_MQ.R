@@ -14,7 +14,7 @@
 #' 
 #' Given a data.frame with two/three columns in long format (name, value, [contaminant]; in that order), each group (given from 1st column)
 #' is plotted as a bar.
-#' Contaminants (if given) are seperated and plotted as yellow bars.
+#' Contaminants (if given) are separated and plotted as yellow bars.
 #' 
 #' Boxes are shaded: many NA or Inf lead to more transparency. Allows to easily spot sparse groups
 #' 
@@ -25,7 +25,7 @@
 #' @param mainlab Main title
 #' @param sublab  Sub title
 #' @param boxes_per_page  Maximum number of boxplots per plot. Yields multiple plots if more groups are given.
-#' @param abline          Draw a horziontal green line at the specified y-position (e.g. to indicate target median values)
+#' @param abline          Draw a horizontal green line at the specified y-position (e.g. to indicate target median values)
 #' @param coord_flip      Exchange Y and X-axis for better readability
 #' @param names           An optional data.frame(long=.., short=..), giving a renaming scheme for the 'group' column
 #' @return List of ggplot objects
@@ -45,7 +45,7 @@ boxplotCompare = function(data,
                           coord_flip = TRUE,
                           names = NA)
 {
- 
+  
   if (ncol(data) == 2) {
     data$contaminant = FALSE ## add a third column, if missing
   }
@@ -66,19 +66,28 @@ boxplotCompare = function(data,
       stop("Group renaming is incomplete! Aborting...")
     }
   }
+  ## make it a factor
+  if (!("factor" %in% class(data$group))) data$group = factor(data$group)
   
   ## actual number of entries in each column (e.g. LFQ often has 0)
-  ncol.stat = ddply(data, colnames(data)[1], function(x){ notNA = sum(!is.infinite(x$value) & !is.na(x$value));
-                                                          data.frame(n = nrow(x), 
-                                                                     notNA = notNA, 
-                                                                     newname = paste0(x$group[1], " (n=", notNA, ")"))})
-  
+  ncol.stat = ddply(data, colnames(data)[1], function(x){
+    notNA = sum(!is.infinite(x$value) & !is.na(x$value));
+    data.frame(n = nrow(x), notNA = notNA, newname = paste0(x$group[1], " (n=", notNA, ")"))})
+
   ## rename (augment with '#n')
-  data$group = ncol.stat$newname[match(data$group, ncol.stat$group)]
+  data$group2 = ncol.stat$newname[match(data$group, ncol.stat$group)]
+
+  ## check (ddply makes  ncol.stat$newname a factor with matching levels)
+  stopifnot(class(data$group2) == "factor")
+  stopifnot(all(as.numeric(data$group) == as.numeric(data$group2)))
+  data$group = data$group2
+  #data$num = as.numeric(data$group)
+  #head(data)
+  
   
   ## remove -inf and NA's
   data = data[!is.infinite(data$value) & !is.na(data$value), ]
-
+  
   groups = unique(data$group);
   ## add color for H vs L (if SILAC)
   cols = c("sample" = "black", 
@@ -89,7 +98,8 @@ boxplotCompare = function(data,
   cat_names = names(cols)
   cat = factor(cat_names, levels=cat_names)
   data$cat = cat[1]
-  if (sum(grepl("^[^HLM]", groups )) == 0 || sum(grepl("^intensity\\.[hlm]\\.", groups )) > 0) { ## all start with either L, M or H
+  if (sum(grepl("^[^HLM]", groups )) == 0 || sum(grepl("^intensity\\.[hlm]\\.", groups )) > 0)
+  { ## all start with either L, M or H
     data$cat = cat[2]
     data$cat[grepl("^M", data$group) | grepl("^intensity\\.m\\.", data$group)] = cat[3]
     data$cat[grepl("^H", data$group) | grepl("^intensity\\.h\\.", data$group)] = cat[4]
@@ -108,17 +118,17 @@ boxplotCompare = function(data,
   {
     #require(ggplot2)
     pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat")) + ## do not use col="cat", since this will dodge bars and loose scaling
-          geom_boxplot(varwidth = TRUE) +
-          xlab("") + 
-          ylab(ylab) +
-          ylim(ylims) +
-          scale_alpha(guide = FALSE) +
-          scale_fill_manual(values=cols, name = "Category") + 
-          scale_color_manual(values=cols, name = "Category") + 
-          theme(axis.text.x = element_text(angle=90, vjust = 0.5)) +
-          theme(legend.position=ifelse(length(cols)==1, "none", "right")) +
-          addGGtitle(mainlab, sublab) + 
-          scale_x_discrete_reverse(unique(data$group))
+      geom_boxplot(varwidth = TRUE) +
+      xlab("") + 
+      ylab(ylab) +
+      ylim(ylims) +
+      scale_alpha(guide = FALSE) +
+      scale_fill_manual(values=cols, name = "Category") + 
+      scale_color_manual(values=cols, name = "Category") + 
+      theme(axis.text.x = element_text(angle=90, vjust = 0.5)) +
+      theme(legend.position=ifelse(length(cols)==1, "none", "right")) +
+      addGGtitle(mainlab, sublab) + 
+      scale_x_discrete_reverse(unique(data$group))
     
     if (!is.na(abline))
     {
@@ -131,7 +141,7 @@ boxplotCompare = function(data,
     #print(pl)
     return(pl)
   }
-  lpl = byXflex(data = data, indices = data$group, subset_size = boxes_per_page, sort_indices = FALSE, FUN = fcn_boxplot_internal, abline)
+  lpl = byXflex(data = data, indices = data$group, subset_size = boxes_per_page, sort_indices = TRUE, FUN = fcn_boxplot_internal, abline)
   return (lpl)
 }
 

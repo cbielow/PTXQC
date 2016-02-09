@@ -11,7 +11,7 @@ Two abundance measures are computed per Raw file:
   - fraction of spectral counts (as comparison for user)
 
 An additional plot with peptide score distributions will be shown if the threshold was reached (i.e. suspected contamination).
-This allows to decide if the contamination is true, i.e. achieves good MS/MS Andromeda scores.
+This allows to decide if the contamination is true, i.e. achieves good MS/MS Andromeda scores (requires a recent MQ version).
 
 Heatmap score [EVD: Pep Intensity (>thresh)]: boolean, i.e. 0% (fail) if the threshold was reached. 100% (pass) otherwise.
 ",
@@ -19,7 +19,8 @@ Heatmap score [EVD: Pep Intensity (>thresh)]: boolean, i.e. 0% (fail) if the thr
     {
       ## completeness check
       stopifnot(c("id", "fasta.headers") %in% colnames(df_pg))
-      stopifnot(c("protein.group.ids", "type", "score", "intensity", "fc.raw.file") %in% colnames(df_evd))
+      ## "score" might not be present (e.g. missing in MQ 1.0.13.13)
+      stopifnot(c("protein.group.ids", "type", "intensity", "fc.raw.file") %in% colnames(df_evd))
 
       local_qcScores = data.frame()
       
@@ -60,12 +61,15 @@ Heatmap score [EVD: Pep Intensity (>thresh)]: boolean, i.e. 0% (fail) if the thr
                                 int = sum(as.numeric(x$intensity[x$idx_cont]), na.rm = TRUE) / sum(as.numeric(x$intensity), na.rm = TRUE) * 100
                                 
                                 above.thresh = (sc > ca_thresh) | (int > ca_thresh)
-                                cont_scoreECDF = ddply(x, "idx_cont", function(xx) {
-                                  if (length(unique(xx$score)) < 2) return(NULL) ## not enough data for ECDF
-                                  r = getECDF(xx$score)
-                                  r$condition = c("sample", "contaminant")[xx$idx_cont[1]+1]
-                                  return(r)
-                                })
+                                cont_scoreECDF = NULL;
+                                if ("score" %in% colnames(x)) {
+                                  cont_scoreECDF = ddply(x, "idx_cont", function(xx) {
+                                    if (length(unique(xx$score)) < 2) return(NULL) ## not enough data for ECDF
+                                    r = getECDF(xx$score)
+                                    r$condition = c("sample", "contaminant")[xx$idx_cont[1]+1]
+                                    return(r)
+                                  })
+                                }
                                 if (!any(x$idx_cont)){
                                   ks_p = NA
                                 } else { ## no contaminant peptide 
@@ -96,13 +100,17 @@ Heatmap score [EVD: Pep Intensity (>thresh)]: boolean, i.e. 0% (fail) if the thr
         } else {
           ## plot User-Contaminants
           lpl_i = byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, 
-                          FUN = plot_ContUser, sort_indices = FALSE, name_contaminant = ca, extra_limit = ca_thresh)
+                          FUN = plot_ContUser, sort_indices = TRUE, name_contaminant = ca, extra_limit = ca_thresh)
           lpl = append(lpl, lpl_i)
           
           ## plot Andromeda score distribution of contaminant vs. sample
           llply(cont_data.l, function(l)
           {
-            if (l$cont_data$above.thresh == FALSE) return(NULL)
+            if (l$cont_data$above.thresh == FALSE ||
+                is.null(l$cont_scoreECDF))
+            {
+              return(NULL)
+            } 
             p = plot_ContUserScore(l$cont_scoreECDF, l$cont_data$fc.raw.file, l$cont_data$score_KS)
             lpl = append(lpl, list(p))
             #print(p)
@@ -643,7 +651,7 @@ Heatmap score [EVD: Charge]: Deviation of the charge 2 proportion from a represe
       
       d_charge = mosaicize(df_evd[!df_evd$hasMTD, c("fc.raw.file", "charge")])
       lpl =
-        byXflex(d_charge, d_charge$Var1, 30, plot_Charge, sort_indices = FALSE)
+        byXflex(d_charge, d_charge$Var1, 30, plot_Charge, sort_indices = TRUE)
       
       ## QC measure for charge centeredness
       qc_charge = ddply(df_evd[!df_evd$hasMTD, c("charge",  "fc.raw.file")], "fc.raw.file", function(x) data.frame(c = (sum(x$charge==2)/nrow(x))))
@@ -689,7 +697,7 @@ Heatmap score [EVD: ID rate over RT]: Scored using 'Uniform' scoring function, i
         return(data.frame(RT = h$mid, counts = h$counts))
       })
       lpl =
-        byXflex(df_idRT, df_idRT$fc.raw.file, raws_perPlot, plot_IDsOverRT, sort_indices = FALSE)
+        byXflex(df_idRT, df_idRT$fc.raw.file, raws_perPlot, plot_IDsOverRT, sort_indices = TRUE)
       
       ## QC measure for uniform-ness
       qcScore = ddply(df_evd[, c("retention.time",  "fc.raw.file")], "fc.raw.file", 
@@ -738,7 +746,7 @@ Heatmap score [EVD: MS Cal Pre (%1.1f)]: the centeredness (function CenteredRef)
       ylim_g = range(boxplot.stats(fix_cal$df_evd$uncalibrated.mass.error..ppm.)$stats[c(1, 5)], c(-tolerance_pc_ppm, tolerance_pc_ppm) * 1.05)
       ## PLOT
       lpl =
-        byXflex(fix_cal$df_evd, fix_cal$df_evd$fc.raw.file, 20, plot_UncalibratedMSErr, sort_indices = FALSE, 
+        byXflex(fix_cal$df_evd, fix_cal$df_evd$fc.raw.file, 20, plot_UncalibratedMSErr, sort_indices = TRUE, 
                 MQBug_raw_files = fix_cal$affected_raw_files, 
                 y_lim = ylim_g,
                 stats = fix_cal$stats,
@@ -796,7 +804,7 @@ Heatmap score [EVD: MS Cal-Post]: The variance and centeredness around zero of t
       ylim_g = range(na.rm = TRUE, boxplot.stats(fix_cal$df_evd$mass.error..ppm.)$stats[c(1, 5)], c(-tol_ppm_mainSearch, tol_ppm_mainSearch) * 1.05)
       ## PLOT
       lpl =
-        byXflex(fix_cal$df_evd, fix_cal$df_evd$fc.raw.file, 20, plot_CalibratedMSErr, sort_indices = FALSE,
+        byXflex(fix_cal$df_evd, fix_cal$df_evd$fc.raw.file, 20, plot_CalibratedMSErr, sort_indices = TRUE,
                 MQBug_raw_files = fix_cal$affected_raw_files,
                 y_lim = ylim_g,
                 stats = fix_cal$stats,
@@ -882,12 +890,12 @@ Heatmap score [EVD: Contaminants]: as fraction of summed intensity
       lpl = list()
       if (is.null(cont.top5.names))
       {
-        lpl[["noCont"]] = ggText("EVD: Contaminant per Raw file",
+        lpl[["noCont"]] = ggText("EVD: Top5 Contaminant per Raw file",
                                  "No contaminants found in any sample.\n\nIncorporating contaminants during search is highly recommended!",
                                  "red")
       } else {
         lpl =
-          byXflex(df_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], df_evd$fc.raw.file, 40, sort_indices = FALSE, 
+          byXflex(df_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], df_evd$fc.raw.file, 40, sort_indices = TRUE, 
                   plot_ContEVD, top5=cont.top5.names)
       }
       
@@ -950,7 +958,7 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
       })
       
       lpl =
-        byXflex(d_dups, d_dups$fc.raw.file, 30, plot_MS2Oversampling, sort_indices = FALSE)
+        byXflex(d_dups, d_dups$fc.raw.file, 30, plot_MS2Oversampling, sort_indices = TRUE)
       
       ## QC measure for how many peaks were fragmented only once
       qc_evd_twin = d_dups[d_dups$n==1,]

@@ -57,11 +57,16 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
       #ms2_binwidth = ms2_range/20
       ## precision (plotting is just so much quicker, despite using a fixed binwidth)
       #ms2_decal$msErr = round(ms2_decal$msErr, digits=ceiling(-log10(ms2_binwidth)+1))
-      ms2_decal$file = paste(ms2_decal$fc.raw.file, paste(ms2_decal$mass.analyzer, ms2_decal$unit), sep="\n")
       
       ## separate plots for each mass analyzer, since we want to keep 'fixed' scales for all raw.files (comparability)
       lpl = dlply(ms2_decal, "mass.analyzer", function(ms2_decal) {
-        byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, plot_MS2Decal, sort_indices = FALSE)
+        ## create filename inside, since we need to retain the factor levels (i.e. ordering)
+        ## and this only works if raw file + massanalyzer is unique
+        ms2_decal$new_filename = paste(ms2_decal$fc.raw.file, paste(ms2_decal$mass.analyzer, ms2_decal$unit), sep="\n")
+        ## i.e. change name without underlying value
+        ms2_decal$file = ms2_decal$fc.raw.file
+        levels(ms2_decal$file) = ms2_decal$new_filename[ match(levels(ms2_decal$file), ms2_decal$file) ]
+        byXflex(ms2_decal, ms2_decal$fc.raw.file, 9, plot_MS2Decal, sort_indices = TRUE)
       })
       ## currently lpl is a list of lists() -- flatten
       lpl = Reduce(append, lpl)
@@ -146,7 +151,7 @@ current study. ",
           return (r)
         })
         lpl =
-          byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, title_sub = msg_cont_removed, sort_indices = FALSE)
+          byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, title_sub = msg_cont_removed, sort_indices = TRUE)
         
         ## QC measure for missed-cleavages variation
         qc_mc = data.frame(fc.raw.file = st_bin$fc.raw.file, valMC = st_bin[, "0"])
