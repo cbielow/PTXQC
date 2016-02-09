@@ -42,6 +42,7 @@ knitr::opts_chunk$set(echo=FALSE, warning=TRUE, error=TRUE, message=TRUE, fig.wi
 
   - navigate using the 'Table of Content' above or just scroll
   - collapse sections by just clicking their name
+  - click on the "?" symbol to see a description for each metric and its scoring
   - report bugs via [GitHub issue tracker](https://github.com/cbielow/PTXQC/issues)
   - edit the config `r paste0("file:///", gsub("\\\\", "/", fh_out$yaml_file))` to
      - set the report format (HTML, plainPDF, or both)
@@ -62,7 +63,9 @@ hm[["plot"]]
 
 ## Name Mapping
 ```{r nameMapping, echo=FALSE, results="asis"}
-pl_nameMapping[[1]]
+for (i in 1:length(pl_nameMapping)) {
+  print(pl_nameMapping[[i]])
+}
 ```
 
 
