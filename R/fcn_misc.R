@@ -469,7 +469,7 @@ byX <- function(data, indices, subset_size = 5, FUN, sort_indices = TRUE, ...)
   if (sort_indices)
   {
     #cat(paste0("Sorting indices (", length(groups), ")...\n"))
-    groups = factor(sort(as.character(groups)))
+    groups = sort(groups)
     #cat(paste0(groups))
     #cat()
   }
@@ -548,7 +548,7 @@ assignBlocks = function(values, set_size = 5, sort_values = TRUE)
   if (sort_values)
   {
     #cat(paste0("Sorting values (", length(groups), ")..."))
-    groups = factor(sort(as.character(groups)))
+    groups = sort(groups)
   }
   
   blocks = seq(from=1, to=length(groups), by=set_size)
