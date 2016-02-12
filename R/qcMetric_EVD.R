@@ -26,6 +26,7 @@ Heatmap score [EVD: Pep Intensity (>thresh)]: boolean, i.e. 0% (fail) if the thr
       
       lpl = list()
       
+      ca_entry = lst_contaminants[[1]]
       for (ca_entry in lst_contaminants)
       {
         ca = ca_entry[1]

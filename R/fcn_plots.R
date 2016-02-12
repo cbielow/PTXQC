@@ -59,13 +59,18 @@ plot_ContsPG = function(data)
 #' 
 plot_ContUser = function(data, name_contaminant, extra_limit) {
   datav = subset(data, data$variable %in% c('spectralCount', "intensity"))
+  datav$section = assignBlocks(datav$fc.raw.file, set_size = 40, sort_values = TRUE)
   dataAT = subset(data, data$variable %in% c('above.thresh'))
+  ## contRaws might be empty
   contRaws = dataAT$fc.raw.file[ dataAT$value == TRUE]
   dataKS = subset(data, data$variable == 'score_KS' & (data$fc.raw.file %in% contRaws))
-  dataKS$value = paste0("p = ", round(dataKS$value,2))
+  if (nrow(dataKS)>0) {
+    dataKS$value = paste0("p = ", round(dataKS$value,2))
+    ## use the same section, so ggplot knows how to subset the data
+    dataKS$section = datav$section[match(dataKS$fc.raw.file, datav$fc.raw.file)]
+  } 
   #cat(paste0("CA entry is ", extra_limit, "\n"))
   maxY = max(datav$value, extra_limit)
-  datav$section = as.integer(seq(0, nrow(datav)/40, length.out = nrow(datav)))
   p = ggplot(datav, aes_string(x = "fc.raw.file", y = "value")) +
         geom_bar(stat="identity", aes_string(fill = "variable"), position = "dodge", width=.7) +
         ggtitle(paste0("EVD: Contaminant '", name_contaminant, "'")) +
@@ -75,9 +80,10 @@ plot_ContUser = function(data, name_contaminant, extra_limit) {
         theme(plot.title = element_text(colour = "red"),
               axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
         scale_fill_discrete(name = "Method") +
-        geom_hline(yintercept = extra_limit, linetype = 'dashed') +
-        geom_text(data = dataKS, aes_string(label = "value", y = maxY * 1.05)) +
-        facet_wrap(~ section, ncol = 1, scales = "free_x")
+        geom_hline(yintercept = extra_limit, linetype = 'dashed')
+  ## group(NULL) seems important in geom_text()
+  if (nrow(dataKS)>0) p = p + geom_text(data = dataKS, aes_string(label = "value", y = maxY * 1.05, group=NULL))
+  p = p + facet_wrap(~ section, ncol = 1, scales = "free_x")
   #print(p)
   return(p)
 }
