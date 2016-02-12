@@ -129,7 +129,7 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   if (sum(!is.na(col_subset)) > 0)
   { ## just read a tiny bit to get column names
     ## do not use data.table::fread for this, since it will read the WHOLE file and takes ages...
-    data_header = try(read.delim(file, na.strings=c("NA", "n. def."), comment.char="", nrows=2))
+    data_header = try(read.delim(file, comment.char="", nrows=2))
     if (inherits(data_header, 'try-error')) stop(msg_parse_error, call. = FALSE);
     
     colnames(data_header) = tolower(colnames(data_header))
@@ -167,8 +167,12 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   #colnames(.$mq.data) = make.names(colnames(.$mq.data), unique = TRUE)
 
   ## comment.char should be "", since lines will be TRUNCATED starting at the comment char.. and a protein identifier might contain just anything...
-  ## the '\u975E\u6570\u5B57' na-string is the chinese UTF-8 representation of "NA"
-  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def.", "\u975E\u6570\u5B57"), encoding="UTF-8", comment.char="", stringsAsFactors = FALSE, colClasses = colClasses, ...))
+  ## na.strings:
+  ##  - use BOTH 'n. def.' and 'n.def.' even though only the former is present in the data
+  ##    However, when the colClass is 'numeric', whitespaces are stripped, and only AFTERWARDS the string
+  ##    is checked against na.strings
+  ##  - the '\u975E\u6570\u5B57' na-string is the chinese UTF-8 representation of "NA"
+  .$mq.data = try(read.delim(file, na.strings=c("NA", "n. def.", "n.def.", "\u975E\u6570\u5B57"), encoding="UTF-8", comment.char="", stringsAsFactors = FALSE, colClasses = colClasses, ...))
   if (inherits(.$mq.data, 'try-error')) stop(msg_parse_error, call. = FALSE);
   
   #colnames(.$mq.data)
