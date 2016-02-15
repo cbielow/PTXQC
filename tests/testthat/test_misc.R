@@ -101,14 +101,16 @@ test_that("correctSetSize", {
 
 test_that("byX", {
   expect_equivalent(byX(data.frame(d=1:10), 1:10, 1, sum, sort_indices = FALSE), as.list(1:10))
-  expect_equivalent(byX(data.frame(d=1:10), 1:10, 1, sum, sort_indices = TRUE), as.list(c(1,10, 2:9)))
+  expect_equivalent(byX(data.frame(d=1:10), 1:10, 1, sum, sort_indices = TRUE), as.list(1:10))
+  expect_equivalent(byX(data.frame(d=1:10), as.character(1:10), 1, sum, sort_indices = TRUE), as.list(c(1, 10, 2:9)))
   expect_equivalent(byX(data.frame(d=1:10), 1:10, 2, sum, sort_indices = FALSE), as.list(c(1+2,3+4,5+6,7+8,9+10)))
   expect_equivalent(byX(data.frame(d=1:10), 1:10, 7, sum, sort_indices = FALSE), as.list(c(sum(1:7), sum(8:10))))
 })
 
 test_that("byXflex", {
   expect_equivalent(byXflex(data.frame(d=1:10), 1:10, 1, sum, sort_indices = FALSE), as.list(1:10))
-  expect_equivalent(byXflex(data.frame(d=1:10), 1:10, 1, sum, sort_indices = TRUE), as.list(c(1,10, 2:9)))
+  expect_equivalent(byXflex(data.frame(d=1:10), 1:10, 1, sum, sort_indices = TRUE), as.list(1:10))
+  expect_equivalent(byXflex(data.frame(d=1:10), as.character(1:10), 1, sum, sort_indices = TRUE), as.list(c(1,10, 2:9)))
   expect_equivalent(byXflex(data.frame(d=1:10), 1:10, 2, sum, sort_indices = FALSE), as.list(c(1+2,3+4,5+6,7+8,9+10)))
   ## within 150% (7*1.5), just create one group
   expect_equivalent(byXflex(data.frame(d=1:10), 1:10, 7, sum, sort_indices = FALSE), as.list(c(sum(1:10))))
