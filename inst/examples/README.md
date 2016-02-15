@@ -31,7 +31,7 @@ since MaxQuant could not normalize the LC gradients at the start and end of the 
 Also, you could check how a new LC gradient influences the identifications over time:
 ![Identifications over Retention Time](./example_IDoverRT.png?raw=true "Identifications over Retention Time")
 
-Find a full report as [html][http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/inst/examples/report_v0.80.0__txt_5files_withMatch-100min.html] or [pdf][report_v0.80.0__txt_5files_withMatch-100min.pdf].
+Find a full report as [html][example_html] or [pdf][example_pdf].
 
 See the package vignettes for documentation on how to create and customize a report.
 
@@ -41,5 +41,5 @@ See the package vignettes for documentation on how to create and customize a rep
   [4]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-Basic_Guide_for_R_users.Rmd
   [5]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-DragNDrop.Rmd
   [JPR_paper]: https://doi.org/10.1021/acs.jproteome.5b00780
-  
-  
+  [example_html]: http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/inst/examples/report_v0.80.0__txt_5files_withMatch-100min.html
+  [example_pdf]: report_v0.80.0__txt_5files_withMatch-100min.pdf
