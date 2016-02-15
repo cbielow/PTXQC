@@ -4,7 +4,7 @@ PTXQC
 [![Build Status](https://travis-ci.org/cbielow/PTXQC.svg?branch=master)](https://travis-ci.org/cbielow/PTXQC) 
 [![Project Stats](https://www.openhub.net/p/PTXQC/widgets/project_thin_badge.gif)](https://www.openhub.net/p/PTXQC)
 
-**This package allows users of MaxQuant to generate quality control reports in PDF format.**
+**This package allows users of MaxQuant to generate quality control reports in Html/PDF format.**
 
 ### Features
   - plethora of quality metrics
@@ -15,12 +15,17 @@ PTXQC
     - Match-between-runs performance
   - easy usage ([Windows OS only] `drag'n'drop` your `txt output folder` onto a `batch file`)
     - 10 min installation, see [drag'n'drop] [1]
-  - PDF report will be generated within your txt folder
+  - Html/PDF report will be generated within your txt folder
   - optional configuration file *in YAML format* for generation of shorter/customized reports
 
 ### Target audience
   - MaxQuant users (no knowledge of R required)
   - bioinformaticians (who want to contribute or customize)
+
+  
+### Latest changes / Change log
+
+See [NEWS][News_File] file.
 
 ### Documentation
   
@@ -41,10 +46,6 @@ You will find documentation on
   - (for MaxQuant users) Usage of Drag'n'drop
   - (for R users) code examples in R
   - ...
-
-### Change log
-
-See NEWS file.
   
 ### Installation
 
@@ -91,8 +92,8 @@ suspicious, please use the [GitHub issue tracker] [issuetracker] and file a repo
 
 You should include
   - **stage** you encounter the bug, e.g. during installation, report creation, or after report creation (i.e. a bug in the report itself).
-  - **PDF report** itself (if one was generated).
-  - **version of PTXQC**, e.g. see the report_XXX.pdf (where XXX will be the version) or see the DESCRIPTION file of the PTXQC package or call `help(package="PTXQC")` within R
+  - **PDF/Html report** itself (if one was generated).
+  - **version of PTXQC**, e.g. see the report_XXX.pdf/html (where XXX will be the version) or see the DESCRIPTION file of the PTXQC package or call `help(package="PTXQC")` within R
   - **error message** (very important!). Either copy it or provide a screen shot.
 
 Please be as precise as possible when providing the bug report - just imagine what kind of information you would like to have in order
@@ -118,7 +119,7 @@ PTXQC is published at JPR:
 Chris Bielow, Guido Mastrobuoni, and Stefan Kempa
 *J. Proteome Res.*
 Publication Date (Web): December 14, 2015
-DOI: [10.1021/acs.jproteome.5b00780](https://doi.org/10.1021/acs.jproteome.5b00780)
+DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
 
 Use [PTXQC v0.69.3] [JPR_PTXQC] if you want the version which was used in the paper, i.e.
 use `install_github("cbielow/PTXQC", ref="v0.69.3", build_vignettes = TRUE)` when following the [Installation](#Installation) procedure.
@@ -135,5 +136,5 @@ We recommend to use the most recent PTXQC for the best user experience.
   [JPR_PTXQC]: https://github.com/cbielow/PTXQC/releases/tag/v0.69.3
   [Ref_VignFAQ]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-FAQ.Rmd
   [Ref_Vign]: https://github.com/cbielow/PTXQC/tree/master/vignettes
-
-
+  [News_File]: https://github.com/cbielow/PTXQC/blob/master/NEWS
+  [JPR_paper]: https://doi.org/10.1021/acs.jproteome.5b00780

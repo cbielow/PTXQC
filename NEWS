@@ -8,6 +8,7 @@ i.e. a list of new features / bugfixes by version number.
 v0.80.0 -- 2016/02
   - Report format is by default now Html and PDF (you get two identical reports)
   - Html report includes help texts describing each metric and scoring
+  - order of metrics is now matching the wet-lab workflow (roughly), but can be customized (i.e. user-defined) using the YAML config
   - removed Bioconductor dependency (for easier installation)
   - bugfixes / minor improvements
 

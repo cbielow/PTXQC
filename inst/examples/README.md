@@ -1,7 +1,7 @@
 
 # Examples
 
-PTXQC will provide you with a report in PDF/HTML format, summarizing the quality of your data.
+PTXQC will provide you with a report in Html/PDF format, summarizing the quality of your data.
 
 Please refer to the publication (currently under review; link is coming soon) for details on which quality metrics are available and how they are scored.
 
@@ -14,14 +14,15 @@ The [PTXQC-Basic_Guide_for_R_users] [4] vignette has R code snippets to automati
 
 ## Report Layout
 
-The first page in the PDF will be a summary of MaxQuant parameters (i.e. which FASTA files were used, was Match-between-runs activated etc...).
-
-The second page is an overview heatmap.
+The first page shows an overview heatmap, representing scores for each Raw file for a set of quality metrics.
 The screenshots given here, a from a rather small run of just 5 files. You can easily analyse a study with more than 100 files, but the report will get bigger :)
 
 ![Overview Heatmap](./example_heatmap.png?raw=true "Overview heatmap showing quality criteria for each LC-MS file")
  
-In the remainder of the report you can follow up on each individual metric and explore the reason for failure.
+After that, there is a summary of MaxQuant parameters (i.e. which FASTA files were used, was Match-between-runs activated etc...).
+
+In the remainder of the report you can follow up on each individual metric and explore the reason for failure. The Html output additionally contains a
+helpful description of each metric in case you have not read the [publication][JPR_paper] or need a refresh on what the plot actually tells you.
 
 For example, the alignment via the Match-between-runs functionality is not optimal in this case, since MaxQuant cannot normalize the LC gradients at the start and end of the run:
 ![Alignment Performance](./example_MBRalignment.png?raw=true "Alignment of 5 raw files (the first file serves as reference here)")
@@ -29,15 +30,15 @@ For example, the alignment via the Match-between-runs functionality is not optim
 Also, you could check how a new LC gradient influences the identifications over time:
 ![Identifications over Retention Time](./example_IDoverRT.png?raw=true "Identifications over Retention Time")
 
-Find a full report here [Dataset2_report_v0.69.3_Align100min.pdf].
+Find a full report as [html][report_v0.80.0__txt_5files_withMatch-100min.html] or [pdf][report_v0.80.0__txt_5files_withMatch-100min.pdf].
 
 See the package vignettes for documentation on how to create and customize a report.
 
-  [Dataset2_report_v0.69.3_Align100min.pdf]: Dataset2_report_v0.69.3_Align100min.pdf
-
-  
   [1]: http://www.ebi.ac.uk/pride/archive/projects/PXD003133
   [2]: http://www.ebi.ac.uk/pride/archive/projects/PXD003134
   [3]: http://www.ebi.ac.uk/pride/archive/projects/PXD000427
   [4]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-Basic_Guide_for_R_users.Rmd
   [5]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-DragNDrop.Rmd
+  [JPR_paper]: https://doi.org/10.1021/acs.jproteome.5b00780
+  
+  
