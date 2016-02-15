@@ -5,15 +5,21 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
-0.70.3
+v0.80.0 -- 2016/02
+  - Report format is by default now Html and PDF (you get two identical reports)
+  - Html report includes help texts describing each metric and scoring
+  - removed Bioconductor dependency (for easier installation)
+  - bugfixes / minor improvements
+
+v0.70.3
   - internal restructuring
 
-0.70.2
+v0.70.2
   - faster loading of txt files / better consistency checking
   - support for Chinese "NA" entries in Txt files
   
-0.70.1
+v0.70.1
   - fix empty parameter page (bug in 0.70.0)
   
-0.70.0
+v0.70.0
   - support for data containing MS3 scans  
