@@ -44,7 +44,10 @@ _______
 
 Knitr (which is the engine which builds the vignettes), relies on Pandoc. If you called `install_github("cbielow/PTXQC", build_vignettes = TRUE)` then Pandoc is required!
 See the installation instructions on where to get it. Make sure to restart R once you have installed Pandoc!
-Alternatively, you can skip vignettes and install PTXQC using `install_github("cbielow/PTXQC", build_vignettes = FALSE)`
+Pandoc is also required to build the report in Html format -- which the default. PDF works just fine without Pandoc.
+
+If you really don't have or want Pandoc, you can skip vignettes and install PTXQC using `install_github("cbielow/PTXQC", build_vignettes = FALSE)` and
+configure your YAML parameter file to omit Html reports and just get plain PDF (not recommended though).
 _______
 
 ## Report Creation
@@ -66,7 +69,7 @@ _______
 
 ### Q: How do I know what the figures in the report mean? ###
 
-**Answer:** Most metrics and figures are described in the publication (see 'Citation' on the main homepage of PTXQC). Updated and new metrics will be described in the documentation of the package. We are currently working a on more interactive version of the report with detailed description for each figure -- soon to come.
+**Answer:** Most metrics and figures are described in the publication (see 'Citation' on the main homepage of PTXQC). Updated and new metrics will be described in the documentation of the package. A short description of each plot and the scoring function is given in each Html report (click the "?" box just below each section heading). See [examples][https://github.com/cbielow/PTXQC/tree/master/inst/examples] for more.
 
 _______
    

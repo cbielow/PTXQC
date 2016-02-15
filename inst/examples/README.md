@@ -24,13 +24,14 @@ After that, there is a summary of MaxQuant parameters (i.e. which FASTA files we
 In the remainder of the report you can follow up on each individual metric and explore the reason for failure. The Html output additionally contains a
 helpful description of each metric in case you have not read the [publication][JPR_paper] or need a refresh on what the plot actually tells you.
 
-For example, the alignment via the Match-between-runs functionality is not optimal in this case, since MaxQuant cannot normalize the LC gradients at the start and end of the run:
+For example, the alignment in MaxQuant via the Match-between-runs did not work optimal across all Raw files in this case,
+since MaxQuant could not normalize the LC gradients at the start and end of the run:
 ![Alignment Performance](./example_MBRalignment.png?raw=true "Alignment of 5 raw files (the first file serves as reference here)")
 
 Also, you could check how a new LC gradient influences the identifications over time:
 ![Identifications over Retention Time](./example_IDoverRT.png?raw=true "Identifications over Retention Time")
 
-Find a full report as [html][report_v0.80.0__txt_5files_withMatch-100min.html] or [pdf][report_v0.80.0__txt_5files_withMatch-100min.pdf].
+Find a full report as [html][http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/inst/examples/report_v0.80.0__txt_5files_withMatch-100min.html] or [pdf][report_v0.80.0__txt_5files_withMatch-100min.pdf].
 
 See the package vignettes for documentation on how to create and customize a report.
 
