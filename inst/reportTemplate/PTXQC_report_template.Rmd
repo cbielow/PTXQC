@@ -19,9 +19,10 @@ output:
   }
 
   .helpSymbol {
-    border: 1px solid black;
-    padding: 5px;
-    width: 20px;
+    border: 1px solid #AAAAAA;
+    padding: 3px;
+    text-align: center;
+    width: 100px;
   }
   .helpText {
     clear: left;
@@ -42,8 +43,7 @@ knitr::opts_chunk$set(echo=FALSE, warning=TRUE, error=TRUE, message=TRUE, fig.wi
 
   - navigate using the 'Table of Content' above or just scroll
   - collapse sections by just clicking their name
-  - click on the "?" symbol to see a description for each metric and its scoring
-  - report bugs via [GitHub issue tracker](https://github.com/cbielow/PTXQC/issues)
+  - click on the "&darr; Show Help" symbol to see a description for each metric and its scoring
   - edit the config `r paste0("file:///", gsub("\\\\", "/", fh_out$yaml_file))` to
      - set the report format (HTML, plainPDF, or both)
      - disable metrics
@@ -54,7 +54,8 @@ knitr::opts_chunk$set(echo=FALSE, warning=TRUE, error=TRUE, message=TRUE, fig.wi
      - abbreviations of Raw file names
   - edit the Html template `r paste0("file:///", gsub("\\\\", "/", html_template))` to
      - alter the look and feel of this report (e.g. colors, font sizes, help texts, etc.)
-  - full manual available [here](https://github.com/cbielow/PTXQC)
+  - report bugs and file requests via the [GitHub issue tracker](https://github.com/cbielow/PTXQC/issues)
+  - full PTXQC manual available [here](https://github.com/cbielow/PTXQC)
 
 ## HeatMap
 ```{r MQparams, echo=FALSE, results="asis"}
@@ -90,7 +91,7 @@ for (i in 1:length(pl_nameMapping)) {
       if (i == 1) { ## print helpText only once
         cat(paste0('\n
 <div>
-  <div class="helpSymbol">?</div>
+  <div class="helpSymbol">&darr; Show Help</div>
   <div class="helpText">', qcm$helpText, "</div>
 </div>"))
       }
@@ -114,8 +115,8 @@ jQuery(document).ready(function()
   jQuery(".helpSymbol").click(function(event)
   {
     var target = $( event.target );
-    // "?" is the first item in a <div> which encloses their section
-    // so toggling its sibling (the actual text) will just leave the "?" visible
+    // "Show Help &darr;" is the first item in a <div> which encloses their section
+    // so toggling its sibling (the actual text) will just leave the "Show Help &darr;" visible
     if ( target.is( "div" ) )
     {
       target.siblings().slideToggle(200);
