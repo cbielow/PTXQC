@@ -5,6 +5,12 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+v0.80.1 -- 2016/03
+  - experimental missing value metric (on peptide level)
+    - density plots (showing what intensities are usually missing)
+      - includes simple inter-Raw file normalization scheme
+    - percentage of missing values (lower is better) -- used for scoring in heatmap
+    
 v0.80.0 -- 2016/02
   - Report format is by default now Html and PDF (you get two identical reports)
   - Html report includes help texts describing each metric and scoring
