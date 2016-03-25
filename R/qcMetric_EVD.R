@@ -981,3 +981,148 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
 
 #####################################################################
 
+qcMetric_EVD_MissingValues =  setRefClass(
+  "qcMetric_EVD_MissingValues",
+  contains = "qcMetric",
+  methods = list(initialize=function() {  callSuper(    
+    helpTextTemplate = 
+      "Missing peptide intensities per Raw file from evidence.txt.
+This metric shows the fraction of missing peptides compared to all peptides seen in the whole experiment.
+The more Raw files you have, the higher this fraction is going to be (because there is always going
+to be some exotic [low intensity?] peptide which gets [falsely] identified in only a single Raw file).
+A second plot shows how many peptides (Y-axis) are covered by at least X Raw files.
+A third plot shows the density of the observed (line) and the missing (filled area) data.
+To reconstruct the distribution of missing values, an imputation strategy is required, so the argument is somewhat
+circular here. If all Raw files are (technical) replicates, i.e. we can expect that missing peptides are indeed
+present and have an intensity similar to the peptides we do see, then the median is a good estimator.
+This method performs a global normalization across Raw files (so their observed intensitiy distributions have the same mean),
+before computing the imputed values. Afterwards, the distributions are de-normalized again (shifting them back to their)
+original locations -- but this time with imputed peptides.
+
+Peptides obtained via Match-between-run (MBR) are accounted for (i.e. are considered as present = non-missing).
+Thus, make sure that MBR is working as intended (see MBR metrics).
+
+<b>Warning:</b> this metric is meaningless for fractionated data!
+<b>TODO:</b> compensate for lower scores in large studies (with many Raw files), since peptide FDR is accumulating!?
+
+Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptides.
+",
+    workerFcn = function(.self, df_evd)
+    {
+      ## completeness check
+      stopifnot(c("fc.raw.file", "modified.sequence", "intensity") %in% colnames(df_evd))
+      
+      if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
+        lpl = list(ggText("Skipped", "Missing values calculation skipped. Fractionated data detected!"))
+        return(list(plots = lpl))
+      }
+      
+      ## make peptides unique per Raw file
+      df_u = ddply(df_evd[ , c("fc.raw.file", "modified.sequence")], "fc.raw.file",
+                   function(x) {
+                     return(x[!duplicated(x$modified.sequence),])
+                  })
+            
+      global_peps = unique(df_u$modified.sequence)
+      global_peps_count = length(global_peps)
+      
+      ## percent identified in each Raw file
+      pep_set = ddply(df_u[ , c("fc.raw.file", "modified.sequence")], "fc.raw.file",
+                      function(x) {
+                        score = 100*length(intersect(global_peps, x$modified.sequence)) / global_peps_count
+                        return(data.frame(idFraction = score))
+                      })
+      
+      lpl = byXflex(pep_set, pep_set$fc.raw.file, subset_size = 50, FUN = function(dx) {
+        p = ggplot(dx) + 
+          geom_bar(aes_string(x = "fc.raw.file", y = "idFraction"), stat = "identity") +
+          addGGtitle("[experimental] EVD: Non-Missing Peptides", "compared to all peptides seen in experiment") +
+          xlab("") +
+          ylab("Fraction of total peptides [%]") +
+          ylim(0, 100) +
+          scale_x_discrete_reverse(dx$fc.raw.file) +
+          coord_flip()
+        return(p)
+      })                      
+      
+      #for (pl in lpl) print(pl)
+      
+      tbl = table(df_u$modified.sequence)
+      head(tbl)
+      tbl_smry = as.data.frame(table(tbl))
+      tbl_smry$FreqRel = tbl_smry$Freq / global_peps_count
+      tbl_smry = tbl_smry[nrow(tbl_smry):1,] ## invert
+      tbl_smry$FreqCum = cumsum(tbl_smry$FreqRel) * 100
+      tbl_smry$x = as.numeric(tbl_smry$tbl)
+      
+      p = ggplot(tbl_smry, aes_string(x = "x", y = "FreqCum")) + 
+        geom_line() +
+        geom_point() +
+        addGGtitle("[experimental] EVD: Non-missing by set", "") +
+        xlab("Minimum # Raw files") +
+        ylab("Fraction of total peptides [%]") +
+        ylim(0, 100)
+      lpl[["missingCul"]] = p
+      
+      ## intensity distribution of missing values
+      df_evd$logInt = log2(df_evd$intensity)
+      
+      lpl_dens = byXflex(df_evd[, c("modified.sequence", "fc.raw.file", "logInt")], df_evd$fc.raw.file,
+                         subset_size = 5, FUN = function(dx) {
+             
+        d_mat = dcast(dx, modified.sequence ~ fc.raw.file, fun.aggregate = mean, value.var = "logInt")
+        
+        ## ... normalization factors
+        d_mat_mult = sapply(2:ncol(d_mat), function(x) {
+          mult = mean(d_mat[, x] / d_mat[, 2], na.rm = TRUE)
+          return(mult)
+        })
+        df_mult = data.frame(fc.raw.file = colnames(d_mat)[-1], mult = d_mat_mult)
+        ## .. normalize data
+        d_mat_n = d_mat
+        d_mat_n[, -1] = sweep( d_mat_n[, -1], 2, d_mat_mult, '/')
+        ## 
+        head(d_mat_n)
+        ## find impute value
+        pep_mean = rowMeans(d_mat_n[, -1], na.rm = TRUE)
+        df_missing = ddply(df_mult, "fc.raw.file", function(x) {
+          ## get set of missing values
+          values = pep_mean[is.na(d_mat_n[, as.character(x$fc.raw.file)])]
+          ## de-normalize (back to old intensity range)
+          values = values * x$mult
+          return(data.frame(missingVals = values))
+        })
+        head(df_missing)
+        
+        pl = ggplot(df_missing) + 
+          geom_freqpoly(data = df_evd, aes_string(x = "logInt", col="fc.raw.file"), binwidth = 0.5, size = 1.2) +
+          geom_area(aes_string(x = "missingVals", col="fc.raw.file", fill = "fc.raw.file"), position = position_dodge(width=0), binwidth = 0.5, stat="bin", alpha=0.5) +
+          xlab("Intensity [log2]") +
+          ggtitle(" [experimental] EVD: Imputed Peptide Intensity Distribution of Missing Values") +
+          scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide = guide_legend("")) +
+          scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide = "none")
+        
+        return(pl)
+      })
+      
+      lpl = append(lpl, lpl_dens)
+      
+      
+      ## QC measure for fraction of missing values
+      cname = .self$qcName
+      pep_set[, cname] = qualLinThresh(pep_set$idFraction, 100) ## a no-op, just for clarity
+      qcScore = pep_set[, c("fc.raw.file", cname)]
+      
+      return(list(plots = lpl, qcScores = qcScore))
+    }, 
+    qcCat = "prep", 
+    qcName = "EVD:~Pep~Missing~Values", 
+    orderNr = 0390  # just before peptide count
+  )
+    return(.self)
+  })
+)
+
+#####################################################################
+
+

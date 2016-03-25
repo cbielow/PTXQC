@@ -41,7 +41,8 @@ test_that("createReport", {
   
   expect_equal(file.exists(r[["heatmap_values_file"]]), TRUE)
   d_heatmap = read.delim(r[["heatmap_values_file"]])
-  expect_equal(dim(d_heatmap), c(2, 22)) ## two files, 22 metrics
+  expect_equal(dim(d_heatmap)[1], 2) ## two files
+  expect_equal(dim(d_heatmap)[2] >= 22, TRUE) ## 22 (or more) metrics
   expect_equal(as.character(d_heatmap$fc.raw.file), c("..Ecoli_01", "..Ecoli_02"))
   
   expect_equal(file.exists(r[["filename_sorting"]]), TRUE)

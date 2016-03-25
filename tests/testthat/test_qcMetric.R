@@ -1,6 +1,6 @@
 library(PTXQC)
 #library(testthat)
-
+library(ggplot2)
 context("qcMetric.R")
 
 test_that("qcMetric", {

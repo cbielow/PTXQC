@@ -537,6 +537,14 @@ createReport = function(txt_folder, yaml_obj = list())
 
     ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
     if (!exists("DEBUG_PTXQC")) d_evd = d_evd[, c("id", "contaminant")]
+    
+    
+    
+    ##
+    ## missing values
+    ##
+    lst_qcMetrics[["qcMetric_EVD_MissingValues"]]$setData(d_evd)
+    
 }
 
 
