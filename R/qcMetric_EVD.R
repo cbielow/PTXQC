@@ -13,7 +13,7 @@ Two abundance measures are computed per Raw file:
 An additional plot with peptide score distributions will be shown if the threshold was reached (i.e. suspected contamination).
 This allows to decide if the contamination is true, i.e. achieves good MS/MS Andromeda scores (requires a recent MQ version).
 
-Heatmap score [EVD: Pep Intensity (>thresh)]: boolean, i.e. 0% (fail) if the threshold was reached. 100% (pass) otherwise.
+Heatmap score [EVD: Contaminant ...]: boolean, i.e. 0% (fail) if the threshold was reached. 100% (pass) otherwise.
 ",
     workerFcn = function(.self, df_evd, df_pg, lst_contaminants)
     {
@@ -155,6 +155,9 @@ Failing to reach the intensity threshold is usually due to unfavorable column co
 column loading or ionization issues. If the study is not a dilution series or pulsed SILAC experiment, we 
 would expect every condition to have about the same median log-intensity (of 2<sup>%1.1f</sup>).
 The relative standard deviation (RSD) gives an indication about reproducibility across files and should be below 5pc.
+
+Depending on your setup, your thresholds might vary from PTXQC's defaults.
+Change the threshold using the YAML configuration file.
 
 Heatmap score [EVD: Pep Intensity (>%1.1f)]: 
   Linear scale of the median intensity reaching the threshold, i.e. reaching 2<sup>21</sup> of 2<sup>23</sup> gives score 0.25.
