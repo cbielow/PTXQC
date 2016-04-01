@@ -18,9 +18,15 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
       ## completeness check
       stopifnot(.self$checkInput(c("fc.raw.file", "fragmentation", "reverse", "mass.deviations..da."), colnames(df_msms)))
       ## older MQ versions do not have 'mass.analyzer' or 'mass.deviations..ppm.'
-      ## , so we use fragmentation instead (this is a little risky, since you could to CID fragmentation and forward to Orbi, but hey...)
+      ## , so we use fragmentation instead (this is a little risky, since you could do CID fragmentation and forward to Orbi, but hey...)
       if (!("mass.analyzer" %in% colnames(df_msms))) df_msms$mass.analyzer = df_msms$fragmentation
       
+      sampleMax = function(x, max = 300) {
+        ## sample at most 'max' items from 1:x
+        ## if 'x' < max, return 1:x
+        if (x < max) return(1:x)
+        return (sort(sample.int(x, size = max)))
+      }
       
       ms2_decal = ddply(df_msms, c("fc.raw.file", "mass.analyzer"), .fun = function(x) {
         df.ms = NULL
@@ -31,7 +37,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
         {
           idx_nr = which(!x$reverse)
           ## select a representative subset, otherwise the number of datapoints is just too large
-          idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=ceiling(length(idx_nr)/1000))]
+          idx_nr_subset = idx_nr[sampleMax(length(idx_nr))]
           df.ms = getFragmentErrors(x[idx_nr_subset, , drop=FALSE])
           if (!is.null(df.ms)) df.ms$type="forward"
         } 
@@ -40,7 +46,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
         {
           idx_nr = which(x$reverse)
           ## select a representative subset, otherwise the number of datapoints is just too large
-          idx_nr_subset = idx_nr[seq(1,length(idx_nr), by=ceiling(length(idx_nr)/1000))]
+          idx_nr_subset = idx_nr[sampleMax(length(idx_nr))]
           df.ms_r = getFragmentErrors(x[idx_nr_subset, , drop=FALSE])
           if (!is.null(df.ms)) {
             df.ms_r$type="decoy"
@@ -51,8 +57,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
         
         return (df.ms)
       })
-      
-      ms2_decal$msErr = as.numeric(as.character(ms2_decal$msErr))
+
       #ms2_range = diff(range(ms2_decal$msErr, na.rm = TRUE))
       #ms2_binwidth = ms2_range/20
       ## precision (plotting is just so much quicker, despite using a fixed binwidth)

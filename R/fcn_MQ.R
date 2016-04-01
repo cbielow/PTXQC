@@ -193,14 +193,13 @@ getFragmentErrors = function(x)
   ## and no data.frame can be constructed, so...
   if (all(nchar(x[, ms2_col]) == 0)) return(NULL)
     
-  err = unlist(strsplit(paste(x[, ms2_col], sep="", collapse=";"), split=";", fixed = TRUE))
+  err = as.numeric(unlist(strsplit(x[, ms2_col], split=";", fixed = TRUE)))
   if (convert_Da2PPM) {
     stopifnot("masses" %in% colnames(x))
-    mass = unlist(strsplit(paste(x$masses, sep="", collapse=";"), split=";", fixed = TRUE))
-    err = as.numeric(err) / as.numeric(mass) * 1e6
+    mass = unlist(strsplit(x$masses, split=";", fixed = TRUE))
+    err = err / as.numeric(mass) * 1e6
   }
-  ## return as character, otherwise it will get converted to factor by ddply?
-  return(data.frame(msErr = as.character(err), unit = ms2_unit))
+  return(data.frame(msErr = err, unit = ms2_unit))
 }
 
 #'

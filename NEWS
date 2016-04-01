@@ -5,6 +5,9 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+v0.80.2 -- 2016/04
+  - reduce memory footprint (~15% reduction; 1st iteration)
+
 v0.80.1 -- 2016/03
   - experimental missing value metric (on peptide level)
     - density plots (showing what intensities are usually missing)

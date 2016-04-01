@@ -523,9 +523,8 @@ RTalignmentTree = function(d_evd, col_fraction = c())
          setdiff(req_cols, colnames(d_evd)), "!")
   }
   
-  d_evd$seqc = paste(d_evd$modified.sequence, d_evd$charge)
+  d_cast = dcast(d_evd, modified.sequence + charge ~ fc.raw.file, mean, value.var = "calibrated.retention.time")
   
-  d_cast = dcast(d_evd, seqc ~ fc.raw.file, mean, value.var = "calibrated.retention.time")
   head(d_cast[,-1])
   d_cast.m = as.matrix(d_cast[,-1])
   head(d_cast.m)

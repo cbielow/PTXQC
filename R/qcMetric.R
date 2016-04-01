@@ -93,7 +93,20 @@ qcMetric = setRefClass("qcMetric",
            cat("  Metric disabled. Skipping...\n")
            return(NULL)
          }
+         
+         ## GC stats
+         mem_before = gc(verbose = F, reset = T)
+         t_before = proc.time()
+         
          r = workerFcn(.self, ...)
+         
+         ## clean memory to get a clean picture of each metrics memory footprint
+         ## to enable the user to skip expensive metrics
+         mem_after = gc(verbose = F)
+         cat(paste0("\nMemory prior: ", sum(mem_before[, 2]), " Mb",
+                    "\nMemory after: ", sum(mem_after[, 2]), " Mb",
+                    "\n         max: ", sum(mem_after[, 6]), " Mb\n", 
+                    "\n    duration: ", round((proc.time() - t_before)[3]), " s\n\n"))
 
          if (!("plots" %in% names(r))) stop(c("Worker of '", .self$qcName, "' did not return valid result format!"))
          if (!class(r[["plots"]]) == "list") stop(c("Worker of '", .self$qcName, "' did not return plots in list format!"))
