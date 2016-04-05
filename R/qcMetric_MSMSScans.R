@@ -4,7 +4,7 @@
 #'
 #' Metric for msmsscans.txt, showing TopN over RT.
 #'
-#' @import data.table
+#' @importFrom data.table as.data.table setkey
 #'
 qcMetric_MSMSScans_TopNoverRT =  setRefClass(
   "qcMetric_MSMSScans_TopNoverRT",
@@ -23,7 +23,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN over RT]: Rewards uniform (function Un
       ## completeness check
       stopifnot(.self$checkInput(c("fc.raw.file", "retention.time", "scan.event.number", "rRT"), colnames(df_msmsScans)))
       
-      dd = data.table(df_msmsScans[, c("fc.raw.file", "retention.time", "scan.event.number", "rRT")])
+      dd = as.data.table(df_msmsScans[, c("fc.raw.file", "retention.time", "scan.event.number", "rRT")])
       setkey(dd, fc.raw.file, retention.time) ## sort by RT
       ## find the highest scan event (SE) after an MS1 scan
       DF_max = dd[, {
@@ -72,7 +72,7 @@ Heatmap score [MS<sup>2</sup> Scans: Ion Inj Time]: Linear score as fraction of 
       stopifnot(.self$checkInput(c("fc.raw.file", "ion.injection.time", "rRT"), colnames(df_msmsScans)))
       
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
-      dd = data.table(df_msmsScans[, c("fc.raw.file", "ion.injection.time", "rRT")])
+      dd = as.data.table(df_msmsScans[, c("fc.raw.file", "ion.injection.time", "rRT")])
 
       ## average injection time over RT
       DFmIIT = dd[, list(medIIT = median(ion.injection.time)), by=c("fc.raw.file", "rRT")]
@@ -133,7 +133,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN high]: rewards if TopN was reached on 
       }
 
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
-      DFc = data.table(scan.events)[, list(n=.N), by=c("scan.event.number", "fc.raw.file")]
+      DFc = as.data.table(scan.events)[, list(n=.N), by=c("scan.event.number", "fc.raw.file")]
 
       dfc.ratio = ddply(DFc, "fc.raw.file", function(x, maxn)
       {
@@ -205,7 +205,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
       stopifnot(.self$checkInput(c("fc.raw.file", "scan.event.number", "identified"), colnames(df_msmsScans)))
       
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
-      DF = data.table(df_msmsScans[, c("fc.raw.file", "scan.event.number", "identified")])[, list(n=.N), by=c("fc.raw.file", "scan.event.number", "identified")]
+      DF = as.data.table(df_msmsScans[, c("fc.raw.file", "scan.event.number", "identified")])[, list(n=.N), by=c("fc.raw.file", "scan.event.number", "identified")]
       
       # try KS on underlying data instead of using qualUniform()
       #   DF2= ddply(df_msmsScans, "fc.raw.file", function(rf){
