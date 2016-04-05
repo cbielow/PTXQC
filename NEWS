@@ -6,7 +6,7 @@ i.e. a list of new features / bugfixes by version number.
 #################################
 
 v0.80.2 -- 2016/04
-  - reduce memory footprint (~15% reduction; 1st iteration)
+  - reduce memory footprint (~50% reduction; replacing ddply() with data.table[])
 
 v0.80.1 -- 2016/03
   - experimental missing value metric (on peptide level)

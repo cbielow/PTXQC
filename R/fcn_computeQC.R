@@ -413,7 +413,7 @@ createReport = function(txt_folder, yaml_obj = list())
     param_name_mbr = "File$Evidence$MatchBetweenRuns_wA"
     param_evd_mbr = yc$getYAML(param_name_mbr, "auto")
     
-    if ("retention.time.calibration" %in% colnames(d_evd))
+    if (("retention.time.calibration" %in% colnames(d_evd)))
     {
       ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
       MBR_HAS_DATA = (sum(d_evd$type == "MULTI-MATCH") > 0)
@@ -580,7 +580,13 @@ if (enabled_msms)
   } else {
     lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(d_msms)
   }
+
+  ## save RAM: msms.txt is not required any longer
+  rm(d_msms)
+  rm(d_evd)
 }
+
+
 
 ######
 ######  msmsScans.txt ...
@@ -638,6 +644,9 @@ if (enabled_msmsscans)
     lst_qcMetrics[["qcMetric_MSMSScans_TopNID"]]$setData(d_msmsScan)
 
   } ## end MSMSscan from MQ > 1.0.13
+  
+  ## save RAM: msmsScans.txt is not required any longer
+  rm(d_msmsScan)
 }
 
   

@@ -10,6 +10,7 @@ Description: An R-package to generate comprehensive quality control reports from
 Depends:
     R (>= 3.0.0)
 Imports:
+    data.table,
     ggplot2,
     ggdendro,
     graphics,

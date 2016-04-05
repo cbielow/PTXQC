@@ -13,7 +13,7 @@ Two abundance measures are computed per Raw file:
 An additional plot with peptide score distributions will be shown if the threshold was reached (i.e. suspected contamination).
 This allows to decide if the contamination is true, i.e. achieves good MS/MS Andromeda scores (requires a recent MQ version).
 
-Heatmap score [EVD: Contaminant ...]: boolean, i.e. 0% (fail) if the threshold was reached. 100% (pass) otherwise.
+Heatmap score [EVD: Contaminant ...]: boolean, i.e. 0% (fail) if the threshold was reached. 100%% (pass) otherwise.
 ",
     workerFcn = function(.self, df_evd, df_pg, lst_contaminants)
     {
@@ -154,7 +154,7 @@ qcMetric_EVD_PeptideInt =  setRefClass(
 Failing to reach the intensity threshold is usually due to unfavorable column conditions, inadequate 
 column loading or ionization issues. If the study is not a dilution series or pulsed SILAC experiment, we 
 would expect every condition to have about the same median log-intensity (of 2<sup>%1.1f</sup>).
-The relative standard deviation (RSD) gives an indication about reproducibility across files and should be below 5pc.
+The relative standard deviation (RSD) gives an indication about reproducibility across files and should be below 5%%.
 
 Depending on your setup, your thresholds might vary from PTXQC's defaults.
 Change the threshold using the YAML configuration file.
@@ -214,7 +214,7 @@ If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transfer
 are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad (see other metrics),
 MBR should be switched off for the Raw files which are affected (could be a few or all). 
 
-Heatmap score [EVD: Prot Count (>%1.0f)]: Reaching the target threshold gives a score of 100pc.
+Heatmap score [EVD: Prot Count (>%1.0f)]: Reaching the target threshold gives a score of 100%%.
 ",
     workerFcn = function(.self, df_evd, thresh_protCount)
     {
@@ -277,7 +277,7 @@ If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transfer
 are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad (see other metrics),
 MBR should be switched off for the Raw files which are affected (could be a few or all). 
 
-Heatmap score [EVD: Pep Count (>%1.0f)]: Reaching the target threshold gives a score of 100pc.
+Heatmap score [EVD: Pep Count (>%1.0f)]: Reaching the target threshold gives a score of 100%%.
 ",
     workerFcn = function(.self, df_evd, thresh_pepCount)
     {
