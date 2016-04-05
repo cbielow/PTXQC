@@ -59,9 +59,9 @@ _______
 The reason why PTXQC does not directly use the mqpar.xml from the root folder is two-fold:
 
 1. the mqpar.xml at the root folder might be outdated/changed, especially of you run MaxQuant multiple times, and rename the txt folders (to compare multiple parameter settings)
-2. users often copy the txt folder from the MaxQuant 'server' to a desktop machine 
+2. users often copy the txt folder from the MaxQuant 'server' to a remote machine 
             for result interpretation. Usually only the txt folder is copied, but not the Raw files. 
-            If PTXQC (re)-should run on the 'desktop', the mqpar.xml needs to be within the txt folder.
+            If PTXQC is run on the remote machine, the mqpar.xml needs to reside within the txt folder.
 
 _______
 
@@ -69,7 +69,7 @@ _______
 
 ### Q: How do I know what the figures in the report mean? ###
 
-**Answer:** Most metrics and figures are described in the publication (see 'Citation' on the main homepage of PTXQC). Updated and new metrics will be described in the documentation of the package. A short description of each plot and the scoring function is given in each Html report (click the "?" box just below each section heading). See [examples][https://github.com/cbielow/PTXQC/tree/master/inst/examples] for more.
+**Answer:** Most metrics and figures are described in the publication (see 'Citation' on the main homepage of PTXQC). Updated and new metrics will be described in the documentation of the package. A short description of each plot and the scoring function is given in each Html report (click the "Show Help" box just below each section heading). See [examples][https://github.com/cbielow/PTXQC/tree/master/inst/examples] for more.
 
 _______
    
