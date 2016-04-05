@@ -32,7 +32,6 @@ Suggests:
     testthat
 VignetteBuilder: knitr
 License: file LICENSE
-biocViews: Software, QualityControl, ReportWriting, Proteomics, MassSpectrometry, DataImport, Visualization
 Roxygen: list(wrap = FALSE)
 RoxygenNote: 5.0.1
 URL: https://github.com/cbielow/PTXQC
