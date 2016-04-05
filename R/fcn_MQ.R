@@ -3,13 +3,6 @@
 ###
 ###
 
-#install.packages("ggplot2")
-#source("http://bioconductor.org/biocLite.R")
-#biocLite("ggplot2")
-#biocLite("plyr")
-#require(plyr)
-
-
 #' Boxplots - one for each condition (=column) in a data frame.
 #' 
 #' Given a data.frame with two/three columns in long format (name, value, [contaminant]; in that order), each group (given from 1st column)

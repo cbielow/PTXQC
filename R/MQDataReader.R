@@ -10,9 +10,6 @@
 ##            what I mean]
 ##
 
-#install.packages("proto")
-#require(proto)
-
 #'
 #' Convenience wrapper for MQDataReader when only a single MQ file should be read
 #' and file mapping need not be stored.
