@@ -130,6 +130,8 @@ However this is true only if all samples show the same degree of digestion. High
 can indicate for example, either a) failed digestion, b) a high (post-digestion) protein contamination, or 
 c) a sample with high amounts of unspecifically degraded peptides which are not digested by trypsin. 
 
+In the rare case that 'no enzyme' was specified in MaxQuant, neither scores nor plots are shown.
+
 Heatmap score [MSMS: MC]: the fraction (0% - 100%) of fully cleaved peptides per Raw file
 
 Heatmap score [MSMS: MC Var]: each Raw file is scored for its deviation (score: MedianDist) from the 'average' digestion state of the 
@@ -162,13 +164,20 @@ current study. ",
           byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, title_sub = msg_cont_removed, sort_indices = TRUE)
         
         ## QC measure for missed-cleavages variation
-        qc_mc = data.frame(fc.raw.file = st_bin$fc.raw.file, valMC = st_bin[, "0"])
-        qc_mc$valMCVar = qualMedianDist(qc_mc$valMC)
-        colnames(qc_mc)[colnames(qc_mc) == "valMC"] = sprintf(.self$qcName, "MC")
-        colnames(qc_mc)[colnames(qc_mc) == "valMCVar"] = sprintf(.self$qcName, "MC~Var")
-        qc_score = qc_mc[, grep("valMC", colnames(qc_mc), invert=TRUE)]
-      } ## end MC check
+        qc_score = data.frame(fc.raw.file = st_bin$fc.raw.file, valMC = st_bin[, "0"])
+        qc_score$valMCVar = qualMedianDist(qc_score$valMC)
+        
+      } else {
+        lpl = list(ggText("MSMS: Missed cleavages per Raw file",
+                          "No enzyme was specified.\nDigestion efficiency cannot be scored."))
+        qc_score = data.frame(fc.raw.file = unique(df_msms$fc.raw.file),
+                              valMC = HEATMAP_NA_VALUE,
+                              valMCVar = HEATMAP_NA_VALUE)
+      }## end enyzme check
       
+      colnames(qc_score)[colnames(qc_score) == "valMC"] = sprintf(.self$qcName, "MC")
+      colnames(qc_score)[colnames(qc_score) == "valMCVar"] = sprintf(.self$qcName, "MC~Var")
+
       return(list(plots = lpl, qcScores = qc_score))
     }, 
     qcCat = "Prep", 
