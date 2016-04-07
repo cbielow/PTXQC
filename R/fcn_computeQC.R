@@ -690,7 +690,21 @@ if (any(is.na(out_format_requested)))
   stop("Output format(s) not supported: '", paste(out_formats[is.na(out_format_requested)], collapse="', '"), "'")
 }
 
+
+if ("html" %in% out_format_requested)
+{
+  fh_out$report_file_extension = c(fh_out$report_file_extension, ".html")
   
+  if (DEBUG_PTXQC) {
+    html_template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
+  } else {
+    html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
+  }
+  html_template
+  ## Rmarkdown: convert to Markdown, and then to HTML or PDF...
+  render(html_template, output_file = paste0(fh_out$report_file, ".html"))
+}
+
 if ("plainPDF" %in% out_format_requested)
 {
   fh_out$report_file_extension = c(fh_out$report_file_extension, ".pdf")
@@ -726,20 +740,6 @@ if ("plainPDF" %in% out_format_requested)
   }
   dev.off();
   cat(" done\n")
-}
-
-if ("html" %in% out_format_requested)
-{
-  fh_out$report_file_extension = c(fh_out$report_file_extension, ".html")
-  
-  if (DEBUG_PTXQC) {
-    html_template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
-  } else {
-    html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
-  }
-  html_template
-  ## Rmarkdown: convert to Markdown, and then to HTML or PDF...
-  render(html_template, output_file = paste0(fh_out$report_file, ".html"))
 }
 
 ## save plot object (for easier access, in case someone wants high-res plots)
