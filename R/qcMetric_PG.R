@@ -5,11 +5,13 @@ qcMetric_PG_Cont =  setRefClass(
   methods = list(initialize=function() {  callSuper(
     helpText = 
       "External protein contamination should be controlled for, therefore MaxQuant ships with a 
-comprehensive, yet customizable protein contamination database, which is enabled by default. PTXQC 
+comprehensive, yet customizable protein contamination database, which is searched by MaxQuant by default. PTXQC 
 generates a contamination plot derived from the proteinGroups (PG) table showing the fraction of total 
-protein intensity attributable to contaminants. The plot employs transparency to indicate the total 
-intensity to delineate a high contamination in high complexity samples from a high 
-contamination in low complexity samples (e.g. from in-gel digestion).
+protein intensity attributable to contaminants. The plot employs transparency to discern differences in
+the group-wise summed protein abundance. This allows to delineate a high contamination in high complexity samples from a high 
+contamination in low complexity samples (e.g. from in-gel digestion). If you see only one 
+abundance class ('mid'), this means all your groups have roughly
+the same summed protein intensity.
 Note that this plot is based on experimental groups, and therefore may not correspond 1:1 to Raw files. 
     
 Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
@@ -52,14 +54,14 @@ qcMetric_PG_RawInt =  setRefClass(
   methods = list(initialize=function() {  callSuper(
     helpText = 
       "Intensity boxplots by experimental groups. Groups are user-defined during MaxQuant configuration.
-This plot displays a (customizable) threshold line for the desired mean intensity of proteins. Raw files
+This plot displays a (customizable) threshold line for the desired mean intensity of proteins. Groups
 which underperform here, are likely to also suffer from a worse MS/MS id rate and higher contamination due to
-the lack of total protein loaded/detected. If possible, all Raw files should show a high and consistent amount
+the lack of total protein loaded/detected. If possible, all groups should show a high and consistent amount
 of total protein.
-The height of the bar correlates to the number of non-zero protein abundance.
+The height of the bar correlates to the number of proteins with non-zero abundance.
 
 Contaminants are shown as overlayed yellow boxes, whose height corresponds to the number of contaminant proteins.
-The position of the box is their intensity distribution.
+The position of the box gives the intensity distribution of the contaminants.
 
 Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
 ",
@@ -107,10 +109,10 @@ This plot displays a (customizable) threshold line for the desired mean of LFQ i
 which underperform in *Raw* intensity, are likely to show an *increased* mean here, since
 only high-abundance proteins are recovered and quantifyable by MaxQuant in this Raw file. The remaining proteins
 are likely to receive an LFQ value of 0 (i.e. do not contribute to the distribution).
-The height of the bar correlates to the number of non-zero protein abundance.
+The height of the bar correlates to the number of proteins with non-zero abundance.
 
 Contaminants are shown as overlayed yellow boxes, whose height corresponds to the number of contaminant proteins.
-The position of the box is their intensity distribution.
+The position of the box gives the intensity distribution of the contaminants.
 
 Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
 ",
@@ -154,10 +156,10 @@ qcMetric_PG_ITRAQInt =  setRefClass(
     helpText = 
       "ITraQ/TMT reporter intensity boxplots by experimental groups. Groups are user-defined during MaxQuant configuration.
 This plot displays a (customizable) threshold line for the desired mean of reporter ion intensity of proteins.
-The height of the bar correlates to the number of non-zero protein abundance.
-  
+The height of the bar correlates to the number of proteins with non-zero abundance.
+
 Contaminants are shown as overlayed yellow boxes, whose height corresponds to the number of contaminant proteins.
-The position of the box is their intensity distribution.
+The position of the box gives the intensity distribution of the contaminants.
 
 Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
 ",

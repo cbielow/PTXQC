@@ -4,16 +4,17 @@ qcMetric_EVD_UserContaminant =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "User defined contaminant search (usually used for Mycoplasma detection, but can be used for an arbitrary (set of) proteins.
+      "User defined contaminant search. Usually used for Mycoplasma detection, 
+but can be used for an arbitrary (set of) proteins.
 
 Two abundance measures are computed per Raw file:
   - fraction of intensity (used for score)
   - fraction of spectral counts (as comparison for user)
 
-An additional plot with peptide score distributions will be shown if the threshold was reached (i.e. suspected contamination).
+An additional plot with peptide score distributions will be shown if the threshold was reached (indicating contamination).
 This allows to decide if the contamination is true, i.e. achieves good MS/MS Andromeda scores (requires a recent MQ version).
 
-Heatmap score [EVD: Contaminant ...]: boolean, i.e. 0% (fail) if the threshold was reached. 100%% (pass) otherwise.
+Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the intensity threshold was reached. 100%% (pass) otherwise.
 ",
     workerFcn = function(.self, df_evd, df_pg, lst_contaminants)
     {
@@ -94,7 +95,7 @@ Heatmap score [EVD: Contaminant ...]: boolean, i.e. 0% (fail) if the threshold w
         
         if (not_found)
         { ## identifier was not found in any sample
-          pl_cont = ggText("PG: Contaminants",
+          pl_cont = ggText("EVD: Contaminants",
                            paste0("Contaminant '", ca, "' was not found in any sample.\n\nDid you use the correct database?"),
                            "red")
           lpl = append(lpl, list(pl_cont))
@@ -151,12 +152,15 @@ qcMetric_EVD_PeptideInt =  setRefClass(
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
       "Peptide intensity per Raw file from evidence.txt.
+Low peptide intensity usually goes hand in hand with low MS/MS identifcation rates and unfavourable signal/noise ratios,
+which makes signal detection harder. Also instrument acquisition time increases for trapping instruments.
+
 Failing to reach the intensity threshold is usually due to unfavorable column conditions, inadequate 
 column loading or ionization issues. If the study is not a dilution series or pulsed SILAC experiment, we 
 would expect every condition to have about the same median log-intensity (of 2<sup>%1.1f</sup>).
 The relative standard deviation (RSD) gives an indication about reproducibility across files and should be below 5%%.
 
-Depending on your setup, your thresholds might vary from PTXQC's defaults.
+Depending on your setup, your target thresholds might vary from PTXQC's defaults.
 Change the threshold using the YAML configuration file.
 
 Heatmap score [EVD: Pep Intensity (>%1.1f)]: 
@@ -643,7 +647,7 @@ qcMetric_EVD_Charge =  setRefClass(
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
       "Charge distribution per Raw file. Should be dominated by charge 2 
-(one N-terminal and one at tryptic C-terminal R or K residue) and have the same fraction in each Raw file.
+(one N-terminal and one at tryptic C-terminal R or K residue) and have a similar distribution across Raw files.
 Consistent charge distribution is paramount for comparable 3D-peak intensities across samples.
 
 Heatmap score [EVD: Charge]: Deviation of the charge 2 proportion from a representative Raw file ('qualMedianDist' function).
@@ -849,12 +853,12 @@ qcMetric_EVD_Top5Cont =  setRefClass(
 (as detected via MaxQuant's contaminants FASTA file) by Raw file, and summarize the 
 remaining contaminants as 'other'. This allows to track down which proteins exactly contaminate your sample.
 Low contamination is obviously better.
-Transparency indicates the average peptide intensity in each Raw file. It is
-not unusual to see samples with low sample content to have higher contamination.
+The 'Abundance class' models the average peptide intensity in each Raw file and is visualized using varying degrees of
+transparency. It is not unusual to see samples with low sample content to have higher contamination.
+If you see only one abundance class ('mid'), this means all your Raw files have roughly
+the same peptide intensity distribution.
     
-Heatmap score [EVD: Contaminants]: as fraction of summed intensity
- - 0 = sample full of contaminants
- - 1 = no contaminants
+Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = sample full of contaminants; 1 = no contaminants
 
 ",
     workerFcn = function(.self, df_evd)

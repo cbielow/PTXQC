@@ -11,7 +11,7 @@ Raw files below 'ok', are listed separately on the next page of the report for c
 The thresholds for the bins are
 %s.
 
-Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (100pc) if the threshold for 'great' is reached or exceeded. ",
+Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the threshold for 'great' is reached or exceeded. ",
     workerFcn = function(.self, df_summary, id_rate_bad, id_rate_great)
     {
       stopifnot(.self$checkInput(c("fc.raw.file", "ms.ms.identified...."), colnames(df_summary)))

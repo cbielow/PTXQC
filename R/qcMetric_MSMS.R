@@ -9,7 +9,10 @@ qcMetric_MSMS_MSMSDecal =  setRefClass(
       "MS/MS decalibration metric. If most of the fragments are within tighter bounds, 
 you can reduce the fragment mass tolerance to obtain more 
 identifications under the same FDR. On the other hand, if the fragment mass errors are not centered on 
-zero (and the distribution is cut by the search tolerance), a recalibration of the instrument should be performed.
+zero, a recalibration of the instrument should be performed.
+If the (Gaussian-like) distribution is cut too severely on either side by the search tolerance window in MaxQuant,
+you might be able to increase the number of identifications by allowing for a wider MS/MS search window when re-running MaxQuant.
+However, the number of decoy identifications will increase as well, potentially offsetting any gain when FDR is applied.
 
 Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around 0 ppm/Da (function Centered).
 ",
