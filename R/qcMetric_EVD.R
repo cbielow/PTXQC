@@ -1021,6 +1021,11 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
         return(list(plots = lpl))
       }
       
+      if (length(unique(df_evd$fc.raw.file)) < 2) {
+        lpl = list(ggText("Skipped", "Need more than one Raw file!"))
+        return(list(plots = lpl))
+      }
+      
       ## make peptides unique per Raw file
       df_u = ddply(df_evd[ , c("fc.raw.file", "modified.sequence")], "fc.raw.file",
                    function(x) {
