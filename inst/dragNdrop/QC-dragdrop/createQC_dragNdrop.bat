@@ -2,16 +2,16 @@
 ECHO.
 ECHO This batch file is used to invoke the QC script by drag'n'dropping of
 ECHO a MaxQuant txt folder (or any file within) onto this .bat file.
-ECHO Within the same txt folder, a QC report in PDF format will be created.
+ECHO Within the same txt folder, a QC report in Html/PDF format will be created.
 ECHO.
 ECHO First time installation of this script [for admins only]:
 ECHO The script expects a certain structure to be present.
-ECHO Right next to this .bat file should by a subfolder named '_internal'
+ECHO This .bat file expects a subfolder named '_internal'
 ECHO which holds:
-ECHO      'R-3.1.0'             containing a complete R installation 
+ECHO      'R-3.1.0'             Holds a complete R installation 
 ECHO                            (including all packages required to run the 
 ECHO                             PTXQC package)
-ECHO      'compute_QC_report.R' The R script that is called by this .bat
+ECHO      'compute_QC_report.R' The R script that is invoked by this .bat
 ECHO.
 REM configure this directory according to above instructions
 REM 
@@ -153,9 +153,9 @@ if %myscriptEL% GTR 0 (
   ECHO   - your R installation is not 64bit and runs out of memory
   ECHO   - the file '%I%\compute_QC_report.R' is missing
   ECHO.
-  ECHO If the error persists, please make a screenshot of this window and the folders mentioned above and open an issue ticket
-  ECHO on https://github.com/cbielow/PTXQC. 
-  ECHO You can also copy the text from this window by 1^) right-clicking here, 2^) choose 'Select all', 3^) press the 'Enter' key, 4^) paste it somewhere ^(issue ticket, email^).
+  ECHO If the error persists, follow the instructions on https://github.com/cbielow/PTXQC
+  ECHO in the section 'Bug reporting'. Leave this window open until the bug report is submitted!
+  ECHO You can copy the text from this window by 1^) right-clicking here, 2^) choose 'Select all', 3^) press the 'Enter' key, 4^) paste it somewhere ^(issue ticket, email^).
   ECHO This ensures that all text is available to debug the problem.
   ECHO Thanks^^!
 )
