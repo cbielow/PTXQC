@@ -1017,12 +1017,12 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
       stopifnot(c("fc.raw.file", "modified.sequence", "intensity") %in% colnames(df_evd))
       
       if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
-        lpl = list(ggText("Skipped", "Missing values calculation skipped. Fractionated data detected!"))
+        lpl = list(ggText("Missing Values Skipped", "Missing values calculation skipped. Fractionated data detected!"))
         return(list(plots = lpl))
       }
       
       if (length(unique(df_evd$fc.raw.file)) < 2) {
-        lpl = list(ggText("Skipped", "Need more than one Raw file!"))
+        lpl = list(ggText("Missing Values Skipped", "Need more than one Raw file!"))
         return(list(plots = lpl))
       }
       
@@ -1103,9 +1103,9 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
         })
         head(df_missing)
         
-        pl = ggplot(df_missing) + 
-          geom_freqpoly(data = df_evd, aes_string(x = "logInt", col="fc.raw.file"), binwidth = 0.5, size = 1.2) +
-          geom_area(aes_string(x = "missingVals", col="fc.raw.file", fill = "fc.raw.file"), position = position_dodge(width=0), binwidth = 0.5, stat="bin", alpha=0.5) +
+        pl = ggplot(df_missing, aes_string(x = "missingVals", col="fc.raw.file", fill = "fc.raw.file")) + 
+          geom_area(position = position_dodge(width=0), binwidth = 0.5, stat="bin", alpha=0.5) +
+          geom_freqpoly(data = dx, aes_string(x = "logInt", col="fc.raw.file"), binwidth = 0.5, size = 1.2) +
           xlab("Intensity [log2]") +
           ggtitle(" [experimental] EVD: Imputed Peptide Intensity Distribution of Missing Values") +
           scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide = guide_legend("")) +
