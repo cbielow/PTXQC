@@ -5,6 +5,11 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+
+v0.80.4 -- 2016/04/11
+  - bug fixes
+      https://github.com/cbielow/PTXQC/issues/22  (Drag'n'drop of folders with space character)
+  
 v0.80.3 -- 2016/04/08
   - bug fixes
       https://github.com/cbielow/PTXQC/issues/21

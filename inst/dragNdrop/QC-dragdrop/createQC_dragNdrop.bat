@@ -71,33 +71,37 @@ PUSHD %1 && POPD || goto is_file
 set is_dir=1
 :is_file
 if %is_dir%==1 ( 
-  echo -- '%1' is a directory 
+  echo -- '%1' is a directory
+  REM this will be quoted automatically
   set txt=%1
 ) else ( 
   echo -- '%1' is a file
-  REM the \ is required!
-  set txt=%~dp1\
+  REM ~dp (drive,path); the final '\' is required!; manual quoting required as well
+  set txt="%~dp1\"
 ) 
 
 ECHO Txt folder is at '%txt%'
 
 if %argC%==2 (
-  REM we use %~dpnx2 instead of %2 to get rid of potential extra surrounding quotes
+  REM We use ~dpnx (drive,path,name,extension) instead of %2 to get rid of potential extra surrounding quotes
   set yaml_file=%~dpnx2
   ECHO.
-  ECHO Yaml file is '!yaml_file!'
+  ECHO Yaml file is: !yaml_file!
   ECHO.
   REM check file extension. We could also use %~x2 to get the file extension
   if !yaml_file:~-5! NEQ .yaml (
     ECHO Error: Second argument '!yaml_file!' does not seem to be a '.yaml' file.
+    ECHO Got: %~x2
     ECHO Please rename or use proper file.
     goto end
   )
   if exist !yaml_file! (
-    ECHO Using YAML configuration file '!yaml_file!'
+    REM Same as above, just using quotes
+    set yaml_file="%~dpnx2"
+    ECHO Using YAML configuration file !yaml_file!
     ECHO.
   ) else (
-    ECHO Error: Yaml file '!yaml_file!' given as second argument does not exist.
+    ECHO Error: Yaml file !yaml_file! given as second argument does not exist.
     ECHO Every QC script run will create a default .yaml file in the respective txt folder, which you can COPY
     ECHO and use as input to any subsequent run.
     ECHO.
@@ -124,20 +128,20 @@ if ERRORLEVEL 1 (
 )
 
 REM works WITH and WITHOUT spaces in !txt!
-if "%yaml_file%" NEQ "" (
-  ECHO Using YAML '!yaml_file!' file and calling R now ...
+if !yaml_file! NEQ "" (
+  ECHO Using YAML !yaml_file! file and calling R now ...
   ECHO.
   ECHO Calling '%Iqt%\R-3.1.0\bin\x64\rscript.exe --vanilla %Iqt%\compute_QC_report.R !txt! !yaml_file!'
   REM using Iqt to guard against path with spaces. Note that using a manually quoted !I!, i.e. "!I!", does not work
   REM However, quoting the arguments is ok.
-  !Iqt!\R-3.1.0\bin\x64\rscript --vanilla !Iqt!\compute_QC_report.R "!txt!" "!yaml_file!"
+  !Iqt!\R-3.1.0\bin\x64\rscript --vanilla !Iqt!\compute_QC_report.R !txt! !yaml_file!
 ) else (
 REM 
   ECHO.
   ECHO Calling '%Iqt%\R-3.1.0\bin\x64\rscript.exe --vanilla %Iqt%\compute_QC_report.R !txt!'
   REM using Iqt to guard against path with spaces. Note that using a manually quoted !I!, i.e. "!I!", does not work
   REM However, quoting the arguments is ok.
-  !Iqt!\R-3.1.0\bin\x64\rscript --vanilla !Iqt!\compute_QC_report.R "!txt!"
+  !Iqt!\R-3.1.0\bin\x64\rscript --vanilla !Iqt!\compute_QC_report.R !txt!
 )
 
 
@@ -153,9 +157,17 @@ if %myscriptEL% GTR 0 (
   ECHO   - your R installation is not 64bit and runs out of memory
   ECHO   - the file '%I%\compute_QC_report.R' is missing
   ECHO.
-  ECHO If the error persists, follow the instructions on https://github.com/cbielow/PTXQC
-  ECHO in the section 'Bug reporting'. Leave this window open until the bug report is submitted!
-  ECHO You can copy the text from this window by 1^) right-clicking here, 2^) choose 'Select all', 3^) press the 'Enter' key, 4^) paste it somewhere ^(issue ticket, email^).
+  ECHO If the error persists, follow the
+  ECHO instructions on https://github.com/cbielow/PTXQC
+  ECHO in the section 'Bug reporting'.
+  ECHO.
+  ECHO Leave this window open until the bug report is submitted!
+  ECHO
+  ECHO You can copy the text from this window by 
+  ECHO   1^) right-clicking here
+  ECHO   2^) choose 'Select all'
+  ECHO   3^) press the 'Enter' key
+  ECHO   4^) paste it somewhere ^(issue ticket, email^)
   ECHO This ensures that all text is available to debug the problem.
   ECHO Thanks^^!
 )
