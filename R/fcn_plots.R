@@ -920,7 +920,7 @@ plot_CalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit
 #'
 plot_MS2Oversampling = function(data)
 {
-  stopifnot(length(unique(data$n)) == 3)
+  stopifnot(length(unique(data$n)) <= 3) ## at most three -- to match color vector below
   
   ## reorder factor, such that '10+' is last
   data$n = as.character(data$n)
