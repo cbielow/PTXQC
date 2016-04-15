@@ -525,8 +525,8 @@ RTalignmentTree = function(d_evd, col_fraction = c())
   
   d_cast = dcast(d_evd, modified.sequence + charge ~ fc.raw.file, mean, value.var = "calibrated.retention.time")
   
-  head(d_cast[,-1])
-  d_cast.m = as.matrix(d_cast[,-1])
+  head(d_cast[,-(1:2)])
+  d_cast.m = as.matrix(d_cast[,-(1:2)])
   head(d_cast.m)
   
   #Dissimilarity = 1 - Correlation
