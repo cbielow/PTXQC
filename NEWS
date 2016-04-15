@@ -5,6 +5,9 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+v0.80.5 -- 2016/04/15
+  - bug fixes
+      https://github.com/cbielow/PTXQC/issues/23  (EVD: MS/MS Oversampling bug)
 
 v0.80.4 -- 2016/04/11
   - bug fixes
