@@ -246,6 +246,7 @@ idTransferCheck = function(data) {
                                return (data.frame(rtdiff_genuine = diff(range(x2$calibrated.retention.time))))
                              })
     # rt_diffs_genuine might be empty, if no oversampling is seen
+    if (nrow(rt_diffs_genuine) == 0) rt_diffs_genuine = data.frame(seq_charge = character(0), rtdiff_genuine = numeric(0)) ## remove columns from empty DF; avoid merge()ing NA columns
     
     ## mixed class:
     ## retain only IDs which have at least one transferred ID
@@ -257,12 +258,11 @@ idTransferCheck = function(data) {
                                return (data.frame(rtdiff_mixed = diff(range(x2$calibrated.retention.time))))
                              })
       ## rtdiff_mixed might be empty, if only singlets where transferred
+      ## only merge if non-empty (otherwise the whole merge is empty)
       if (nrow(rt_diffs_mixed) > 0) {
-        ## only merge if non-empty (otherwise the whole merge is empty)
         rt_diffs_genuine = merge(rt_diffs_genuine, rt_diffs_mixed, all = TRUE)
       }
     }
-  
     return (rt_diffs_genuine)    
   })
   #head(alignQ)
@@ -401,7 +401,7 @@ peakSegmentation = function(d_evd)
     ## segmentation genuine (ignore the nMatched, i.e. project everything onto first row)
     n.perf = sum(ddt[,colnames(ddt)==1]) ## uniquely matched
     n.all = sum(ddt[,!colnames(ddt)==0]) ## all natives (==0 is the matched-only column)
-    single.nat = n.perf/n.all ## e.g. 94%
+    single.nat = max(0, n.perf/n.all, na.rm=TRUE) ## e.g. 94%, but n.all could be 0, yielding NaN
     
     ## segmentation of matched-only
     i.perf = ddt[rownames(ddt)==1, colnames(ddt)==0] ## transferred singlets (nMatched=1,nNative=0)
