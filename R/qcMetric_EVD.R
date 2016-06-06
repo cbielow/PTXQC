@@ -620,7 +620,8 @@ Heatmap score: none.
         ## gain for each raw file: absolute gain, and percent gain
         mtr.df = ddply(df_evd, "fc.raw.file", function(x) {
           match_count_abs = sum(!is.na(x$match.time.difference))
-          match_count_pc  = round(100*match_count_abs/(nrow(x)-match_count_abs)) ## newIDs / oldIDs
+          ## if only matched IDs are present, this would be 'Inf' -- we limit that to 1e4
+          match_count_pc  = min(1e4, round(100*match_count_abs/(nrow(x)-match_count_abs))) ## newIDs / oldIDs
           return (data.frame(abs = match_count_abs, pc = match_count_pc))
         })
         lpl[["gain"]] =
