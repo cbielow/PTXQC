@@ -43,18 +43,18 @@ this is out of scope of this manual).
 
 > **Here's some intuition about the next steps**   
 > To make PTXQC Drag'n'drop a standalone application which can be run from any user and even from a network drive,
-> we need a copy of the whole R installation. Within the PTXQC package (which part of the R installation) we have prepared a 
-> batch script which invokes R and calls PTXQC. So first, we need to extract this script (i.e. copy it to a top-level folder)
+> we need a copy of the whole R installation. Within the PTXQC package (which is part of the R installation) we have prepared a 
+> drag'n'drop batch script which invokes R and calls PTXQC. We need to extract this script (i.e. copy it to a top-level folder)
 > and then place the whole R installation beneath it. This includes all your R-libraries, which might reside in a different place.
 
 Almost done, we just need to copy some folders.
         
  1. The last command will tell you where R installed PTXQC, i.e. `PTXQC was installed to '<libR>'.`
     **Open** this **`<libR>`** folder in your file explorer. It will either be your default R library 
-    folder which comes with R (e.g. `C:\Program Files\R\R-3.1.0\library`), or a user-specific folder like 
+    folder which comes with R (e.g. `C:\Program Files\R\R-3.1.0\library`), or a user-specific library folder like 
     this `C:/Users/cbielow/Documents/R/win-library/3.1`. Keep this directory in mind. We will need it later.
- 2. **Copy** the folder `<libR>\PTXQC\dragNdrop\QC-dragdrop` to a custom target location of your choice (let's call it **`<QCdir>`**) where you want PTXQC to reside.
-    Usually, that's some network or local drive (e.g. **`<QCdir>`** = `Z:\my-proteomics`)
+ 2. **Copy** the folder `<libR>\PTXQC\dragNdrop\QC-dragdrop` to a custom target location of your choice (let's call this target folder **`<QCdir>`**) where you want PTXQC to reside.
+    Usually, that's some network or local drive (e.g. **`<QCdir>`** = `Z:\my-proteomics`). Now you should have `<QCdir>\QC-dragdrop\...`.
  3. **Copy** the whole R installation directory (e.g. `c:\program files\R\R-3.1.0`) into the `<QCdir>\QC-dragdrop\_internal` sub-folder,
     such that you end up with `<QCdir>\QC-dragdrop\_internal\R-3.1.0\` (your R version number might differ)
  4. **Copy** the Pandoc.exe (which you installed earlier) to `<QCdir>\QC-dragdrop\_internal\R-3.1.0\bin\pandoc\pandoc.exe` (you will need to create the pandoc folder).
