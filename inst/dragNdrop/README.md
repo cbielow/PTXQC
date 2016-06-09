@@ -18,7 +18,7 @@ and install R from scratch, such that you do not end up copying useless packages
 If you are a knowledgeable R user already, you can probably find other ways around it (e.g. a temporary library, or selective copying of packages, but
 this is out of scope of this manual).
 
- - create a clean R installation by downloading R from [http://www.r-project.org] and installing it. Make sure to install the x64 version for 64bit support.
+ - create a clean R installation by downloading R from [http://www.r-project.org] and installing it. We highly recommend the 64bit version to avoid out-of-memory errors.
    If you already have R installed, you may skip this step.
  - install [pandoc](https://github.com/jgm/pandoc/releases). Pandoc is required in order to build the package vignettes (documentation) and PTXQC reports in HTML format.
    In theory you can skip vignette building (see below) and read the [vignettes] [Ref_Vign] online from the PTXQC GitHub page.
