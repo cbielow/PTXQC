@@ -18,6 +18,9 @@ REM
 REM  --- config done --- 
 REM
 
+REM change this, if your R installation has a different version and you do not want to rename the folder
+set R_VERSION=R-3.1.0
+
 REM A usage message with multiline (i.e. keep the empty line!)
 setlocal EnableDelayedExpansion
 set USAGE= ^
@@ -111,15 +114,39 @@ if %argC%==2 (
 
 REM use R_LIBS, not R_LIBS_USER, since the latter will APPEND to the search path, i.e. if the package is installed locally, it will take precedence and mess
 REM up versioning
-set R_LIBS=!I!\R-3.1.0\library
-REM echo R_LIBS=%I%\R-3.1.0\library
+set R_LIBS=!I!\!R_VERSION!\library
+REM echo !R_LIBS!
 
-set PATH=!I!\R-3.1.0\bin\pandoc;!PATH!
-
-where pandoc
+REM check for existence of rscript.exe
+set R_SCRIPT_EXE=!R_VERSION!\bin\x64\rscript.exe
+dir !Iqt!\!R_SCRIPT_EXE! > NUL 2>&1
 if ERRORLEVEL 1 (
   ECHO.
-  ECHO 'Pandoc.exe not found in '!I!\R-3.1.0\bin\pandoc\pandoc.exe'.
+  ECHO Warning: Could not find 64bit R installation at '!Iqt!\!R_SCRIPT_EXE!'.
+  ECHO Falling back to 32bit. Be aware that this might lead to 'Out-of-memory' errors for larger projects.
+  ECHO.
+  set R_SCRIPT_EXE=!R_VERSION!\bin\rscript.exe
+  dir !Iqt!\!R_SCRIPT_EXE! > NUL 2>&1
+  if ERRORLEVEL 1 (
+    ECHO.
+    ECHO Error: Could not find a 32bit R installation at '!Iqt!\!R_SCRIPT_EXE!'.
+    ECHO.
+    ECHO No R found. Please check your PTXQC installation and read the installation instructions! Quitting now.
+    ECHO.
+    PAUSE
+    EXIT 1
+  )
+)
+ECHO.
+ECHO Found R at '!Iqt!\!R_SCRIPT_EXE!'.
+ECHO.
+
+REM check for PANDOC
+set PATH=!I!\!R_VERSION!\bin\pandoc;!PATH!
+where pandoc > NUL 2>&1
+if ERRORLEVEL 1 (
+  ECHO.
+  ECHO 'Pandoc.exe not found in '!I!\!R_VERSION!\bin\pandoc\pandoc.exe'.
   ECHO.
   ECHO Please install Pandoc from 'https://github.com/jgm/pandoc/releases'
   ECHO and copy it to the folder mentioned above.
@@ -127,21 +154,22 @@ if ERRORLEVEL 1 (
   goto end
 )
 
+
 REM works WITH and WITHOUT spaces in !txt!
 if !yaml_file! NEQ "" (
   ECHO Using YAML !yaml_file! file and calling R now ...
   ECHO.
-  ECHO Calling '%Iqt%\R-3.1.0\bin\x64\rscript.exe --vanilla %Iqt%\compute_QC_report.R !txt! !yaml_file!'
+  ECHO Calling '!Iqt!\!R_SCRIPT_EXE! --vanilla !Iqt!\compute_QC_report.R !txt! !yaml_file!'
   REM using Iqt to guard against path with spaces. Note that using a manually quoted !I!, i.e. "!I!", does not work
   REM However, quoting the arguments is ok.
-  !Iqt!\R-3.1.0\bin\x64\rscript --vanilla !Iqt!\compute_QC_report.R !txt! !yaml_file!
+  !Iqt!\!R_SCRIPT_EXE! --vanilla !Iqt!\compute_QC_report.R !txt! !yaml_file!
 ) else (
 REM 
   ECHO.
-  ECHO Calling '%Iqt%\R-3.1.0\bin\x64\rscript.exe --vanilla %Iqt%\compute_QC_report.R !txt!'
+  ECHO Calling '!Iqt!\!R_SCRIPT_EXE! --vanilla !Iqt!\compute_QC_report.R !txt!'
   REM using Iqt to guard against path with spaces. Note that using a manually quoted !I!, i.e. "!I!", does not work
   REM However, quoting the arguments is ok.
-  !Iqt!\R-3.1.0\bin\x64\rscript --vanilla !Iqt!\compute_QC_report.R !txt!
+  !Iqt!\!R_SCRIPT_EXE! --vanilla !Iqt!\compute_QC_report.R !txt!
 )
 
 
@@ -153,8 +181,7 @@ if %myscriptEL% GTR 0 (
   ECHO.
   ECHO The error should be indicated above.
   ECHO Common errors are ^(yours might be different^)
-  ECHO   - rscript.exe is not present in the folder mentioned above
-  ECHO   - your R installation is not 64bit and runs out of memory
+  ECHO   - your R installation runs out of memory; especially if its 32bit
   ECHO   - the file '%I%\compute_QC_report.R' is missing
   ECHO.
   ECHO If the error persists, follow the
@@ -162,7 +189,7 @@ if %myscriptEL% GTR 0 (
   ECHO in the section 'Bug reporting'.
   ECHO.
   ECHO Leave this window open until the bug report is submitted!
-  ECHO
+  ECHO.
   ECHO You can copy the text from this window by 
   ECHO   1^) right-clicking here
   ECHO   2^) choose 'Select all'
