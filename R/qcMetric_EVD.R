@@ -8,13 +8,23 @@ qcMetric_EVD_UserContaminant =  setRefClass(
 but can be used for an arbitrary (set of) proteins.
 
 Two abundance measures are computed per Raw file:
-  - fraction of intensity (used for score)
-  - fraction of spectral counts (as comparison for user)
+  - fraction of intensity (used for scoring)
+  - fraction of spectral counts (as comparison; both should be similar)
 
-An additional plot with peptide score distributions will be shown if the threshold was reached (indicating contamination).
-This allows to decide if the contamination is true, i.e. achieves good MS/MS Andromeda scores (requires a recent MQ version).
+If the intensity fraction exceeds the threshold (indicated by the dashed horizontal line) a contamination is assumed. 
+Also, for each Raw file exceeding the threshold an additional plot giving cumulative Andromeda peptide 
+score distributions is shown.
+This allows to decide if the contamination is true. Contaminant scores
+should be equally high (or higher), i.e. to the right, compared to the sample scores.
+Each graph's subtitle is augmented with a p-value of the Kologorov-Smirnoff test of this data
+(Andromeda scores of contaminant peptides vs. sample peptides).
+If the p-value is high, there is no score difference between the two peptide populations.
+In particular, the contaminant peptides are not bad scoring, random hits.
+These p-values are also shown in the first figure for each Raw file. Note that the p-value is purely based
+on Andromeda scores and has nothing to do with intensity or spectral counts.
+    
 
-Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the intensity threshold was reached. 100%% (pass) otherwise.
+Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the intensity threshold was exceeded; otherwise 100% (pass).
 ",
     workerFcn = function(.self, df_evd, df_pg, lst_contaminants)
     {
@@ -106,7 +116,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
           lpl = append(lpl, lpl_i)
           
           ## plot Andromeda score distribution of contaminant vs. sample
-          llply(cont_data.l, function(l)
+          pl_andr = llply(cont_data.l, function(l)
           {
             if (l$cont_data$above.thresh == FALSE ||
                 is.null(l$cont_scoreECDF))
@@ -114,10 +124,10 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
               return(NULL)
             } 
             p = plot_ContUserScore(l$cont_scoreECDF, l$cont_data$fc.raw.file, l$cont_data$score_KS)
-            lpl = append(lpl, list(p))
             #print(p)
-            return(NULL)
+            return(p)
           })
+          lpl = append(lpl, pl_andr)
           
           ## add heatmap column
           cname = sprintf(.self$qcName, ca)

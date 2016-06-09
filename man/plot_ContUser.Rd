@@ -17,7 +17,10 @@ plot_ContUser(data, name_contaminant, extra_limit)
 GGplot object
 }
 \description{
-Plot user-defined contaminants from evidence.txt
+Kolmogorov-Smirnoff p-values are plotted on top of each group.
+High p-values indicate that Andromeda scores for contaminant peptides
+are equal or higher compared to sample peptide scores, i.e. the probability that
+sample peptides scores are NOT greater than contaminant peptide scores.
 }
 \examples{
 

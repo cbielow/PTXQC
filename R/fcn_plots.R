@@ -39,6 +39,11 @@ plot_ContsPG = function(data)
 #'
 #' Plot user-defined contaminants from evidence.txt
 #' 
+#' Kolmogorov-Smirnoff p-values are plotted on top of each group.
+#' High p-values indicate that Andromeda scores for contaminant peptides
+#' are equal or higher compared to sample peptide scores, i.e. the probability that
+#' sample peptides scores are NOT greater than contaminant peptide scores.
+#' 
 #' @param data A data.frame with columns 'fc.raw.file', 'variable', 'value'
 #' @param name_contaminant Name of the contaminant shown in title
 #' @param extra_limit Position where a h-line is plotted (for visual guidance)
@@ -75,7 +80,7 @@ plot_ContUser = function(data, name_contaminant, extra_limit) {
         geom_bar(stat="identity", aes_string(fill = "variable"), position = "dodge", width=.7) +
         ggtitle(paste0("EVD: Contaminant '", name_contaminant, "'")) +
         xlab("")  +
-        ylab("abundance (%)") +
+        ylab("abundance fraction (%)") +
         ylim(c(0, maxY * 1.1)) +
         theme(plot.title = element_text(colour = "red"),
               axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
