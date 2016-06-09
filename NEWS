@@ -5,6 +5,13 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+v0.80.7 -- 2016/06/09
+  - features
+     - support for 32bit R for Drag'n'Drop batch file
+  - bug fixes
+     - fix missing score distribution plots for custom contaminants
+     - small documentation improvements
+          
 v0.80.6 -- 2016/06/06
   - bug fixes
      - fix NA's (empty bars) in MBR ID transfer plot for very sparse Raw files
