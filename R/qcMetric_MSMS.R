@@ -51,7 +51,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
           ## select a representative subset, otherwise the number of datapoints is just too large
           idx_nr_subset = idx_nr[sampleMax(length(idx_nr))]
           df.ms_r = getFragmentErrors(x[idx_nr_subset, , drop=FALSE])
-          if (!is.null(df.ms)) {
+          if (!is.null(df.ms) & !is.null(df.ms_r)) {
             df.ms_r$type="decoy"
             ## only merge if we have hits
             df.ms = rbind(df.ms, df.ms_r)

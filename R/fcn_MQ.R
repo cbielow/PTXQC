@@ -269,6 +269,8 @@ fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2,
   MS1_decal_smr$outOfCal = (MS1_decal_smr$sd > tolerance_sd_PCoutOfCal) & 
     (MS1_decal_smr$lowIDRate) & 
     (MS1_decal_smr$sd < 100)  ## upper bound, to distinguish from MQ bug (which has much larger SD's)
+  ## NA's are possible if only a single peptide was seen (yielding MS1_decal_smr$sd == NA)
+  MS1_decal_smr$outOfCal[is.na(MS1_decal_smr$outOfCal)] = FALSE
   
   ## report too small search tolerance
   if (any(MS1_decal_smr$outOfCal)) recal_message = "search tolerance too small"

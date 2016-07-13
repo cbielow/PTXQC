@@ -5,6 +5,10 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+v0.80.8 -- 2016/07/13
+  - bug fixes
+     - avoid crash in pre-calibration metric when there is only a single peptide identified in (any) Raw file
+
 v0.80.7 -- 2016/06/09
   - features
      - support for 32bit R for Drag'n'Drop batch file
