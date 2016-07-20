@@ -225,10 +225,17 @@ qcMetric_EVD_ProteinCount =  setRefClass(
       "Number of Protein groups (after FDR) per Raw file. A configurable target threshold is indicated as dashed line.
 
 If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
-are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad (see other metrics),
-MBR should be switched off for the Raw files which are affected (could be a few or all). 
+are shown, so the user can judge the gain that MBR provides. Here, 'transferred (exclusive)' means that this protein group
+has peptide evidence which originates only from transferred peptide IDs. The quantification is (of course) always from the
+local Raw file. 
+Proteins in the 'genuine + transferred' category have peptide evidence from within the Raw file by MS/MS, but at the same time
+also peptide IDs transferred using MBR were used. This peptide ID transfer can be correct (e.g. in case of different charge states),
+or incorrect -- see MBR-related metrics to tell the difference.
 
-Heatmap score [EVD: Prot Count (>%1.0f)]: Reaching the target threshold gives a score of 100%%.
+If the MBR gain is low and the MBR scores are bad (see the two MBR-related metrics),
+MBR should be switched off for the Raw files which are affected (could be a few or all).
+
+Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or exceeding the target threshold gives a score of 100%%.
 ",
     workerFcn = function(.self, df_evd, thresh_protCount)
     {
@@ -285,13 +292,18 @@ qcMetric_EVD_PeptideCount =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "Number of peptides (after FDR) per Raw file. A configurable target threshold is indicated as dashed line.
+      "Number of unique peptide sequences including modifications (after FDR) per Raw file. A configurable target threshold is indicated as dashed line.
 
 If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
-are shown, so the user can judge the gain that MBR provides. If the gain is low and the MBR scores are bad (see other metrics),
+are shown, so the user can judge the gain that MBR provides.    
+Peptides in the 'genuine + transferred' category were identified within the Raw file by MS/MS, but at the same time
+also transferred using MBR. This ID transfer can be correct (e.g. in case of different charge states),
+or incorrect -- see MBR-related metrics to tell the difference.
+
+If the MBR gain is low and the MBR scores are bad (see the two MBR-related metrics),
 MBR should be switched off for the Raw files which are affected (could be a few or all). 
 
-Heatmap score [EVD: Pep Count (>%1.0f)]: Reaching the target threshold gives a score of 100%%.
+Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or exceeding the target threshold gives a score of 100%%.
 ",
     workerFcn = function(.self, df_evd, thresh_pepCount)
     {
