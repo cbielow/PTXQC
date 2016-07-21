@@ -229,10 +229,12 @@ are shown, so the user can judge the gain that MBR provides. Here, 'transferred 
 has peptide evidence which originates only from transferred peptide IDs. The quantification is (of course) always from the
 local Raw file. 
 Proteins in the 'genuine + transferred' category have peptide evidence from within the Raw file by MS/MS, but at the same time
-also peptide IDs transferred using MBR were used. This peptide ID transfer can be correct (e.g. in case of different charge states),
-or incorrect -- see MBR-related metrics to tell the difference.
+also peptide IDs transferred to this Raw file using MBR were used. It is not unusual to see the 'genuine + transferred' category be the 
+rather large, since a protein group usually has peptide evidence from both sources.
+To see of MBR worked, it is better to look at the two MBR-related metrics.
 
-If the MBR gain is low and the MBR scores are bad (see the two MBR-related metrics),
+If MBR would be switched off, you can expect to see the number of protein groups corresponding to 'genuine (exclusive)' + 'genuine + transferred'.
+In general, if the MBR gain is low and the MBR scores are bad (see the two MBR-related metrics),
 MBR should be switched off for the Raw files which are affected (could be a few or all).
 
 Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or exceeding the target threshold gives a score of 100%%.
@@ -292,15 +294,17 @@ qcMetric_EVD_PeptideCount =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "Number of unique peptide sequences including modifications (after FDR) per Raw file. A configurable target threshold is indicated as dashed line.
+      "Number of unique (i.e. not counted twice) peptide sequences including modifications (after FDR) per Raw file. A configurable target threshold is indicated as dashed line.
 
 If MBR was enabled, three categories ('genuine (exclusive)', 'genuine + transferred', 'transferred (exclusive)'
 are shown, so the user can judge the gain that MBR provides.    
 Peptides in the 'genuine + transferred' category were identified within the Raw file by MS/MS, but at the same time
-also transferred using MBR. This ID transfer can be correct (e.g. in case of different charge states),
+also transferred to this Raw file using MBR. This ID transfer can be correct (e.g. in case of different charge states),
 or incorrect -- see MBR-related metrics to tell the difference.
+Ideally, the 'genuine + transferred' category should be rather small, the other two should be large.
 
-If the MBR gain is low and the MBR scores are bad (see the two MBR-related metrics),
+If MBR would be switched off, you can expect to see the number of peptides corresponding to 'genuine (exclusive)' + 'genuine + transferred'.
+In general, if the MBR gain is low and the MBR scores are bad (see the two MBR-related metrics),
 MBR should be switched off for the Raw files which are affected (could be a few or all). 
 
 Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or exceeding the target threshold gives a score of 100%%.
