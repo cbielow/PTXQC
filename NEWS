@@ -5,6 +5,12 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+v0.80.9 -- 2016/08/02
+  - bug fixes
+     - MBR-Metric: if more than one RT-reference is found (which can happen for a VERY stable LC), the first is picked
+       https://github.com/cbielow/PTXQC/issues/25
+  - minor doc improvements     
+
 v0.80.8 -- 2016/07/13
   - bug fixes
      - avoid crash in pre-calibration metric when there is only a single peptide identified in (any) Raw file

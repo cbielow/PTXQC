@@ -466,9 +466,14 @@ Heatmap score [EVD: MBR Align]: fraction of 'green' vs. 'green+red' peptides.
       lpl = list()
       qcScore = .self$qcScores
       
-      if (length(refRaw) != 1) {
-        lpl[[1]] = ggText("EVD: Alignment check", paste0("Cannot find a unique reference Raw file (files: ", paste(refRaw, collapse=", "), ")"))
+      if (!evd_has_fractions && length(refRaw) == 0) {
+        lpl[[1]] = ggText("EVD: Alignment check", paste0("Cannot find a reference Raw file!\nPlease report this as a 'bug'!"))
       } else {
+        if (!evd_has_fractions & (length(refRaw) != 1))
+        {
+          refRaw = refRaw[1] ## take the first
+          warning(paste0("Cannot find a unique reference Raw file (files: ", paste(refRaw, collapse=", "), "). Picking the first."), immediate. = TRUE)
+        }
         ## find RT curve based on genuine 3D peaks (should be flat)
         d_alignQ = alignmentCheck(df_evd[(df_evd$type %in% c("MULTI-MSMS")), 
                                          c("calibrated.retention.time", 

@@ -203,9 +203,12 @@ qcMetric_PG_PCA =  setRefClass(
     helpText = 
       "Principal components plots of experimental groups (as defined during MaxQuant configuration).
 
-This plot is shown only if more than one group was defined.
+This plot is shown only if more than one experimental group was defined.
 If LFQ was activated in MaxQuant, an additional PCA plot for LFQ intensities is shown. Similarly, if iTRAQ/TMT
 reporter intensities are detected.
+
+Since experimental groups and Raw files do not necessarily correspond 1:1, this plot cannot use the abbreviated
+Raw file names, but instead must rely on automatic shortening of group names.
 
 Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
 ",
