@@ -86,8 +86,10 @@ But in general, the YAML file will look like this:
 
 ## Rename Raw files in the report
 
-PTXQC will try to shorten Raw file names to make the plot axis as compact as possible, giving more area to show the data rather than overly long Raw file names. It will use prefix and infix removal of strings which are common to all Raw file names. Name your files in a systematic to make this approach as effective as possible. 
-Should this shortening not reach a predefined threshold of 10 characters in length for the longest filename after shortening, PTXQC will simply use consecutive numbers, i.e. **file 01**, **file 02** to name your files on the axis of the plots.
+PTXQC will try to shorten Raw file names to make the plot axis as compact as possible, giving more area to show the data rather than overly long Raw file names.
+It will use prefix and infix removal of strings which are common to all Raw file names. Name your files in a systematic to make this approach as effective as possible. 
+Should this shortening not reach a predefined threshold of 10 characters in length for the longest filename after shortening, 
+PTXQC will simply use consecutive numbers, i.e. **file 01**, **file 02** to name your files on the axis of the plots.
 
 If you do not want that, you can either:
 

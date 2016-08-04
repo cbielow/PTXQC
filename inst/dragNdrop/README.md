@@ -82,7 +82,9 @@ To make PTXQC accessible more easily, you can create a shortcut on your Windows 
 
 Start the R GUI within in PTXQC standalone installation at `<QCdir>\QC-dragdrop\_internal\R-3.1.0\bin\x64\rgui.exe` and
 run the block of code from the installation (see above) again. Then, copy the packages from the `<libR>` folder to the main R library (see the last bullet point above).
- 
+
+**Important:** make sure that you start with a clean R-Session and that no other R-Sessions are open, since they might prevent the update of package files where
+R will only give you warnings like `Warning: cannot remove prior installation of package "digest"`, but will fail hard with a misleading error message afterwards. 
  
 ### Usage (short version)
 

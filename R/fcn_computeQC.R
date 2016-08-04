@@ -122,7 +122,7 @@ createReport = function(txt_folder, yaml_obj = list())
   ######  parameters.txt ...
   ######
   
-  enabled_parameters = yc$getYAML("File$Parameters$enabled", TRUE)
+  enabled_parameters = yc$getYAML("File$Parameters$enabled", TRUE) & file.exists(txt_files$param)
   if (enabled_parameters)
   {
     d_parAll = mq$readMQ(txt_files$param, type="par")
@@ -135,7 +135,7 @@ createReport = function(txt_folder, yaml_obj = list())
   ######  summary.txt ...
   ######
   
-  enabled_summary = yc$getYAML("File$Summary$enabled", TRUE)
+  enabled_summary = yc$getYAML("File$Summary$enabled", TRUE) & file.exists(txt_files$summary)
   if (enabled_summary)
   {
     d_smy = mq$readMQ(txt_files$summary, type="sm", add_fs_col = add_fs_col)
@@ -155,9 +155,9 @@ createReport = function(txt_folder, yaml_obj = list())
   ######
   
   GL_name_min_length = 8
-  
-  enabled_proteingroups = yc$getYAML("File$ProteinGroups$enabled", TRUE)
   enabled_pg_ratioLabIncThresh = yc$getYAML("File$ProteinGroups$RatioPlot$LabelIncThresh_num", 4)
+
+  enabled_proteingroups = yc$getYAML("File$ProteinGroups$enabled", TRUE) & file.exists(txt_files$groups)
   if (enabled_proteingroups)
   {
     
@@ -292,7 +292,7 @@ createReport = function(txt_folder, yaml_obj = list())
   ######  evidence.txt ...
   ######
   
-  enabled_evidence = yc$getYAML("File$Evidence$enabled", TRUE)
+  enabled_evidence = yc$getYAML("File$Evidence$enabled", TRUE) & file.exists(txt_files$evd)
   
   ## get scoring threshold (upper limit)
   param_name_EV_protThresh = "File$Evidence$ProteinCountThresh_num"
@@ -361,8 +361,8 @@ createReport = function(txt_folder, yaml_obj = list())
       if (!enabled_proteingroups)
       {
         ## fail hard; we could hack around this (e.g. by loading fasta headers from evidence.txt), but it wastes a lot of memory and time
-        stop(paste0("Error: reporting of special contaminants requires loading of proteinGroups.txt.",
-                    "If you don't have this file, please disable contaminant lookup in the YAML file ('SpecialContaminants: no') and re-run."))
+        warning(paste0("Warning: reporting of special contaminants requires loading of proteinGroups.txt.",
+                       "If you don't have this file and want to get rid of this warning, please disable contaminant lookup in the YAML file ('SpecialContaminants: no')."))
       } else {
         lst_qcMetrics[["qcMetric_EVD_UserContaminant"]]$setData(d_evd, d_pg, yaml_contaminants)
       }
@@ -552,7 +552,7 @@ createReport = function(txt_folder, yaml_obj = list())
 ######  msms.txt ...
 ######
 
-enabled_msms = yc$getYAML("File$MsMs$enabled", TRUE)
+enabled_msms = yc$getYAML("File$MsMs$enabled", TRUE) & file.exists(txt_files$msms)
 if (enabled_msms)
 {
   ### missed cleavages (again)
@@ -592,7 +592,7 @@ if (enabled_msms)
 ######  msmsScans.txt ...
 ######
 
-enabled_msmsscans = yc$getYAML("File$MsMsScans$enabled", TRUE)
+enabled_msmsscans = yc$getYAML("File$MsMsScans$enabled", TRUE) & file.exists(txt_files$msmsScan)
 if (enabled_msmsscans)
 {
   #d_msmsScan_h = mq$readMQ(txt_files$msmsScan, type="msms", filter = "", nrows=2)

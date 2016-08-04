@@ -5,6 +5,9 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+v0.80.10 -- 2016/08/04
+  -  automatic detection which txt files are present [only these are used]
+
 v0.80.9 -- 2016/08/02
   - bug fixes
      - MBR-Metric: if more than one RT-reference is found (which can happen for a VERY stable LC), the first is picked

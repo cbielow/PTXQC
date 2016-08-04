@@ -16,7 +16,18 @@ vignette: >
 
 ## Installation
 _______
-### Q: During installation an error pops up: '... cannot open the connection...'. What do I do? ###
+
+### Q: During installation an error pops up: '... cannot open URL 'ftp://ftp.pride.ebi.ac.uk/pride/ ..'. ###
+
+**Answer:** When R builds the vignettes for PTXQC, it needs to download a test dataset from a public PRIDE repository. On rare occasions, the server
+might not be reachable. Either wait a little until it comes back up and try again, OR simply skip building the vignettes using
+
+```install_github("cbielow/PTXQC", build_vignettes = FALSE)```
+
+This omits the part where the error occurs. Downside: no offline
+vignettes for PTXQC -- but you can always look them up on GitHub.
+
+### Q: During installation an error pops up: '... cannot open the connection...'. ###
 
 **Answer:** One common error is that the CRAN mirror hosting the R packages is incomplete/buggy and installation of packages fails.
    This **could** look like this:
@@ -52,7 +63,7 @@ _______
 
 ## Report Creation
 
-### Q: A warning **"The file '<...>/mqpar.xml' was not found..."** in the console popped up. What does it mean? ###
+### Q: A warning **"The file '<...>/mqpar.xml' was not found..."** in the console popped up. ###
 
 **Answer:** PTXQC uses the mqpar.xml file from MaxQuant to extract certain parameters (like mass accuracy search tolerances) automatically. By default the mqpar.xml is created by MaxQuant in the root folder of each analysis (where the Raw files reside). The warning now tells you to **copy this mqpar.xml into the combined/txt/ folder**, where PTXQC can read it.
     
