@@ -1,25 +1,24 @@
 #'
 #' Return list of raw file names which were reported by MaxQuant as reference point for alignment.
 #' 
-#' There is only one reference point which has '0' as corrected RT (in all MQ versions we've seen so far). 
-#' This is also true for fractions.
-#' The reference can be identified by using the 'retention.time.calibration' column in evidence.txt.
-#' The raw.file with very small values is usually the one (they are not exactly zero, even though they should be!)
+#' There is only one reference point which has '0' in 'retention.time.calibration' column in evidence.txt 
+#' as corrected RT. This is true for most MaxQuant versions
+#' and also true for fractions. However, some evidence.txt files show 0.03 as an averaged minimum per Raw file.
+#' We use the raw.file with the smallest average as reference.
 #' 
 #' Note that MaxQuant uses a guide tree to align the Raw files, so the order of files does not influence the 
 #' alignment. But the first file will always be used as reference point when reporting delta-RTs. And this file is also
 #' used by PTXQC as reference file vs all other files to find the real calibration function (see alignmentCheck()).
 #'
-#' This function might return multiple, or no raw file names (if MQ decides to change its mind at some point in the future).
+#' This function might return multiple raw file names (if MQ decides to change its mind at some point in the future).
 #' In this case the result should be treated with caution or (better) regarded as failure.
 #' 
 #' @param data The data.frame with columns 'retention.time.calibration' and 'raw.file'
-#' @param threshold Maximum range (min to max) of values required to be recognized as reference
 #' @return List of reference raw files (usually just one)
 #' 
 #' @importFrom plyr ddply
 #'
-findAlignReference = function(data, threshold = 1e-4)
+findAlignReference = function(data)
 {
   colnames(data) = tolower(colnames(data))
   if (!("retention.time.calibration" %in% colnames(data)))
@@ -31,7 +30,7 @@ findAlignReference = function(data, threshold = 1e-4)
     stop("findAlignReference(): Error, could not find column 'raw.file' in data. Aborting!")  
   }
   fr = ddply(data, "raw.file", function(x) data.frame(range = diff(range(x$retention.time.calibration, na.rm = TRUE))))
-  ref = as.character(fr$raw.file[fr$range < threshold])
+  ref = as.character(fr$raw.file[fr$range <= min(fr$range)])
   return (ref)  
 }
 

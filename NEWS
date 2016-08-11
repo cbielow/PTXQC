@@ -5,6 +5,10 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+v0.80.11 -- 2016/08/11
+  -  bug fixes
+      - augment fix from v0.80.9 since MaxQuant for finding a MBR reference Raw file
+
 v0.80.10 -- 2016/08/04
   -  automatic detection which txt files are present [only these are used]
 
