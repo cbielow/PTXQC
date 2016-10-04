@@ -5,6 +5,10 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+v0.80.12 -- 2016/09/28
+  -  bug fixes
+      - fix error during in 'PG: Ratio Density' plot when all ratio data is empty (e.g. for blank samples)
+
 v0.80.11 -- 2016/08/11
   -  bug fixes
       - augment fix from v0.80.9 since MaxQuant for finding a MBR reference Raw file

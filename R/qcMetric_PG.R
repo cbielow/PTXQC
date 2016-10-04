@@ -298,13 +298,20 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       ratio.densities = do.call(rbind, (lapply(1:ncol(d_sub), function(x) {
         name = colnames(d_sub)[x]
         ## density estimation can fail if not enough data
-        h = try(density(na.omit(d_sub[ ,x]), bw = "SJ", adjust=2, na.rm = TRUE))
-        if (inherits(h, "try-error")) return (data.frame(x = 1, y = 1, col = name, multimodal = FALSE))
+        h = try(density(na.omit(d_sub[ ,x]), bw = "SJ", adjust=2, na.rm = TRUE), silent = TRUE)
+        if (inherits(h, "try-error")) return (NULL)
         count = sum(getMaxima(h$y))
         if (count > 1) name = paste(name, "*")
         df = data.frame(x = h$x, y = h$y, col = name, multimodal = (count>1))
         return (df)
       })))
+      if (is.null(ratio.densities)) {
+        pl_cont = ggText("PG: ratio density",
+                         paste0("No data for plotting!"),
+                         "red")
+        return(list(plots = list(pl_cont)))
+      } 
+      
       ratio.densities$alpha = c(0.8, 1)[ratio.densities$multimodal+1]
       ratio.densities$ltype = c("dotted", "solid")[ratio.densities$multimodal+1]
       #head((ratio.densities))
@@ -352,7 +359,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
         byXflex(ratio.densities, ratio.densities$col, 5, plot_RatiosPG, sort_indices = FALSE, d_range = range(d_sub, na.rm=TRUE), main_title, main_col, legend_title)
       
       return(list(plots = lpl))
-    }, 
+    },
     qcCat = "prep", 
     qcName = "PG:~Ratio", 
     orderNr = 0019

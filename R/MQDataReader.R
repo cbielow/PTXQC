@@ -265,9 +265,16 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
       .$mq.data[, int_cols[int_cols_nn]] = sapply(int_cols[int_cols_nn], function(x_name)
       {
         x = .$mq.data[, x_name]
+        if (class(x) == "integer")
+        {
+          x = as.numeric(x)
+        }
         if (class(x) != "numeric")
         {
-          warning(paste0("Warning: column '", x_name, "' in file '", file, "' is expected to contain numbers, but was classified as 'string'.",
+          cat(paste(x[grep(",", x)], collapse = ",", sep=", "))
+          cat(paste(unique(x), collapse = ",", sep=", "))
+          warning(paste0("Column '", x_name, "' in file '", file, "' is expected to contain numbers, but was classified as '",
+                         class(x), "'.",
                          " A bug in MaxQuant 1.5.2.8 (and related?) versions causes usage of comma instead of dot for large numbers in scientific notation,",
                          " e.g. '1,73E+011' instead of '1.73E+011'. We will try to fix this now ..."),
                   call. = FALSE, immediate. = TRUE)

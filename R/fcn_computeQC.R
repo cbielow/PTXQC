@@ -25,7 +25,7 @@
 #' @importFrom rmarkdown render
 #' 
 #' @export
-#'           
+#'
 createReport = function(txt_folder, yaml_obj = list())
 {
   DEBUG_PTXQC = FALSE
@@ -284,7 +284,7 @@ createReport = function(txt_folder, yaml_obj = list())
     
     if (length(ratio_cols) > 0)
     {
-      lst_qcMetrics[["qcMetric_PG_Ratio"]]$setData(d_pg, ratio_cols, enabled_pg_ratioLabIncThresh, GL_name_min_length)
+      lst_qcMetrics[["qcMetric_PG_Ratio"]]$setData(df_pg = d_pg, ratio_cols = ratio_cols, thresh_LabelIncorp = enabled_pg_ratioLabIncThresh, GL_name_min_length = GL_name_min_length)
     }
   }
   
