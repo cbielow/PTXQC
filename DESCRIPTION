@@ -1,12 +1,14 @@
 Package: PTXQC
 Type: Package
 Title: Quality Report Generation for MaxQuant Results
-Version: 0.80.12
-Date: 2016-09-28
+Version: 0.80.13
+Date: 2016-10-07
 Author: Chris Bielow <chris.bielow@mdc-berlin.de>
 Maintainer: Chris Bielow <chris.bielow@mdc-berlin.de>
-Description: An R-package to generate comprehensive quality control reports from
-    MaxQuant txt-folders.
+Description: Generates Proteomics (PTX) quality control (QC) reports for shotgun LC-MS data analyzed with the 
+             MaxQuant software suite (see <http://www.maxquant.org>).
+             Reports are customizable (target thresholds, subsetting) and available in HTML or PDF format.
+             Published in J. Proteome Res., Proteomics Quality Control: Quality Control Software for MaxQuant Results (2015) <doi:10.1021/acs.jproteome.5b00780>.
 Depends:
     R (>= 3.0.0)
 Imports:
@@ -16,6 +18,7 @@ Imports:
     graphics,
     grid,
     gridExtra,
+    grDevices,
     gtable,
     methods,
     plyr,
@@ -31,7 +34,7 @@ Suggests:
     knitr (>= 1.10),
     testthat
 VignetteBuilder: knitr
-License: file LICENSE
+License: GPL-2
 Roxygen: list(wrap = FALSE)
 RoxygenNote: 5.0.1
 URL: https://github.com/cbielow/PTXQC

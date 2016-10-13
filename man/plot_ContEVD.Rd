@@ -23,8 +23,10 @@ Plot contaminants from evidence.txt, broken down into top5-proteins.
                    pname = rep(letters[1:3], 4), 
                    fc.raw.file = rep(paste("f", 1:4), each=3),
                    contaminant = TRUE)
- plot_ContEVD(data, top5 = letters[1:5]) ## providing more proteins than present... d,e will be ignored
- plot_ContEVD(data, top5 = letters[1:2]) ## classify 'c' as 'other'
+ ## providing more proteins than present... d,e will be ignored
+ plot_ContEVD(data, top5 = letters[1:5])
+ ## classify 'c' as 'other'
+ plot_ContEVD(data, top5 = letters[1:2])
 
 }
 

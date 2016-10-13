@@ -147,8 +147,10 @@ plot_ContUserScore = function(data, raw.file, score) {
 #'                    pname = rep(letters[1:3], 4), 
 #'                    fc.raw.file = rep(paste("f", 1:4), each=3),
 #'                    contaminant = TRUE)
-#'  plot_ContEVD(data, top5 = letters[1:5]) ## providing more proteins than present... d,e will be ignored
-#'  plot_ContEVD(data, top5 = letters[1:2]) ## classify 'c' as 'other'
+#'  ## providing more proteins than present... d,e will be ignored
+#'  plot_ContEVD(data, top5 = letters[1:5])
+#'  ## classify 'c' as 'other'
+#'  plot_ContEVD(data, top5 = letters[1:2])
 #' 
 plot_ContEVD = function(data, top5) 
 { 
@@ -432,9 +434,12 @@ plot_MBRAlign = function(data, y_lim, title_sub, match_tol)
 #' 
 #' @examples 
 #'  data = data.frame(fc.raw.file = rep(c("file A", "file B"), each = 3),
-#'                    single = c(0.9853628, 0.8323160, 0.9438375, 0.9825538, 0.8003763, 0.9329961), 
-#'                    multi.inRT = c(0.002927445, 0.055101018, 0.017593087, 0.005636457, 0.099640044, 0.031870056),
-#'                    multi.outRT = c(0.01170978, 0.11258294, 0.03856946, 0.01180972, 0.09998363, 0.03513386),
+#'                    single = c(0.9853628, 0.8323160, 0.9438375,
+#'                               0.9825538, 0.8003763, 0.9329961), 
+#'                    multi.inRT = c(0.002927445, 0.055101018, 0.017593087,
+#'                                   0.005636457, 0.099640044, 0.031870056),
+#'                    multi.outRT = c(0.01170978, 0.11258294, 0.03856946,
+#'                                    0.01180972, 0.09998363, 0.03513386),
 #'                    sample = rep(c("genuine", "transferred", "all"), 2))
 #'  plot_MBRIDtransfer(data)
 #' 
@@ -618,7 +623,9 @@ plot_IDsOverRT = function(data, x_lim = range(data$RT), y_max = max(data$counts)
 #'  label_ID = c("bad (<20%)" = "red", "ok (...)" = "blue", "great (>35%)" = "green")
 #'  data = data.frame(fc.raw.file = paste('file', letters[1:3]),
 #'                    ms.ms.identified.... = rnorm(3, 25, 15))
-#'  data$cat = factor(cut(data$ms.ms.identified...., breaks=c(-1, id_rate_bad, id_rate_great, 100), labels=names(label_ID)))                  
+#'  data$cat = factor(cut(data$ms.ms.identified....,
+#'                        breaks=c(-1, id_rate_bad, id_rate_great, 100),
+#'                        labels=names(label_ID)))                  
 #'  plot_IDRate(data, id_rate_bad, id_rate_great, label_ID)
 #'
 plot_IDRate = function(data, id_rate_bad, id_rate_great, label_ID)
@@ -722,7 +729,11 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
 #' @examples
 #'   data = data.frame(raw.file = letters[1:4],
 #'                     id.rate = 3:6)
-#'   plotTable(data, title = "Bad files", footer = "bottom", col_names = c("first col", "second col"), col=c("red", "green"))
+#'   plotTable(data, 
+#'             title = "Bad files",
+#'             footer = "bottom", 
+#'             col_names = c("first col", "second col"),
+#'             col=c("red", "green"))
 #' 
 plotTable = function(data, title = "", footer = "", col_names = colnames(data), fill = c("grey90", "grey70"), col = "black", just="centre")
 {
@@ -807,11 +818,15 @@ print.PTXQC_table = function(x, ...) {
 #' @examples
 #'   n = c(150, 1000, 1000, 1000)
 #'   data = data.frame(fc.raw.file = repEach(letters[4:1], n),
-#'                     uncalibrated.mass.error..ppm. = c(rnorm(n[1], 13, 2.4), rnorm(n[2], 4, 0.5), rnorm(n[3], 3, 0.7), rnorm(n[4], 4.5, 0.8)))
+#'                     uncalibrated.mass.error..ppm. = c(rnorm(n[1], 13, 2.4),
+#'                                                       rnorm(n[2], 4, 0.5),
+#'                                                       rnorm(n[3], 3, 0.7),
+#'                                                       rnorm(n[4], 4.5, 0.8)))
 #'   stats = data.frame(fc.raw.file = letters[4:1],
 #'                      sd = c(2.4, 0.5, 0.7, 0.8),
 #'                      outOfCal = c(TRUE, FALSE, FALSE, FALSE))           
-#'   plot_UncalibratedMSErr(data, MQBug_raw_files = letters[1], stats, y_lim = c(-20,20), 15, "subtitle")
+#'   plot_UncalibratedMSErr(data, MQBug_raw_files = letters[1],
+#'                          stats, y_lim = c(-20,20), 15, "subtitle")
 #' 
 plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit, title_sub)
 {
@@ -865,7 +880,10 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
 #' @examples
 #'   n = c(150, 1000, 1000, 1000)
 #'   data = data.frame(fc.raw.file = repEach(letters[4:1], n),
-#'                     mass.error..ppm. = c(rnorm(n[1], 1, 2.4), rnorm(n[2], 0.5, 0.5), rnorm(n[3], 0.1, 0.7), rnorm(n[4], 0.3, 0.8)))
+#'                     mass.error..ppm. = c(rnorm(n[1], 1, 2.4),
+#'                                          rnorm(n[2], 0.5, 0.5),
+#'                                          rnorm(n[3], 0.1, 0.7),
+#'                                          rnorm(n[4], 0.3, 0.8)))
 #'   stats = data.frame(fc.raw.file = letters[4:1],
 #'                      sd = c(2.4, 0.5, 0.7, 0.8),
 #'                      outOfCal = c(TRUE, FALSE, FALSE, FALSE))           
@@ -1038,7 +1056,9 @@ plot_MissedCleavages = function(data, title_sub = "")
 #' @examples
 #'   data = data.frame(fc.raw.file = rep(letters[1:3], each=100),
 #'                     rRT = seq(20, 120, length.out = 100),
-#'                     topN = c(round(runif(100, min=3, max=5)), round(runif(100, min=5, max=8)), round(runif(100, min=1, max=3)))
+#'                     topN = c(round(runif(100, min=3, max=5)),
+#'                              round(runif(100, min=5, max=8)),
+#'                              round(runif(100, min=1, max=3)))
 #'                     )
 #'   plot_TopNoverRT(data)
 #'
@@ -1074,7 +1094,9 @@ plot_TopNoverRT = function(data)
 #' @examples
 #'   data = data.frame(fc.raw.file = rep(c("d","a","x"), each=100),
 #'                     rRT = seq(20, 120, length.out = 100),
-#'                     medIIT = c(round(runif(100, min=3, max=5)), round(runif(100, min=5, max=8)), round(runif(100, min=1, max=3)))
+#'                     medIIT = c(round(runif(100, min=3, max=5)),
+#'                                round(runif(100, min=5, max=8)),
+#'                                round(runif(100, min=1, max=3)))
 #'                     )
 #'   stats = data.frame(fc.raw.file = c("d","a","x"),
 #'                      mean = c(4, 6.5, 2))

@@ -25,6 +25,7 @@
 #' 
 #' @import ggplot2
 #' @importFrom plyr ddply
+#' @importFrom grDevices boxplot.stats
 #' 
 #' @export
 #' 

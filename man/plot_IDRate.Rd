@@ -33,7 +33,9 @@ where each row represents one Raw file.
  label_ID = c("bad (<20\%)" = "red", "ok (...)" = "blue", "great (>35\%)" = "green")
  data = data.frame(fc.raw.file = paste('file', letters[1:3]),
                    ms.ms.identified.... = rnorm(3, 25, 15))
- data$cat = factor(cut(data$ms.ms.identified...., breaks=c(-1, id_rate_bad, id_rate_great, 100), labels=names(label_ID)))                  
+ data$cat = factor(cut(data$ms.ms.identified....,
+                       breaks=c(-1, id_rate_bad, id_rate_great, 100),
+                       labels=names(label_ID)))                  
  plot_IDRate(data, id_rate_bad, id_rate_great, label_ID)
 
 }

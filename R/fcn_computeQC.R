@@ -23,6 +23,7 @@
 #' @importFrom plyr ddply dlply ldply llply adply summarise mapvalues
 #' @importFrom reshape2 melt
 #' @importFrom rmarkdown render
+#' @importFrom grDevices dev.off pdf
 #' 
 #' @export
 #'

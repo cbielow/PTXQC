@@ -32,10 +32,15 @@ and can produce plots (at runtime, when data is provided) using setData().
 require(ggplot2)
 dd = data.frame(x=1:10, y=11:20)
 a = qcMetric$new(helpText="small help text", 
-                 workerFcn=function(.self, data, gtit) ## arbitrary arguments, matched during setData()
+                 ## arbitrary arguments, matched during setData()
+                 workerFcn=function(.self, data, gtit)
                  {
                    ## usually some code here to produce ggplots
-                   pl = lapply(1:2, function(xx) ggplot(data) + geom_point(aes(x=x*xx,y=y)) + ggtitle(gtit))
+                   pl = lapply(1:2, function(xx) {
+                       ggplot(data) +
+                         geom_point(aes(x=x*xx,y=y)) +
+                         ggtitle(gtit)
+                     })
                    return(list(plots = pl))
                  }, 
                  qcCat="LC", 
