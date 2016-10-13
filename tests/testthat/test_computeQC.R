@@ -8,7 +8,7 @@ require(methods)
 context("fcn_computeQC.R")
 
 test_that("createReport", {
-  ## this is a rather lengthy function, and its hard to test in all its granlarity (hence we test
+  ## this is a rather lengthy function, and its hard to test in all its granularity (hence we test
   ## the functions within in other tests), but at least we want to see that it produces
   ## results -- even though its hard to test if the resulting PDF report is exactly what we expect
   ## without going into mindboggling image-comparison tests...
@@ -37,7 +37,7 @@ test_that("createReport", {
   rep_file = paste0(r[["report_file"]], r[["report_file_extension"]])
   
   expect_equal(all(file.exists(rep_file)), TRUE)
-  expect_equal(all(file.info(rep_file)$size > rep(100*1024, 2)), TRUE) ## ~119kb PDF & HTML
+  expect_equal(all(file.info(rep_file)$size > 100*1024), TRUE) ## ~119kb PDF & HTML
   
   expect_equal(file.exists(r[["heatmap_values_file"]]), TRUE)
   d_heatmap = read.delim(r[["heatmap_values_file"]])

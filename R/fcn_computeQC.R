@@ -22,7 +22,7 @@
 #'          
 #' @importFrom plyr ddply dlply ldply llply adply summarise mapvalues
 #' @importFrom reshape2 melt
-#' @importFrom rmarkdown render
+#' @importFrom rmarkdown render pandoc_available
 #' @importFrom grDevices dev.off pdf
 #' 
 #' @export
@@ -694,16 +694,21 @@ if (any(is.na(out_format_requested)))
 
 if ("html" %in% out_format_requested)
 {
-  fh_out$report_file_extension = c(fh_out$report_file_extension, ".html")
-  
-  if (DEBUG_PTXQC) {
-    html_template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
+  if (pandoc_available()) {
+    ## HTML reports require Pandoc for converting Markdown to Html via the rmarkdown package
+    fh_out$report_file_extension = c(fh_out$report_file_extension, ".html")
+    
+    if (DEBUG_PTXQC) {
+      html_template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
+    } else {
+      html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
+    }
+    html_template
+    ## Rmarkdown: convert to Markdown, and then to HTML (or PDF) ...
+    render(html_template, output_file = paste0(fh_out$report_file, ".html"))
   } else {
-    html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
+    warning("The 'Pandoc' converter is not installed on your system but is required for HTML reports.\nPlease install Pandoc <http://pandoc.org/installing.html>. Restart your R-session afterwards.")
   }
-  html_template
-  ## Rmarkdown: convert to Markdown, and then to HTML or PDF...
-  render(html_template, output_file = paste0(fh_out$report_file, ".html"))
 }
 
 if ("plainPDF" %in% out_format_requested)
