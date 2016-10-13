@@ -5,6 +5,9 @@ i.e. a list of new features / bugfixes by version number.
 #########   CHANGELOG  ##########
 #################################
 
+v0.80.14 -- 2016/10/13
+  -  CRAN test fix (make PANDOC optional -- prevents Html reports and Vignettes)
+
 v0.80.13 -- 2016/10/07
   -  minor documentation changes prior to CRAN submission
   
