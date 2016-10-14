@@ -20,26 +20,32 @@ this is out of scope of this manual).
 
  - create a clean R installation by downloading R from [http://www.r-project.org] and installing it. We highly recommend the 64bit version to avoid out-of-memory errors.
    If you already have R installed, you may skip this step.
- - install [pandoc](https://github.com/jgm/pandoc/releases) (see bottom of page). Pandoc is required in order to build the package vignettes (documentation) and PTXQC reports in HTML format.
-   In theory you can skip vignette building (see below) and read the [vignettes] [Ref_Vign] online from the PTXQC GitHub page.
-   The reports can also be configured to be printed as PDF instead of HTML, but HTML just looks nicer and is interactive.
+ - install [pandoc](https://github.com/jgm/pandoc/releases) (see bottom of linked page). Pandoc is required in order to locally build the package vignettes (documentation),
+but you can also read the [vignettes] [Ref_Vign] online from the PTXQC GitHub page. More importantly, Pandoc enables PTXQC to write QC reports in HTML format (which come
+with a help text for each plot and are interactive). PDF reports only contain plots!
+The reports are printed as PDF by default and additionally as HTML if Pandoc is found.
    **If you install Pandoc later while your R session is already open, you need to close and re-open R in order to make R aware of Pandoc!**
  - Now, we install PTXQC and its dependency packages.
    Start the R GUI (64bit!) and execute the following commands to install the `PTXQC` package (dependencies are installed automatically).
    
-   Run **each line** separately, i.e. do not copy and paste the whole block.
-   If an error should occur, this allows to track it down more easily. See [FAQ - Installation] [Ref_VignFAQ]
-   how to resolve them.
-   If R is asking if it should create a user-specific library, say yes (this just means that R cannot write to it's global library, but that's fine).
-   
-        ##
-        ## the actual installation of packages
-        ##
-        if (!require(devtools, quietly = TRUE)) install.packages("devtools")
-        library("devtools")             ## if you see a warning like 'WARNING: Rtools is required ...': ignore it.
-        install_github("cbielow/PTXQC", build_vignettes = TRUE)   ## use build_vignettes = FALSE if you did not install pandoc!
+You can grab PTXQC from either [CRAN](https://cran.r-project.org/web/packages/PTXQC/index.html) *or* [GitHub](https://github.com/cbielow/PTXQC#installation).
+GitHub installation will give you the latest package; the CRAN version might be a little older, but is faster to install. Check the [NEWS][News_File] for CRAN submissions and version.
+> For the code blocks below: Run **each line** separately in your R console, i.e. do not copy and paste the whole block.
+> If an error should occur, this allows to track it down more easily. See [FAQ - Installation] [Ref_VignFAQ]
+> how to resolve them.
 
-        cat(paste0("\nPTXQC was installed to '", .libPaths()[1], "'.\n\n"))
+    ## CRAN
+    install.packages("PTXQC")
+or
+
+    ## GitHub
+    if (!require(devtools, quietly = TRUE)) install.packages("devtools")
+    library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
+    install_github("cbielow/PTXQC", build_vignettes = TRUE)    ## use build_vignettes = FALSE if you did not install pandoc!
+
+Finally, always run:
+
+    cat(paste0("\nPTXQC was installed to '", .libPaths()[1], "'.\n\n"))
 
 > **Here's some intuition about the next steps**   
 > To make PTXQC Drag'n'drop a standalone application which can be run from any user and even from a network drive,

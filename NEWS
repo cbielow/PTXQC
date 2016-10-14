@@ -1,14 +1,16 @@
 This NEWS file mainly serves as a changelog file,
 i.e. a list of new features / bugfixes by version number.
 
+Versions uploaded to CRAN are marked with [CRAN].
+
 #################################
 #########   CHANGELOG  ##########
 #################################
 
-v0.80.14 -- 2016/10/13
+[CRAN] v0.80.14 -- 2016/10/13 
   -  CRAN test fix (make PANDOC optional -- prevents Html reports and Vignettes)
 
-v0.80.13 -- 2016/10/07
+[CRAN] v0.80.13 -- 2016/10/07
   -  minor documentation changes prior to CRAN submission
   
 v0.80.12 -- 2016/09/28
