@@ -7,6 +7,10 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+v0.81.0 -- 2016/10/18
+  -  [METRIC] new experimental MS/MS intensity metric 
+     (scoring the MS/MS TIC vs. base peak, to look for bad ion transmission or fragmentation)
+
 [CRAN] v0.80.14 -- 2016/10/13 
   -  CRAN test fix (make PANDOC optional -- prevents Html reports and Vignettes)
 

@@ -604,6 +604,8 @@ if (enabled_msmsscans)
                                         numeric = "^retention.time$", 
                                         "^Identified", 
                                         "^Scan.event.number", 
+                                        "^total.ion.current",
+                                        "^base.peak.intensity",
                                         "^Raw.file"),
                          check_invalid_lines = FALSE)
   
@@ -634,6 +636,11 @@ if (enabled_msmsscans)
     ##
     lst_qcMetrics[["qcMetric_MSMSScans_IonInjTime"]]$setData(d_msmsScan, param_MSMSScans_ionInjThresh)
 
+    ##
+    ## MS/MS intensity (TIC and base peak)
+    ##
+    lst_qcMetrics[["qcMetric_MSMSScans_MSMSIntensity"]]$setData(d_msmsScan)
+    
     ##
     ## TopN counts
     ##

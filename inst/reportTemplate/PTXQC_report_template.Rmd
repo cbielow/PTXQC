@@ -32,7 +32,7 @@ output:
 
 ```{r setup, include=FALSE}
 ## global options
-knitr::opts_chunk$set(echo=FALSE, warning=TRUE, error=TRUE, message=TRUE, fig.width=8)
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.width=10)
 ```
 
 <a name="Overview"></a>
@@ -53,7 +53,7 @@ knitr::opts_chunk$set(echo=FALSE, warning=TRUE, error=TRUE, message=TRUE, fig.wi
      - the order of Raw files in plots and heatmap
      - abbreviations of Raw file names
   - edit the Html template `r paste0("file:///", gsub("\\\\", "/", html_template))` to
-     - alter the look and feel of this report (e.g. colors, font sizes, help texts, etc.)
+     - alter the look and feel of this report (e.g. colors, font and image sizes, help texts, etc.)
   - report bugs and file requests via the [GitHub issue tracker](https://github.com/cbielow/PTXQC/issues)
   - full PTXQC manual available [here](https://github.com/cbielow/PTXQC)
 

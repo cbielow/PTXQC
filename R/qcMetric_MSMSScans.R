@@ -56,6 +56,93 @@ Heatmap score [MS<sup>2</sup> Scans: TopN over RT]: Rewards uniform (function Un
 
 #####################################################################
 
+qcMetric_MSMSScans_MSMSIntensity =  setRefClass(
+  "qcMetric_MSMSScans_MSMSIntensity",
+  contains = "qcMetric",
+  methods = list(initialize=function() {  callSuper(
+    helpTextTemplate = 
+      "MS/MS identifications can be 'bad' for a couple of reasons. It could be computational, i.e. ID rates
+are low because you specified the wrong protein database or modifications (not our concern here).
+Another reason is low/missing signals for fragment ions,
+e.g. due to bad (quadrupole/optics) ion transmission (charging effects), too small isolation windows, etc.
+
+Hence, we plot the TIC and base peak intensity of all MS/MS scans (incl. unidentified ones) per Raw file.
+Depending on the setup, these intensities can vary, but telling apart good from bad samples
+should never be a problem. If you only have bad samples, you need to know the intensity a good sample would reach.
+
+To automatically score this, we found that the TIC should be 10-100x larger than the base peak, i.e. there 
+should be many other ions which are roughly as high (a good fragmentation ladder).
+If there are only a few spurious peaks (bad MS/MS), the TIC is much lower. Thus, we score the ratio 
+BP * 10 > TIC (this would be 100% score). If it's only BP * 3 < TIC, we say this MS/MS failed (0%).
+Anything between 3x and 10x gets a score in between. The score for the Raw file is computed as the
+median score across all its MS/MS scans.
+
+Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3 < (TIC / BP) < 10. 
+    ",
+    workerFcn = function(.self, d_msmsScan, score_min_factor = 3, score_max_factor = 10)
+    {
+      ## completeness check
+      stopifnot(.self$checkInput(c("fc.raw.file", "total.ion.current", "base.peak.intensity"), colnames(d_msmsScan)))
+      
+      ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
+      dd = as.data.table(d_msmsScan[, c("fc.raw.file", "total.ion.current", "base.peak.intensity")])
+      dd$log.total.ion.current = log10(dd$total.ion.current)
+      dd$log.base.peak.intensity = log10(dd$base.peak.intensity)
+      log.dd.tic = dd[,list(mean=mean(log.total.ion.current),
+                        min=min(log.total.ion.current),
+                        lower=quantile(log.total.ion.current, .25, na.rm=TRUE),
+                        middle=quantile(log.total.ion.current, .50, na.rm=TRUE),
+                        upper=quantile(log.total.ion.current, .75, na.rm=TRUE),
+                        max=max(log.total.ion.current)),
+                    by='fc.raw.file']
+      log.dd.bpi = dd[,list(mean2=mean(log.base.peak.intensity),
+                        min2=min(log.base.peak.intensity),
+                        lower2=quantile(log.base.peak.intensity, .25, na.rm=TRUE),
+                        middle2=quantile(log.base.peak.intensity, .50, na.rm=TRUE),
+                        upper2=quantile(log.base.peak.intensity, .75, na.rm=TRUE),
+                        max2=max(log.base.peak.intensity)),
+                  by='fc.raw.file']
+      ## merge, so we have one table for byXflex()
+      dd.all = merge(log.dd.tic, log.dd.bpi, by='fc.raw.file')
+      
+      ## for scoring...
+      dd.ratio = dd[,list(ratio=median(total.ion.current/base.peak.intensity)), by ='fc.raw.file']
+      dd.ratio
+      
+      
+      plot_MSMSintensity = function(dd.all) {
+        pl = ggplot(data = dd.all, aes(x = fc.raw.file)) + 
+                geom_boxplot(stat = "identity", aes(col = "TIC", ymin = min, lower = lower, middle = middle, upper = upper, ymax = max)) +
+                geom_boxplot(stat = "identity", aes(col = "Base\nPeak", ymin = min2, lower = lower2, middle = middle2, upper = upper2, ymax = max2, width = 0.3)) +
+                scale_color_manual("MS/MS\nintensity", values = c("TIC" = "black", "Base\nPeak" = "blue")) +
+                ylim(0, NA) +
+                scale_x_discrete_reverse(dd.all$fc.raw.file) +
+                ggtitle("[experimental] MSMSscans: MS/MS intensity") +
+                xlab("") +
+                ylab(expression('intensity (' * log[10] * ')')) +
+                coord_flip()
+      }
+      
+      lpl = byXflex(dd.all, dd.all$fc.raw.file, 12, plot_MSMSintensity, sort_indices = FALSE)
+      
+      
+      ## QC measure for intensity ratio below expected threshold (3x-10x by default)
+      qc_MSMSint = ddply(dd.ratio, "fc.raw.file", 
+                     function(x) data.frame(val = qualLinThresh(x$ratio - score_min_factor, t = score_max_factor - score_min_factor)))
+      colnames(qc_MSMSint)[colnames(qc_MSMSint) == "val"] = .self$qcName
+      
+      return(list(plots = lpl, qcScores = qc_MSMSint))
+    }, 
+    qcCat = "MS", 
+    qcName = "MS^2*Scans:~Intensity", 
+    orderNr = 0245
+  )
+    return(.self)
+  })
+)
+
+#####################################################################
+
 qcMetric_MSMSScans_IonInjTime =  setRefClass(
   "qcMetric_MSMSScans_IonInjTime",
   contains = "qcMetric",
