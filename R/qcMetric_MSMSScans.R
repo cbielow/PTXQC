@@ -332,3 +332,73 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
   })
 )
 
+
+#####################################################################
+
+qcMetric_MSMSScans_DepPep =  setRefClass(
+  "qcMetric_MSMSScans_DepPep",
+  contains = "qcMetric",
+  methods = list(initialize=function() {  callSuper(
+    helpTextTemplate = 
+      "Prominent dependent peptides are shown, and how they contribute to increase identification numbers.
+You can use this metric to assess if specifying another variable (or even fixed) modification makes sense to boost
+your ID rate (remember that dependent peptides are only an add-on in MaxQuant and do not count towards global ID rates or
+quantification!).
+You can also the use the DP-modifications to compare samples (e.g. with modified sample preparation or biological conditions where you expect drastic changes).
+    
+Heatmap score [MS<sup>2</sup> Scans: DepPep]: No score.
+",
+    workerFcn = function(.self, d_msmsScan)
+    {
+      ## completeness check
+      stopifnot(.self$checkInput(c("fc.raw.file", "dp.modification", "identified"), colnames(d_msmsScan)))
+      stopifnot(unique(d_msmsScan$identified) %in% c("-","+"))
+
+      ## modified subset
+      d_msmsScan$hasDP = d_msmsScan$dp.modification != ""
+      d_dp = d_msmsScan[d_msmsScan$hasDP,]
+      
+      ## pick global top-5 modifications
+      d_dp.mods.top = sort(table(d_dp$dp.modification), decreasing = TRUE)[1:5]
+      names(d_dp.mods.top)
+      ## set all other DPs to 'other'
+      d_dp$dp.modification[!(d_dp$dp.modification %in% names(d_dp.mods.top))] = "other"
+      dp.names = c(names(d_dp.mods.top), "other")
+      
+      ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
+      d_dp.mods = as.data.table(d_dp)[, list(n=.N), by=c("fc.raw.file", "dp.modification")]
+      tail(d_dp.mods)
+
+      d_noDP_id = as.data.table(d_msmsScan[d_msmsScan$identified=="+" & !d_msmsScan$hasDP,])[, list(n=.N), by=c("fc.raw.file")]
+      
+      d_dp.mods$n_noDP = d_noDP_id$n[match(d_dp.mods$fc.raw.file, d_noDP_id$fc.raw.file)]
+      d_dp.mods$n_percent = d_dp.mods$n / d_dp.mods$n_noDP * 100
+
+      plotDPMods = function(d_dp.mods){
+        p = ggplot(d_dp.mods) +
+              geom_line(aes(fc.raw.file, n_percent, col=dp.modification, group=dp.modification)) +
+              scale_color_manual(values = brewer.pal.Safe(n = length(dp.names), palette = "Accent")) +
+              guides(color = guide_legend(title = "modification")) +
+              ggtitle("Dependent peptides by modification type") +
+              xlab("Raw file") +
+              ylab("#DP / #non-DP [%]") +
+              scale_x_discrete_reverse(d_dp.mods$fc.raw.file) +
+              coord_flip()
+        return(p)
+      }
+
+      lpl = byXflex(d_dp.mods, d_dp.mods$fc.raw.file, 9, plotDPMods, sort_indices = FALSE)
+      
+      ## QC measure: NA
+      #qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame(val = qualUniform(x$ratio, x$count)))
+      #colnames(qc_TopN_ID)[colnames(qc_TopN_ID) == "val"] = .self$qcName
+      
+      return(list(plots = lpl))
+    }, 
+    qcCat = "MS", 
+    qcName = "MS^2*Scans:~Dependent Peps", 
+    orderNr = 0383
+  )
+    return(.self)
+  })
+)

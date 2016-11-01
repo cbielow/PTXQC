@@ -606,7 +606,8 @@ if (enabled_msmsscans)
                                         "^Scan.event.number", 
                                         "^total.ion.current",
                                         "^base.peak.intensity",
-                                        "^Raw.file"),
+                                        "^Raw.file",
+                                        "^dp.modification$"),
                          check_invalid_lines = FALSE)
   
   param_name_MSMSScans_ionInjThresh = "File$MsMsScans$IonInjectionThresh_num"
@@ -650,7 +651,14 @@ if (enabled_msmsscans)
     ## Scan event: % identified
     ##
     lst_qcMetrics[["qcMetric_MSMSScans_TopNID"]]$setData(d_msmsScan)
-
+    
+    ##
+    ## Dependent peptides (no score)
+    ##
+    if ("dp.modification" %in% colnames(d_msmsScan)) {
+      lst_qcMetrics[["qcMetric_MSMSScans_DepPep"]]$setData(d_msmsScan)
+    }
+    
   } ## end MSMSscan from MQ > 1.0.13
   
   ## save RAM: msmsScans.txt is not required any longer
