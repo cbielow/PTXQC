@@ -7,6 +7,9 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+v0.82.1 -- 2016/11/03
+  -  fixes to new Dependent Peptides (DP) plot (issue #28) (added target sites in percent)
+
 v0.82.0 -- 2016/11/01
   -  [METRIC] new Dependent Peptides (DP) plot (issue #28)
      (if DP were enabled in MaxQuant, the Top5 modifications will be displayed;

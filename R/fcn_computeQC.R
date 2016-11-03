@@ -607,6 +607,7 @@ if (enabled_msmsscans)
                                         "^total.ion.current",
                                         "^base.peak.intensity",
                                         "^Raw.file",
+                                        "^dp.aa$",
                                         "^dp.modification$"),
                          check_invalid_lines = FALSE)
   
