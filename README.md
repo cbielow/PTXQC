@@ -71,7 +71,7 @@ with a help text for each plot and are interactive). PDF reports only contain pl
 The reports are printed as PDF by default and additionally as HTML if Pandoc is found.
 **If you install Pandoc later while your R session is already open, you need to close and re-open R in order to make R aware of Pandoc!**
    
-You can grab PTXQC from either [CRAN](https://cran.r-project.org/web/packages/PTXQC/index.html) *or* [GitHub](https://github.com/cbielow/PTXQC#installation).
+You can grab PTXQC from either [CRAN](https://CRAN.R-project.org/package=PTXQC) *or* [GitHub](https://github.com/cbielow/PTXQC#installation).
 GitHub installation will give you the latest package; the CRAN version might be a little older, but is faster to install. Check the [NEWS][News_File] for CRAN submissions and version.
 > For the code blocks below: Run **each line** separately in your R console, i.e. do not copy and paste the whole block.
 > If an error should occur, this allows to track it down more easily. See [FAQ - Installation] [Ref_VignFAQ]
