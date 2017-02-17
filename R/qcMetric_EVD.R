@@ -1110,7 +1110,6 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
       
       lpl_dens = byXflex(df_evd[, c("modified.sequence", "fc.raw.file", "logInt")], df_evd$fc.raw.file,
                          subset_size = 5, FUN = function(dx) {
-             
         d_mat = dcast(dx, modified.sequence ~ fc.raw.file, fun.aggregate = mean, value.var = "logInt")
         
         ## ... normalization factors
@@ -1121,11 +1120,11 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
         df_mult = data.frame(fc.raw.file = colnames(d_mat)[-1], mult = d_mat_mult)
         ## .. normalize data
         d_mat_n = d_mat
-        d_mat_n[, -1] = sweep( d_mat_n[, -1], 2, d_mat_mult, '/')
+        d_mat_n[, -1] = sweep( d_mat_n[, -1, drop=FALSE], 2, d_mat_mult, '/')
         ## 
         head(d_mat_n)
         ## find impute value
-        pep_mean = rowMeans(d_mat_n[, -1], na.rm = TRUE)
+        pep_mean = rowMeans(d_mat_n[, -1, drop=FALSE], na.rm = TRUE)
         df_missing = ddply(df_mult, "fc.raw.file", function(x) {
           ## get set of missing values
           values = pep_mean[is.na(d_mat_n[, as.character(x$fc.raw.file)])]
@@ -1142,7 +1141,6 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
           ggtitle(" [experimental] EVD: Imputed Peptide Intensity Distribution of Missing Values") +
           scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide = guide_legend("")) +
           scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide = "none")
-        
         return(pl)
       })
       

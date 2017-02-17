@@ -447,6 +447,10 @@ plot_MBRIDtransfer = function(data)
 {
   data.m = melt(data, id.vars=c("fc.raw.file", "sample"))
   data.m$value = data.m$value * 100 ## used to be scores in [0-1]
+  if (all(is.na(data.m$value)))
+  {# the slice of Raw file we are looking at could have no MBR data -- and ggplot needs something to plot...
+    data.m$value = 0
+  }
   p = ggplot(data.m) + 
         geom_bar(aes_string(x="fc.raw.file", y="value", fill="variable"), stat="identity", position="stack") + 
         scale_fill_manual("peak class", 

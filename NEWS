@@ -7,6 +7,11 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v0.82.2 -- 2017/02/18
+  - [FIX] fix Match-between-runs plotting when data is extremely sparse (issue #30)
+  - [DOC] improved description of how to customize YAML config
+  - [FEATURE] write out preliminary YAML config upon first invocation, enabling the user to disable metrics on failing runs
+
 v0.82.1 -- 2016/11/03
   -  fixes to new Dependent Peptides (DP) plot (issue #28) (added target sites in percent)
 

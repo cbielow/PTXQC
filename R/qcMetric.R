@@ -120,6 +120,7 @@ qcMetric = setRefClass("qcMetric",
          
 
          lpl = flattenList(r[["plots"]])
+         #print(lpl) ## debug
          .self$plots = lpl;
          #.self$plots = r[["plots"]]
          
