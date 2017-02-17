@@ -92,7 +92,15 @@ To get started, see the help and/or vignettes:
     browseVignettes(package = 'PTXQC')
 
 Please feel free to report bugs (see below), or issue pull requests!    
-    
+
+### Report Examples
+
+An overview chart at the beginning of the report will give you a first impression.
+<img src="./inst/examples/example_heatmap.png?raw=true" width="500" /><br>
+Detailed plots can be found in the remainder of each report.
+
+For example input data and full reports, see the ['inst/examples' subfolder] [2].
+
 ### Bug reporting / Feature requests
 
 If you encounter a bug, e.g. error message, wrong figures, missing axis annotation or anything which looks
@@ -109,15 +117,6 @@ to track down the issue.
 In certain situations, the whole txt-folder or a single MaxQuant file might be helpful to solve the problem.
 
 If you want to see a new metric, or have ideas how to improve the existing ones, just open an issue ticket and leave a description.
-  
-### Report Examples
-
-An overview chart at the beginning of the report will give you a first impression.
-<img src="./inst/examples/example_heatmap.png?raw=true" width="500" /><br>
-Detailed plots can be found in the remainder of each report.
-
-For example input data and full reports, see the ['inst/examples' subfolder] [2].
-
   
 ### Citation
 

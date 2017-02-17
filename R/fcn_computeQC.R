@@ -80,10 +80,10 @@ createReport = function(txt_folder, yaml_obj = list())
   ####
   ####  prepare the metrics
   ####
-  if (!DEBUG_PTXQC) {
-    lst_qcMetrics_str = ls(name = getNamespace("PTXQC"), pattern="qcMetric_") 
-  } else {
+  if (DEBUG_PTXQC) {
     lst_qcMetrics_str = ls(sys.frame(which = 0), pattern="qcMetric_") ## executed outside of package, i.e. not loaded...
+  } else {
+    lst_qcMetrics_str = ls(name = getNamespace("PTXQC"), pattern="qcMetric_") 
   }
   if (length(lst_qcMetrics_str) == 0) stop("computeReport(): No metrics found! Very weird!")
   lst_qcMetrics = sapply(lst_qcMetrics_str, function(m) {
@@ -118,6 +118,8 @@ createReport = function(txt_folder, yaml_obj = list())
   ## reorder metrics (again; after param update)
   lst_qcMetrics_ord = lst_qcMetrics[df.meta$.id]
   
+  ## write out a preliminary YAML file (so users can disable metrics, if they fail)
+  yc$writeYAML(fh_out$yaml_file)
   
   ######
   ######  parameters.txt ...

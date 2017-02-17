@@ -97,6 +97,8 @@ YAMLClass = setRefClass(
 #
 # The subsection 'order' enables reordering of metrics by assigning other numbers.
 # The order affects both the order of columns in the heatmap, and the order of plots in the report.
+# If you set a metrics order number to a negative value, the metric will not be computed!
+# This is useful to switch of uninteresting or broken metrics (until a fix is rolled out).
 #
 # Parameters whose name starts with 'MQpar_' should be matched to the parameters set in MaxQuant.
 # E.g. 'File$Evidence$MQpar_MatchingTimeWindow_num' is the matching (not alignment!) tolerance

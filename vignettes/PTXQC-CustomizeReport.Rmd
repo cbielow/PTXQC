@@ -19,10 +19,9 @@ Reports rely on a small set of parameters, which do two things:
     (usually tighly connected to the data and MS instrument)
   - report length: number of metrics shown in the report or partial evaluation of the txt-folder
 
-The first point can partially be addressed via a mqpar.xml file (see below).
-
+The first point can partially be addressed via a **mqpar.xml file**.
 However, not all thresholds are known or even interesting to MaxQuant, e.g. the number of expected proteins.
-For this, PTXQC comes with a YAML config file (see below). This file also addresses the report length.
+For this, PTXQC comes with a **YAML config file**. This file also addresses the report length.
 
 ## Automatically importing MaxQuant parameters via mqpar.xml
 
@@ -34,7 +33,7 @@ Copy the `mqpar.xml` which MaxQuant generated in the analysis directory
 into your txt folder, e.g. `c:\MQ_Diabetes_study\mqpar.xml` -> `c:\MQ_Diabetes_study\combined\txt\mqpar.xml`. 
 This will enable PTXQC to extract some parameter settings and results in more accurate reports. 
 You will see a warning message during report generation if `mqpar.xml` is missing.
-The FAQ vignette has additional information on why this manual copying is sensefull.
+The FAQ vignette has additional information on why this manual copying is senseful.
 
 Alternatively, you can set the MaxQuant parameters manually in the YAML file (see next section) to match your MaxQuant configuration.
 
@@ -47,10 +46,14 @@ PTXQC uses YAML format for its parameter configuration. YAML is short for 'YAML 
 There is a nice tutorial for YAML at [http://rhnh.net/2011/01/31/yaml-tutorial] -- or just Google to find more.
 Also, any PTXQC YAML file will start with a comment section which explains the format.
 
-Before you run PTXQC, look at the `report_*.yaml` file within your txt folder. If you did not run PTXQC 
-before on this folder, you can take any other YAML config file or run PTXQC with default settings
-(see above) to create such a file.
+PTXQC will create a `report_*.yaml` file within your txt folder upon its first invocation.
+If you did not run PTXQC before on this folder, you can take any other YAML config file
+or run PTXQC with default settings (see above) to create such a file.
 Edit the YAML file as you desire using a text editor of your choice (e.g. Notepad++). **Each YAML file has a leading comment section which will describe the basics of how YAML looks like and what you should/not change.**
+
+> Note: PTXQC will only read the YAML file which **matches its own version exactly**, i.e. `report_v0.82.1.yaml` will be
+> ignored if PTXQC has version `0.83.1` to avoid compatibility problems. A new YAML file matching the current PTXQC 
+> version will automatically be generated. If you want to use your old settings, rename the file manually.
 
 The YAML shown below is shortened and lacks parts of the introductory comment section.
 But in general, the YAML file will look like this:
@@ -68,6 +71,13 @@ But in general, the YAML file will look like this:
         extended: yes
       NameLengthMax_num: 10.0
       AddPageNumbers: 'on'
+    order:
+      qcMetric_PAR: 1.0
+      qcMetric_PG_PCA: 3.0
+      qcMetric_EVD_Top5Cont: 10.0
+      qcMetric_PG_Ratio: 19.0
+      qcMetric_EVD_UserContaminant: 20.0
+      << more metrics here... >>
     File:
       Parameters:
         enabled: yes
@@ -83,6 +93,11 @@ But in general, the YAML file will look like this:
         PeptideCountThresh_num: 15000.0
         MatchBetweenRuns_wA: auto
 
+To disable certain metrics/plots, just change the **order** of the metric in question to a **negative** value,
+e.g. `qcMetric_PG_PCA: -3.0`, will disable the PCA plot.
+This is helpful to disable uninteresting metrics, but also a temporary solution if your PC cannot cope with RAM demands of PTXQC
+or a metric is broken (you should open a bug report in this case nevertheless).
+        
 
 ## Rename Raw files in the report
 
