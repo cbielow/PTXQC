@@ -8,9 +8,10 @@ PTXQC
 
 ### Latest changes / Change log
 
-**Latest:**
-  - Nov 2016: New Dependent peptides metric (issue #28).
-  - Oct 2016: Easier [Installation](#installation) of PTXQC via CRAN.
+**Latest: **
+  - v0.82.03 - Apr 2017: Create full Yaml config upon first invocation
+  - v0.82.01 - Nov 2016: New Dependent peptides metric (issue #28).
+  - v0.80.14 - Oct 2016: Easier [Installation](#installation) of PTXQC via CRAN.
 
 See [NEWS][News_File] file for a version history.
 

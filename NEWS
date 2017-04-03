@@ -7,6 +7,10 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v0.82.3 -- 2017/04/03
+  - [FIX] MS/MS fragment plots can deal with 'Unknown' mass analyzer (e.g. from mzXML input)
+  - [FIX] .yaml config file is written completely before actual analysis starts
+
 [CRAN] v0.82.2 -- 2017/02/18
   - [FIX] fix Match-between-runs plotting when data is extremely sparse (issue #30)
   - [DOC] improved description of how to customize YAML config
