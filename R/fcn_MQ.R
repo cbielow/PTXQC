@@ -180,6 +180,13 @@ getFragmentErrors = function(x)
     ## --> convert back to ppm
     ms2_unit = "[ppm]"; ms2_col = "mass.deviations..da."
     convert_Da2PPM = TRUE
+  } else {
+    ## fallback if mass.analyzer is 'Unknown' (e.g. for mzXML input)
+    if ("mass.deviations..ppm." %in% colnames(x)) {
+      ms2_unit = "[ppm]"; ms2_col = "mass.deviations..ppm."
+    } else {
+      ms2_unit = "[Da]"; ms2_col = "mass.deviations..da."
+    }
   }
 
   ## sometimes, peptides are identified purely based on MS1, i.e. have no fragments
@@ -193,6 +200,14 @@ getFragmentErrors = function(x)
     mass = unlist(strsplit(x$masses, split=";", fixed = TRUE))
     err = err / as.numeric(mass) * 1e6
   }
+  
+  if ((ms2_unit == "[ppm]") & (median(abs(err)) > 10)) {
+    cat(paste0("MS/MS fragment error seems rather large ", median(abs(err)), ". Reporting in [Da]...\n"))
+    # heuristic: ppm errors seem to be way to big. Use 'Da' instead.
+    x$mass.analyzer = "ITMS"
+    return (getFragmentErrors(x))
+  }
+  
   return(data.frame(msErr = err, unit = ms2_unit))
 }
 
