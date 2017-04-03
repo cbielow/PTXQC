@@ -1,6 +1,6 @@
 ---
 title: "Customizing PTXQC reports"
-author: "Chris Bielow <chris.bielow@mdc-berlin.de>"
+author: "Chris Bielow <chris.bielow@fu-berlin.de>"
 date: '`r Sys.Date()`'
 output:
   html_document: default
@@ -96,7 +96,7 @@ But in general, the YAML file will look like this:
 To disable certain metrics/plots, just change the **order** of the metric in question to a **negative** value,
 e.g. `qcMetric_PG_PCA: -3.0`, will disable the PCA plot.
 This is helpful to disable uninteresting metrics, but also a temporary solution if your PC cannot cope with RAM demands of PTXQC
-or a metric is broken (you should open a bug report in this case nevertheless).
+or a metric is broken (you should open a bug report in this case).
         
 
 ## Rename Raw files in the report
