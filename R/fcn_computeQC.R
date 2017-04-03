@@ -37,18 +37,9 @@ createReport = function(txt_folder, yaml_obj = list())
   {
     stop(paste0("Argument 'yaml_obj' is not of type list\n"));
   }
-  yc = YAMLClass$new(yaml_obj)
-  
-  ## determines if a local mqpar.xml should be used to grep all YAML parameters whose name starts with "MQpar_" from the
-  ## original mqpar.xml instead of the yaml.config. The "MQpar_..." param from the config
-  ## will be ignored and the newly written yaml.config will contain the values from mqpar.xml.
-  param_name_PTXQC_UseLocalMQPar = "PTXQC$UseLocalMQPar"
-  param_def_PTXQC_UseLocalMQPar = TRUE
-  param_useMQPAR = yc$getYAML(param_name_PTXQC_UseLocalMQPar, param_def_PTXQC_UseLocalMQPar)
-  
+
   time_start = Sys.time()
-  
-  
+
   if (!any(file.info(txt_folder)$isdir, na.rm = TRUE))
   {
     stop(paste0("Argument txt_folder with value '", txt_folder, "' is not a valid directory\n"));
@@ -62,10 +53,152 @@ createReport = function(txt_folder, yaml_obj = list())
   txt_files$msmsScan = "msmsScans.txt"
   txt_files$mqpar = "mqpar.xml"
   txt_files = lapply(txt_files, function(x) paste(txt_folder, x, sep=.Platform$file.sep))
+  yc = YAMLClass$new(yaml_obj)
+  
+  ## YAML default config
+  {
+  use_extended_report_filename = yc$getYAML("PTXQC$ReportFilename$extended", TRUE)
+  
+  ## determines if a local mqpar.xml should be used to grep all YAML parameters whose name starts with "MQpar_" from the
+  ## original mqpar.xml instead of the yaml.config. The "MQpar_..." param from the config
+  ## will be ignored and the newly written yaml.config will contain the values from mqpar.xml.
+  param_name_PTXQC_UseLocalMQPar = "PTXQC$UseLocalMQPar"
+  param_def_PTXQC_UseLocalMQPar = TRUE
+  param_useMQPAR = yc$getYAML(param_name_PTXQC_UseLocalMQPar, param_def_PTXQC_UseLocalMQPar)
+  
+  enabled_parameters = yc$getYAML("File$Parameters$enabled", TRUE) & file.exists(txt_files$param)
+  add_fs_col = yc$getYAML("PTXQC$NameLengthMax_num", 10)
+  
+  enabled_summary = yc$getYAML("File$Summary$enabled", TRUE) & file.exists(txt_files$summary)
+  id_rate_bad = yc$getYAML("File$Summary$IDRate$Thresh_bad_num", 20)
+  id_rate_great = yc$getYAML("File$Summary$IDRate$Thresh_great_num", 35)
+  
+  GL_name_min_length = 8
+  
+  enabled_proteingroups = yc$getYAML("File$ProteinGroups$enabled", TRUE) & file.exists(txt_files$groups)
+  enabled_pg_ratioLabIncThresh = yc$getYAML("File$ProteinGroups$RatioPlot$LabelIncThresh_num", 4)
+  param_name_PG_intThresh = "File$ProteinGroups$IntensityThreshLog2_num"
+  param_def_PG_intThresh = 25 ## default median intensity in log2 scale
+  param_PG_intThresh = yc$getYAML(param_name_PG_intThresh, param_def_PG_intThresh)
+  if (!is.numeric(param_PG_intThresh) || !(param_PG_intThresh %in% 1:100))
+  { ## reset if value is weird
+    cat("YAML value for '" %+% param_name_PG_intThresh %+% "' is invalid ('" %+% param_PG_intThresh %+% "'). Using default of " %+% param_def_PG_intThresh %+% ".")
+    param_PG_intThresh = param_def_PG_intThresh
+  }
+  
+  enabled_evidence = yc$getYAML("File$Evidence$enabled", TRUE) & file.exists(txt_files$evd)
+  
+  ## get scoring threshold (upper limit)
+  param_name_EV_protThresh = "File$Evidence$ProteinCountThresh_num"
+  param_def_EV_protThresh = 3500
+  param_EV_protThresh = yc$getYAML(param_name_EV_protThresh, param_def_EV_protThresh)
+  if (!is.numeric(param_EV_protThresh) || !(param_EV_protThresh %in% 1:1e5))
+  { ## reset if value is weird
+    cat("YAML value for '" %+% param_name_EV_protThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_protThresh %+% ".")
+    param_EV_protThresh = param_def_EV_protThresh
+  }
+  
+  param_name_EV_intThresh = "File$Evidence$IntensityThreshLog2_num"
+  param_def_EV_intThresh = 23 ## default median intensity in log2 scale
+  param_EV_intThresh = yc$getYAML(param_name_EV_intThresh, param_def_EV_intThresh)
+  if (!is.numeric(param_EV_intThresh) || !(param_EV_intThresh %in% 1:100))
+  { ## reset if value is weird
+    cat("YAML value for '" %+% param_name_EV_intThresh %+% "' is invalid ('" %+% param_EV_intThresh %+% "'). Using default of " %+% param_def_EV_intThresh %+% ".")
+    param_EV_intThresh = param_def_EV_intThresh
+  }
+  
+  ## get scoring threshold (upper limit)
+  param_name_EV_pepThresh = "File$Evidence$PeptideCountThresh_num"
+  param_def_EV_pepThresh = 15000
+  param_EV_pepThresh = yc$getYAML(param_name_EV_pepThresh, param_def_EV_pepThresh)
+  if (!is.numeric(param_EV_pepThresh) || !(param_EV_pepThresh %in% 1:1e6))
+  { ## reset if value is weird
+    cat("YAML value for '" %+% param_name_EV_pepThresh %+% "' is invalid ('" %+% param_EV_pepThresh %+% "'). Using default of " %+% param_def_EV_pepThresh %+% ".")
+    param_EV_pepThresh = param_def_EV_pepThresh
+  }
+  
+  ### warn of special contaminants!
+  ## these need to be in FASTA headers (description is not enough)!
+  ## syntax:  list( contaminant1 = c(name, threshold), contaminant2 = c(...), ...)
+  ##
+  ##  if within the YAML file
+  ##    SpecialContaminants: no
+  ##  is set, then 'yaml_contaminants' will be 'FALSE'
+  ##
+  contaminant_default = list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
+  ##yaml_obj = list()
+  ##contaminant_default = FALSE ## to switch it off by default
+  yaml_contaminants = yc$getYAML("File$Evidence$SpecialContaminants", contaminant_default)
+  
+  ## param
+  param_name_EV_MatchingTolerance = "File$Evidence$MQpar_MatchingTimeWindow_num"
+  param_def_EV_MatchingTolerance = 1
+  param_EV_MatchingTolerance = yc$getYAML(param_name_EV_MatchingTolerance, param_def_EV_MatchingTolerance)
+  if (param_useMQPAR) {
+    v = getMQPARValue(txt_files$mqpar, "matchingTimeWindow") ## will also warn() if file is missing
+    if (!is.null(v)) {
+      param_EV_MatchingTolerance = yc$setYAML(param_name_EV_MatchingTolerance, as.numeric(v))
+    }
+  }
+  param_name_mbr = "File$Evidence$MatchBetweenRuns_wA"
+  param_evd_mbr = yc$getYAML(param_name_mbr, "auto")
+  
+  
+  param_name_EV_PrecursorTolPPM = "File$Evidence$MQpar_firstSearchTol_num"
+  param_def_EV_PrecursorTolPPM = 20
+  param_EV_PrecursorTolPPM = yc$getYAML(param_name_EV_PrecursorTolPPM, param_def_EV_PrecursorTolPPM)
+  if (param_useMQPAR) {
+    v = getMQPARValue(txt_files$mqpar, "firstSearchTol") ## will also warn() if file is missing
+    if (!is.null(v)) {
+      param_EV_PrecursorTolPPM = yc$setYAML(param_name_EV_PrecursorTolPPM, as.numeric(v))
+    }
+  }
+  
+  param_name_EV_PrecursorOutOfCalSD = "File$Evidence$firstSearch_outOfCalWarnSD_num"
+  param_def_EV_PrecursorOutOfCalSD = 2
+  param_EV_PrecursorOutOfCalSD = yc$getYAML(param_name_EV_PrecursorOutOfCalSD, param_def_EV_PrecursorOutOfCalSD)
+  
+  
+  param_name_EV_PrecursorTolPPMmainSearch = "File$Evidence$MQpar_mainSearchTol_num"
+  param_def_EV_PrecursorTolPPMmainSearch = NA  ## we do not dare to have a default, since it ranges from 6 - 4.5 ppm across MQ versions
+  param_EV_PrecursorTolPPMmainSearch = yc$getYAML(param_name_EV_PrecursorTolPPMmainSearch, param_def_EV_PrecursorTolPPMmainSearch)
+  if (param_useMQPAR) {
+    v = getMQPARValue(txt_files$mqpar, "mainSearchTol") ## will also warn() if file is missing
+    if (!is.null(v)) {
+      param_EV_PrecursorTolPPMmainSearch = yc$setYAML(param_name_EV_PrecursorTolPPMmainSearch, as.numeric(v))
+    }
+  }
+  if (is.na(param_EV_PrecursorTolPPMmainSearch))
+  {
+    warning("PTXQC: Cannot draw borders for calibrated mass error, since neither 'File$Evidence$MQpar_mainSearchTol_num' is set nor a mqpar.xml file is present!", immediate. = TRUE)
+  }
+  
+  enabled_msms = yc$getYAML("File$MsMs$enabled", TRUE) & file.exists(txt_files$msms)
+  enabled_msmsscans = yc$getYAML("File$MsMsScans$enabled", TRUE) & file.exists(txt_files$msmsScan)
+  
+  param_name_MSMSScans_ionInjThresh = "File$MsMsScans$IonInjectionThresh_num"
+  param_def_MSMSScans_ionInjThresh = 10 ## default ion injection threshold in milliseconds
+  param_MSMSScans_ionInjThresh = yc$getYAML(param_name_MSMSScans_ionInjThresh, param_def_MSMSScans_ionInjThresh)
+  if (!is.numeric(param_MSMSScans_ionInjThresh))
+  { ## reset if value is weird
+    cat("YAML value for '" %+% param_name_MSMSScans_ionInjThresh %+% "' is invalid ('" %+% param_MSMSScans_ionInjThresh %+% "'). Using default of " %+% param_def_MSMSScans_ionInjThresh %+% ".")
+    param_MSMSScans_ionInjThresh = param_def_MSMSScans_ionInjThresh
+  }
+  
+  
+  param_name_PTXQC_OutputFormats = "PTXQC$OutputFormats"
+  out_formats_supported = c("html", "plainPDF")
+  param_def_PTXQC_OutputFormats =  out_formats_supported
+  param_OutputFormats = yc$getYAML(param_name_PTXQC_OutputFormats, param_def_PTXQC_OutputFormats)
+  
+  param_name_PTXQC_PageNumbers = "PTXQC$PlainPDF$AddPageNumbers"
+  param_def_PTXQC_PageNumbers = "on"
+  param_PageNumbers = yc$getYAML(param_name_PTXQC_PageNumbers, param_def_PTXQC_PageNumbers)
+  
+  }
   
   ## create names of output files (report PDF, YAML, stats, etc...)
   fh_out = getReportFilenames(txt_folder)
-  use_extended_report_filename = yc$getYAML("PTXQC$ReportFilename$extended", TRUE)
   fh_out$report_file = ifelse(use_extended_report_filename, fh_out$report_file_extended, fh_out$report_file_simple)
   
   unlink(fh_out$stats_file)
@@ -118,35 +251,28 @@ createReport = function(txt_folder, yaml_obj = list())
   ## reorder metrics (again; after param update)
   lst_qcMetrics_ord = lst_qcMetrics[df.meta$.id]
   
-  ## write out a preliminary YAML file (so users can disable metrics, if they fail)
+  ## write out the final YAML file (so users can disable metrics, if they fail)
   yc$writeYAML(fh_out$yaml_file)
   
   ######
   ######  parameters.txt ...
   ######
   
-  enabled_parameters = yc$getYAML("File$Parameters$enabled", TRUE) & file.exists(txt_files$param)
   if (enabled_parameters)
   {
     d_parAll = mq$readMQ(txt_files$param, type="par")
     lst_qcMetrics[["qcMetric_PAR"]]$setData(d_parAll)
   }
   
-  add_fs_col = yc$getYAML("PTXQC$NameLengthMax_num", 10)
-  
   ######
   ######  summary.txt ...
   ######
   
-  enabled_summary = yc$getYAML("File$Summary$enabled", TRUE) & file.exists(txt_files$summary)
   if (enabled_summary)
   {
     d_smy = mq$readMQ(txt_files$summary, type="sm", add_fs_col = add_fs_col)
     #colnames(d_smy)
     #colnames(d_smy[[1]])
-    
-    id_rate_bad = yc$getYAML("File$Summary$IDRate$Thresh_bad_num", 20)
-    id_rate_great = yc$getYAML("File$Summary$IDRate$Thresh_great_num", 35)
     
     ### MS/MS identified [%]
     lst_qcMetrics[["qcMetric_SM_MSMSIdRate"]]$setData(d_smy$raw, id_rate_bad, id_rate_great)
@@ -157,24 +283,11 @@ createReport = function(txt_folder, yaml_obj = list())
   ######  proteinGroups.txt ...
   ######
   
-  GL_name_min_length = 8
-  enabled_pg_ratioLabIncThresh = yc$getYAML("File$ProteinGroups$RatioPlot$LabelIncThresh_num", 4)
-
-  enabled_proteingroups = yc$getYAML("File$ProteinGroups$enabled", TRUE) & file.exists(txt_files$groups)
   if (enabled_proteingroups)
   {
     
     d_pg = mq$readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")
       
-    param_name_PG_intThresh = "File$ProteinGroups$IntensityThreshLog2_num"
-    param_def_PG_intThresh = 25 ## default median intensity in log2 scale
-    param_PG_intThresh = yc$getYAML(param_name_PG_intThresh, param_def_PG_intThresh)
-    if (!is.numeric(param_PG_intThresh) || !(param_PG_intThresh %in% 1:100))
-    { ## reset if value is weird
-      cat("YAML value for '" %+% param_name_PG_intThresh %+% "' is invalid ('" %+% param_PG_intThresh %+% "'). Using default of " %+% param_def_PG_intThresh %+% ".")
-      param_PG_intThresh = param_def_PG_intThresh
-    }
-    
     ##
     ## Raw/LFQ/Reporter intensity boxplots
     ##
@@ -294,38 +407,7 @@ createReport = function(txt_folder, yaml_obj = list())
   ######
   ######  evidence.txt ...
   ######
-  
-  enabled_evidence = yc$getYAML("File$Evidence$enabled", TRUE) & file.exists(txt_files$evd)
-  
-  ## get scoring threshold (upper limit)
-  param_name_EV_protThresh = "File$Evidence$ProteinCountThresh_num"
-  param_def_EV_protThresh = 3500
-  param_EV_protThresh = yc$getYAML(param_name_EV_protThresh, param_def_EV_protThresh)
-  if (!is.numeric(param_EV_protThresh) || !(param_EV_protThresh %in% 1:1e5))
-  { ## reset if value is weird
-    cat("YAML value for '" %+% param_name_EV_protThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_protThresh %+% ".")
-    param_EV_protThresh = param_def_EV_protThresh
-  }
-  
-  param_name_EV_intThresh = "File$Evidence$IntensityThreshLog2_num"
-  param_def_EV_intThresh = 23 ## default median intensity in log2 scale
-  param_EV_intThresh = yc$getYAML(param_name_EV_intThresh, param_def_EV_intThresh)
-  if (!is.numeric(param_EV_intThresh) || !(param_EV_intThresh %in% 1:100))
-  { ## reset if value is weird
-    cat("YAML value for '" %+% param_name_EV_intThresh %+% "' is invalid ('" %+% param_EV_intThresh %+% "'). Using default of " %+% param_def_EV_intThresh %+% ".")
-    param_EV_intThresh = param_def_EV_intThresh
-  }
-  
-  ## get scoring threshold (upper limit)
-  param_name_EV_pepThresh = "File$Evidence$PeptideCountThresh_num"
-  param_def_EV_pepThresh = 15000
-  param_EV_pepThresh = yc$getYAML(param_name_EV_pepThresh, param_def_EV_pepThresh)
-  if (!is.numeric(param_EV_pepThresh) || !(param_EV_pepThresh %in% 1:1e6))
-  { ## reset if value is weird
-    cat("YAML value for '" %+% param_name_EV_pepThresh %+% "' is invalid ('" %+% param_EV_pepThresh %+% "'). Using default of " %+% param_def_EV_pepThresh %+% ".")
-    param_EV_pepThresh = param_def_EV_pepThresh
-  }
-  
+
   if (enabled_evidence)
   {
     ## protein.names is only available from MQ 1.4 onwards
@@ -347,18 +429,6 @@ createReport = function(txt_folder, yaml_obj = list())
                                                                          numeric = "^ms.ms.count$"))
 
     ### warn of special contaminants!
-    ## these need to be in FASTA headers (description is not enough)!
-    ## syntax:  list( contaminant1 = c(name, threshold), contaminant2 = c(...), ...)
-    ##
-    ##  if within the YAML file
-    ##    SpecialContaminants: no
-    ##  is set, then 'yaml_contaminants' will be 'FALSE'
-    ##
-    contaminant_default = list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
-    ##yaml_obj = list()
-    ##contaminant_default = FALSE ## to switch it off by default
-    yaml_contaminants = yc$getYAML("File$Evidence$SpecialContaminants", contaminant_default)
-    
     if (class(yaml_contaminants) == "list")  ## SC are requested
     {
       if (!enabled_proteingroups)
@@ -403,19 +473,7 @@ createReport = function(txt_folder, yaml_obj = list())
     ## Even if MBR=off, this column always contains numbers (usually 0, or very small)
     ##
     
-    ## param
-    param_name_EV_MatchingTolerance = "File$Evidence$MQpar_MatchingTimeWindow_num"
-    param_def_EV_MatchingTolerance = 1
-    param_EV_MatchingTolerance = yc$getYAML(param_name_EV_MatchingTolerance, param_def_EV_MatchingTolerance)
-    if (param_useMQPAR) {
-      v = getMQPARValue(txt_files$mqpar, "matchingTimeWindow") ## will also warn() if file is missing
-      if (!is.null(v)) {
-        param_EV_MatchingTolerance = yc$setYAML(param_name_EV_MatchingTolerance, as.numeric(v))
-      }
-    }
-    param_name_mbr = "File$Evidence$MatchBetweenRuns_wA"
-    param_evd_mbr = yc$getYAML(param_name_mbr, "auto")
-    
+
     if (("retention.time.calibration" %in% colnames(d_evd)))
     {
       ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
@@ -481,20 +539,6 @@ createReport = function(txt_folder, yaml_obj = list())
     ## Then, 'uncalibrated.mass.error..ppm.' will be 'NaN' throughout -- but weirdly, calibrated masses will be reported.
     ##
     
-    param_name_EV_PrecursorTolPPM = "File$Evidence$MQpar_firstSearchTol_num"
-    param_def_EV_PrecursorTolPPM = 20
-    param_EV_PrecursorTolPPM = yc$getYAML(param_name_EV_PrecursorTolPPM, param_def_EV_PrecursorTolPPM)
-    if (param_useMQPAR) {
-      v = getMQPARValue(txt_files$mqpar, "firstSearchTol") ## will also warn() if file is missing
-      if (!is.null(v)) {
-        param_EV_PrecursorTolPPM = yc$setYAML(param_name_EV_PrecursorTolPPM, as.numeric(v))
-      }
-    }
-    
-    param_name_EV_PrecursorOutOfCalSD = "File$Evidence$firstSearch_outOfCalWarnSD_num"
-    param_def_EV_PrecursorOutOfCalSD = 2
-    param_EV_PrecursorOutOfCalSD = yc$getYAML(param_name_EV_PrecursorOutOfCalSD, param_def_EV_PrecursorOutOfCalSD)
-    
     ##
     ## MS1-out-of-calibration (i.e. the tol-window being too small)
     ##
@@ -511,19 +555,7 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     ## MS1 post calibration
     ##
-    param_name_EV_PrecursorTolPPMmainSearch = "File$Evidence$MQpar_mainSearchTol_num"
-    param_def_EV_PrecursorTolPPMmainSearch = NA  ## we do not dare to have a default, since it ranges from 6 - 4.5 ppm across MQ versions
-    param_EV_PrecursorTolPPMmainSearch = yc$getYAML(param_name_EV_PrecursorTolPPMmainSearch, param_def_EV_PrecursorTolPPMmainSearch)
-    if (param_useMQPAR) {
-      v = getMQPARValue(txt_files$mqpar, "mainSearchTol") ## will also warn() if file is missing
-      if (!is.null(v)) {
-        param_EV_PrecursorTolPPMmainSearch = yc$setYAML(param_name_EV_PrecursorTolPPMmainSearch, as.numeric(v))
-      }
-    }
-    if (is.na(param_EV_PrecursorTolPPMmainSearch))
-    {
-      warning("PTXQC: Cannot draw borders for calibrated mass error, since neither 'File$Evidence$MQpar_mainSearchTol_num' is set nor a mqpar.xml file is present!", immediate. = TRUE)
-    }
+    
 
     lst_qcMetrics[["qcMetric_EVD_PostCal"]]$setData(d_evd, df_idrate, param_EV_PrecursorTolPPM, param_EV_PrecursorOutOfCalSD, param_EV_PrecursorTolPPMmainSearch)
 
@@ -555,7 +587,6 @@ createReport = function(txt_folder, yaml_obj = list())
 ######  msms.txt ...
 ######
 
-enabled_msms = yc$getYAML("File$MsMs$enabled", TRUE) & file.exists(txt_files$msms)
 if (enabled_msms)
 {
   ### missed cleavages (again)
@@ -595,7 +626,6 @@ if (enabled_msms)
 ######  msmsScans.txt ...
 ######
 
-enabled_msmsscans = yc$getYAML("File$MsMsScans$enabled", TRUE) & file.exists(txt_files$msmsScan)
 if (enabled_msmsscans)
 {
   #d_msmsScan_h = mq$readMQ(txt_files$msmsScan, type="msms", filter = "", nrows=2)
@@ -612,15 +642,6 @@ if (enabled_msmsscans)
                                         "^dp.aa$",
                                         "^dp.modification$"),
                          check_invalid_lines = FALSE)
-  
-  param_name_MSMSScans_ionInjThresh = "File$MsMsScans$IonInjectionThresh_num"
-  param_def_MSMSScans_ionInjThresh = 10 ## default ion injection threshold in milliseconds
-  param_MSMSScans_ionInjThresh = yc$getYAML(param_name_MSMSScans_ionInjThresh, param_def_MSMSScans_ionInjThresh)
-  if (!is.numeric(param_MSMSScans_ionInjThresh))
-  { ## reset if value is weird
-    cat("YAML value for '" %+% param_name_MSMSScans_ionInjThresh %+% "' is invalid ('" %+% param_MSMSScans_ionInjThresh %+% "'). Using default of " %+% param_def_MSMSScans_ionInjThresh %+% ".")
-    param_MSMSScans_ionInjThresh = param_def_MSMSScans_ionInjThresh
-  }
   
   ##
   ## MQ version 1.0.13 has very rudimentary MSMSscans.txt, with no header, so we need to skip the metrics of this file
@@ -685,18 +706,7 @@ pl_nameMapping = mq$plotNameMapping()
 ##
 ## plot it!!!
 ##
-out_formats_supported = c("html", "plainPDF")
-
-param_name_PTXQC_OutputFormats = "PTXQC$OutputFormats"
-param_def_PTXQC_OutputFormats =  out_formats_supported
-param_OutputFormats = yc$getYAML(param_name_PTXQC_OutputFormats, param_def_PTXQC_OutputFormats)
-
-param_name_PTXQC_PageNumbers = "PTXQC$PlainPDF$AddPageNumbers"
-param_def_PTXQC_PageNumbers = "on"
-param_PageNumbers = yc$getYAML(param_name_PTXQC_PageNumbers, param_def_PTXQC_PageNumbers)
-
 cat("Creating Report file ...")
-
 
 #
 #param_OutputFormats = "html pdf"
@@ -771,9 +781,6 @@ if ("plainPDF" %in% out_format_requested)
 #cat("Dumping plot objects as Rdata file ...")
 #save(file = fh_out$R_plots_file, list = "GPL")
 #cat(" done\n")
-
-### write YAML config
-yc$writeYAML(fh_out$yaml_file)
 
 ## write shortnames and sorting of filenames
 mq$writeMappingFile(fh_out$filename_sorting)
