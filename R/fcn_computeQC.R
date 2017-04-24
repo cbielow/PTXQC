@@ -637,7 +637,7 @@ if (enabled_msmsscans)
                                         "^Identified", 
                                         "^Scan.event.number", 
                                         "^total.ion.current",
-                                        "^base.peak.intensity",
+                                        "^base.?peak.intensity", ## basepeak.intensity (MQ1.2) and base.peak.intensity (MQ1.3+)
                                         "^Raw.file",
                                         "^dp.aa$",
                                         "^dp.modification$"),
@@ -727,7 +727,7 @@ if ("html" %in% out_format_requested)
     fh_out$report_file_extension = c(fh_out$report_file_extension, ".html")
     
     if (DEBUG_PTXQC) {
-      html_template = "C:/projects/QC/package/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd"
+      html_template = "Z:/projects/QC/PTXQC/package/inst/reportTemplate/PTXQC_report_template.Rmd"
     } else {
       html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
     }

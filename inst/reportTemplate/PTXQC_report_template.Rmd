@@ -76,6 +76,8 @@ for (i in 1:length(pl_nameMapping)) {
   for (qcm in lst_qcMetrics_ord)
   {
     if (length(qcm$plots) == 0) next; # skip empty metrics
+    #debug: 
+    #cat(c("processing ", qcm$qcName))
     v_titles = qcm$getTitles(subtitle_sep = "\n<b>")
     plots = qcm$getPlots(withTitle = FALSE)
     if (length(v_titles) != length(plots)) {

@@ -114,7 +114,11 @@ qcMetric = setRefClass("qcMetric",
                     sum(mem_after[, 6]), " (",
                     round(sum(mem_after[, 6])-sum(mem_before[, 2]),0) ,")\n",
                     "\nDuration: ", round((proc.time() - t_before)[3]), " s\n\n"))
-
+         if (is.null(r)) {
+           warning(c("Worker of '", .self$qcName, "' returned prematurely! Skipping metric!"))
+           return(NULL);         
+         }
+         
          if (!("plots" %in% names(r))) stop(c("Worker of '", .self$qcName, "' did not return valid result format!"))
          if (!class(r[["plots"]]) == "list") stop(c("Worker of '", .self$qcName, "' did not return plots in list format!"))
          
