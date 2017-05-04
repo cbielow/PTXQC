@@ -11,10 +11,4 @@ bibentry(bibtype = "Article",
          year = "2016",
          doi = "10.1021/acs.jproteome.5b00780",
          url = "https://github.com/cbielow/PTXQC")
-		 
-		 
-		 Proteomics Quality Control: Quality Control Software for MaxQuant Results**
-Chris Bielow, Guido Mastrobuoni, and Stefan Kempa
-*J. Proteome Res.*
-Publication Date (Web): December 14, 2015
-DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
+
