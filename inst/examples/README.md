@@ -7,10 +7,10 @@ Please refer to the publication (currently under review; link is coming soon) fo
 
 ## Obtaining example data
 If you want to generate a report yourself, example input data can be found on the **PRIDE** repository under the
-following accession numbers: [PXD003133 (MBR)] [1], [PXD003134 (Myco)] [2], and [PXD000427 (TMT)] [3].
+following accession numbers: [PXD003133 (MBR)][1], [PXD003134 (Myco)][2], and [PXD000427 (TMT)][3].
 This data corresponds to the MaxQuant data used in the publication.
 
-The [PTXQC-Basic_Guide_for_R_users] [4] vignette has R code snippets to automatically download the data. If you are not an R person and have Windows as operating system, just download the zip files from the PRIDE link above, and run PTXQC via drag'n'drop (as described in the [PTXQC-DragNDrop] [5] vignette).
+The [PTXQC-Basic_Guide_for_R_users][4] vignette has R code snippets to automatically download the data. If you are not an R person and have Windows as operating system, just download the zip files from the PRIDE link above, and run PTXQC via drag'n'drop (as described in the [PTXQC-DragNDrop][5] vignette).
 
 ## Report Layout
 

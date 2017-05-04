@@ -9,6 +9,7 @@ PTXQC
 ### Latest changes / Change log
 
 **Latest: **
+  - v0.82.05 - May 2017: More robust installation of GitHub package
   - v0.82.04 - Apr 2017: Fix crash with MaxQuant 1.2 input (issue #33)
   - v0.82.03 - Apr 2017: Create full Yaml config upon first invocation
   - v0.82.01 - Nov 2016: New Dependent peptides metric (issue #28).
@@ -17,7 +18,7 @@ PTXQC
 See [NEWS][News_File] file for a version history.
 
 ### Platform support
-  - Windows (recommended for convenience to make use of the [drag'n'drop] [1] batch file provided)
+  - Windows (recommended for convenience to make use of the [drag'n'drop][1] batch file provided)
   - Linux
   - MacOSX
   
@@ -47,7 +48,7 @@ you can browse the vignettes using either of these commands within R:
     help(package="PTXQC")
     browseVignettes(package = 'PTXQC')
   
-If you do not want to wait that long, have a look at the ['vignettes' subfolder] [3].
+If you do not want to wait that long, have a look at the ['vignettes' subfolder][3].
 The top part contains a small table with technical gibberish, but the rest is identical to the
 vignettes you would see in R.
 
@@ -63,20 +64,20 @@ You will find documentation on
 
 We offer a Batch-file based Drag'n'drop mechanism to trigger PTXQC on any MaxQuant output folder.
 This only works for Windows (not Linux or MacOS) at the moment -- but you have a Windows anyway to run MaxQuant, right?!
-See [drag'n'drop] [1] for details. It takes 10 minutes and you are done!
+See [drag'n'drop][1] for details. It takes 10 minutes and you are done!
 
 **If you just want the package to use (and maybe even modify) it:**
 
 *First*, install [pandoc](https://github.com/jgm/pandoc/releases) (see bottom of linked page). Pandoc is required in order to locally build the package vignettes (documentation),
-but you can also read the [vignettes] [Ref_Vign] online from the PTXQC GitHub page. More importantly, Pandoc enables PTXQC to write QC reports in HTML format (which come
+but you can also read the [vignettes][Ref_Vign] online from the PTXQC GitHub page. More importantly, Pandoc enables PTXQC to write QC reports in HTML format (which come
 with a help text for each plot and are interactive). PDF reports only contain plots!
 The reports are printed as PDF by default and additionally as HTML if Pandoc is found.
 **If you install Pandoc later while your R session is already open, you need to close and re-open R in order to make R aware of Pandoc!**
    
 You can grab PTXQC from either [CRAN](https://CRAN.R-project.org/package=PTXQC) *or* [GitHub](https://github.com/cbielow/PTXQC#installation).
-GitHub installation will give you the latest package; the CRAN version might be a little older, but is faster to install. Check the [NEWS][News_File] for CRAN submissions and version.
+GitHub installation will give you the latest package; the CRAN version might be a little older, but is faster to install. Check the [NEWS][News_File] file for CRAN submissions and version.
 > For the code blocks below: Run **each line** separately in your R console, i.e. do not copy and paste the whole block.
-> If an error should occur, this allows to track it down more easily. See [FAQ - Installation] [Ref_VignFAQ]
+> If an error should occur, this allows to track it down more easily. See [FAQ - Installation][Ref_VignFAQ]
 > how to resolve them.
 
     ## CRAN
@@ -86,7 +87,9 @@ or
     ## GitHub
     if (!require(devtools, quietly = TRUE)) install.packages("devtools")
     library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
-    install_github("cbielow/PTXQC", build_vignettes = TRUE)    ## use build_vignettes = FALSE if you did not install pandoc!
+    
+	## use build_vignettes = FALSE if you did not install pandoc or if you encounter errors when building vignettes (e.g. PRIDE ftp unavailable)!
+	install_github("cbielow/PTXQC", build_vignettes = TRUE, dependencies = TRUE)
 
 To get started, see the help and/or vignettes:
 
@@ -101,12 +104,12 @@ An overview chart at the beginning of the report will give you a first impressio
 <img src="./inst/examples/example_heatmap.png?raw=true" width="500" /><br>
 Detailed plots can be found in the remainder of each report.
 
-For example input data and full reports, see the ['inst/examples' subfolder] [2].
+For example input data and full reports, see the ['inst/examples' subfolder][2].
 
 ### Bug reporting / Feature requests
 
 If you encounter a bug, e.g. error message, wrong figures, missing axis annotation or anything which looks
-suspicious, please use the [GitHub issue tracker] [issuetracker] and file a report.
+suspicious, please use the [GitHub issue tracker][issuetracker] and file a report.
 
 You should include
   - **stage** you encounter the bug, e.g. during installation, report creation, or after report creation (i.e. a bug in the report itself).
@@ -130,13 +133,12 @@ Chris Bielow, Guido Mastrobuoni, and Stefan Kempa
 Publication Date (Web): December 14, 2015
 DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
 
-Use [PTXQC v0.69.3] [JPR_PTXQC] if you want the version which was used in the paper, i.e.
-use `install_github("cbielow/PTXQC", ref="v0.69.3", build_vignettes = TRUE)` when following the [Installation](#installation) procedure.
+Use [PTXQC v0.69.3][JPR_PTXQC] if you want the version which was used in the paper, i.e.
+use `install_github(..., ref="v0.69.3")` when following the [Installation](#installation) procedure.
 
-The input data is available in the ['inst/examples' subfolder] [2].
+The input data is available in the ['inst/examples' subfolder][2].
 
 We recommend to use the most recent PTXQC for the best user experience.
-
   
   [1]: https://github.com/cbielow/PTXQC/tree/master/inst/dragNdrop
   [2]: https://github.com/cbielow/PTXQC/tree/master/inst/examples

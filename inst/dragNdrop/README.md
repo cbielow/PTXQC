@@ -3,11 +3,11 @@ and provide an automated drag'n'drop solution to their MaxQuant users (incl. the
 Please contact an admin or proficient R user, if you are new to installing R packages.
 
 **Note:** the drag'n'drop currently only works for Windows, not MacOSX or Linux. 
-          For the latter, please refer to the [vignettes] [Ref_Vign] of this package (after installation), which explain how to invoke PTXQC from within R.
+          For the latter, please refer to the [vignettes][Ref_Vign] of this package (after installation), which explain how to invoke PTXQC from within R.
 
 We recommend using a shared network drive as installation folder to which all users have read access. Alternatively you can copy the folder structure we are about to create to a folder on your local machine. However, if you want to use the QC reporting from multiple PC's just use a network folder.
 
-When you are done, provide the users with the [PTXQC-DragNDrop] [Ref_VignDrag] vignette (or write your own).
+When you are done, provide the users with the [PTXQC-DragNDrop][Ref_VignDrag] vignette (or write your own).
 This will show them how to invoke the QC (it's very easy - see 'Usage' below).
 
 ### Installation
@@ -21,7 +21,7 @@ this is out of scope of this manual).
  - create a clean R installation by downloading R from [http://www.r-project.org] and installing it. We highly recommend the 64bit version to avoid out-of-memory errors.
    If you already have R installed, you may skip this step.
  - install [pandoc](https://github.com/jgm/pandoc/releases) (see bottom of linked page). Pandoc is required in order to locally build the package vignettes (documentation),
-but you can also read the [vignettes] [Ref_Vign] online from the PTXQC GitHub page. More importantly, Pandoc enables PTXQC to write QC reports in HTML format (which come
+but you can also read the [vignettes][Ref_Vign] online from the PTXQC GitHub page. More importantly, Pandoc enables PTXQC to write QC reports in HTML format (which come
 with a help text for each plot and are interactive). PDF reports only contain plots!
 The reports are printed as PDF by default and additionally as HTML if Pandoc is found.
    **If you install Pandoc later while your R session is already open, you need to close and re-open R in order to make R aware of Pandoc!**
@@ -29,9 +29,9 @@ The reports are printed as PDF by default and additionally as HTML if Pandoc is 
    Start the R GUI (64bit!) and execute the following commands to install the `PTXQC` package (dependencies are installed automatically).
    
 You can grab PTXQC from either [CRAN](https://cran.r-project.org/web/packages/PTXQC/index.html) *or* [GitHub](https://github.com/cbielow/PTXQC#installation).
-GitHub installation will give you the latest package; the CRAN version might be a little older, but is faster to install. Check the [NEWS][News_File] for CRAN submissions and version.
+GitHub installation will give you the latest package; the CRAN version might be a little older, but is faster to install. Check the [NEWS][News_File] file for CRAN submissions and version.
 > For the code blocks below: Run **each line** separately in your R console, i.e. do not copy and paste the whole block.
-> If an error should occur, this allows to track it down more easily. See [FAQ - Installation] [Ref_VignFAQ]
+> If an error should occur, this allows to track it down more easily. See [FAQ - Installation][Ref_VignFAQ]
 > how to resolve them.
 
     ## CRAN
@@ -41,7 +41,9 @@ or
     ## GitHub
     if (!require(devtools, quietly = TRUE)) install.packages("devtools")
     library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
-    install_github("cbielow/PTXQC", build_vignettes = TRUE)    ## use build_vignettes = FALSE if you did not install pandoc!
+    
+	## use build_vignettes = FALSE if you did not install pandoc or if you encounter errors when building vignettes (e.g. PRIDE ftp unavailable)!
+	install_github("cbielow/PTXQC", build_vignettes = TRUE, dependencies = TRUE)
 
 Finally, always run:
 
@@ -94,7 +96,7 @@ R will only give you warnings like `Warning: cannot remove prior installation of
  
 ### Usage (short version)
 
-  For the long version, see the [PTXQC-DragNDrop] [Ref_VignDrag] vignette of this package.
+  For the long version, see the [PTXQC-DragNDrop][Ref_VignDrag] vignette of this package.
   
   You can create a QC report by dragging a **txt-folder** (or any file within the txt-folder)
   onto the `createQC_dragNdrop.bat` file which resides on your (network) drive.

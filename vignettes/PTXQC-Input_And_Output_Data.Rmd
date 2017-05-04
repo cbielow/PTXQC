@@ -29,7 +29,7 @@ When a full report is generated, PTXQC requires the following **input files**:
 These files can be found in the `<baseDir>/combined/txt` folder after MaxQuant analysis successfully finished.
 Here, `<baseDir>` is your main MaxQuant project folder containing your Raw files.
 
-If you are not interested in the full report, PTXQC can be configured to look only at some of these files by editing the YAML file. See the [PTX-CustomizeReport] [Ref_VignCust] vignette
+If you are not interested in the full report, PTXQC can be configured to look only at some of these files by editing the YAML file. See the [PTX-CustomizeReport][Ref_VignCust] vignette
 ```{r, eval=FALSE}
 vignette("PTXQC-CustomizeReport", package = "PTXQC")
 ```
@@ -49,7 +49,7 @@ Further output files (with the same prefix name as the Html/PDF report), include
   
 The YAML configuration file is created the first time you run PTXQC on a txt-folder. Customize it as you see fit.
 
-Read more about `report_vXXX_filename_sort.txt` and `report_vXXX.yaml` in the [PTX-CustomizeReport] [Ref_VignCust] vignette.
+Read more about `report_vXXX_filename_sort.txt` and `report_vXXX.yaml` in the [PTX-CustomizeReport][Ref_VignCust] vignette.
   
 
   [MaxQuant]: http://www.maxquant.org

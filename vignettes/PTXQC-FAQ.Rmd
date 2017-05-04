@@ -22,10 +22,12 @@ _______
 **Answer:** When R builds the vignettes for PTXQC, it needs to download a test dataset from a public PRIDE repository. On rare occasions, the server
 might not be reachable. Either wait a little until it comes back up and try again, OR simply skip building the vignettes using
 
-```install_github("cbielow/PTXQC", build_vignettes = FALSE)```
+```install_github("cbielow/PTXQC", build_vignettes = FALSE, dependencies = TRUE)```
 
 This omits the part where the error occurs. Downside: no offline
 vignettes for PTXQC -- but you can always look them up on GitHub.
+
+Alternatively, use CRAN: `install.packages("PTXQC")`.
 
 ### Q: During installation an error pops up: '... cannot open the connection...'. ###
 
@@ -46,18 +48,18 @@ vignettes for PTXQC -- but you can always look them up on GitHub.
    
    Try another CRAN mirror (type `chooseCRANmirror()`) and then re-run the failed command.
   
-   If you're still stuck, please open a [ticket] [issuetracker] (see 'Bug Reporting' on the main PTXQC homepage for the details you should provide).
+   If you're still stuck, please open a [ticket][issuetracker] (see 'Bug Reporting' on the main PTXQC homepage for the details you should provide).
 
 ### Q: During vignette building, I see an error related to Pandoc and 'It seems you should call rmarkdown::render() instead of knitr::knit2html()'.   
 
 **Answer:** The full error message could look like:
 ```ERROR Warning in engine$weave(file, quiet = quiet, encoding = enc) : Pandoc (>= 1.12.3) and/or pandoc-citeproc is not available. Please install both. Warning in readLines(con) : incomplete final line found on 'PTXQC-Basic_Guide_for_R_users.Rmd' Error: processing vignette 'PTXQC-Basic_Guide_for_R_users.Rmd' failed with diagnostics: It seems you should call rmarkdown::render() instead of knitr::knit2html() because PTXQC-Basic_Guide_for_R_users.Rmd appears to be an R Markdown v2 document. Execution halted Error: Command failed (1)```
 
-Knitr (which is the engine which builds the vignettes), relies on Pandoc. If you called `install_github("cbielow/PTXQC", build_vignettes = TRUE)` then Pandoc is required!
+Knitr (which is the engine which builds the vignettes), relies on Pandoc. If you called `install_github(..., build_vignettes = TRUE)` then Pandoc is required!
 See the installation instructions on where to get it. Make sure to restart R once you have installed Pandoc!
 Pandoc is also required to build the report in Html format -- which the default. PDF works just fine without Pandoc.
 
-If you really don't have or want Pandoc, you can skip vignettes and install PTXQC using `install_github("cbielow/PTXQC", build_vignettes = FALSE)` and
+If you really don't have or want Pandoc, you can skip vignettes and install PTXQC using `install_github(..., build_vignettes = FALSE)` and
 configure your YAML parameter file to omit Html reports and just get plain PDF (not recommended though).
 _______
 
