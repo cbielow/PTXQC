@@ -53,9 +53,13 @@ identically named across MQ versions:
  protein.descriptions      fasta.headers
  potential.contaminant     contaminant
  mass.deviations           mass.deviations..da.
+ basepeak.intensity        base.peak.intensity
 }
 }
 \details{
+Note: you must find a regex which matches both versions, or explicitly add both terms if you are requesting only a subset
+      of columns!
+
 Example of usage:
 \preformatted{
   mq = MQDataReader$new()
