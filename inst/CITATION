@@ -1,9 +1,20 @@
 citHeader("To cite package 'PTXQC' in publications use:")
 
-bibentry(bibtype = "Manual",
-         title = "{ptxqc}: A convenient quality control package for MaxQuant",
+bibentry(bibtype = "Article",
+         journal = "Journal of Proteome Research",
+         title = "Proteomics Quality Control: Quality Control Software for MaxQuant Results",
          author = c(person("Chris", "Bielow"),
-                    person("...", "...")),
-         year = "2014",
-         note = "",
+                    person("Guido", "Mastrobuoni"),
+					person("Stefan", "Kempa")),
+		 volume = "15 (3)",			
+		 pages = "77–787",
+         year = "2016",
+         doi = "10.1021/acs.jproteome.5b00780",
          url = "https://github.com/cbielow/PTXQC")
+		 
+		 
+		 Proteomics Quality Control: Quality Control Software for MaxQuant Results**
+Chris Bielow, Guido Mastrobuoni, and Stefan Kempa
+*J. Proteome Res.*
+Publication Date (Web): December 14, 2015
+DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]

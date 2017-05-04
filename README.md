@@ -129,8 +129,7 @@ PTXQC is published at JPR:
 
 **Proteomics Quality Control: Quality Control Software for MaxQuant Results**
 Chris Bielow, Guido Mastrobuoni, and Stefan Kempa
-*J. Proteome Res.*
-Publication Date (Web): December 14, 2015
+*J. Proteome Res.*, 2016, 15 (3), pp 777–787.
 DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
 
 Use [PTXQC v0.69.3][JPR_PTXQC] if you want the version which was used in the paper, i.e.

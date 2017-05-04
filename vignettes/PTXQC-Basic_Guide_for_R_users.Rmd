@@ -42,7 +42,12 @@ require(methods)
 if (1) {
   ## we will use an example dataset from PRIDE (dataset 2 of the PTXQC publication)
   local_zip = tempfile(fileext=".zip")
-  download.file("ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2015/11/PXD003133/txt_20min.zip", destfile = local_zip)
+  tryCatch({
+	download.file("ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2015/11/PXD003133/txt_20min.zip", destfile = local_zip)
+  }, error = function(err) {
+    ## on Windows, one can get a 'cannot open URL' using the default method. So we try another
+	download.file("ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2015/11/PXD003133/txt_20min.zip", destfile = local_zip, method= "internal")
+  })
   unzip(local_zip, exdir = tempdir()) ## extracts content
   txt_folder = paste0(tempdir(),"/txt_20min")
 } else {
