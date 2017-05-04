@@ -7,7 +7,7 @@ bibentry(bibtype = "Article",
                     person("Guido", "Mastrobuoni"),
 					person("Stefan", "Kempa")),
 		 volume = "15 (3)",			
-		 pages = "77–787",
+		 pages = "77-787",
          year = "2016",
          doi = "10.1021/acs.jproteome.5b00780",
          url = "https://github.com/cbielow/PTXQC")
