@@ -9,7 +9,9 @@ according to its ID rate and categorized into performance bins as 'bad', 'ok' an
 Raw files below 'ok', are listed separately on the next page of the report for convenient follow-up.
 
 The thresholds for the bins are
-%s.
+
+%s
+
 
 Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the threshold for 'great' is reached or exceeded. ",
     workerFcn = function(.self, df_summary, id_rate_bad, id_rate_great)
@@ -49,7 +51,7 @@ Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the th
       }
       
       ## update help text according to actual limits
-      inText = paste(paste0(" - ", names(lab_IDd)), collapse="\n", sep="")
+      inText = paste(paste0("  - ", names(lab_IDd)), collapse="\n", sep="")
       
       .self$helpText = sprintf(.self$helpTextTemplate, inText, id_rate_great)
       

@@ -9,11 +9,9 @@ PTXQC
 ### Latest changes / Change log
 
 **Latest: **
+  - v0.82.06 - Jun 2017: Special contaminants fix (issue #34)
   - v0.82.05 - May 2017: More robust installation of GitHub package
   - v0.82.04 - Apr 2017: Fix crash with MaxQuant 1.2 input (issue #33)
-  - v0.82.03 - Apr 2017: Create full Yaml config upon first invocation
-  - v0.82.01 - Nov 2016: New Dependent peptides metric (issue #28).
-  - v0.80.14 - Oct 2016: Easier [Installation](#installation) of PTXQC via CRAN.
 
 See [NEWS][News_File] file for a version history.
 

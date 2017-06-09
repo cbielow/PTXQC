@@ -4,12 +4,12 @@
 \alias{addGGtitle}
 \title{Add title and subtitle to a ggplot}
 \usage{
-addGGtitle(main, sub = "")
+addGGtitle(main, sub = NULL)
 }
 \arguments{
 \item{main}{String for main title}
 
-\item{sub}{String for sub title}
+\item{sub}{Optional string for sub title}
 }
 \value{
 A ggplot object

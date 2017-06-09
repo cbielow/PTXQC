@@ -128,18 +128,18 @@ ggAxisLabels = function(x, n = 20)
 #'   ggplot(...) + geom_X(...) + addGGtitle(...)
 #'   
 #' @param main String for main title
-#' @param sub String for sub title
+#' @param sub Optional string for sub title
 #' @return A ggplot object
 #' 
 #' @import ggplot2
 #' 
 #' @export
 #' 
-addGGtitle = function(main, sub=""){
+addGGtitle = function(main, sub = NULL){
   #require(ggplot2)
-  if(sub==""){
+  if (is.null(sub) || sub=="") {
     pl = ggtitle(main)
-  }else{
+  } else {
     pl = ggtitle(eval(parse(text=paste("expression(atop(\"",main, "\",", " scriptstyle(\"", sub , "\")))", sep=""))))
   }
   return (pl)

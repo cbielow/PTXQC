@@ -4,7 +4,7 @@
 \alias{plot_ContUser}
 \title{Plot user-defined contaminants from evidence.txt}
 \usage{
-plot_ContUser(data, name_contaminant, extra_limit)
+plot_ContUser(data, name_contaminant, extra_limit, subtitle = NULL)
 }
 \arguments{
 \item{data}{A data.frame with columns 'fc.raw.file', 'variable', 'value'}
@@ -12,6 +12,8 @@ plot_ContUser(data, name_contaminant, extra_limit)
 \item{name_contaminant}{Name of the contaminant shown in title}
 
 \item{extra_limit}{Position where a h-line is plotted (for visual guidance)}
+
+\item{subtitle}{Optional subtitle for plot}
 }
 \value{
 GGplot object
@@ -30,7 +32,7 @@ sample peptides scores are NOT greater than contaminant peptide scores.
                                  rep("above.thresh", 3),
                                  rep("score_KS", 3)),
                    value = c(10, 20, 15, 9, 21, 14, 0, 1, 1, 0.3, 0.01, 0.04))
- plot_ContUser(data, "myco", 5)
+ plot_ContUser(data, "myco", 5, "subtitle")
 
 }
 

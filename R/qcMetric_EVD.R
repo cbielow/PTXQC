@@ -4,32 +4,46 @@ qcMetric_EVD_UserContaminant =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(  
     helpTextTemplate = 
-      "User defined contaminant search. Usually used for Mycoplasma detection, 
-but can be used for an arbitrary (set of) proteins.
+      "User defined contaminant plot based on peptide intensities and counts.
+Usually used for Mycoplasma detection, but can be used for an arbitrary (set of) proteins.
+
+All proteins (and their peptides) which contain the search string from the YAML file are considered contaminants. 
+The contaminant's search string is searched in the full FASTA header in proteinGroups.txt.
+If proteinGroups.txt is not available/found,
+only protein identifiers can be considered. The search realm used is given in the plot subtitle.
+You should choose the contaminant name to be distinctive.
+Only peptides belonging to a single protein group are considered when computing the fractions (contaminant vs. all),
+since peptides shared across multiple groups are potentially false positives.
 
 Two abundance measures are computed per Raw file:
-  - fraction of intensity (used for scoring)
-  - fraction of spectral counts (as comparison; both should be similar)
+
+   - fraction of contaminant intensity (used for scoring of the metric)
+   - fraction of contaminant spectral counts (as comparison; both should be similar)
 
 If the intensity fraction exceeds the threshold (indicated by the dashed horizontal line) a contamination is assumed. 
-Also, for each Raw file exceeding the threshold an additional plot giving cumulative Andromeda peptide 
+
+For each Raw file exceeding the threshold an additional plot giving cumulative Andromeda peptide 
 score distributions is shown.
 This allows to decide if the contamination is true. Contaminant scores
 should be equally high (or higher), i.e. to the right, compared to the sample scores.
 Each graph's subtitle is augmented with a p-value of the Kologorov-Smirnoff test of this data
 (Andromeda scores of contaminant peptides vs. sample peptides).
 If the p-value is high, there is no score difference between the two peptide populations.
-In particular, the contaminant peptides are not bad scoring, random hits.
+In particular, the contaminant peptides are not bad-scoring, random hits.
 These p-values are also shown in the first figure for each Raw file. Note that the p-value is purely based
-on Andromeda scores and has nothing to do with intensity or spectral counts.
+on Andromeda scores and is independent of intensity or spectral counts.
     
 
 Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the intensity threshold was exceeded; otherwise 100% (pass).
 ",
     workerFcn = function(.self, df_evd, df_pg, lst_contaminants)
     {
+      #df_evd = d_evd
+      #df_pg = d_pg
+      #lst_contaminants = yaml_contaminants
       ## completeness check
-      stopifnot(c("id", "fasta.headers") %in% colnames(df_pg))
+      ## PG is either missing, or has the correct data
+      if (!is.null(df_pg)) stopifnot(c("id", "fasta.headers") %in% colnames(df_pg))
       ## "score" might not be present (e.g. missing in MQ 1.0.13.13)
       stopifnot(c("protein.group.ids", "type", "intensity", "fc.raw.file") %in% colnames(df_evd))
 
@@ -51,12 +65,23 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
         
         not_found = TRUE
         
-        pg_id = df_pg$id[grep(ca, df_pg$fasta.headers, ignore.case = TRUE)]
+        if (is.null(df_pg)) {
+          ## only search in protein IDs
+          pg_id = df_evd$protein.group.ids[grep(ca, df_evd$proteins)] 
+          ## this could be multiple PGs ("PG1; PG2") per cell, but we require unique peptides below, so its not a problem
+          search_realm = "protein name only"
+        } else {
+          ## search in FASTA headers and protein IDs
+          pg_id = df_pg$id[c(grep(ca, df_pg$fasta.headers, ignore.case = TRUE),
+                             grep(ca, df_pg$protein.ids, ignore.case = TRUE))]
+          search_realm = "full FASTA header"
+        }
+        
         
         if (length(pg_id) > 0)
         {
-          
           ## we might or might not have found something... we plot it anyways, so the user can be sure that we searched for it
+          not_found = FALSE
           
           ## find peptides which only have one group (ignoring razor peptides where we cannot be sure)
           evd_uniqueGroup = !grepl(";", df_evd$protein.group.ids)
@@ -100,7 +125,8 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
           cont_data = ldply(cont_data.l, function(l) { l$cont_data })
           cont_data.long = melt(cont_data, id.vars="fc.raw.file")
           
-          not_found = all(cont_data.long$value[cont_data.long$variable == "above.thresh"] == FALSE)
+          # 
+          # old: not_found = all(cont_data.long$value[cont_data.long$variable == "above.thresh"] == FALSE)
         }
         
         if (not_found)
@@ -112,7 +138,8 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
         } else {
           ## plot User-Contaminants
           lpl_i = byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, 
-                          FUN = plot_ContUser, sort_indices = TRUE, name_contaminant = ca, extra_limit = ca_thresh)
+                          FUN = plot_ContUser, sort_indices = TRUE, 
+                          name_contaminant = ca, extra_limit = ca_thresh, subtitle = paste("search realm:", search_realm))
           lpl = append(lpl, lpl_i)
           
           ## plot Andromeda score distribution of contaminant vs. sample

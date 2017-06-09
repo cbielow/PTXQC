@@ -47,6 +47,7 @@ plot_ContsPG = function(data)
 #' @param data A data.frame with columns 'fc.raw.file', 'variable', 'value'
 #' @param name_contaminant Name of the contaminant shown in title
 #' @param extra_limit Position where a h-line is plotted (for visual guidance)
+#' @param subtitle Optional subtitle for plot
 #' @return GGplot object
 #' 
 #' @import ggplot2
@@ -60,9 +61,9 @@ plot_ContsPG = function(data)
 #'                                  rep("above.thresh", 3),
 #'                                  rep("score_KS", 3)),
 #'                    value = c(10, 20, 15, 9, 21, 14, 0, 1, 1, 0.3, 0.01, 0.04))
-#'  plot_ContUser(data, "myco", 5)
+#'  plot_ContUser(data, "myco", 5, "subtitle")
 #' 
-plot_ContUser = function(data, name_contaminant, extra_limit) {
+plot_ContUser = function(data, name_contaminant, extra_limit, subtitle = NULL) {
   datav = subset(data, data$variable %in% c('spectralCount', "intensity"))
   datav$section = assignBlocks(datav$fc.raw.file, set_size = 40, sort_values = TRUE)
   dataAT = subset(data, data$variable %in% c('above.thresh'))
@@ -78,7 +79,7 @@ plot_ContUser = function(data, name_contaminant, extra_limit) {
   maxY = max(datav$value, extra_limit)
   p = ggplot(datav, aes_string(x = "fc.raw.file", y = "value")) +
         geom_bar(stat="identity", aes_string(fill = "variable"), position = "dodge", width=.7) +
-        ggtitle(paste0("EVD: Contaminant '", name_contaminant, "'")) +
+        addGGtitle(paste0("EVD: Contaminant '", name_contaminant, "'"), subtitle) +
         xlab("")  +
         ylab("abundance fraction (%)") +
         ylim(c(0, maxY * 1.1)) +

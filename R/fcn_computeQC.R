@@ -431,13 +431,11 @@ createReport = function(txt_folder, yaml_obj = list())
     ### warn of special contaminants!
     if (class(yaml_contaminants) == "list")  ## SC are requested
     {
-      if (!enabled_proteingroups)
+      if (exists("d_pg"))
       {
-        ## fail hard; we could hack around this (e.g. by loading fasta headers from evidence.txt), but it wastes a lot of memory and time
-        warning(paste0("Warning: reporting of special contaminants requires loading of proteinGroups.txt.",
-                       "If you don't have this file and want to get rid of this warning, please disable contaminant lookup in the YAML file ('SpecialContaminants: no')."))
-      } else {
         lst_qcMetrics[["qcMetric_EVD_UserContaminant"]]$setData(d_evd, d_pg, yaml_contaminants)
+      } else {
+        lst_qcMetrics[["qcMetric_EVD_UserContaminant"]]$setData(d_evd, NULL, yaml_contaminants)
       }
     }
     
@@ -452,7 +450,7 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     ## contains NA if 'genuine' ID
     d_evd$hasMTD = !is.na(d_evd$match.time.difference)
-    ## report Match-between-runs data only if if it was enabled
+    ## report Match-between-runs data only if it was enabled
     reportMTD = any(d_evd$hasMTD)
 
     lst_qcMetrics[["qcMetric_EVD_ProteinCount"]]$setData(d_evd, param_EV_protThresh)
@@ -570,16 +568,13 @@ createReport = function(txt_folder, yaml_obj = list())
     ##
     lst_qcMetrics[["qcMetric_EVD_MS2OverSampling"]]$setData(d_evd)
 
-    ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
-    if (!exists("DEBUG_PTXQC")) d_evd = d_evd[, c("id", "contaminant")]
-    
-    
-    
     ##
     ## missing values
     ##
     lst_qcMetrics[["qcMetric_EVD_MissingValues"]]$setData(d_evd)
-    
+
+    ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
+    if (!DEBUG_PTXQC) d_evd = d_evd[, c("id", "contaminant")]
 }
 
 
@@ -617,7 +612,7 @@ if (enabled_msms)
 
   ## save RAM: msms.txt is not required any longer
   rm(d_msms)
-  rm(d_evd)
+  if (!DEBUG_PTXQC) rm(d_evd)
 }
 
 
