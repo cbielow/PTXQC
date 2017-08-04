@@ -760,12 +760,15 @@ if ("plainPDF" %in% out_format_requested)
   }
   pdf(report_file_PDF)
   printWithPage(hm[["plot"]], "p. 1")      # summary heatmap
-  printWithPage(pl_nameMapping, "p. 2")    # short file mapping
+  printWithPage(pl_nameMapping$plots, "p. 2")    # short file mapping
   pc = 3; ## subsequent pages start at #4
   for (qcm in lst_qcMetrics_ord)
   {
-    printWithPage(qcm$plots, paste("p.", pc))
-    pc = pc + 1
+    for (p in qcm$plots)
+    {
+      printWithPage(p, paste("p.", pc))
+      pc = pc + 1
+    }
   }
   dev.off();
   cat(" done\n")

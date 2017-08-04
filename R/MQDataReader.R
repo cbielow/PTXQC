@@ -419,7 +419,7 @@ MQDataReader$getShortNames = function(., raw.files, max_len, fallbackStartNr = 1
 #' The data frame can be accessed directly via \code{.$raw_file_mapping}.
 #' If no mapping exists, the function prints a warning to console and returns NULL (which is safe to use in print(NULL)).
 #'
-#' @return Returns a list of mapping plots if mapping is available, 'NULL' otherwise.
+#' @return if mapping is available, returns a list of plots 'plots' and a Html table string 'htmlTable' ; 'NULL' otherwise.
 #'
 #' @import ggplot2
 #'
@@ -432,15 +432,21 @@ MQDataReader$plotNameMapping <- function(.)
     table_header = c("original", "short\nname")
     xpos = c(9, 11)
     extra = ""
+    has_best_effort = FALSE
     if ("best.effort" %in% colnames(.$raw_file_mapping))
     {
-      extra = "\n(automatic shortening of names was not sufficiently short - see 'best effort')"
+      has_best_effort = TRUE
       table_header = c(table_header, "best\neffort")
       xpos = c(9, 11, 13)
+      if (all(.$raw_file_mapping$to != .$raw_file_mapping$best.effort)) {
+        extra = "\n(automatic shortening of names was not sufficient - see 'best effort')"
+      }
+      
     }
     
     #mq_mapping = mq$raw_file_mapping
     mq_mapping = .$raw_file_mapping
+    pl_title = "Mapping of Raw files to their short names\nMapping source: " %+% .$mapping.creation %+% extra;
     
     mappingChunk = function(mq_mapping)
     {
@@ -471,11 +477,11 @@ MQDataReader$plotNameMapping <- function(.)
         theme(plot.margin = grid::unit(c(1,1,1,1), "cm"), line = element_blank(), 
               axis.title = element_blank(), panel.border = element_blank(),
               axis.text = element_blank(), strip.text = element_blank(), legend.position = "none") +
-        ggtitle("Mapping of Raw files to their short names\nMapping source: " %+% .$mapping.creation %+% extra)
+        ggtitle(pl_title)
       return(mqmap_pl)
     }
     l_plots = byXflex(mq_mapping, 1:nrow(mq_mapping), 20, mappingChunk, sort_indices = FALSE);
-    return (l_plots)
+    return (list(plots = l_plots, htmlTable = getHTMLTable(.$raw_file_mapping, pl_title)))
   } else {
     cat("No mapping found. Omitting plot.")
     return (NULL);

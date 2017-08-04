@@ -711,6 +711,40 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
   return(g)
 }
 
+#'
+#' Create an HTML table with an extra header row
+#' 
+#' 
+#' @param data A data.frame which serves as table
+#' @param header A set of headlines, e.g. c("top line", "bottom line")
+#' @param font_size Html font size
+#' @return table as character string for cat()'ing into html
+#'
+#' @importFrom knitr kable
+#' @import kableExtra
+#' @export 
+#' 
+#' @examples
+#'   data = data.frame(raw.file = letters[1:4],
+#'                     id.rate = 3:6)
+#'   getHTMLTable(data, 
+#'                header = "some header line", 
+#'                font_size = 11)
+#' 
+getHTMLTable = function(data, header = NA, font_size = 12)
+{
+  tbl = kable(data, row.names = FALSE, format = "html") %>%
+           kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE, font_size = font_size)
+  
+  if (!any(is.na(header)))
+  {
+    header__ = header;
+    tbl = tbl %>% add_header_above(c(header__ = ncol(data)))
+    tbl = gsub("header__", paste(header__, sep = "", collapse = "<br>"), as.character(tbl))
+  } 
+
+  return(tbl)
+}
 
 #'
 #' Plot a table with row names and title

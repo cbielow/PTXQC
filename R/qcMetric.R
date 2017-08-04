@@ -55,6 +55,7 @@ qcMetric = setRefClass("qcMetric",
                  helpTextTemplate = "character", ## a template (with placeholders for update at runtime) or a static text
                  workerFcn = "function",  ## returns list(plots =, [qcScores=])
                  plots = "list",
+                 htmlTable = "character",
                  ## the following members are related to the heatmap only
                  qcScores = "data.frame", ## with columns "raw.file", "score"
                  qcCat = "character", ## one of "prep", "LC", "MS" or empty (e.g. for PG)
@@ -72,6 +73,7 @@ qcMetric = setRefClass("qcMetric",
            .self$helpText = helpTextTemplate;
            .self$workerFcn = workerFcn;
            .self$plots = list();  ## obtained from worker
+           .self$htmlTable = NA_character_;  ## obtained from worker
            .self$qcScores = data.frame();  ## obtained from worker
            .self$qcCat = qcCat;
            .self$qcName = qcName;
@@ -128,6 +130,7 @@ qcMetric = setRefClass("qcMetric",
          .self$plots = lpl;
          #.self$plots = r[["plots"]]
          
+         if ("htmlTable" %in% names(r)) .self$htmlTable = r[["htmlTable"]];
          if ("qcScores" %in% names(r)) .self$qcScores = r[["qcScores"]];
          
          cat("...", gsub("~", " ", .self$qcName), " done\n")

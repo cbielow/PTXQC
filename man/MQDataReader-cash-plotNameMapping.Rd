@@ -4,7 +4,7 @@
 \alias{MQDataReader$plotNameMapping}
 \title{Plots the current mapping of Raw file names to their shortened version.}
 \value{
-Returns a list of mapping plots if mapping is available, 'NULL' otherwise.
+if mapping is available, returns a list of plots 'plots' and a Html table string 'htmlTable' ; 'NULL' otherwise.
 }
 \description{
 Convenience function to plot the mapping (e.g. to a PDF device for reporting).

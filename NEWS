@@ -7,6 +7,9 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v0.90.0 -- 2017/08/03
+  - [FEATURE] Tables are shown as genuine HTML tables in Html-Output
+  
 [CRAN] v0.82.6 -- 2017/06/09
   - [FIX] Special Contaminants searched by name in protein ID as well (issue #34)
 

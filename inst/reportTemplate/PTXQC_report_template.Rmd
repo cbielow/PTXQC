@@ -64,8 +64,8 @@ hm[["plot"]]
 
 ## Name Mapping
 ```{r nameMapping, echo=FALSE, results="asis"}
-for (i in 1:length(pl_nameMapping)) {
-  print(pl_nameMapping[[i]])
+if(!any(is.na(pl_nameMapping))) {
+  cat(pl_nameMapping$htmlTable)
 }
 ```
 
@@ -96,6 +96,11 @@ for (i in 1:length(pl_nameMapping)) {
   <div class="helpSymbol">&darr; Show Help</div>
   <div class="helpText">', qcm$helpText, "</div>
 </div>"))
+      }
+      if (!is.na(qcm$htmlTable))
+      { ## if there is an HTML table, prefer it over the plots
+        cat(qcm$htmlTable)
+        break;
       }
       print(plots[[i]])
       cat("\n<br>\n")

@@ -59,9 +59,12 @@ track database completeness and database version information (if given in the fi
       d_par2 = cbind(d_par[d_par$page==0, parC], d_par[d_par$page==1, parC])
       
       plot_title = "PAR: parameters"
-      par_pl = plotTable(d_par2, title = plot_title, footer = fasta_files)
+      ## PDF: split table onto multiple pages if necessary...
+      par_pl = byXflex(d_par2, 1:nrow(d_par2), 25, plotTable, sort_indices = TRUE, title = plot_title, footer = fasta_files)
+      ## HTML: alternative table
+      tbl_f = getHTMLTable(d_par2, header = fasta_files, font_size = 12)
       
-      return(list(plots = list(par_pl)))
+      return(list(plots = par_pl, htmlTable = tbl_f))
     }, 
     qcCat = NA_character_, 
     qcName = "PAR:~MQ~Parameters", 
