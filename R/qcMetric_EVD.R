@@ -38,8 +38,6 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
 ",
     workerFcn = function(.self, df_evd, df_pg, lst_contaminants)
     {
-      #df_evd = d_evd
-      #df_pg = d_pg
       #lst_contaminants = yaml_contaminants
       ## completeness check
       ## PG is either missing, or has the correct data
@@ -148,13 +146,14 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
             if (l$cont_data$above.thresh == FALSE ||
                 is.null(l$cont_scoreECDF))
             {
-              return(NULL)
+              return(NULL) ## some entries might be skipped (not significant)
             } 
             p = plot_ContUserScore(l$cont_scoreECDF, l$cont_data$fc.raw.file, l$cont_data$score_KS)
             #print(p)
             return(p)
           })
-          lpl = append(lpl, pl_andr)
+          pl_andr_nonNull = compact(pl_andr) ## remove 'NULL' entries from plot list
+          lpl = append(lpl, pl_andr_nonNull)
           
           ## add heatmap column
           cname = sprintf(.self$qcName, ca)
