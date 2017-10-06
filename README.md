@@ -9,9 +9,9 @@ PTXQC
 ### Latest changes / Change log
 
 **Latest: **
+  - v0.90.00 - Oct 2017: fix issues #39 (barcharts), #40 (custom contaminant plot);
   - v0.90.00 - Aug 2017: Tables are shown in Html format
   - v0.82.06 - Jun 2017: Special contaminants fix (issue #34)
-  - v0.82.05 - May 2017: More robust installation of GitHub package
 
 See [NEWS][News_File] file for a version history.
 
