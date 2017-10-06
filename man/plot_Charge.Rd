@@ -2,21 +2,18 @@
 % Please edit documentation in R/fcn_plots.R
 \name{plot_Charge}
 \alias{plot_Charge}
-\title{Plot MaxQuant Match-between-runs id transfer performance.}
+\title{The plots shows the charge distribution per Raw file.
+The output of 'mosaicize()' can be used directly.}
 \usage{
 plot_Charge(d_charge)
 }
 \arguments{
-\item{data}{A data.frame with columns as described above}
+\item{d_charge}{A data.frame with columns as described above}
 }
 \value{
 GGplot object
 }
 \description{
-The plots shows the charge distribution per Raw file.
-The output of 'mosaicize()' can be used directly.
-}
-\details{
 The input is a data.frame with columns
   'Var1' - name of the Raw file
   'Var2' - charge (used as fill color)
@@ -27,7 +24,7 @@ where each row represents one peptide sequence.
 }
 \examples{
  data = data.frame(raw.file = c(rep('file A', 100), rep('file B', 40)),
-                     charge = c(rep(2, 60), rep(3, 30), rep(4, 10),
+                       data = c(rep(2, 60), rep(3, 30), rep(4, 10),
                                 rep(2, 30), rep(3, 7), rep(4, 3)))
  plot_Charge(mosaicize(data))
 
