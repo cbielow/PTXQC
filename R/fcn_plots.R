@@ -23,7 +23,7 @@ plot_ContsPG = function(data)
   p = ggplot(data=data, aes_string(x = "group", y = "cont_pc", alpha="logAbdClass")) +
         scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(data$logAbdClass))==1) + 1], 1.0), ## ordering of range is critical!
                              name = "Abundance\nclass") +
-        geom_bar(stat="identity") +
+        geom_col() +
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
         xlab("")  +
         ggtitle("PG: Contaminant per condition") +
@@ -78,7 +78,7 @@ plot_ContUser = function(data, name_contaminant, extra_limit, subtitle = NULL) {
   #cat(paste0("CA entry is ", extra_limit, "\n"))
   maxY = max(datav$value, extra_limit)
   p = ggplot(datav, aes_string(x = "fc.raw.file", y = "value")) +
-        geom_bar(stat="identity", aes_string(fill = "variable"), position = "dodge", width=.7) +
+        geom_col(aes_string(fill = "variable"), position = "dodge", width=.7) +
         addGGtitle(paste0("EVD: Contaminant '", name_contaminant, "'"), subtitle) +
         xlab("")  +
         ylab("abundance fraction (%)") +
@@ -195,8 +195,7 @@ plot_ContEVD = function(data, top5)
   p = ggplot(d_sum, aes_string(   x = "fc.raw.file",
                                   y = "s.intensity", 
                                fill = "Protein")) +
-        geom_bar(aes_string(alpha = "Log10Diff"), 
-                 stat = "identity") +
+        geom_col(aes_string(alpha = "Log10Diff")) +
         scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(d_sum$Log10Diff))==1) + 1], 1.0),
                              name = "Abundance\nclass") +
         xlab("")  +
@@ -299,7 +298,7 @@ plot_CountData = function(data, y_max, thresh_line, title)
   title_main = title[1]
   title_sub = ifelse(length(title) > 1,  title[2], "")
   p = ggplot(data, aes_string(x = "fc.raw.file", y = "counts", fill = "category")) +
-        geom_bar(stat = "identity", position = "stack") +
+        geom_col(position = position_stack(reverse = TRUE)) +
         xlab("") +
         ylab("count") +
         scale_x_discrete_reverse(data$fc.raw.file) +
@@ -453,7 +452,7 @@ plot_MBRIDtransfer = function(data)
     data.m$value = 0
   }
   p = ggplot(data.m) + 
-        geom_bar(aes_string(x="fc.raw.file", y="value", fill="variable"), stat="identity", position="stack") + 
+        geom_col(aes_string(x="fc.raw.file", y="value", fill="variable"), position = position_stack(reverse = TRUE)) + 
         scale_fill_manual("peak class", 
                           values = c("single"="green", "multi.inRT"="lightgreen", "multi.outRT"="red"),
                           labels=c("single", "group (in width)", "group (out width)")) +
@@ -539,14 +538,15 @@ plot_MBRgain = function(data, title_sub = "")
 #'                                 rep(2, 30), rep(3, 7), rep(4, 3)))
 #'  plot_Charge(mosaicize(data))
 #' 
-plot_Charge = function(data)
+plot_Charge = function(d_charge)
 {
-  p = ggplot(data, aes_string(x = "Var1_center", y = "Var2_height")) +
-        geom_bar(stat = "identity", aes_string(width = "Margin_var1", fill = "Var2"), color = "black")  +
-        geom_text(aes_string(label = "as.character(Var1)", x = "Var1_center", y = 1.05)) +
+  p = ggplot(d_charge, aes_string(x = "Var1_center", y = "Var2_height")) +
+        geom_col(aes_string(width = "Margin_var1", fill = "Var2"), color = "black", position = position_stack(reverse = TRUE))  +
+        geom_text(aes_string(label = "Var1", x = "Var1_center", y = 1.05)) +
         xlab("Raw file") +
         ylab("fraction [%]") +
-        guides(fill = guide_legend(title="charge"), color = FALSE) + # avoid black line in legend
+        guides(fill = guide_legend(title="charge"),
+                                   color = FALSE) + # avoid black line in legend
         scale_x_reverse() +
         coord_flip() +
         theme(axis.text.y = element_blank(), axis.ticks = element_blank()) +
@@ -983,14 +983,14 @@ plot_CalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit
 plot_MS2Oversampling = function(data)
 {
   stopifnot(length(unique(data$n)) <= 3) ## at most three -- to match color vector below
-  
+  #data = d_dups
   ## reorder factor, such that '10+' is last
   data$n = as.character(data$n)
   n_unique = sort(unique(data$n)) ## sort as character vector!
   data$n = factor(data$n, levels=n_unique[order(nchar(n_unique))], ordered = TRUE)
   
   p = ggplot(data) + 
-        geom_bar(stat="identity", position="stack", aes_string(x = "fc.raw.file", y = "fraction", fill="n")) +
+        geom_col(position = position_stack(reverse = TRUE), aes_string(x = "fc.raw.file", y = "fraction", fill="n")) +
         scale_fill_manual("MS/MS\ncounts", values =c("green", "blue", "red")) +
         scale_x_discrete_reverse(data$fc.raw.file) +
         xlab("") +
@@ -1066,8 +1066,9 @@ plot_MS2Decal = function(data)
 plot_MissedCleavages = function(data, title_sub = "")
 {
   st_bin.m = melt(data, id.vars = c("fc.raw.file"))
-  p = ggplot(data = st_bin.m, aes_string(x = "factor(fc.raw.file)", y = "value", fill = "variable")) + 
-        geom_bar(stat="identity") +
+  p =
+    ggplot(data = st_bin.m, aes_string(x = "factor(fc.raw.file)", y = "value", fill = "variable")) + 
+        geom_col(position=position_stack(reverse = TRUE)) +
         xlab("Raw file") +  
         ylab("missed cleavages [%]") + 
         theme(legend.title=element_blank()) +
@@ -1190,7 +1191,7 @@ plot_TopN = function(data)
 {
   
   p = ggplot(data, aes_string(x = "scan.event.number", y = "n")) +
-        geom_bar(stat="identity") +
+        geom_col() +
         xlab("highest scan event") +
         ylab("count") +
         facet_wrap(~ fc.raw.file, scales = "free_y") +
@@ -1222,7 +1223,7 @@ plot_ScanIDRate = function(data)
 {
   
   p = ggplot(data, aes_string(x = "scan.event.number", y = "ratio", alpha = "count")) +
-        geom_bar(stat="identity") +
+        geom_col() +
         xlab("scan event") +
         ylab("percent identified") +
         facet_wrap(~ fc.raw.file) +

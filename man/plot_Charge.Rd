@@ -4,7 +4,7 @@
 \alias{plot_Charge}
 \title{Plot MaxQuant Match-between-runs id transfer performance.}
 \usage{
-plot_Charge(data)
+plot_Charge(d_charge)
 }
 \arguments{
 \item{data}{A data.frame with columns as described above}
