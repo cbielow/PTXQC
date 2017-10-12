@@ -64,20 +64,17 @@ boxplotCompare = function(data,
   if (!("factor" %in% class(data$group))) data$group = factor(data$group)
   
   ## actual number of entries in each column (e.g. LFQ often has 0)
-  ncol.stat = ddply(data, colnames(data)[1], function(x){
+  ncol.stat = ddply(data, "group", function(x){
     notNA = sum(!is.infinite(x$value) & !is.na(x$value));
     data.frame(n = nrow(x), notNA = notNA, newname = paste0(x$group[1], " (n=", notNA, ")"))})
-
+  head(ncol.stat)
   ## rename (augment with '#n')
   data$group2 = ncol.stat$newname[match(data$group, ncol.stat$group)]
 
   ## check (ddply makes  ncol.stat$newname a factor with matching levels)
   stopifnot(class(data$group2) == "factor")
-  stopifnot(all(as.numeric(data$group) == as.numeric(data$group2)))
+  #stopifnot(all(as.numeric(data$group) == as.numeric(data$group2))) ## as.numeric() is meaningless on factors with different levels
   data$group = data$group2
-  #data$num = as.numeric(data$group)
-  #head(data)
-  
   
   ## remove -inf and NA's
   data = data[!is.infinite(data$value) & !is.na(data$value), ]
