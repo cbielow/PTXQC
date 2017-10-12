@@ -33,11 +33,11 @@ test_that("createReport", {
   
   r = createReport(txt_folder, yaml_obj)
   expect_equal(c("yaml_file", "heatmap_values_file", "R_plots_file", "filename_sorting", "stats_file",         
-                 "report_file_simple", "report_file_extended", "report_file", "report_file_extension"), names(r))
-  rep_file = paste0(r[["report_file"]], r[["report_file_extension"]])
+                 "log_file", "report_file_prefix", "report_file_PDF", "report_file_HTML"), names(r))
+  rep_files = c(r[["report_file_PDF"]], r[["report_file_HTML"]])
   
-  expect_equal(all(file.exists(rep_file)), TRUE)
-  expect_equal(all(file.info(rep_file)$size > 100*1024), TRUE) ## ~119kb PDF & HTML
+  expect_equal(all(file.exists(rep_files)), TRUE)
+  expect_equal(all(file.info(rep_files)$size > 100*1024), TRUE) ## ~119kb PDF & HTML
   
   expect_equal(file.exists(r[["heatmap_values_file"]]), TRUE)
   d_heatmap = read.delim(r[["heatmap_values_file"]])

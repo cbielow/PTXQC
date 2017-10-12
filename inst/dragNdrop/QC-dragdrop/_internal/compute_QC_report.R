@@ -7,7 +7,7 @@ library(yaml)
 library(methods)
 
 argv = commandArgs(TRUE)
-#argv = c('C:\\projects\\QC\\data\\txt_SILAC')
+#argv = c('Z:\\projects\\QC\\PTXQC\\data\\_txt_withMBR_withFractions_MQ15')
 cat("Command line args are:\n")
 cat(paste(argv, collapse="\n", sep=""))
 cat("\n")
@@ -33,16 +33,21 @@ if (length(argv)==2 && nchar(argv[2])>0)
   YAML_CONFIG = yaml.load_file(input = argv[2])
 } else {
   ## use a YAML config inside the target directory if present
-  fh_out = getReportFilenames(PATH_TO_TXT)
-  if (file.exists(fh_out$yaml_file))
+  rprt_fns = getReportFilenames(PATH_TO_TXT)
+  if (file.exists(rprt_fns$yaml_file))
   {
     cat("\nUsing YAML config already present in target directory ...\n")
-    YAML_CONFIG = yaml.load_file(input = fh_out$yaml_file)
+    YAML_CONFIG = yaml.load_file(input = rprt_fns$yaml_file)
   }
 }
+## use YAML_CONFIG to get output-filenames (which contains the log-file name)
+yc = YAMLClass$new(YAML_CONFIG)
+use_extended_reportname = yc$getYAML("PTXQC$ReportFilename$extended", TRUE)
+rprt_fns = getReportFilenames(PATH_TO_TXT, use_extended_reportname)
 
-r = try(createReport(PATH_TO_TXT, YAML_CONFIG))
-
+sink(rprt_fns$log_file, split = TRUE) ## log output to file
+output_files = try(createReport(PATH_TO_TXT, YAML_CONFIG, rprt_fns))
+sink() ## undo sink()
 
 
 

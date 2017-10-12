@@ -44,12 +44,12 @@ knitr::opts_chunk$set(echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig
   - navigate using the 'Table of Content' above or just scroll
   - collapse sections by just clicking their name
   - click on the "&darr; Show Help" symbol to see a description for each metric and its scoring
-  - edit the config `r paste0("file:///", gsub("\\\\", "/", fh_out$yaml_file))` to
+  - edit the config `r paste0("file:///", gsub("\\\\", "/", rprt_fns$yaml_file))` to
      - set the report format (HTML, plainPDF, or both)
      - disable metrics
      - customize the order of metrics
      - set individual target thresholds
-  - edit `r paste0("file:///", gsub("\\\\", "/", fh_out$filename_sorting))` to customize
+  - edit `r paste0("file:///", gsub("\\\\", "/", rprt_fns$filename_sorting))` to customize
      - the order of Raw files in plots and heatmap
      - abbreviations of Raw file names
   - edit the Html template `r paste0("file:///", gsub("\\\\", "/", html_template))` to

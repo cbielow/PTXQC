@@ -7,6 +7,11 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v0.92.0 -- 2017/10/12
+  - [FIX] fix an issue where PTXQC would fail when drawing boxPlots (usually for large experiments only)
+  - [FEATURE] - cleaner R interface to main report function (allowing to specify custom output files as arguments)
+              - a log file is generated when using drag'n'drop;
+
 [CRAN] v0.91.0 -- 2017/10/06
   - [DOC] Extended 'charge' plot html-documentation (linking to Bittremieux 2017, DOI: 10.1002/mas.21544).
   - [FIX] issue #39 (order of barchart items corrected after changes to ggplot package)

@@ -4,13 +4,21 @@
 \alias{getReportFilenames}
 \title{Assembles a list of output file names, which will be created during reporting.}
 \usage{
-getReportFilenames(txt_folder)
+getReportFilenames(txt_folder, report_name_has_folder = TRUE)
 }
 \arguments{
 \item{txt_folder}{Directory where the MaxQuant output resides}
+
+\item{report_name_has_folder}{Boolean: Should the report files (html, pdf) contain the name
+of the deepest(=last) subdirectory in 'txt_folder' which is not 'txt'?
+Useful for discerning different reports in a PDF viewer.
+E.g. when flag is FALSE: 'report_v0.91.0.html'; and 'report_v0.91.0_bloodStudy.html' when flag is TRUE (and the
+txt folder is '.../bloodStudy/txt/' or '...bloodStudy/', i.e. './txt/' will be skipped over)}
 }
 \value{
-List of output file names (just names :))
+List of output file names (just names, no file is created) 
+        with list entries: 
+        yaml_file, heatmap_values_file, R_plots_file, filename_sorting, stats_file, log_file, report_file_prefix, report_file_PDF, report_file_HTML
 }
 \description{
 Assembles a list of output file names, which will be created during reporting.

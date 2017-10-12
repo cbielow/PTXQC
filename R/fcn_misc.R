@@ -901,13 +901,20 @@ getAbundanceClass = function(x) {
 #' Assembles a list of output file names, which will be created during reporting.
 #' 
 #' @param txt_folder Directory where the MaxQuant output resides
-#' @return List of output file names (just names :))
+#' @param report_name_has_folder Boolean: Should the report files (html, pdf) contain the name
+#'        of the deepest(=last) subdirectory in 'txt_folder' which is not 'txt'?
+#'        Useful for discerning different reports in a PDF viewer.
+#'        E.g. when flag is FALSE: 'report_v0.91.0.html'; and 'report_v0.91.0_bloodStudy.html' when flag is TRUE (and the
+#'        txt folder is '.../bloodStudy/txt/' or '...bloodStudy/', i.e. './txt/' will be skipped over)
+#' @return List of output file names (just names, no file is created) 
+#'         with list entries: 
+#'         yaml_file, heatmap_values_file, R_plots_file, filename_sorting, stats_file, log_file, report_file_prefix, report_file_PDF, report_file_HTML
 #' 
 #' @import utils
 #' 
 #' @export
 #' 
-getReportFilenames = function(txt_folder)
+getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
 {
   ## package version: added to output filename
   pv = try(packageVersion("PTXQC"))
@@ -924,22 +931,28 @@ getReportFilenames = function(txt_folder)
     } else folders = folders[-1]
   }
   
-  yaml_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, ".yaml")
-  heatmap_values_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_heatmap.txt")
-  R_plots_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_plots.Rdata")
-  filename_sorting = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_filename_sort.txt")
-  stats_file = paste0(txt_folder, .Platform$file.sep, "report_", report_version, "_stats.txt")
-  report_file_simple   = paste0(txt_folder, .Platform$file.sep, "report_", report_version)
+  report_file_simple = paste0(txt_folder, .Platform$file.sep, "report_", report_version)
+  yaml_file = paste0(report_file_simple, ".yaml")
+  heatmap_values_file = paste0(report_file_simple, "_heatmap.txt")
+  R_plots_file = paste0(report_file_simple, "_plots.Rdata")
+  filename_sorting = paste0(report_file_simple, "_filename_sort.txt")
+  stats_file = paste0(report_file_simple, "_stats.txt")
+  log_file = paste0(report_file_simple, ".log")
+  
   report_file_extended = paste0(report_file_simple, extra_folderRef)
+  
+  report_file_prefix = ifelse(report_name_has_folder, report_file_extended, report_file_simple)
   
   fh = list(yaml_file = yaml_file,
             heatmap_values_file = heatmap_values_file, 
             R_plots_file = R_plots_file,
             filename_sorting = filename_sorting,
             stats_file = stats_file,
-            report_file_simple = report_file_simple,
-            report_file_extended = report_file_extended
-            )
+            log_file = log_file,
+            report_file_prefix = report_file_prefix,
+            report_file_PDF = paste0(report_file_prefix, ".pdf"),
+            report_file_HTML = paste0(report_file_prefix, ".html")
+           )
   return (fh)
 }
 
