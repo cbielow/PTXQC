@@ -730,9 +730,10 @@ if ("html" %in% out_format_requested)
     } else {
       html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
     }
-    html_template
+    cat(paste0("HTML TEMPLATE: ", html_template, "\n"))
     ## Rmarkdown: convert to Markdown, and then to HTML (or PDF) ...
-    render(html_template, output_file = rprt_fns$report_file_HTML)
+    ## Intermediates_dir is required, since Shiny server might not allow write-access to input file directory
+    render(html_template, output_file = rprt_fns$report_file_HTML, intermediates_dir = dirname(rprt_fns$report_file_HTML))
   } else {
     warning("The 'Pandoc' converter is not installed on your system but is required for HTML reports.\nPlease install Pandoc <http://pandoc.org/installing.html>. Restart your R-session afterwards.")
   }
