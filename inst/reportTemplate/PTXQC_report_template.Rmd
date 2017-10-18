@@ -64,7 +64,7 @@ hm[["plot"]]
 
 ## Name Mapping
 ```{r nameMapping, echo=FALSE, results="asis"}
-if(!any(is.na(pl_nameMapping))) {
+if(!is.null(pl_nameMapping) && (!any(is.na(pl_nameMapping)))) {
   cat(pl_nameMapping$htmlTable)
 }
 ```
