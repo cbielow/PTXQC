@@ -241,7 +241,7 @@ createReport = function(txt_folder, yaml_obj = list(), report_filenames = NULL)
   i = 1
   for (i in 1:nrow(df.meta))
   {
-    cat(paste("meta id: ", df.meta$.id[i], "\n"))
+    #cat(paste("meta id: ", df.meta$.id[i], "\n"))
     pname = paste0("order$", df.meta$.id[i])
     pval = df.meta$order[i]
     param = yc$getYAML(pname, pval)

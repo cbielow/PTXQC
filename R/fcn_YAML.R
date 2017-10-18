@@ -45,16 +45,16 @@ YAMLClass = setRefClass(
     getYAML = function(param_name, default)
     {
       "Query this YAML object for a certain parameter and return its value. If it does not exist it is created with a default value."
-      cat(paste("getYAML with:", param_name, " default:", default, "\n"))
+      cat(paste0("YAML: ", param_name, " def: ", paste(default, sep="", collapse=",")))
       pval = eval(parse(text=paste0(".self$yamlObj$", param_name))) 
       if (is.null(pval))
       { ## param not known yet --> add
         expr = paste0(".self$yamlObj$", param_name, " = ", quote(default))
         eval(parse(text=expr)) 
-        cat(paste(" .. return default:", default, "\n"))
+        cat("\n")
         return (default)
       } else {
-        cat(paste(" .. return val:", pval, "\n"))
+        cat(paste0(" || new val: ", paste(pval, sep="", collapse=","), "\n"))
         return (pval)
       }
     },
