@@ -12,5 +12,6 @@ Returns NULL.
 \description{
 The internal structure \code{raw_file_mapping} is written to the
 file specified.
+File is only created if mapping exists (in .$raw_file_mapping).
 }
 

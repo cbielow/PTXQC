@@ -496,6 +496,7 @@ MQDataReader$plotNameMapping <- function(.)
 #'
 #' The internal structure \code{raw_file_mapping} is written to the
 #' file specified.
+#' File is only created if mapping exists (in .$raw_file_mapping).
 #' 
 #' @param filename  Target filename to create.
 #' @return Returns NULL.
@@ -505,6 +506,8 @@ MQDataReader$plotNameMapping <- function(.)
 MQDataReader$writeMappingFile = function(., filename)
 {
   dfs = data.frame(orig.Name = .$raw_file_mapping$from, new.Name = .$raw_file_mapping$to)
+  if (nrow(dfs) == 0) return(NULL)
+  
   if ("best.effort" %in% colnames(.$raw_file_mapping)) {
     dfs$best.effort = .$raw_file_mapping[, "best.effort"]
   }
@@ -546,6 +549,7 @@ MQDataReader$readMappingFile = function(., filename)
 {
   if (file.exists(filename))
   {
+    message(paste0("Reading mapping file '", filename, "'\n"))
     dfs = read.delim(filename, comment.char="#", stringsAsFactors = FALSE)
     colnames(dfs) = gsub("_", ".", colnames(dfs)) ## legacy support for old "best_effort" column (now "best.effort")
     req_cols = c(from = "orig.Name", to = "new.Name")
