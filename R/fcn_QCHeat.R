@@ -51,6 +51,12 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
   ## final heat map of QC metrics
   df.QCM = Reduce(function(a,b) merge(a,b,all = TRUE), lst.QCM)
 
+  ## no metrics...  
+  if (is.null(df.QCM))
+  {
+    p = ggText("HeatMap unavailable", "No metrics were computed (not enough data)");
+    return(list(plot = p, table = NULL))
+  }
   ## create summary column
   lst_qcMetrics[["qcMetric_AverageQualOverall"]]$setData(df.QCM)
   ## ... add it
