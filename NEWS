@@ -7,6 +7,11 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+v0.92.1 -- 2017/10/18
+  - [FIX] issue #41 (partial data problem)
+  - [FIX] read/write report problem on Shiny.io
+
+
 [CRAN] v0.92.0 -- 2017/10/12
   - [FIX] fix an issue where PTXQC would fail when drawing boxPlots (usually for large experiments only)
   - [FEATURE] - cleaner R interface to main report function (allowing to specify custom output files as arguments)
