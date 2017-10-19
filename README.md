@@ -8,7 +8,6 @@ PTXQC
 
 ### Latest changes / Change log
 
-**Latest: **
   - v0.92.01 - Oct 2017: fix issue #41 (partial data error)
   - v0.92.00 - Oct 2017: cleaner R interface; log file for drag'n'drop; fix boxPlots issue (usually for large experiments only);
   - v0.91.00 - Oct 2017: fix issues #39 (barcharts); #40 (custom contaminant plot)
