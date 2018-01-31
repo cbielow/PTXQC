@@ -2,8 +2,8 @@
 % Please edit documentation in R/fcn_YAML.R
 \docType{class}
 \name{YAMLClass-class}
-\alias{YAMLClass}
 \alias{YAMLClass-class}
+\alias{YAMLClass}
 \title{Query a YAML object for a certain parameter.}
 \description{
 If the object has the param, then return it.
@@ -14,6 +14,7 @@ If the param is unknown, create it with the given default value and return the d
 \describe{
 \item{\code{yamlObj}}{A Yaml object as created by \code{\link[yaml]{yaml.load}}}
 }}
+
 \section{Methods}{
 
 \describe{
@@ -23,6 +24,7 @@ If the param is unknown, create it with the given default value and return the d
 
 \item{\code{writeYAML(filename)}}{Write YAML config (including some documentation) to a YAML file. Returns TRUE on success (always), unless writing the file generates an error.}
 }}
+
 \examples{
     yc = YAMLClass$new(list())
     val = yc$getYAML("cat$subCat", "someDefault")
@@ -32,4 +34,3 @@ If the param is unknown, create it with the given default value and return the d
     yc$getYAML("cat$subCat", "someDefault") ## still 'someValue' (since its set already)
 
 }
-

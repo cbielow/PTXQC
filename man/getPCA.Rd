@@ -25,4 +25,3 @@ Default: NA (no lines)}
 \description{
 Create a principal component analysis (PCA) plot for the first two dimensions.
 }
-

@@ -29,4 +29,3 @@ Note: We found early MaxQuant versions (e.g. 1.2.2.5) to have an empty 'modified
 The sequence which SHOULD be present is equal to the immediate upper row. This is what we use to guess the sequence.
 However, this relies on the data.frame not being subsetted before (we can sort using the 'id' column)!
 }
-

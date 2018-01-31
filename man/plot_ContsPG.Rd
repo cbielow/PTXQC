@@ -21,4 +21,3 @@ Plot contaminants from proteinGroups.txt
  plot_ContsPG(data)
 
 }
-

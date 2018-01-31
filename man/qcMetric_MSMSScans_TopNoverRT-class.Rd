@@ -2,8 +2,8 @@
 % Please edit documentation in R/qcMetric_MSMSScans.R
 \docType{class}
 \name{qcMetric_MSMSScans_TopNoverRT-class}
-\alias{qcMetric_MSMSScans_TopNoverRT}
 \alias{qcMetric_MSMSScans_TopNoverRT-class}
+\alias{qcMetric_MSMSScans_TopNoverRT}
 \title{Metric for msmsscans.txt, showing TopN over RT.}
 \description{
 Metric for msmsscans.txt, showing TopN over RT.

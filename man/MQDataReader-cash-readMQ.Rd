@@ -68,4 +68,3 @@ Example of usage:
 
 If the file is empty, this function stops with an error.
 }
-

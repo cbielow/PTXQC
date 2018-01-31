@@ -1,4 +1,6 @@
 
+#####################################################################
+
 qcMetric_EVD_UserContaminant =  setRefClass(
   "qcMetric_EVD_UserContaminant",
   contains = "qcMetric",
@@ -187,7 +189,7 @@ qcMetric_EVD_PeptideInt =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "Peptide intensity per Raw file from evidence.txt.
+      "Peptide precursor intensity per Raw file from evidence.txt.
 Low peptide intensity usually goes hand in hand with low MS/MS identifcation rates and unfavourable signal/noise ratios,
 which makes signal detection harder. Also instrument acquisition time increases for trapping instruments.
 
@@ -239,6 +241,111 @@ Heatmap score [EVD: Pep Intensity (>%1.1f)]:
   })
 )
 
+
+#####################################################################
+
+qcMetric_EVD_ReporterInt =  setRefClass(
+  "qcMetric_EVD_ReporterInt",
+  contains = "qcMetric",
+  methods = list(initialize=function() {  callSuper(
+    helpText = 
+      "ITRAQ/TMT reporter intensity boxplots of all PSMs for each channel and Raw file.
+The height of the bar correlates to the number of PSMs with non-zero abundance.
+
+There is a similar 'Experimental Group' based metric/plot based on proteins.txt.
+
+PTXQC uses isotope-corrected intensities (eliminating channel carry-over) to allow for detection of empty channels, e.g. due to mis-labeling.
+
+Note: global labelling efficiency can only be judged indirectly with this metric, since isobaric reporters where set as
+      fixed modification. Thus, only labeled peptides will be identified by MaxQuant. If there are almost no PSMs, all channels might
+      be insufficiently labeled.
+      However, if only the labeling of a few channels failed, this will be noticable!
+
+The median intensity is used as reference point (see heatmap score below) and is shown as black line.
+
+Heatmap score: maximum deviation (i.e. minimum score) of median intensity per Raw file AND channel. 
+I.e. for 4-plex ITRAQ and two Raw files, there will be 8 median intensities. The median of those will be the reference point.
+Each Raw file is now scored by its maximum deviation of all its channel medians from this reference point.
+Note the median for scoring is not log-scaled, but the plots are.
+",
+    workerFcn=function(.self, df_evd)
+    {
+      ## completeness check
+      stopifnot(c("fc.raw.file") %in% colnames(df_evd))
+      ## check if reporter.intensity.0... is present
+      cols_reporter = grepv("^reporter.intensity.corrected.[0-9]", colnames(df_evd));
+      stopifnot(length(cols_reporter) > 1)
+      
+      ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
+      df_reps = melt(df_evd[, c("fc.raw.file", cols_reporter)], 
+                     id.vars ="fc.raw.file", 
+                     value.name = "intensity",
+                     variable.name = "channel")
+      head(df_reps)
+      dt_reps = data.table(df_reps)
+      dt_reps_median = dt_reps[, list(medRawRep = median(intensity)), by=c("fc.raw.file", "channel")]
+      
+      ## compute score with respect to global median
+      dt_reps_median$score = qualMedianDist(scale01linear(dt_reps_median$medRawRep))
+      ## .. take min score over all channels
+      dt_reps_median_min = dt_reps_median[, list(score_min = min(score)), by=c("fc.raw.file")]
+      dt_reps_median_min
+      ref_median = median(dt_reps_median$medRawRep)
+      
+      ## remove -inf and NA's and 0's
+      dt_reps_no0 = subset(dt_reps, !is.infinite(intensity) & !is.na(intensity) & intensity > 0)
+      
+      ## rename 'reporter.intensity.corrected.0' to '0'
+      dt_reps_no0$channel = substring(dt_reps_no0$channel, nchar('reporter.intensity.corrected.') + 1)
+      ## invert the channel order (so that channel 0 is highest, i.e. appears on top in plot)
+      dt_reps_no0$channel = factor(dt_reps_no0$channel, levels = sort(unique(dt_reps_no0$channel), decreasing = TRUE))
+      head(dt_reps_no0)
+      
+      ## compute global boxplot stats (so we can fix min/max across plots)
+      ylims = dt_reps_no0[, { limits = boxplot.stats(intensity)$stats;
+                              list(imin = limits[1], lower = limits[2], middle = limits[3], upper = limits[4], imax = limits[5]) 
+                            },
+                            by=c("fc.raw.file", "channel")
+                          ]
+      ylims2 = range(ylims$imin, ylims$imax)
+      fcn_boxplot_internal = function(data, ref_median = ref_median) 
+      {
+        #require(ggplot2)
+        #data = ylims
+        pl = ggplot(data=data) +
+          geom_boxplot(aes_string(x = "fc.raw.file", fill = "channel", ## do not use col="channel", since this will dodge bars and loose scaling
+                                  ymin = "imin", lower = "lower", middle = "middle", upper = "upper", ymax = "imax"),
+                       position = "dodge", stat = "identity") +
+          xlab("") + 
+          ylab("reporter intensity (log10)") +
+          guides(fill = guide_legend(reverse = TRUE)) + ## inverse label order, so that channel 0 is on top
+          theme(axis.text.x = element_text(angle=45, vjust = 0.5), legend.position="right") +
+          addGGtitle("EVD: Reporter label intensities", "") + 
+          geom_hline(size = 1, alpha = 0.5, yintercept = ref_median, colour = "black") +
+          scale_x_discrete_reverse(unique(data$fc.raw.file)) +
+          scale_y_log10(limits = ylims2) +
+          coord_flip() 
+
+        #print(pl)
+        return(pl)
+      }
+      channel_count = length(unique(ylims$channel))
+      lpl = byXflex(data = ylims, indices = ylims$fc.raw.file, subset_size = round(40 / channel_count), sort_indices = TRUE, FUN = fcn_boxplot_internal, ref_median)
+
+      # heatmap scoring
+      qcScore = dt_reps_median_min
+      colnames(qcScore) = c("fc.raw.file", .self$qcName)
+      
+      
+      return(list(plots = lpl, qcScores = qcScore))
+    }, 
+    qcCat = "prep", 
+    qcName = "EVD:~Reporter~intensity", 
+    orderNr = 0031  ## should not show up in heatmap
+  )
+    return(.self)
+  })
+)
 
 
 #####################################################################

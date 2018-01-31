@@ -17,4 +17,3 @@ A flat list
 Flatten lists of lists with irregular depths to just a list of items,
 i.e. a list of the leaves (if you consider the input as a tree).
 }
-

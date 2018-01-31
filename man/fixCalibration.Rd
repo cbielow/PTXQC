@@ -25,4 +25,3 @@ Returns a list of items for both diagnostics and possibly a fixed evidence data.
 Also two strings with messages are returned, which can serve as user message for
 pre and post calibration status.
 }
-

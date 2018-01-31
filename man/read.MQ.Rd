@@ -29,4 +29,3 @@ see \code{\link{MQDataReader$readMQ}}
 \description{
 For params, see \code{\link{MQDataReader$readMQ}}.
 }
-

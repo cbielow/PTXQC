@@ -25,4 +25,3 @@ Distinct sub-clusters should have their own color.
 If not, MaxQuant's fraction settings should be optimized.
 Note that introducing fractions in MaxQuant will naturally lead to a clustering here (it's somewhat circular).
 }
-

@@ -25,4 +25,3 @@ Simply sum up the vector to get the number of maxima.
     all(r == c(TRUE,FALSE,FALSE,FALSE,TRUE,FALSE))
     
 }
-

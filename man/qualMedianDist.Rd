@@ -17,4 +17,3 @@ Ranges between 0 (worst score) and 1 (best score).
 Input must be between [0,1].
 Deviations from the median of the sample represent the score for each sample point.
 }
-

@@ -29,4 +29,3 @@ Example:
   my.ggAxisLabels = function(x) ggAxisLabels(x, n = 4)
   p + scale_y_discrete(breaks = my.ggAxisLabels)
 }
-

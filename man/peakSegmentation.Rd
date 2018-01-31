@@ -36,4 +36,3 @@ Required columns are 'match.time.difference', 'fc.raw.file', 'modified.sequence'
 Note that this function must be given MS/MS identifications of type "MULTI-MSMS" and "MSMS-MATCH".
 It will stop() otherwise.
 }
-

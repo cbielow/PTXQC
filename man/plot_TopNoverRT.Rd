@@ -25,4 +25,3 @@ Number of Raw files must be 6 at most. Function will stop otherwise.
   plot_TopNoverRT(data)
 
 }
-

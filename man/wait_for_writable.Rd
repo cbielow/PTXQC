@@ -25,4 +25,3 @@ is actually made by R to avoid having run the whole program again upon write fai
 \details{
 Note: The file will not be overwritten or changed by this function.
 }
-

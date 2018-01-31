@@ -23,4 +23,3 @@ ggplot object with new geom_point
 Usage: 
   ggplot(...) + geom_X(...) + pointsPutX(...)
 }
-

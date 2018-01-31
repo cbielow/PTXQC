@@ -27,4 +27,3 @@ will look up the line
 <firstSearchTol>20</firstSearchTol>
 and return "20" (string!).
 }
-

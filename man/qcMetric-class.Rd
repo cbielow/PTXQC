@@ -2,8 +2,8 @@
 % Please edit documentation in R/qcMetric.R
 \docType{class}
 \name{qcMetric-class}
-\alias{qcMetric}
 \alias{qcMetric-class}
+\alias{qcMetric}
 \title{Class which can compute plots (usually for a single metric).}
 \description{
 Reference class which is instanciated with a metric description and a
@@ -27,6 +27,8 @@ and can produce plots (at runtime, when data is provided) using setData().
 
 \item{\code{orderNr}}{[placeholder] column index during heatmap generation and for the general order of plots}
 }}
+
+
 \examples{
 
 require(ggplot2)
@@ -58,4 +60,3 @@ a$qcName
 
 
 }
-

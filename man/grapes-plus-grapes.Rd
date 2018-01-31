@@ -17,4 +17,3 @@ Concatenated string (no separator)
 \description{
 A string concatenation function, more readable than 'paste()'.
 }
-

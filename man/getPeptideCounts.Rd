@@ -21,4 +21,3 @@ If match-between-runs was enabled during the MaxQuant run,
 the data.frame returned will contain separate values for 'transferred' evidence
 plus an 'MBRgain' column, which will give the extra MBR evidence in percent.
 }
-

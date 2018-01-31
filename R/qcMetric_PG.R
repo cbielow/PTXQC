@@ -149,17 +149,21 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
 
 #####################################################################
 
-qcMetric_PG_ITRAQInt =  setRefClass(
-  "qcMetric_PG_ITRAQInt",
+qcMetric_PG_ReporterInt =  setRefClass(
+  "qcMetric_PG_ReporterInt",
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(
     helpText = 
-      "ITraQ/TMT reporter intensity boxplots by experimental groups. Groups are user-defined during MaxQuant configuration.
+      "ITRAQ/TMT reporter intensity boxplots by experimental groups. Groups are user-defined during MaxQuant configuration.
 This plot displays a (customizable) threshold line for the desired mean of reporter ion intensity of proteins.
 The height of the bar correlates to the number of proteins with non-zero abundance.
 
 Contaminants are shown as overlayed yellow boxes, whose height corresponds to the number of contaminant proteins.
 The position of the box gives the intensity distribution of the contaminants.
+Contaminants should be lower compared to label-free samples, since all contaminants introduced after the labeling 
+should not be identified by Andromeda (since they lack the isobaric tag).
+    
+There is a similar 'Raw file' based metric/plot based on evidence.txt.
 
 Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
 ",
@@ -187,7 +191,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       return(list(plots = lpl))
     }, 
     qcCat = "prep", 
-    qcName = "PG:~Itraq~intensity", 
+    qcName = "PG:~Reporter~intensity", 
     orderNr = 0034  ## should not show up in heatmap
   )
     return(.self)

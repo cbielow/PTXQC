@@ -7,6 +7,10 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v0.92.2 -- 2018/01/29
+  - [FEATURE] added plots and metrics of reporter intensity (iTRAQ, TMT, ...) for labeled MSn experiments 
+
+
 v0.92.1 -- 2017/10/18
   - [FIX] issue #41 (partial data problem)
   - [FIX] read/write report problem on Shiny.io

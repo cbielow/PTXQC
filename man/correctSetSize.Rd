@@ -41,4 +41,3 @@ or 8 items & initial_set_size=5, would result in 2 bins (5+3 items), since the l
  )
  
 }
-

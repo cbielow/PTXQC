@@ -19,4 +19,3 @@ Using the result from 'alignmentCheck()', score the features of every Raw file a
 have been properly aligned.
 Returned value is between 0 (bad) and 1 (all aligned).
 }
-

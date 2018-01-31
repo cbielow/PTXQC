@@ -8,4 +8,3 @@ This class is used to read MQ data tables using readMQ() while holding
 the internal raw file --> short raw file name mapping (stored in a member called 
 'raw_file_mapping') and updating/using it every time readMQ() is called.
 }
-

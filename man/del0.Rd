@@ -15,4 +15,3 @@ Vector of same size as 'x', with 0's replaced by NA
 \description{
 Replace 0 with NA in a vector
 }
-

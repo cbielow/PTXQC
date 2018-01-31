@@ -20,4 +20,3 @@ paste with newline as separator
   ## --> "newline\\nseparated"
   
 }
-

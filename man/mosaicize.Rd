@@ -32,4 +32,3 @@ Returns a data frame, which can be used for plotting and has the following colum
   mosaicize(data)                             
   
 }
-

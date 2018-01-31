@@ -18,4 +18,3 @@ A data.frame which details the distribution of singlets and pairs (inRT and outR
 qMBRSeg_Dist_inGroup might be empty if there are only singlets (transferred and genuine), but then the scores will be pretty
 boring as well (100%).
 }
-

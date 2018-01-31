@@ -23,4 +23,3 @@ Can be used for uncalibrated mass errors, as a measure of how well they are cent
 \details{
 NA's are removed for all computations.
 }
-

@@ -20,7 +20,7 @@
 #' @param boxes_per_page  Maximum number of boxplots per plot. Yields multiple plots if more groups are given.
 #' @param abline          Draw a horizontal green line at the specified y-position (e.g. to indicate target median values)
 #' @param coord_flip      Exchange Y and X-axis for better readability
-#' @param names           An optional data.frame(long=.., short=..), giving a renaming scheme for the 'group' column
+#' @param names           An optional data.frame(long=.., short=..), giving a renaming scheme (long->short) for the 'name' column
 #' @return List of ggplot objects
 #' 
 #' @import ggplot2

@@ -25,7 +25,7 @@ boxplotCompare(data, log2 = TRUE, ylab = "intensity", mainlab = ylab,
 
 \item{coord_flip}{Exchange Y and X-axis for better readability}
 
-\item{names}{An optional data.frame(long=.., short=..), giving a renaming scheme for the 'group' column}
+\item{names}{An optional data.frame(long=.., short=..), giving a renaming scheme (long->short) for the 'name' column}
 }
 \value{
 List of ggplot objects
@@ -38,4 +38,3 @@ Contaminants (if given) are separated and plotted as yellow bars.
 \details{
 Boxes are shaded: many NA or Inf lead to more transparency. Allows to easily spot sparse groups
 }
-

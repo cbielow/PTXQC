@@ -30,4 +30,3 @@ the origin of information (genuine ID, transferred ID, or both).
  plot_CountData(data, 6000, 4000, c("EVD: Protein Groups count", "gain: 23\%"))
 
 }
-

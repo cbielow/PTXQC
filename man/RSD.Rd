@@ -15,4 +15,3 @@ RSD
 \description{
 Simply \code{\link{CV}}*100
 }
-

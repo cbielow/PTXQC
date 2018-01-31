@@ -38,4 +38,3 @@ where each row represents one peptide sequence.
  plot_MBRIDtransfer(data)
 
 }
-

@@ -36,4 +36,3 @@ The 'x' values are expected to be log2() transformed already.
  plot_RatiosPG(data, range(data$x), "Ratio plot", "red", "group")
 
 }
-

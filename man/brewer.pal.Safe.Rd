@@ -18,4 +18,3 @@ character vector of colors
 \description{
 Internally calls 'brewer.pal(n, palette)', checking 'n' beforehand.
 }
-

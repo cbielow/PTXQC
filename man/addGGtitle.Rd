@@ -21,4 +21,3 @@ Found in http://www.antoni.fr/blog/?p=39 .. whewww... modified a little
 Usage: 
   ggplot(...) + geom_X(...) + addGGtitle(...)
 }
-

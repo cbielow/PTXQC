@@ -40,4 +40,3 @@ if PTXQC detected a too narrow search window.
   plot_CalibratedMSErr(data, MQBug_raw_files = letters[1], stats, y_lim = c(-20,20), 15, "subtitle")
 
 }
-

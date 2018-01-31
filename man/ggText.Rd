@@ -19,4 +19,3 @@ ggplot object
 \description{
 Plot a text as graphic using ggplot2.
 }
-

@@ -17,4 +17,3 @@ A vector of translated file names as factor (ordered by mapping!)
 \description{
 Given a vector of (short/long) filenames, translate to the (long/short) version
 }
-

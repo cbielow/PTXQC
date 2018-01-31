@@ -31,4 +31,3 @@ A visual threshold line is drawn at 75% (expected MC0 count).
   plot_MissedCleavages(data, "contaminant inclusion unknown")
 
 }
-

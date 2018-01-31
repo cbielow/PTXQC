@@ -22,4 +22,3 @@ The value of the variable 'v' will be stored under the name given in 'v_name'.
 If 'v_name' is not given, a variable name will be created by increasing an internal counter
 and using the its value padded with zeros as name (i.e., "0001", "0002" etc).
 }
-
