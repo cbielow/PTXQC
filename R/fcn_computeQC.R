@@ -361,7 +361,7 @@ createReport = function(txt_folder, yaml_obj = list(), report_filenames = NULL)
     ## iTRAQ/TMT, reporter ion intensity boxplot
     ##
     ## either "reporter.intensity.0.groupname" or "reporter.intensity.0" (no groups)    
-    colsITRAQ = grepv("^reporter.intensity.[0-9].|^reporter.intensity.[0-9]$", colnames(df_pg))
+    colsITRAQ = grepv("^reporter.intensity.[0-9]", colnames(df_pg)) ## we require at least one number!
     ## a global PG name mapping
     MAP_pg_groups_ITRAQ = NA
     if (length(colsITRAQ) > 0)
@@ -374,7 +374,7 @@ createReport = function(txt_folder, yaml_obj = list(), report_filenames = NULL)
 
       clusterCols$reporter.intensity = colsITRAQ ## cluster using reporters
       
-      lst_qcMetrics[["qcMetric_PG_ITRAQInt"]]$setData(df_pg, colsITRAQ, MAP_pg_groups_ITRAQ, param_PG_intThresh)
+      lst_qcMetrics[["qcMetric_PG_ReporterInt"]]$setData(df_pg, colsITRAQ, MAP_pg_groups_ITRAQ, param_PG_intThresh)
     }
     
     
@@ -417,22 +417,24 @@ createReport = function(txt_folder, yaml_obj = list(), report_filenames = NULL)
   if (enabled_evidence)
   {
     ## protein.names is only available from MQ 1.4 onwards
-    df_evd = mq$readMQ(txt_files$evd, type="ev", filter="R", col_subset=c("proteins",
-                                                                         numeric = "Retention.Length",
-                                                                         numeric = "retention.time.calibration", 
-                                                                         numeric = "Retention.time$", 
-                                                                         numeric = "Match.Time.Difference",
-                                                                         numeric = "^intensity$", "^Type$",
-                                                                         numeric = "Mass\\.Error", 
-                                                                         numeric = "^uncalibrated...calibrated." ,
-                                                                         numeric = "^m.z$",
-                                                                         numeric = "^score$", 
-                                                                         numeric = "^fraction$",  ## only available when fractions were given
-                                                                         "Raw.file", "^Protein.Group.IDs$", "Contaminant",
-                                                                         numeric = "[RK]\\.Count", 
-                                                                         numeric = "^Charge$", "modified.sequence",
-                                                                         numeric = "^Mass$", "^protein.names$",
-                                                                         numeric = "^ms.ms.count$"))
+    df_evd = mq$readMQ(txt_files$evd, type="ev", filter="R",
+                       col_subset=c("proteins",
+                                    numeric = "Retention.Length",
+                                    numeric = "retention.time.calibration", 
+                                    numeric = "Retention.time$", 
+                                    numeric = "Match.Time.Difference",
+                                    numeric = "^intensity$", "^Type$",
+                                    numeric = "Mass\\.Error", 
+                                    numeric = "^uncalibrated...calibrated." ,
+                                    numeric = "^m.z$",
+                                    numeric = "^score$", 
+                                    numeric = "^fraction$",  ## only available when fractions were given
+                                    "Raw.file", "^Protein.Group.IDs$", "Contaminant",
+                                    numeric = "[RK]\\.Count", 
+                                    numeric = "^Charge$", "modified.sequence",
+                                    numeric = "^Mass$", "^protein.names$",
+                                    numeric = "^ms.ms.count$",
+                                    numeric = "^reporter.intensity.corrected"))
 
     ### warn of special contaminants!
     if (class(yaml_contaminants) == "list")  ## SC are requested
@@ -450,7 +452,15 @@ createReport = function(txt_folder, yaml_obj = list(), report_filenames = NULL)
     ##
     lst_qcMetrics[["qcMetric_EVD_PeptideInt"]]$setData(df_evd, param_EV_intThresh)
 
-
+    ##
+    ## MS2/MS3 labeled (TMT/ITRAQ) only: reporter intensity of peptides
+    ##
+    if (length(grep("^reporter.intensity.", colnames(df_evd))) > 0)
+    {
+      lst_qcMetrics[["qcMetric_EVD_ReporterInt"]]$setData(df_evd)
+    }
+    
+    
     ##
     ## peptide & protein counts
     ##
@@ -735,7 +745,11 @@ if ("html" %in% out_format_requested)
     ## Intermediates_dir is required, since Shiny server might not allow write-access to input file directory
     render(html_template, output_file = rprt_fns$report_file_HTML, intermediates_dir = dirname(rprt_fns$report_file_HTML))
   } else {
-    warning("The 'Pandoc' converter is not installed on your system but is required for HTML reports.\nPlease install Pandoc <http://pandoc.org/installing.html>. Restart your R-session afterwards.")
+    warning("The 'Pandoc' converter is not installed on your system or you do not have read-access to it!\n",
+            "Pandoc is required for HTML reports.\n",
+            "Please install Pandoc <http://pandoc.org/installing.html> or make sure you have access to pandoc(.exe).\n",
+            "Restart your R-session afterwards.",
+            immediate. = TRUE)
   }
 }
 

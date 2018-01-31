@@ -35,4 +35,3 @@ sample peptides scores are NOT greater than contaminant peptide scores.
  plot_ContUser(data, "myco", 5, "subtitle")
 
 }
-

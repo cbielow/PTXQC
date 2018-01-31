@@ -1,8 +1,8 @@
 Package: PTXQC
 Type: Package
 Title: Quality Report Generation for MaxQuant Results
-Version: 0.92.1
-Date: 2017-10-18
+Version: 0.92.2
+Date: 2018-01-29
 Author: Chris Bielow <chris.bielow@fu-berlin.de>
 Maintainer: Chris Bielow <chris.bielow@fu-berlin.de>
 Description: Generates Proteomics (PTX) quality control (QC) reports for shotgun LC-MS data analyzed with the 
@@ -38,6 +38,6 @@ Suggests:
 VignetteBuilder: knitr
 License: GPL-2
 Roxygen: list(wrap = FALSE)
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 URL: https://github.com/cbielow/PTXQC
 BugReports: https://github.com/cbielow/PTXQC/issues

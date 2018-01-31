@@ -34,4 +34,3 @@ all(r == c("gamg_101", "gamg_101230100..", "jurkat_06_1007..", "jurkat_06_1"))
 \seealso{
 \code{\link{delLCP}}, \code{\link{simplifyNames}}
 }
-

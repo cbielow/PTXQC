@@ -31,4 +31,3 @@ E.g. parse(text = <colname>)
 To judge the overall quality of each raw file a summary column is added, 
 values being the mean of all other columns per row.
 }
-

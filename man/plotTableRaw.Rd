@@ -21,4 +21,3 @@ gTable
 \description{
 Code taken from http://stackoverflow.com/questions/23819209/change-text-color-for-cells-using-tablegrob-in-r
 }
-

@@ -29,4 +29,3 @@ where each row represents one peptide sequence.
  plot_Charge(mosaicize(data))
 
 }
-

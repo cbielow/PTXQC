@@ -16,4 +16,3 @@ data.frame with mapping
 \description{
 Shorten a set of Raw file names and return a data frame with the mappings.
 }
-

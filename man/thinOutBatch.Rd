@@ -22,4 +22,3 @@ Data.frame with reduced rows, but identical input columns
 The binsize is computed from the global data range of the filter column by dividing the range
 into binCount bins.
 }
-

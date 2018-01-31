@@ -20,4 +20,3 @@ Useful for performance measures where reaching a certain reference threshold 't'
 will be enough to reach 100\%.
 The input range from [0, t] is scored from 0-100\%.
 }
-

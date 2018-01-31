@@ -41,4 +41,3 @@ if PTXQC detected a too narrow search window.
                          stats, y_lim = c(-20,20), 15, "subtitle")
 
 }
-

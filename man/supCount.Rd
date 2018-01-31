@@ -27,4 +27,3 @@ e.g.  substr(x, 1, supCount(x)) == x
   ## TRUE (no unique prefix due to duplicated entries)
 
 }
-

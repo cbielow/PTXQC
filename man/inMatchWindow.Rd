@@ -22,4 +22,3 @@ i.e. compute the fraction of groups which are within a certain RT tolerance.
 \details{
 Returned value is between 0 (bad) and 1 (all within tolerance).
 }
-

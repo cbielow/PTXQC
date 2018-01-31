@@ -38,4 +38,3 @@ Restriction: currently, the footer will be cropped at the table width.
             col=c("red", "green"))
 
 }
-

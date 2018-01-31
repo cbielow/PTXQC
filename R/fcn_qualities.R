@@ -79,6 +79,17 @@ qualCenteredRef = function(x, tol)
   return (q)
 }
 
+#'
+#' Scales a vector of values linearly to [0, 1]
+#' @param X Vector of values
+#' @return Scaled vector
+scale01linear = function(X)
+{
+  X2 = (X - min(X)) / (max(X) - min(X))
+  #summary(X2)
+  return(X2)
+}
+
 
 #'
 #' Quality metric which measures the absolute distance from median.

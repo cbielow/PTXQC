@@ -34,4 +34,3 @@ FUN is applied on each subset.
  byX(data.frame(d=1:10), 1:10, 2, sum)
  
 }
-

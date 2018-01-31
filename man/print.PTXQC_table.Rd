@@ -17,4 +17,3 @@ A function
 \description{
 helper S3 class, enabling print(some-plot_Table-object)
 }
-

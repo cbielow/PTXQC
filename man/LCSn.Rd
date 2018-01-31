@@ -21,4 +21,3 @@ Warning: heuristic! This is not guaranteed to find the best solution, since its 
 LCSn(c("1_abcde...", "2_abcd...", "x_abc..."))  ## result: "_abc"
 
 }
-

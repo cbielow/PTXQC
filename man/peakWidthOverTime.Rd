@@ -29,4 +29,3 @@ the middle of each bin and 'peakWidth' is the averaged peak width per bin.
   
   
 }
-

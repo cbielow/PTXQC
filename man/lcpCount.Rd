@@ -15,4 +15,3 @@ Length of LCP
 \description{
 Count the number of chars of the longest common prefix
 }
-

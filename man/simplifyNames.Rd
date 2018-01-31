@@ -42,4 +42,3 @@ try(simplifyNames(c("bla", "foo"), min_LCS_length=5))
 # --> error, since min_LCS_length must be >=6
 
 }
-

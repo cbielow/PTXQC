@@ -21,4 +21,3 @@ Estimate the empirical density and return it
   plot(getECDF(rnorm(1e4)))
   
 }
-

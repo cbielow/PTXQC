@@ -19,4 +19,3 @@ quality, ranging from 0 (bad agreement) to 1 (perfect, i.e. centered at 0)
 Measure for centeredness around 0.
 Highest score is 1, worst score is 0.
 }
-

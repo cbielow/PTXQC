@@ -27,4 +27,3 @@ The input is a data.frame with already averaged counts over binned RT-slices.
  plot_RTPeakWidth(data, c(10, 100), c(0, 40))
 
 }
-

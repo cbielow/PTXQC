@@ -23,4 +23,3 @@ Like longestCommonPrefix(), but on the suffix.
  longestCommonSuffix(c("nothing", "in", "common"))     ## ""
  
 }
-

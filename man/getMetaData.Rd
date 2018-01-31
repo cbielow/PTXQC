@@ -17,4 +17,3 @@ data.frame with columns 'name', 'order' and 'cat' (category)
 Extract meta information (orderNr, metric name, category)
 from a list of Qc metric objects
 }
-

@@ -19,4 +19,3 @@ The first column 'name' gives the name of the list element, the second column 'k
 Kolmogorov-Smirnoff test to the "reference" distribution (which was picked by maximising the sum of 'ks_best').
 Thus, the row with a 'ks_best' of 1 is the reference distribution.
 }
-

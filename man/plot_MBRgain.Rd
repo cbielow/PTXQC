@@ -35,4 +35,3 @@ where each row represents one peptide sequence.
  plot_MBRgain(data, "MBR gain: 18\%")
 
 }
-

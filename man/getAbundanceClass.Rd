@@ -23,4 +23,3 @@ are just numbers.
 Example:
  getAbundanceClass(c(12.4, 17.1, 14.9, 12.3)) ## --> factor(c("low", "high", "mid", "low"))
 }
-

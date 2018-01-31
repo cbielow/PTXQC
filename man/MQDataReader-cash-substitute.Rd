@@ -18,4 +18,3 @@ Most MQ tables contain columns like 'contaminants' or 'reverse', whose values ar
 or "+", which is inconvenient and can be much better represented as TRUE/FALSE.
 The params \code{valid_entries} and \code{replacements} contain the matched pairs, which determine what is replaced with what.
 }
-

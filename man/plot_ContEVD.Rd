@@ -29,4 +29,3 @@ Plot contaminants from evidence.txt, broken down into top5-proteins.
  plot_ContEVD(data, top5 = letters[1:2])
 
 }
-

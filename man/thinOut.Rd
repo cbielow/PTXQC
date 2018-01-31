@@ -21,4 +21,3 @@ All values in the numerical column 'filterColname' are assigned to bins of width
 Only one value per bin is retained. All other rows are removed and the reduced
 data frame will all its columns is returned.
 }
-

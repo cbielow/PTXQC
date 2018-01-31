@@ -46,4 +46,3 @@ where each row represents one peptide whose RT was corrected by MaxQuant.
  plot_MBRAlign(data, c(-10, 10), "fancy subtitle", 0.7)
 
 }
-

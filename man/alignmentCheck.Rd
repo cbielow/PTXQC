@@ -33,4 +33,3 @@ pre-fractionation, a column named 'fraction' should be given and 'referenceFile'
 pick the one Raw file for each fraction (the first in order) to use as reference. Only the immediately neighbouring
 fractions will be matched to this reference.
 }
-

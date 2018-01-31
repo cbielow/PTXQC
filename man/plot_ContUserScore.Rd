@@ -32,4 +32,3 @@ your sample is contaminated although that's not the case.
  plot_ContUserScore(data, 'test file', 0.96)
 
 }
-

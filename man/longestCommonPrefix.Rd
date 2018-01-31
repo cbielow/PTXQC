@@ -23,4 +23,3 @@ Input is converted to character (e.g. from factor) first.
 
 
 }
-

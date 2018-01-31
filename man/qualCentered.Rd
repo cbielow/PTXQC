@@ -21,4 +21,3 @@ E.g. if the median is 0.1, while the range is [-0.5,0.5], the score will be 0.8 
 If the range of data is asymmetric, e.g. [-1.5,-0.5] and does not include zero, the score cannot reach 1, 
 since the median can never be zero.
 }
-

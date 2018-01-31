@@ -12,4 +12,3 @@ A ggplot2 object, representing an empty theme
 \description{
 A blank theme (similar to the deprecated theme_blank())
 }
-

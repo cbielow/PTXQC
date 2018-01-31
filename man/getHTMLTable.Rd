@@ -27,4 +27,3 @@ Create an HTML table with an extra header row
                font_size = 11)
 
 }
-

@@ -29,4 +29,3 @@ Sometimes, peptides are identified purely based on MS1, i.e. have no fragments. 
 
 If ppm mass deviations are not available, errors in Da will be converted to ppm using the corresponding mass values.
 }
-

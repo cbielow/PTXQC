@@ -31,4 +31,3 @@ c(16,0,0,0,0) gives a score of 0.
  qualHighest(c(0,16,0,0), 4)   ## 1/3
  
 }
-

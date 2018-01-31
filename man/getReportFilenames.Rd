@@ -23,4 +23,3 @@ List of output file names (just names, no file is created)
 \description{
 Assembles a list of output file names, which will be created during reporting.
 }
-

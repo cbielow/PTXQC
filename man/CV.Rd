@@ -15,4 +15,3 @@ CV
 \description{
 Computes sd(x) / mean(x)
 }
-

@@ -19,4 +19,3 @@ printWithFooter(gg_obj, bottom_left = NULL, bottom_right = NULL)
 \description{
 Augment a ggplot with footer text
 }
-

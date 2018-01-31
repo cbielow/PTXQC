@@ -17,4 +17,3 @@ ggplot object, concatenatable with '+'
 \description{
 Inverse the order of items on the y-axis (for discrete scales)
 }
-

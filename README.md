@@ -8,11 +8,10 @@ PTXQC
 
 ### Latest changes / Change log
 
+  - v0.92.2 -- Jan 2018: plots and metrics of reporter intensity (iTRAQ, TMT, ...) for labeled MSn experiments 
   - v0.92.01 - Oct 2017: fix issue #41 (partial data error)
   - v0.92.00 - Oct 2017: cleaner R interface; log file for drag'n'drop; fix boxPlots issue (usually for large experiments only);
-  - v0.91.00 - Oct 2017: fix issues #39 (barcharts); #40 (custom contaminant plot)
   - v0.90.00 - Aug 2017: Tables are shown in Html format
-  - v0.82.06 - Jun 2017: Special contaminants fix (issue #34)
 
 See [NEWS][News_File] file for a version history.
 
@@ -128,7 +127,7 @@ PTXQC is published at JPR:
 
 **Proteomics Quality Control: Quality Control Software for MaxQuant Results**
 Chris Bielow, Guido Mastrobuoni, and Stefan Kempa
-*J. Proteome Res.*, 2016, 15 (3), pp 777–787.
+*J. Proteome Res.*, 2016, 15 (3), pp 777-787.
 DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
 
 Use [PTXQC v0.69.3][JPR_PTXQC] if you want the version which was used in the paper, i.e.

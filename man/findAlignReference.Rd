@@ -26,4 +26,3 @@ used by PTXQC as reference file vs all other files to find the real calibration 
 This function might return multiple raw file names (if MQ decides to change its mind at some point in the future).
 In this case the result should be treated with caution or (better) regarded as failure.
 }
-

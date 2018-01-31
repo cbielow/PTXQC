@@ -44,4 +44,3 @@ This distance is normalized to the worst possible input (e.g. one bin with 100% 
  stopifnot(abs(qualUniform(1:120)-0.38661) < 0.0001)
  
 }
-

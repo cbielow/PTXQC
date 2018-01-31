@@ -18,4 +18,3 @@ String containing the longest common substring
 Implementation is very inefficient (dynamic programming in R)
 --> use only on small instances
 }
-

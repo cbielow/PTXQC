@@ -39,4 +39,3 @@ where each row represents one Raw file.
  plot_IDRate(data, id_rate_bad, id_rate_great, label_ID)
 
 }
-

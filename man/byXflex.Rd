@@ -33,4 +33,3 @@ then \code{\link{byX}} is called.
  )
  
 }
-

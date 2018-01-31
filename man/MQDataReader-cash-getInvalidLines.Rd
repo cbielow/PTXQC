@@ -25,4 +25,3 @@ leads to columns not having the class (e.g. numeric) they should have.
 
 [Solution to the problem: try LibreOffice 4.0.x or above -- seems not to have this limitation]
 }
-
