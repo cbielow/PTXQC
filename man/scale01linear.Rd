@@ -2,7 +2,8 @@
 % Please edit documentation in R/fcn_qualities.R
 \name{scale01linear}
 \alias{scale01linear}
-\title{Scales a vector of values linearly to [0, 1]}
+\title{Scales a vector of values linearly to [0, 1]
+If all input values are equal, returned values are all 0}
 \usage{
 scale01linear(X)
 }
@@ -14,4 +15,5 @@ Scaled vector
 }
 \description{
 Scales a vector of values linearly to [0, 1]
+If all input values are equal, returned values are all 0
 }

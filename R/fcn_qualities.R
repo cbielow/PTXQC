@@ -81,11 +81,14 @@ qualCenteredRef = function(x, tol)
 
 #'
 #' Scales a vector of values linearly to [0, 1]
+#' If all input values are equal, returned values are all 0
 #' @param X Vector of values
 #' @return Scaled vector
 scale01linear = function(X)
 {
-  X2 = (X - min(X)) / (max(X) - min(X))
+  rng = (max(X) - min(X));
+  if (rng == 0) rng = 1; ## no range, so divide by 1
+  X2 = (X - min(X)) / rng
   #summary(X2)
   return(X2)
 }

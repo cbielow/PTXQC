@@ -434,7 +434,7 @@ createReport = function(txt_folder, yaml_obj = list(), report_filenames = NULL)
                                     numeric = "^Charge$", "modified.sequence",
                                     numeric = "^Mass$", "^protein.names$",
                                     numeric = "^ms.ms.count$",
-                                    numeric = "^reporter.intensity.corrected"))
+                                    numeric = "^reporter.intensity.")) ## we want .corrected and .not.corrected
 
     ### warn of special contaminants!
     if (class(yaml_contaminants) == "list")  ## SC are requested

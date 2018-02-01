@@ -72,6 +72,10 @@ MQDataReader$new <- function(.)
 #'  basepeak.intensity        base.peak.intensity
 #' }
 #' 
+#' We also correct 'reporter.intensity.*' naming issues to MQ 1.6 convention, when 'reporter.intensity.not.corrected' is present.
+#' MQ 1.5 uses: reporter.intensity.X and reporter.intensity.not.corrected.X
+#' MQ 1.6 uses: reporter.intensity.X and reporter.intensity.corrected.X       
+#'
 #' Note: you must find a regex which matches both versions, or explicitly add both terms if you are requesting only a subset
 #'       of columns!
 #' 
@@ -205,6 +209,17 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   cn[cn=="mass.deviations"] = "mass.deviations..da."
   ## MQ 1.5 uses 'potential.contaminant' instead of 'contaminant'
   cn[cn=="potential.contaminant"] = "contaminant"
+  ## MQ 1.5 uses     : reporter.intensity.X and reporter.intensity.not.corrected.X
+  ## whereas 1.6 has : reporter.intensity.X and reporter.intensity.corrected.X
+  ## we rename to 1.6 convention:
+  if (sum(grepl("reporter.intensity.not.corrected", cn)) > 0)
+  {
+    idx_nc = grep("reporter.intensity.not.corrected", cn);
+    idx_c = grep("reporter.intensity.[0-9]", cn);
+    cn[idx_nc] = gsub(".not.corrected", "", cn[idx_nc]);
+    cn[idx_c] = gsub(".intensity", ".intensity.corrected", cn[idx_c]);
+  }
+  
   colnames(.$mq.data) = cn
   
   

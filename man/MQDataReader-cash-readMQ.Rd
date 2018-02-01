@@ -57,6 +57,10 @@ identically named across MQ versions:
 }
 }
 \details{
+We also correct 'reporter.intensity.*' naming issues to MQ 1.6 convention, when 'reporter.intensity.not.corrected' is present.
+MQ 1.5 uses: reporter.intensity.X and reporter.intensity.not.corrected.X
+MQ 1.6 uses: reporter.intensity.X and reporter.intensity.corrected.X
+
 Note: you must find a regex which matches both versions, or explicitly add both terms if you are requesting only a subset
       of columns!
 

@@ -120,7 +120,8 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
   })
   
   p = ggplot(QCM_final.m, aes_string(y="fc.raw.file", x="variable2"))
-  if (any(is.na(QCM_final.m$value))) {
+  if (any(is.na(QCM_final.m$value)))
+  {
     p = p + geom_tile(aes_string(fill = "value", colour = "dummy_col")) +
       scale_colour_manual(name="Missing", values=c("NA" = "grey50")) +
       guides(colour = guide_legend(override.aes = list(fill = 'grey50')))
