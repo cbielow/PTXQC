@@ -7,9 +7,11 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
-[CRAN] v0.92.2 -- 2018/01/29
-  - [FEATURE] added plots and metrics of reporter intensity (iTRAQ, TMT, ...) for labeled MSn experiments 
+[CRAN] v0.92.3 -- 2018/02/06
+  - [FEATURE] List of Metrics (PTXQC_list-of-metrics.html) added
 
+v0.92.2 -- 2018/01/29
+  - [FEATURE] added plots and metrics of reporter intensity (iTRAQ, TMT, ...) for labeled MSn experiments 
 
 v0.92.1 -- 2017/10/18
   - [FIX] issue #41 (partial data problem)

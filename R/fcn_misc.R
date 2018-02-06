@@ -1206,3 +1206,50 @@ peakWidthOverTime = function(data, RT_bin_width = 2)
   return(retLStats)
 }
 
+#'
+#' Create Html file with list of QC metrics
+#' 
+#' @param outdir Target dir where PTXQC_list-of-metrics_template.html is written
+#' @param outname Filename (without directory)
+#' @return Complete filename of written html file
+#' 
+#' @importFrom rmarkdown render pandoc_available
+#' 
+#' @export
+#' 
+createListOfPTXQCMetrics = function(outdir = getwd(), outname = "PTXQC_list-of-metrics.html")
+{
+  html_template = system.file("./reportTemplate/PTXQC_list-of-metrics_template.Rmd", package="PTXQC")
+  cat(paste0("HTML TEMPLATE: ", html_template, "\n"))
+  ## Rmarkdown: convert to Markdown, and then to HTML (or PDF) ...
+  lst_qcMetrics_ord = getMetricsObjects()
+  filename = file.path(outdir, outname)
+  render(html_template, output_file = filename)
+  return (filename)
+}
+
+#' Get all currently available metrics
+#'  
+#' @param DEBUG_PTXQC Use qc objects from the package (FALSE) or from environment (TRUE/DEBUG)
+#' @return List of matric objects
+#' 
+getMetricsObjects = function(DEBUG_PTXQC = FALSE)
+{
+  if (DEBUG_PTXQC) {
+    lst_qcMetrics_str = ls(sys.frame(which = 0), pattern="qcMetric_") ## executed outside of package, i.e. not loaded...
+  } else {
+    lst_qcMetrics_str = ls(name = getNamespace("PTXQC"), pattern="qcMetric_") 
+  }
+  if (length(lst_qcMetrics_str) == 0) stop("getMetricsObjects(): No metrics found! Very weird!")
+  
+  lst_qcMetrics = sapply(lst_qcMetrics_str, function(m) {
+    q = get(m)
+    if (class(q) %in% "refObjectGenerator"){
+      return(q$new())
+    }
+    return(NULL)
+  })
+  return(lst_qcMetrics)
+}
+
+

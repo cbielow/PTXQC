@@ -8,7 +8,8 @@ PTXQC
 
 ### Latest changes / Change log
 
-  - v0.92.2 -- Jan 2018: plots and metrics of reporter intensity (iTRAQ, TMT, ...) for labeled MSn experiments 
+  - v0.92.03 - Feb 2018: [List of Metrics](PTXQC_list-of-metrics.html) added
+  - v0.92.02 - Jan 2018: plots and metrics of reporter intensity (iTRAQ, TMT, ...) for labeled MSn experiments 
   - v0.92.01 - Oct 2017: fix issue #41 (partial data error)
   - v0.92.00 - Oct 2017: cleaner R interface; log file for drag'n'drop; fix boxPlots issue (usually for large experiments only);
   - v0.90.00 - Aug 2017: Tables are shown in Html format
@@ -56,6 +57,9 @@ You will find documentation on
   - (for MaxQuant users) Usage of Drag'n'drop
   - (for R users) code examples in R
 
+For a comprehensive overview on the types of metrics available see [List of Metrics/Plots](PTXQC_list-of-metrics.html), 
+which also contains a full description for each metric (as seen in the Help section of a Html report).
+  
 ### Installation
 
 **If you want to generate QC reports without actually getting involved in R:**

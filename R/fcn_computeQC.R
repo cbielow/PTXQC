@@ -219,19 +219,7 @@ createReport = function(txt_folder, yaml_obj = list(), report_filenames = NULL)
   ####
   ####  prepare the metrics
   ####
-  if (DEBUG_PTXQC) {
-    lst_qcMetrics_str = ls(sys.frame(which = 0), pattern="qcMetric_") ## executed outside of package, i.e. not loaded...
-  } else {
-    lst_qcMetrics_str = ls(name = getNamespace("PTXQC"), pattern="qcMetric_") 
-  }
-  if (length(lst_qcMetrics_str) == 0) stop("computeReport(): No metrics found! Very weird!")
-  lst_qcMetrics = sapply(lst_qcMetrics_str, function(m) {
-    q = get(m)
-    if (class(q) %in% "refObjectGenerator"){
-      return(q$new())
-    }
-    return(NULL)
-  })
+  lst_qcMetrics = getMetricsObjects(DEBUG_PTXQC)
   df.meta = getMetaData(lst_qcMetrics = lst_qcMetrics)
   df.meta
   ## reorder metrics (required for indexing below!)
@@ -741,9 +729,12 @@ if ("html" %in% out_format_requested)
       html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
     }
     cat(paste0("HTML TEMPLATE: ", html_template, "\n"))
+    out_dir = dirname(rprt_fns$report_file_HTML)
+    file.copy(html_template, out_dir, overwrite = TRUE)
+    out_template = file.path(out_dir, basename(html_template))
     ## Rmarkdown: convert to Markdown, and then to HTML (or PDF) ...
-    ## Intermediates_dir is required, since Shiny server might not allow write-access to input file directory
-    render(html_template, output_file = rprt_fns$report_file_HTML, intermediates_dir = dirname(rprt_fns$report_file_HTML))
+    ## Intermediates_dir is required if inputdir!=outputdir, since Shiny server might not allow write-access to input file directory
+    render(out_template, output_file = rprt_fns$report_file_HTML) #, intermediates_dir = dirname(rprt_fns$report_file_HTML))
   } else {
     warning("The 'Pandoc' converter is not installed on your system or you do not have read-access to it!\n",
             "Pandoc is required for HTML reports.\n",
