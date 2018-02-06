@@ -8,7 +8,7 @@ PTXQC
 
 ### Latest changes / Change log
 
-  - v0.92.03 - Feb 2018: [List of Metrics](PTXQC_list-of-metrics.html) added
+  - v0.92.03 - Feb 2018: [List of Metrics][ListOfMetrics] added
   - v0.92.02 - Jan 2018: plots and metrics of reporter intensity (iTRAQ, TMT, ...) for labeled MSn experiments 
   - v0.92.01 - Oct 2017: fix issue #41 (partial data error)
   - v0.92.00 - Oct 2017: cleaner R interface; log file for drag'n'drop; fix boxPlots issue (usually for large experiments only);
@@ -57,7 +57,7 @@ You will find documentation on
   - (for MaxQuant users) Usage of Drag'n'drop
   - (for R users) code examples in R
 
-For a comprehensive overview on the types of metrics available see [List of Metrics/Plots](PTXQC_list-of-metrics.html), 
+For a comprehensive overview on the types of metrics available see [List of Metrics/Plots][ListOfMetrics], 
 which also contains a full description for each metric (as seen in the Help section of a Html report).
   
 ### Installation
@@ -141,6 +141,7 @@ The input data is available in the ['inst/examples' subfolder][2].
 
 We recommend to use the most recent PTXQC for the best user experience.
   
+  [ListOfMetrics]: http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/PTXQC_list-of-metrics.html
   [1]: https://github.com/cbielow/PTXQC/tree/master/inst/dragNdrop
   [2]: https://github.com/cbielow/PTXQC/tree/master/inst/examples
   [3]: https://github.com/cbielow/PTXQC/tree/master/vignettes
