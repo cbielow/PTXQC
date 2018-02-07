@@ -1206,28 +1206,6 @@ peakWidthOverTime = function(data, RT_bin_width = 2)
   return(retLStats)
 }
 
-#'
-#' Create Html file with list of QC metrics
-#' 
-#' @param outdir Target dir where PTXQC_list-of-metrics_template.html is written
-#' @param outname Filename (without directory)
-#' @return Complete filename of written html file
-#' 
-#' @importFrom rmarkdown render pandoc_available
-#' 
-#' @export
-#' 
-createListOfPTXQCMetrics = function(outdir = getwd(), outname = "PTXQC_list-of-metrics.html")
-{
-  html_template = system.file("./reportTemplate/PTXQC_list-of-metrics_template.Rmd", package="PTXQC")
-  cat(paste0("HTML TEMPLATE: ", html_template, "\n"))
-  ## Rmarkdown: convert to Markdown, and then to HTML (or PDF) ...
-  lst_qcMetrics_ord = getMetricsObjects()
-  filename = file.path(outdir, outname)
-  render(html_template, output_file = filename)
-  return (filename)
-}
-
 #' Get all currently available metrics
 #'  
 #' @param DEBUG_PTXQC Use qc objects from the package (FALSE) or from environment (TRUE/DEBUG)

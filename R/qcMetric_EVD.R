@@ -825,7 +825,7 @@ qcMetric_EVD_Charge =  setRefClass(
       "Charge distribution per Raw file. For typtic digests, peptides of charge 2 
 (one N-terminal and one at tryptic C-terminal R or K residue) should be dominant.
 Ionization issues (voltage?), in-source fragmentation, missed cleavages and buffer irregularities can 
-cause a shift (see [http://onlinelibrary.wiley.com/doi/10.1002/mas.21544/abstract](Bittremieux 2017, DOI: 10.1002/mas.21544) ).
+cause a shift (see [Bittremieux 2017, DOI: 10.1002/mas.21544](http://onlinelibrary.wiley.com/doi/10.1002/mas.21544/abstract) ).
 The charge distribution should be similar across Raw files.
 Consistent charge distribution is paramount for comparable 3D-peak intensities across samples.
 
@@ -866,8 +866,7 @@ qcMetric_EVD_IDoverRT =  setRefClass(
 Ideally, the LC gradient is chosen such that the number of identifications (here, after FDR filtering) is 
 uniform over time, to ensure consistent instrument duty cycles. Sharp peaks and uneven distribution of 
 identifications over time indicate potential for LC gradient optimization. 
-See [http://www.ncbi.nlm.nih.gov/pubmed/24700534](Moruz et al., GradientOptimizer: An open-source graphical environment for calculating optimized gradients in reversed-phase
-liquid chromatography, Proteomics, 06/2014; 14) for details.
+See [Moruz 2014, DOI: 10.1002/pmic.201400036](http://www.ncbi.nlm.nih.gov/pubmed/24700534) for details.
 
 Heatmap score [EVD: ID rate over RT]: Scored using 'Uniform' scoring function, i.e. constant receives good score, extreme shapes are bad.
 ",

@@ -1,0 +1,85 @@
+---
+title: "List of Metrics"
+author: "Chris Bielow <chris.bielow@fu-berlin.de>"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    mathjax: null
+    number_sections: yes
+    toc: no
+  pdf_document:
+    toc: no
+vignette: >
+  %\VignetteIndexEntry{List of Metrics}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+
+<!-- the TOC (table of content) would go here, but we create it manually to use this as a vignette
+      - - > use 'toc: no' above to disable the TOC 
+ -->
+
+<a id="TOP"/>
+
+<style type="text/css">
+  p { 
+    padding: 5px 0;
+  }
+
+  .helpText {
+    clear: left;
+  }
+  
+</style>
+
+```{r setup, include=TRUE, echo=FALSE, results="asis"}
+## global options
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, error=FALSE, message=FALSE, fig.width=10)
+
+lst_qcMetrics_ord = PTXQC:::getMetricsObjects()
+
+txt_TOC = "# Table of Contents
+  - [Overview](#Overview)
+  - [Metrics](#Metrics)
+"
+txt_BODY = ""
+for (qcm in lst_qcMetrics_ord)
+{
+  newname = gsub("(.*)\\(.*" , "\\1", gsub("[\\*~%]" , " ", gsub("[\\^\">]" , "", qcm$qcName))) 
+  ## remove weird symbols (to serve as link)
+  newname_lnk = gsub("[^a-zA-Z0-9]", "", newname)
+  txt_TOC = paste0(txt_TOC, paste0("    - [", newname, "](#", newname_lnk, ")\n"))
+  txt_BODY = paste0(txt_BODY, '\n
+## ', newname, ' <a name="', newname_lnk, '"/>
+\n
+  <div class="helpText">', qcm$helpTextTemplate, '</div>
+<p style="text-align: right"><a href="#TOP">-- back to top --</a></p>\n\n')
+}
+
+## print the TOC
+cat(txt_TOC)
+
+```
+
+# Overview <a name="Overview"/>
+
+The following metrics are implemented in PTXQC.<br>
+
+Reasons why metrics might not appear in every report
+ 
+ * applicable only to certain types of data, e.g. SILAC or TMT
+ * metric was disabled manually using the YAML config file
+ * missing input data (incomplete tables), e.g. only evidence.txt is present
+
+ 
+Some metrics are incompletely named here, since they might contain (hithero unknown) thresholds.
+
+# Metrics <a name="Metrics"/>
+```{r metrics, echo=FALSE, results="asis"}
+  cat(txt_BODY)
+```
+
+If the above list is empty, the vignette was not compiled (e.g. when viewing on GitHub).
+Please see https://CRAN.R-project.org/package=PTXQC --> Vignettes for a compiled version.
+

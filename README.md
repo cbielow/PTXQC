@@ -8,7 +8,7 @@ PTXQC
 
 ### Latest changes / Change log
 
-  - v0.92.03 - Feb 2018: [List of Metrics][ListOfMetrics] added
+  - v0.92.03 - Feb 2018: Full List of Metrics added as vignette
   - v0.92.02 - Jan 2018: plots and metrics of reporter intensity (iTRAQ, TMT, ...) for labeled MSn experiments 
   - v0.92.01 - Oct 2017: fix issue #41 (partial data error)
   - v0.92.00 - Oct 2017: cleaner R interface; log file for drag'n'drop; fix boxPlots issue (usually for large experiments only);
@@ -47,18 +47,17 @@ you can browse the vignettes using either of these commands within R:
     help(package="PTXQC")
     browseVignettes(package = 'PTXQC')
   
-If you do not want to wait that long, have a look at the ['vignettes' subfolder][3].
-The top part contains a small table with technical gibberish, but the rest is identical to the
-vignettes you would see in R.
+If you do not want to wait that long, you can look at the 
+[latest online vignette at CRAN](https://cran.r-project.org/web/packages/PTXQC/vignettes/)
 
 You will find documentation on
+  - Full List of Quality Metrics with help text
   - Input and Output
   - Report customization
   - (for MaxQuant users) Usage of Drag'n'drop
   - (for R users) code examples in R
 
-For a comprehensive overview on the types of metrics available see [List of Metrics/Plots][ListOfMetrics], 
-which also contains a full description for each metric (as seen in the Help section of a Html report).
+The 'List of Metrics' vignette contains a full description for each metric (as seen in the Help section of a Html report).
   
 ### Installation
 
@@ -141,10 +140,8 @@ The input data is available in the ['inst/examples' subfolder][2].
 
 We recommend to use the most recent PTXQC for the best user experience.
   
-  [ListOfMetrics]: http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/PTXQC_list-of-metrics.html
   [1]: https://github.com/cbielow/PTXQC/tree/master/inst/dragNdrop
   [2]: https://github.com/cbielow/PTXQC/tree/master/inst/examples
-  [3]: https://github.com/cbielow/PTXQC/tree/master/vignettes
   [issuetracker]: https://github.com/cbielow/PTXQC/issues
   [JPR_PTXQC]: https://github.com/cbielow/PTXQC/releases/tag/v0.69.3
   [Ref_VignFAQ]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-FAQ.Rmd
