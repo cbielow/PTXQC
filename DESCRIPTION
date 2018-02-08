@@ -6,9 +6,9 @@ Date: 2018-02-05
 Author: Chris Bielow <chris.bielow@fu-berlin.de>
 Maintainer: Chris Bielow <chris.bielow@fu-berlin.de>
 Description: Generates Proteomics (PTX) quality control (QC) reports for shotgun LC-MS data analyzed with the 
-             MaxQuant software suite (see <http://www.maxquant.org>).
+             MaxQuant software suite (see 'http://www.maxquant.org').
              Reports are customizable (target thresholds, subsetting) and available in HTML or PDF format.
-             Published in J. Proteome Res., Proteomics Quality Control: Quality Control Software for MaxQuant Results (2015) <doi:10.1021/acs.jproteome.5b00780>.
+             Published in J. Proteome Res., Proteomics Quality Control: Quality Control Software for MaxQuant Results (2015) 'doi:10.1021/acs.jproteome.5b00780'.
 SystemRequirements: pandoc (http://pandoc.org) for building Vignettes and output reports as HTML 
 Depends:
     R (>= 3.0.0)
