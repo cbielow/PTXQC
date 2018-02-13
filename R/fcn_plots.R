@@ -1070,7 +1070,7 @@ plot_MissedCleavages = function(data, title_sub = "")
         xlab("Raw file") +  
         ylab("missed cleavages [%]") + 
         theme(legend.title=element_blank()) +
-        scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000"), 10)) +
+        scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000", "#800080", "#000000"), 10)) +
         geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
         coord_flip() +
         scale_x_discrete_reverse(st_bin.m$fc.raw.file) +
