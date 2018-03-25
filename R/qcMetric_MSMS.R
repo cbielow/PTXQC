@@ -130,6 +130,9 @@ However this is true only if all samples show the same degree of digestion. High
 can indicate for example, either a) failed digestion, b) a high (post-digestion) protein contamination, or 
 c) a sample with high amounts of unspecifically degraded peptides which are not digested by trypsin. 
 
+If MC>=1 is high (>20%) you should increase the missed cleavages settings in MaxQuant and compare the number of peptides.
+Usually high MC correlates with bad identification rates, since many spectra cannot be matched to the forward database.
+
 In the rare case that 'no enzyme' was specified in MaxQuant, neither scores nor plots are shown.
 
 Heatmap score [MSMS: MC]: the fraction (0% - 100%) of fully cleaved peptides per Raw file
