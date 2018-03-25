@@ -55,7 +55,7 @@ You will find documentation on
   - Input and Output
   - Report customization
   - (for MaxQuant users) Usage of Drag'n'drop
-  - (for R users) code examples in R
+  - (for R users) Code examples in R
 
 The 'List of Metrics' vignette contains a full description for each metric (as seen in the Help section of a Html report).
   
