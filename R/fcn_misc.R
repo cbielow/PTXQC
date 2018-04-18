@@ -217,15 +217,17 @@ LCS <- function(s1, s2)
 
 #' Find longest common substring from 'n' strings.
 #' 
-#' Warning: heuristic! This is not guaranteed to find the best solution, since its done pairwise with the shortest input string as reference.
+#' Warning: greedy heuristic! This is not guaranteed to find the best solution (or any solution at all), since its done pairwise with the shortest input string as reference.
 #' 
 #' @param strings A vector of strings in which to search for LCS
 #' @param min_LCS_length Minimum length expected. Empty string is returned if the result is shorter
 #' @return longest common substring (or "" if shorter than \code{min_LCS_length})
 #' 
 #' @examples
-#' LCSn(c("1_abcde...", "2_abcd...", "x_abc..."))  ## result: "_abc"
-#' 
+#' LCSn(c("1_abcde...", "2_abcd...", "x_abc..."))  ## --> "_abc"
+#' LCSn(c("16_IMU008_CISPLA_E5_R11", "48_IMU008_CISPLA_P4_E7_R31", "60_IMU008_CISPLA_E7_R11"), 3) ## -->"_IMU008_CISPLA_"
+#  LCSn(c("AAAAACBBBBB", "AAAAADBBBBB", "AAAABBBBBEF", "AAABBBBBDGH")) ## -->  "BBBBB"
+#'
 #' @export
 #' 
 LCSn = function(strings, min_LCS_length = 0)
@@ -238,17 +240,22 @@ LCSn = function(strings, min_LCS_length = 0)
   ## apply LCS to all strings, using the shortest as reference
   idx_ref = which(nchar(strings)==min(nchar(strings)))[1]
   strings_other = strings[-idx_ref]  
-  r = unique(sapply(strings_other, LCS, strings[idx_ref]))
-  r
+  candidates = unique(sapply(strings_other, LCS, strings[idx_ref]))
+  candidates
   ## if only one string remains, we're done
-  if (length(r) == 1)
+  if (length(candidates) == 1)
   {
-    if (nchar(r[1]) < min_LCS_length) return("") else return (r[1])
+    if (nchar(candidates[1]) < min_LCS_length) return("") else return (candidates[1])
   }
   ## if its more, call recursively until a solution is found
-  return (LCSn(r, min_LCS_length))
+  ## continue with the shortest candidates (since only they can be common to all)
+  cand_short = candidates[nchar(candidates) == min(nchar(candidates))]
+  solutions = unique(sapply(cand_short, function(cand) LCSn(c(cand, strings_other))))
+  ## get the longest solution
+  idx_sol = which(nchar(solutions)==max(nchar(solutions)))[1];
+  
+  return (solutions[idx_sol])
 }
-# LCSn(c("16_IMU008_CISPLA_E5_R11", "48_IMU008_CISPLA_P4_E7_R31", "60_IMU008_CISPLA_E7_R11"), 3)
 
 
 #'
