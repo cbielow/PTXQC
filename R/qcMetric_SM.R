@@ -16,7 +16,7 @@ The thresholds for the bins are
 Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the threshold for 'great' is reached or exceeded. ",
     workerFcn = function(.self, df_summary, id_rate_bad, id_rate_great)
     {
-      stopifnot(.self$checkInput(c("fc.raw.file", "ms.ms.identified...."), colnames(df_summary)))
+      if(!.self$checkInput(c("fc.raw.file", "ms.ms.identified...."), colnames(df_summary))){return(NULL)}
       
       dms = df_summary$"ms.ms.identified...."
       dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was acquired

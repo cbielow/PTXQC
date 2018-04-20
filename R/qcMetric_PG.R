@@ -19,7 +19,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
     workerFcn=function(.self, df_pg, int_cols, MAP_pg_groups)
     {
       ## completeness check
-      stopifnot(c(int_cols, "contaminant") %in% colnames(df_pg))
+      if(!(.self$checkInput(c(int_cols, "contaminant"),colnames(df_pg)))){return(NULL)}
       
       df.con_stats = adply(int_cols, .margins=1, function(group) {
         #cat(group)
@@ -68,7 +68,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
     workerFcn=function(.self, df_pg, int_cols, MAP_pg_groups, thresh_intensity)
     {
       ## completeness check
-      stopifnot(c(int_cols, "contaminant") %in% colnames(df_pg))
+      if(!(.self$checkInput(c(int_cols, "contaminant"), colnames(df_pg)))){return(NULL)}
       
       
       ## some stats (for plot title)
@@ -119,7 +119,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
     workerFcn=function(.self, df_pg, int_cols, MAP_pg_groups, thresh_intensity)
     {
       ## completeness check
-      stopifnot(c(int_cols, "contaminant") %in% colnames(df_pg))
+      if(!(.self$checkInput(c(int_cols, "contaminant"), colnames(df_pg)))){return(NULL)}
       
       
       ## some stats (for plot title)
@@ -170,7 +170,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
     workerFcn=function(.self, df_pg, int_cols, MAP_pg_groups, thresh_intensity)
     {
       ## completeness check
-      stopifnot(c(int_cols, "contaminant") %in% colnames(df_pg))
+      if(!(.self$checkInput(c(int_cols, "contaminant"), colnames(df_pg)))){return(NULL)}
       
       
       ## some stats (for plot title)
@@ -219,7 +219,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
     workerFcn=function(.self, df_pg, lst_cols, MAP_pg_groups)
     {
       ## completeness check
-      stopifnot(c(unlist(lst_cols), "contaminant") %in% colnames(df_pg))
+      if(!(.self$checkInput(c(unlist(lst_cols), "contaminant"), colnames(df_pg)))){return(NULL)}
       
       lpl = list()
       for (cond in names(lst_cols))
@@ -271,7 +271,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
     workerFcn=function(.self, df_pg, ratio_cols, thresh_LabelIncorp, GL_name_min_length)
     {
       ## completeness check
-      stopifnot(c(ratio_cols, "contaminant", "reverse") %in% colnames(df_pg))
+      if(!(.self$checkInput(c(ratio_cols, "contaminant", "reverse"), colnames(df_pg)))){return(NULL)}
       
       
       ## remove reverse and contaminants (might skew the picture)
