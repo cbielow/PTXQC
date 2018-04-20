@@ -43,9 +43,9 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
       #lst_contaminants = yaml_contaminants
       ## completeness check
       ## PG is either missing, or has the correct data
-      if (!is.null(df_pg)) stopifnot(c("id", "fasta.headers") %in% colnames(df_pg))
+      if (!is.null(df_pg)) if(!(.self$checkInput(c("id", "fasta.headers"),colnames(df_pg)))){return(NULL)}
       ## "score" might not be present (e.g. missing in MQ 1.0.13.13)
-      stopifnot(c("protein.group.ids", "type", "intensity", "fc.raw.file") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("protein.group.ids", "type", "intensity", "fc.raw.file"),colnames(df_evd)))){return(NULL)}
 
       local_qcScores = data.frame()
       
@@ -207,7 +207,7 @@ Heatmap score [EVD: Pep Intensity (>%1.1f)]:
     workerFcn = function(.self, df_evd, thresh_intensity)
     {
       ## completeness check
-      stopifnot(c("fc.raw.file", "intensity") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("fc.raw.file", "intensity"),colnames(df_evd)))){return(NULL)}
       
       ## update helpText
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_intensity, thresh_intensity)
@@ -276,7 +276,7 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
     workerFcn=function(.self, df_evd)
     {
       ## completeness check
-      stopifnot(c("fc.raw.file") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("fc.raw.file"),colnames(df_evd)))){return(NULL)}
       ## check if reporter.intensity.0... is present
       cols_reporter = grepv("^reporter.intensity.corrected.[0-9]", colnames(df_evd));
       cols_reporter.nc = grepv("^reporter.intensity.[0-9]", colnames(df_evd));
@@ -386,7 +386,7 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
     workerFcn = function(.self, df_evd, thresh_protCount)
     {
       ## completeness check
-      stopifnot(c("fc.raw.file", "protein.group.ids", "match.time.difference") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("fc.raw.file", "protein.group.ids", "match.time.difference"),colnames(df_evd)))){return(NULL)}
       
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_protCount)
       
@@ -456,7 +456,7 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
     workerFcn = function(.self, df_evd, thresh_pepCount)
     {
       ## completeness check
-      stopifnot(c("fc.raw.file", "modified.sequence", "match.time.difference") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("fc.raw.file", "modified.sequence", "match.time.difference"),colnames(df_evd)))){return(NULL)}
       
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_pepCount)
       
@@ -518,7 +518,7 @@ Heatmap score [EVD: RT Peak Width]: Scored using BestKS function, i.e. the D sta
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
-      stopifnot(c("retention.time", "retention.length", "fc.raw.file") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("retention.time", "retention.length", "fc.raw.file"),colnames(df_evd)))){return(NULL)}
       
       ## compute some summary stats before passing data to ggplot (performance issue for large experiments) 
       df_evd.m.d = ddply(df_evd[,c("retention.time", "retention.length", "fc.raw.file")], "fc.raw.file", .fun = peakWidthOverTime)
@@ -590,7 +590,7 @@ Heatmap score [EVD: MBR Align]: fraction of 'green' vs. 'green+red' peptides.
     workerFcn = function(.self, df_evd, tolerance_matching, raw_file_mapping)
     {
       ## completeness check
-      stopifnot(c("type", "calibrated.retention.time", "id", "raw.file", "modified.sequence", "charge") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("type", "calibrated.retention.time", "id", "raw.file", "modified.sequence", "charge"),colnames(df_evd)))){return(NULL)}
       
       ## find reference
       if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
@@ -711,7 +711,7 @@ provides few (and wrong) additional information, and should be disabled.
     workerFcn = function(.self, df_evd, avg_peak_width)
     {
       ## completeness check
-      #stopifnot(c("...") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("match.time.difference", "fc.raw.file", "modified.sequence", "charge", "type"),colnames(df_evd)))){return(NULL)}
       
       ## increase of segmentation by MBR:
       ## three values returned: single peaks(%) in genuine, transferred and all(combined)
@@ -775,7 +775,7 @@ Heatmap score: none.
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
-      stopifnot(c("type", "match.time.difference", "calibrated.retention.time", "fc.raw.file", "modified.sequence", "charge") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("type", "match.time.difference", "calibrated.retention.time", "fc.raw.file", "modified.sequence", "charge"),colnames(df_evd)))){return(NULL)}
       
       if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
         ## fractions: there must be more than one, otherwise MQ will treat the samples as unfractionated
@@ -834,7 +834,7 @@ Heatmap score [EVD: Charge]: Deviation of the charge 2 proportion from a represe
     workerFcn = function(.self, df_evd, int_cols, MAP_pg_groups)
     {
       ## completeness check
-      stopifnot(c("hasMTD", "fc.raw.file", "charge") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("hasMTD", "fc.raw.file", "charge"),colnames(df_evd)))){return(NULL)}
       
       d_charge = mosaicize(df_evd[!df_evd$hasMTD, c("fc.raw.file", "charge")])
       lpl =
@@ -872,8 +872,9 @@ Heatmap score [EVD: ID rate over RT]: Scored using 'Uniform' scoring function, i
 ",
     workerFcn = function(.self, df_evd)
     {
+      browser()
       ## completeness check
-      stopifnot(c("retention.time", "fc.raw.file") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("retention.time", "fc.raw.file"),colnames(df_evd)))){return(NULL)}
       
       raws_perPlot = 6
       
@@ -921,7 +922,8 @@ Heatmap score [EVD: MS Cal Pre (%1.1f)]: the centeredness (function CenteredRef)
     workerFcn = function(.self, df_evd, df_idrate, tolerance_pc_ppm, tolerance_sd_PCoutOfCal)
     {
       ## completeness check
-      #stopifnot(c("...") %in% colnames(df_pg))
+      if(!(.self$checkInput(c("fc.raw.file", "mass", "charge", "m.z", "mass.error..ppm.", "uncalibrated.mass.error..ppm."), colnames(df_evd)))){return(NULL)}
+      if(!(.self$checkInput(c("fc.raw.file", "ms.ms.identified...."),colnames(df_idrate)))){return(NULL)}
       
       .self$helpText = sprintf(.self$helpTextTemplate, tolerance_pc_ppm, tolerance_pc_ppm)
       
@@ -983,7 +985,9 @@ Heatmap score [EVD: MS Cal-Post]: The variance and centeredness around zero of t
     workerFcn = function(.self, df_evd, df_idrate, tolerance_pc_ppm, tolerance_sd_PCoutOfCal, tol_ppm_mainSearch)
     {
       ## completeness check
-      #stopifnot(c("...") %in% colnames(df_pg))
+      if(!(.self$checkInput(c("fc.raw.file", "mass", "charge", "m.z", "mass.error..ppm.", "uncalibrated.mass.error..ppm."), colnames(df_evd)))){return(NULL)}
+      if(!(.self$checkInput(c("fc.raw.file", "ms.ms.identified...."),colnames(df_idrate)))){return(NULL)}
+
       
       fix_cal = fixCalibration(df_evd, df_idrate, tolerance_sd_PCoutOfCal)
       
@@ -1042,7 +1046,7 @@ Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = samp
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
-      stopifnot(c("intensity", "contaminant", "fc.raw.file") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("intensity", "contaminant", "fc.raw.file"), colnames(df_evd)))){return(NULL)}
       
       ##
       ## elaborate contaminant fraction per Raw.file (this is not possible from PG, since raw files could be merged)
@@ -1126,7 +1130,7 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
-      stopifnot(c("fc.raw.file", "ms.ms.count") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("fc.raw.file", "ms.ms.count"),colnames(df_evd)))){return(NULL)}
       
       d_dups = ddply(df_evd, "fc.raw.file", function(x) {
         tt = as.data.frame(table(x$ms.ms.count), stringsAsFactors = FALSE)
@@ -1192,7 +1196,7 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
-      stopifnot(c("fc.raw.file", "modified.sequence", "intensity") %in% colnames(df_evd))
+      if(!(.self$checkInput(c("fc.raw.file", "modified.sequence", "intensity"),colnames(df_evd)))){return(NULL)}
       
       if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
         lpl = list(ggText("Missing Values Skipped", "Missing values calculation skipped. Fractionated data detected!"))

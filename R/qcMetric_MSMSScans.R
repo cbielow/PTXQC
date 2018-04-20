@@ -20,7 +20,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN over RT]: Rewards uniform (function Un
     workerFcn = function(.self, df_msmsScans)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "retention.time", "scan.event.number", "rRT"), colnames(df_msmsScans)))
+      if(!(.self$checkInput(c("fc.raw.file", "retention.time", "scan.event.number", "rRT"), colnames(df_msmsScans)))){return(NULL)}
       
       dd = as.data.table(df_msmsScans[, c("fc.raw.file", "retention.time", "scan.event.number", "rRT")])
       setkey(dd, fc.raw.file, retention.time) ## sort by RT
@@ -81,7 +81,7 @@ Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3
     workerFcn = function(.self, d_msmsScan, score_min_factor = 3, score_max_factor = 10)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "total.ion.current", "base.peak.intensity"), colnames(d_msmsScan)))
+      if(!(.self$checkInput(c("fc.raw.file", "total.ion.current", "base.peak.intensity"), colnames(d_msmsScan)))){return(NULL)}
       
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
       dd = as.data.table(d_msmsScan[, c("fc.raw.file", "total.ion.current", "base.peak.intensity")])
@@ -155,7 +155,7 @@ Heatmap score [MS<sup>2</sup> Scans: Ion Inj Time]: Linear score as fraction of 
     workerFcn = function(.self, df_msmsScans, threshold_iit)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "ion.injection.time", "rRT"), colnames(df_msmsScans)))
+      if(!(.self$checkInput(c("fc.raw.file", "ion.injection.time", "rRT"), colnames(df_msmsScans)))){return(NULL)}
       
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
       dd = as.data.table(df_msmsScans[, c("fc.raw.file", "ion.injection.time", "rRT")])
@@ -206,7 +206,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN high]: rewards if TopN was reached on 
     workerFcn = function(.self, df_msmsScans)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "scan.event.number"), colnames(df_msmsScans)))
+      if(!(.self$checkInput(c("fc.raw.file", "scan.event.number"), colnames(df_msmsScans)))){return(NULL)}
       
       ## check if scan.event.number requires fixing
       ## (e.g. when MS3 events are recorded between MS2 events, there are gaps in the numbering)
@@ -288,7 +288,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
     workerFcn = function(.self, df_msmsScans)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "scan.event.number", "identified"), colnames(df_msmsScans)))
+      if(!(.self$checkInput(c("fc.raw.file", "scan.event.number", "identified"), colnames(df_msmsScans)))){return(NULL)}
       
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
       DF = as.data.table(df_msmsScans[, c("fc.raw.file", "scan.event.number", "identified")])[, list(n=.N), by=c("fc.raw.file", "scan.event.number", "identified")]
@@ -356,7 +356,7 @@ Heatmap score [MS<sup>2</sup> Scans: DepPep]: No score.
     workerFcn = function(.self, d_msmsScan)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "dp.modification", "dp.aa", "identified"), colnames(d_msmsScan)))
+      if(!(.self$checkInput(c("fc.raw.file", "dp.modification", "dp.aa", "identified"), colnames(d_msmsScan)))){return(NULL)}
       stopifnot(unique(d_msmsScan$identified) %in% c("-","+"))
 
       ## modified subset

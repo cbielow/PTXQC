@@ -11,6 +11,10 @@ track database completeness and database version information (if given in the fi
     {
       ##todo: read in mqpar.xml to get group information and ppm tolerances for all groups (parameters.txt just gives Group1)
       
+      ## completeness check
+      if(!(.self$checkInput(c("parameter", "value"),colnames(df_mqpar)))){return(NULL)}
+      
+      
       line_break = "\n"; ## use space to make it work with table
       ## remove AIF stuff
       df_mqpar = df_mqpar[!grepl("^AIF ", df_mqpar$parameter),]
