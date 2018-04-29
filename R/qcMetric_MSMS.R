@@ -19,7 +19,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
     workerFcn = function(.self, df_msms, fc_raw_files)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "fragmentation", "reverse", "mass.deviations..da."), colnames(df_msms)))
+      if(!(.self$checkInput(c("fc.raw.file", "fragmentation", "reverse", "mass.deviations..da."), colnames(df_msms)))){return(NULL)}
       ## older MQ versions do not have 'mass.analyzer' or 'mass.deviations..ppm.'
       ## , so we use fragmentation instead (this is a little risky, since you could do CID fragmentation and forward to Orbi, but hey...)
       if (!("mass.analyzer" %in% colnames(df_msms))) df_msms$mass.analyzer = df_msms$fragmentation
@@ -130,6 +130,9 @@ However this is true only if all samples show the same degree of digestion. High
 can indicate for example, either a) failed digestion, b) a high (post-digestion) protein contamination, or 
 c) a sample with high amounts of unspecifically degraded peptides which are not digested by trypsin. 
 
+If MC>=1 is high (>20%) you should increase the missed cleavages settings in MaxQuant and compare the number of peptides.
+Usually high MC correlates with bad identification rates, since many spectra cannot be matched to the forward database.
+
 In the rare case that 'no enzyme' was specified in MaxQuant, neither scores nor plots are shown.
 
 Heatmap score [MSMS: MC]: the fraction (0% - 100%) of fully cleaved peptides per Raw file
@@ -139,8 +142,8 @@ current study. ",
     workerFcn = function(.self, df_msms, df_evd = NULL)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file"), colnames(df_msms)))
-      if (!is.null(df_evd)) stopifnot(.self$checkInput(c("contaminant", "id"), colnames(df_evd)))
+      if(!(.self$checkInput(c("fc.raw.file"), colnames(df_msms)))){return(NULL)}
+      if (!is.null(df_evd)) if(!.self$checkInput(c("contaminant", "id"), colnames(df_evd))){return(NULL)}
       
       max_mc = max(-Inf, df_msms$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
       if (!is.infinite(max_mc))
