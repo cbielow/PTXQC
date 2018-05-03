@@ -66,7 +66,7 @@ mzTab = setRefClass("mzTab",
                       #### function to generate evidence dataframe (df_evd) from an mzTab object ---------------------
                       get_df_evd = function(.self,add_fs_col){
                         
-                        browser()
+                        
                         
                         # the base for the df_evd is the PSM section of the mzTab file
                         # helper function 
@@ -84,7 +84,8 @@ mzTab = setRefClass("mzTab",
                         #### rename the columns (column names determined by metric functions) -------------------------
                         
                         df_evd <- rename(df_evd, c("sequence" = "modified.sequence","accession" = "proteins","PSM_ID" = "id","spectra_ref" = "raw.file",
-                                                   "exp_mass_to_charge" = "m.z", "retention_time" = "retention.time", "search_engine_score[1]" = "score") )
+                                                   "exp_mass_to_charge" = "m.z", "retention_time" = "retention.time", "search_engine_score[1]" = "score",
+                                                   "opt_Match_Time_Difference = match.time.difference", "retention_time_window = retention.length") )
                         
                         #### set datatypes for cloumns ------------------------
                         
@@ -93,6 +94,8 @@ mzTab = setRefClass("mzTab",
                         try(df_evd$m.z <- as.numeric(df_evd$m.z))
                         try(df_evd$charge <- as.numeric(df_evd$charge))
                         try(df_evd$score <- as.numeric(df_evd$score))
+                        try(df_evd$match.time.difference <- as.numeric(df_evd$match.time.difference))
+                        try(df_evd$retention.length <- as.numeric(df_evd$retention.length))
                         
                         #### add "extra" columns needed for the evd metrics but not immediate present in the mzTabfile -----------
                         if("proteins" %in% colnames(df_evd))

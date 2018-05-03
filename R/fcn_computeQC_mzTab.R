@@ -31,7 +31,7 @@
 #' @export
 #'
 # function ---------------------
-createReport = function(mzTab_file, yaml_obj = list(), report_filenames = NULL)
+createReport_mzTab = function(mzTab_file, yaml_obj = list(), report_filenames = NULL)
 {
   # file paths and yaml --------------------
   
@@ -391,7 +391,7 @@ createReport = function(mzTab_file, yaml_obj = list(), report_filenames = NULL)
   }
   
   # evidence.txt => df_evd für evd metrics ----
-  browser()
+  
   mzTabReader = mzTab$new()
   mzTabReader$read.mzTab(mzTab_file)
   
