@@ -872,7 +872,6 @@ Heatmap score [EVD: ID rate over RT]: Scored using 'Uniform' scoring function, i
 ",
     workerFcn = function(.self, df_evd)
     {
-      browser()
       ## completeness check
       if(!(.self$checkInput(c("retention.time", "fc.raw.file"),colnames(df_evd)))){return(NULL)}
       
