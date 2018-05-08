@@ -1,4 +1,5 @@
-﻿**Nutzung des Packages mit [mzTab](https://github.com/HUPO-PSI/mzTab) Files**
+
+**Nutzung des Packages mit [mzTab](https://github.com/HUPO-PSI/mzTab) Files**
 
 Zunächst muss das PTXQC Package geladen werden.
 Da die von uns im Zuge des Praktikums bearbeitete Version nicht über den Cran-Server zu beziehen ist, muss das Github-Repository geladen werden.
@@ -15,7 +16,7 @@ Folgender Befehl erstellt einen QC-Report anhand einer .mzTab:
  PTXQC::createReport_mzTab("PATH/TO/FILE.mztab")
     
 Es kann vorkommen, dass die Erstellung des Reports durch die [browser()](http://stat.ethz.ch/R-manual/R-devel/library/base/html/browser.html) Funktion unterbrochen wird. In diesem Fall kann der Vorgang durch Enter oder Continue fortgesetzt werden.
- Die browser() Funktion ist hilfreich zum Debugging. Mit ihr können zB. Variablenbelegungen während der Laufzeit überprüft werden.
+Die browser() Funktion ist hilfreich zum Debugging. Mit ihr können zB. Variablenbelegungen während der Laufzeit überprüft werden.
 
 
 

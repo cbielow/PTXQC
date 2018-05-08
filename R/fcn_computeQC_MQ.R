@@ -1,3 +1,4 @@
+# documentation ---------------------
 #' Create a quality control report (in PDF format).
 #'
 #' This is the main function of the package and the only thing you need to call directly if you are 
@@ -47,7 +48,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
   txt_files$msmsScan = "msmsScans.txt"
   txt_files$mqpar = "mqpar.xml"
   txt_files = lapply(txt_files, function(file) file.path(txt_folder, file))
-   
+  
   ###
   ###  prepare the YAML config
   ###
@@ -69,154 +70,154 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
   ## stats_file:not used at the moment
   #unlink(rprt_fns$stats_file)
   #cat("Statistics summary:", file=rprt_fns$stats_file, append = FALSE, sep="\n")
-
+  
   ## YAML default config
   {
-  
-  ## determines if a local mqpar.xml should be used to grep all YAML parameters whose name starts with "MQpar_" from the
-  ## original mqpar.xml instead of the yaml.config. The "MQpar_..." param from the config
-  ## will be ignored and the newly written yaml.config will contain the values from mqpar.xml.
-  param_name_PTXQC_UseLocalMQPar = "PTXQC$UseLocalMQPar"
-  param_def_PTXQC_UseLocalMQPar = TRUE
-  param_useMQPAR = yc$getYAML(param_name_PTXQC_UseLocalMQPar, param_def_PTXQC_UseLocalMQPar)
-  
-  enabled_parameters = yc$getYAML("File$Parameters$enabled", TRUE) & file.exists(txt_files$param)
-  add_fs_col = yc$getYAML("PTXQC$NameLengthMax_num", 10)
-  
-  enabled_summary = yc$getYAML("File$Summary$enabled", TRUE) & file.exists(txt_files$summary)
-  id_rate_bad = yc$getYAML("File$Summary$IDRate$Thresh_bad_num", 20)
-  id_rate_great = yc$getYAML("File$Summary$IDRate$Thresh_great_num", 35)
-  
-  GL_name_min_length = 8
-  
-  enabled_proteingroups = yc$getYAML("File$ProteinGroups$enabled", TRUE) & file.exists(txt_files$groups)
-  enabled_pg_ratioLabIncThresh = yc$getYAML("File$ProteinGroups$RatioPlot$LabelIncThresh_num", 4)
-  param_name_PG_intThresh = "File$ProteinGroups$IntensityThreshLog2_num"
-  param_def_PG_intThresh = 25 ## default median intensity in log2 scale
-  param_PG_intThresh = yc$getYAML(param_name_PG_intThresh, param_def_PG_intThresh)
-  if (!is.numeric(param_PG_intThresh) || !(param_PG_intThresh %in% 1:100))
-  { ## reset if value is weird
-    cat("YAML value for '" %+% param_name_PG_intThresh %+% "' is invalid ('" %+% param_PG_intThresh %+% "'). Using default of " %+% param_def_PG_intThresh %+% ".")
-    param_PG_intThresh = param_def_PG_intThresh
-  }
-  
-  enabled_evidence = yc$getYAML("File$Evidence$enabled", TRUE) & file.exists(txt_files$evd)
-  
-  ## get scoring threshold (upper limit)
-  param_name_EV_protThresh = "File$Evidence$ProteinCountThresh_num"
-  param_def_EV_protThresh = 3500
-  param_EV_protThresh = yc$getYAML(param_name_EV_protThresh, param_def_EV_protThresh)
-  if (!is.numeric(param_EV_protThresh) || !(param_EV_protThresh %in% 1:1e5))
-  { ## reset if value is weird
-    cat("YAML value for '" %+% param_name_EV_protThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_protThresh %+% ".")
-    param_EV_protThresh = param_def_EV_protThresh
-  }
-  
-  param_name_EV_intThresh = "File$Evidence$IntensityThreshLog2_num"
-  param_def_EV_intThresh = 23 ## default median intensity in log2 scale
-  param_EV_intThresh = yc$getYAML(param_name_EV_intThresh, param_def_EV_intThresh)
-  if (!is.numeric(param_EV_intThresh) || !(param_EV_intThresh %in% 1:100))
-  { ## reset if value is weird
-    cat("YAML value for '" %+% param_name_EV_intThresh %+% "' is invalid ('" %+% param_EV_intThresh %+% "'). Using default of " %+% param_def_EV_intThresh %+% ".")
-    param_EV_intThresh = param_def_EV_intThresh
-  }
-  
-  ## get scoring threshold (upper limit)
-  param_name_EV_pepThresh = "File$Evidence$PeptideCountThresh_num"
-  param_def_EV_pepThresh = 15000
-  param_EV_pepThresh = yc$getYAML(param_name_EV_pepThresh, param_def_EV_pepThresh)
-  if (!is.numeric(param_EV_pepThresh) || !(param_EV_pepThresh %in% 1:1e6))
-  { ## reset if value is weird
-    cat("YAML value for '" %+% param_name_EV_pepThresh %+% "' is invalid ('" %+% param_EV_pepThresh %+% "'). Using default of " %+% param_def_EV_pepThresh %+% ".")
-    param_EV_pepThresh = param_def_EV_pepThresh
-  }
-  
-  ### warn of special contaminants!
-  ## these need to be in FASTA headers (description is not enough)!
-  ## syntax:  list( contaminant1 = c(name, threshold), contaminant2 = c(...), ...)
-  ##
-  ##  if within the YAML file
-  ##    SpecialContaminants: no
-  ##  is set, then 'yaml_contaminants' will be 'FALSE'
-  ##
-  contaminant_default = list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
-  ##yaml_obj = list()
-  ##contaminant_default = FALSE ## to switch it off by default
-  yaml_contaminants = yc$getYAML("File$Evidence$SpecialContaminants", contaminant_default)
-  
-  ## param
-  param_name_EV_MatchingTolerance = "File$Evidence$MQpar_MatchingTimeWindow_num"
-  param_def_EV_MatchingTolerance = 1
-  param_EV_MatchingTolerance = yc$getYAML(param_name_EV_MatchingTolerance, param_def_EV_MatchingTolerance)
-  if (param_useMQPAR) {
-    v = getMQPARValue(txt_files$mqpar, "matchingTimeWindow") ## will also warn() if file is missing
-    if (!is.null(v)) {
-      param_EV_MatchingTolerance = yc$setYAML(param_name_EV_MatchingTolerance, as.numeric(v))
+    
+    ## determines if a local mqpar.xml should be used to grep all YAML parameters whose name starts with "MQpar_" from the
+    ## original mqpar.xml instead of the yaml.config. The "MQpar_..." param from the config
+    ## will be ignored and the newly written yaml.config will contain the values from mqpar.xml.
+    param_name_PTXQC_UseLocalMQPar = "PTXQC$UseLocalMQPar"
+    param_def_PTXQC_UseLocalMQPar = TRUE
+    param_useMQPAR = yc$getYAML(param_name_PTXQC_UseLocalMQPar, param_def_PTXQC_UseLocalMQPar)
+    
+    enabled_parameters = yc$getYAML("File$Parameters$enabled", TRUE) & file.exists(txt_files$param)
+    add_fs_col = yc$getYAML("PTXQC$NameLengthMax_num", 10)
+    
+    enabled_summary = yc$getYAML("File$Summary$enabled", TRUE) & file.exists(txt_files$summary)
+    id_rate_bad = yc$getYAML("File$Summary$IDRate$Thresh_bad_num", 20)
+    id_rate_great = yc$getYAML("File$Summary$IDRate$Thresh_great_num", 35)
+    
+    GL_name_min_length = 8
+    
+    enabled_proteingroups = yc$getYAML("File$ProteinGroups$enabled", TRUE) & file.exists(txt_files$groups)
+    enabled_pg_ratioLabIncThresh = yc$getYAML("File$ProteinGroups$RatioPlot$LabelIncThresh_num", 4)
+    param_name_PG_intThresh = "File$ProteinGroups$IntensityThreshLog2_num"
+    param_def_PG_intThresh = 25 ## default median intensity in log2 scale
+    param_PG_intThresh = yc$getYAML(param_name_PG_intThresh, param_def_PG_intThresh)
+    if (!is.numeric(param_PG_intThresh) || !(param_PG_intThresh %in% 1:100))
+    { ## reset if value is weird
+      cat("YAML value for '" %+% param_name_PG_intThresh %+% "' is invalid ('" %+% param_PG_intThresh %+% "'). Using default of " %+% param_def_PG_intThresh %+% ".")
+      param_PG_intThresh = param_def_PG_intThresh
     }
-  }
-  param_name_mbr = "File$Evidence$MatchBetweenRuns_wA"
-  param_evd_mbr = yc$getYAML(param_name_mbr, "auto")
-  
-  
-  param_name_EV_PrecursorTolPPM = "File$Evidence$MQpar_firstSearchTol_num"
-  param_def_EV_PrecursorTolPPM = 20
-  param_EV_PrecursorTolPPM = yc$getYAML(param_name_EV_PrecursorTolPPM, param_def_EV_PrecursorTolPPM)
-  if (param_useMQPAR) {
-    v = getMQPARValue(txt_files$mqpar, "firstSearchTol") ## will also warn() if file is missing
-    if (!is.null(v)) {
-      param_EV_PrecursorTolPPM = yc$setYAML(param_name_EV_PrecursorTolPPM, as.numeric(v))
+    
+    enabled_evidence = yc$getYAML("File$Evidence$enabled", TRUE) & file.exists(txt_files$evd)
+    
+    ## get scoring threshold (upper limit)
+    param_name_EV_protThresh = "File$Evidence$ProteinCountThresh_num"
+    param_def_EV_protThresh = 3500
+    param_EV_protThresh = yc$getYAML(param_name_EV_protThresh, param_def_EV_protThresh)
+    if (!is.numeric(param_EV_protThresh) || !(param_EV_protThresh %in% 1:1e5))
+    { ## reset if value is weird
+      cat("YAML value for '" %+% param_name_EV_protThresh %+% "' is invalid ('" %+% param_EV_protThresh %+% "'). Using default of " %+% param_def_EV_protThresh %+% ".")
+      param_EV_protThresh = param_def_EV_protThresh
     }
-  }
-  
-  param_name_EV_PrecursorOutOfCalSD = "File$Evidence$firstSearch_outOfCalWarnSD_num"
-  param_def_EV_PrecursorOutOfCalSD = 2
-  param_EV_PrecursorOutOfCalSD = yc$getYAML(param_name_EV_PrecursorOutOfCalSD, param_def_EV_PrecursorOutOfCalSD)
-  
-  
-  param_name_EV_PrecursorTolPPMmainSearch = "File$Evidence$MQpar_mainSearchTol_num"
-  param_def_EV_PrecursorTolPPMmainSearch = NA  ## we do not dare to have a default, since it ranges from 6 - 4.5 ppm across MQ versions
-  param_EV_PrecursorTolPPMmainSearch = yc$getYAML(param_name_EV_PrecursorTolPPMmainSearch, param_def_EV_PrecursorTolPPMmainSearch)
-  if (param_useMQPAR) {
-    v = getMQPARValue(txt_files$mqpar, "mainSearchTol") ## will also warn() if file is missing
-    if (!is.null(v)) {
-      param_EV_PrecursorTolPPMmainSearch = yc$setYAML(param_name_EV_PrecursorTolPPMmainSearch, as.numeric(v))
+    
+    param_name_EV_intThresh = "File$Evidence$IntensityThreshLog2_num"
+    param_def_EV_intThresh = 23 ## default median intensity in log2 scale
+    param_EV_intThresh = yc$getYAML(param_name_EV_intThresh, param_def_EV_intThresh)
+    if (!is.numeric(param_EV_intThresh) || !(param_EV_intThresh %in% 1:100))
+    { ## reset if value is weird
+      cat("YAML value for '" %+% param_name_EV_intThresh %+% "' is invalid ('" %+% param_EV_intThresh %+% "'). Using default of " %+% param_def_EV_intThresh %+% ".")
+      param_EV_intThresh = param_def_EV_intThresh
     }
+    
+    ## get scoring threshold (upper limit)
+    param_name_EV_pepThresh = "File$Evidence$PeptideCountThresh_num"
+    param_def_EV_pepThresh = 15000
+    param_EV_pepThresh = yc$getYAML(param_name_EV_pepThresh, param_def_EV_pepThresh)
+    if (!is.numeric(param_EV_pepThresh) || !(param_EV_pepThresh %in% 1:1e6))
+    { ## reset if value is weird
+      cat("YAML value for '" %+% param_name_EV_pepThresh %+% "' is invalid ('" %+% param_EV_pepThresh %+% "'). Using default of " %+% param_def_EV_pepThresh %+% ".")
+      param_EV_pepThresh = param_def_EV_pepThresh
+    }
+    
+    ### warn of special contaminants!
+    ## these need to be in FASTA headers (description is not enough)!
+    ## syntax:  list( contaminant1 = c(name, threshold), contaminant2 = c(...), ...)
+    ##
+    ##  if within the YAML file
+    ##    SpecialContaminants: no
+    ##  is set, then 'yaml_contaminants' will be 'FALSE'
+    ##
+    contaminant_default = list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
+    ##yaml_obj = list()
+    ##contaminant_default = FALSE ## to switch it off by default
+    yaml_contaminants = yc$getYAML("File$Evidence$SpecialContaminants", contaminant_default)
+    
+    ## param
+    param_name_EV_MatchingTolerance = "File$Evidence$MQpar_MatchingTimeWindow_num"
+    param_def_EV_MatchingTolerance = 1
+    param_EV_MatchingTolerance = yc$getYAML(param_name_EV_MatchingTolerance, param_def_EV_MatchingTolerance)
+    if (param_useMQPAR) {
+      v = getMQPARValue(txt_files$mqpar, "matchingTimeWindow") ## will also warn() if file is missing
+      if (!is.null(v)) {
+        param_EV_MatchingTolerance = yc$setYAML(param_name_EV_MatchingTolerance, as.numeric(v))
+      }
+    }
+    param_name_mbr = "File$Evidence$MatchBetweenRuns_wA"
+    param_evd_mbr = yc$getYAML(param_name_mbr, "auto")
+    
+    
+    param_name_EV_PrecursorTolPPM = "File$Evidence$MQpar_firstSearchTol_num"
+    param_def_EV_PrecursorTolPPM = 20
+    param_EV_PrecursorTolPPM = yc$getYAML(param_name_EV_PrecursorTolPPM, param_def_EV_PrecursorTolPPM)
+    if (param_useMQPAR) {
+      v = getMQPARValue(txt_files$mqpar, "firstSearchTol") ## will also warn() if file is missing
+      if (!is.null(v)) {
+        param_EV_PrecursorTolPPM = yc$setYAML(param_name_EV_PrecursorTolPPM, as.numeric(v))
+      }
+    }
+    
+    param_name_EV_PrecursorOutOfCalSD = "File$Evidence$firstSearch_outOfCalWarnSD_num"
+    param_def_EV_PrecursorOutOfCalSD = 2
+    param_EV_PrecursorOutOfCalSD = yc$getYAML(param_name_EV_PrecursorOutOfCalSD, param_def_EV_PrecursorOutOfCalSD)
+    
+    
+    param_name_EV_PrecursorTolPPMmainSearch = "File$Evidence$MQpar_mainSearchTol_num"
+    param_def_EV_PrecursorTolPPMmainSearch = NA  ## we do not dare to have a default, since it ranges from 6 - 4.5 ppm across MQ versions
+    param_EV_PrecursorTolPPMmainSearch = yc$getYAML(param_name_EV_PrecursorTolPPMmainSearch, param_def_EV_PrecursorTolPPMmainSearch)
+    if (param_useMQPAR) {
+      v = getMQPARValue(txt_files$mqpar, "mainSearchTol") ## will also warn() if file is missing
+      if (!is.null(v)) {
+        param_EV_PrecursorTolPPMmainSearch = yc$setYAML(param_name_EV_PrecursorTolPPMmainSearch, as.numeric(v))
+      }
+    }
+    if (is.na(param_EV_PrecursorTolPPMmainSearch))
+    {
+      warning("PTXQC: Cannot draw borders for calibrated mass error, since neither 'File$Evidence$MQpar_mainSearchTol_num' is set nor a mqpar.xml file is present!", immediate. = TRUE)
+    }
+    
+    enabled_msms = yc$getYAML("File$MsMs$enabled", TRUE) & file.exists(txt_files$msms)
+    enabled_msmsscans = yc$getYAML("File$MsMsScans$enabled", TRUE) & file.exists(txt_files$msmsScan)
+    
+    param_name_MSMSScans_ionInjThresh = "File$MsMsScans$IonInjectionThresh_num"
+    param_def_MSMSScans_ionInjThresh = 10 ## default ion injection threshold in milliseconds
+    param_MSMSScans_ionInjThresh = yc$getYAML(param_name_MSMSScans_ionInjThresh, param_def_MSMSScans_ionInjThresh)
+    if (!is.numeric(param_MSMSScans_ionInjThresh))
+    { ## reset if value is weird
+      cat("YAML value for '" %+% param_name_MSMSScans_ionInjThresh %+% "' is invalid ('" %+% param_MSMSScans_ionInjThresh %+% "'). Using default of " %+% param_def_MSMSScans_ionInjThresh %+% ".")
+      param_MSMSScans_ionInjThresh = param_def_MSMSScans_ionInjThresh
+    }
+    
+    
+    param_name_PTXQC_OutputFormats = "PTXQC$OutputFormats"
+    out_formats_supported = c("html", "plainPDF")
+    param_def_PTXQC_OutputFormats =  out_formats_supported
+    param_OutputFormats = yc$getYAML(param_name_PTXQC_OutputFormats, param_def_PTXQC_OutputFormats)
+    
+    param_name_PTXQC_PageNumbers = "PTXQC$PlainPDF$AddPageNumbers"
+    param_def_PTXQC_PageNumbers = "on"
+    param_PageNumbers = yc$getYAML(param_name_PTXQC_PageNumbers, param_def_PTXQC_PageNumbers)
+    
   }
-  if (is.na(param_EV_PrecursorTolPPMmainSearch))
-  {
-    warning("PTXQC: Cannot draw borders for calibrated mass error, since neither 'File$Evidence$MQpar_mainSearchTol_num' is set nor a mqpar.xml file is present!", immediate. = TRUE)
-  }
   
-  enabled_msms = yc$getYAML("File$MsMs$enabled", TRUE) & file.exists(txt_files$msms)
-  enabled_msmsscans = yc$getYAML("File$MsMsScans$enabled", TRUE) & file.exists(txt_files$msmsScan)
-  
-  param_name_MSMSScans_ionInjThresh = "File$MsMsScans$IonInjectionThresh_num"
-  param_def_MSMSScans_ionInjThresh = 10 ## default ion injection threshold in milliseconds
-  param_MSMSScans_ionInjThresh = yc$getYAML(param_name_MSMSScans_ionInjThresh, param_def_MSMSScans_ionInjThresh)
-  if (!is.numeric(param_MSMSScans_ionInjThresh))
-  { ## reset if value is weird
-    cat("YAML value for '" %+% param_name_MSMSScans_ionInjThresh %+% "' is invalid ('" %+% param_MSMSScans_ionInjThresh %+% "'). Using default of " %+% param_def_MSMSScans_ionInjThresh %+% ".")
-    param_MSMSScans_ionInjThresh = param_def_MSMSScans_ionInjThresh
-  }
-  
-  
-  param_name_PTXQC_OutputFormats = "PTXQC$OutputFormats"
-  out_formats_supported = c("html", "plainPDF")
-  param_def_PTXQC_OutputFormats =  out_formats_supported
-  param_OutputFormats = yc$getYAML(param_name_PTXQC_OutputFormats, param_def_PTXQC_OutputFormats)
-  
-  param_name_PTXQC_PageNumbers = "PTXQC$PlainPDF$AddPageNumbers"
-  param_def_PTXQC_PageNumbers = "on"
-  param_PageNumbers = yc$getYAML(param_name_PTXQC_PageNumbers, param_def_PTXQC_PageNumbers)
-  
-  }
-
   ## prepare for readMQ()
   mq = MQDataReader$new()
   
   ## read manual filename shortening & sorting (if available)
   mq$readMappingFile(rprt_fns$filename_sorting)
-
+  
   ####
   ####  prepare the metrics
   ####
@@ -282,7 +283,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
   {
     
     df_pg = mq$readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")
-      
+    
     ##
     ## Raw/LFQ/Reporter intensity boxplots
     ##
@@ -311,8 +312,8 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
     ## Contaminants plots on Raw intensity
     ##
     lst_qcMetrics[["qcMetric_PG_Cont"]]$setData(df_pg, colsW, MAP_pg_groups)
-
-
+    
+    
     ###
     ### Raw intensity boxplot
     ###
@@ -320,7 +321,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
     clusterCols$raw.intensity = colsW ## cluster using intensity
     
     lst_qcMetrics[["qcMetric_PG_RawInt"]]$setData(df_pg, colsW, MAP_pg_groups, param_PG_intThresh)
-
+    
     ##
     ## LFQ boxplots
     ##
@@ -340,7 +341,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
                                                                     min_out_length = GL_name_min_length, 
                                                                     add_dots = TRUE), 
                                                              min_out_length = GL_name_min_length))
-
+      
       clusterCols$lfq.intensity = colsW ## cluster using LFQ
       
       lst_qcMetrics[["qcMetric_PG_LFQInt"]]$setData(df_pg, colsW, MAP_pg_groups_LFQ, param_PG_intThresh)
@@ -360,7 +361,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
                                                                       min_out_length = GL_name_min_length, 
                                                                       add_dots = TRUE), 
                                                                min_out_length = GL_name_min_length))
-
+      
       clusterCols$reporter.intensity = colsITRAQ ## cluster using reporters
       
       lst_qcMetrics[["qcMetric_PG_ReporterInt"]]$setData(df_pg, colsITRAQ, MAP_pg_groups_ITRAQ, param_PG_intThresh)
@@ -375,7 +376,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
     MAP_pg_groups_ALL = rbind(MAP_pg_groups, MAP_pg_groups_LFQ, MAP_pg_groups_ITRAQ)
     
     lst_qcMetrics[["qcMetric_PG_PCA"]]$setData(df_pg, clusterCols, MAP_pg_groups_ALL)
-
+    
     
     ##################################
     ## ratio plots
@@ -402,7 +403,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
   ######
   ######  evidence.txt ...
   ######
-
+  
   if (enabled_evidence)
   {
     
@@ -425,7 +426,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
                                     numeric = "^Mass$", "^protein.names$",
                                     numeric = "^ms.ms.count$",
                                     numeric = "^reporter.intensity.")) ## we want .corrected and .not.corrected
-
+    
     ### warn of special contaminants!
     if (class(yaml_contaminants) == "list")  ## SC are requested
     {
@@ -441,7 +442,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
     ## intensity of peptides
     ##
     lst_qcMetrics[["qcMetric_EVD_PeptideInt"]]$setData(df_evd, param_EV_intThresh)
-
+    
     ##
     ## MS2/MS3 labeled (TMT/ITRAQ) only: reporter intensity of peptides
     ##
@@ -458,11 +459,11 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
     df_evd$hasMTD = !is.na(df_evd$match.time.difference)
     ## report Match-between-runs data only if it was enabled
     reportMTD = any(df_evd$hasMTD)
-
+    
     lst_qcMetrics[["qcMetric_EVD_ProteinCount"]]$setData(df_evd, param_EV_protThresh)
-
+    
     lst_qcMetrics[["qcMetric_EVD_PeptideCount"]]$setData(df_evd, param_EV_pepThresh)
-
+    
     ####
     #### peak length (not supported in MQ 1.0.13)
     ####
@@ -477,19 +478,19 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
     ## Even if MBR=off, this column always contains numbers (usually 0, or very small)
     ##
     
-
+    
     if (("retention.time.calibration" %in% colnames(df_evd)))
     {
       ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
       MBR_HAS_DATA = (sum(df_evd$type == "MULTI-MATCH") > 0)
-
+      
       if ((param_evd_mbr == FALSE) || (MBR_HAS_DATA == FALSE))
       {
         ## MBR is not evaluated
       } else
       {
         lst_qcMetrics[["qcMetric_EVD_MBRAlign"]]$setData(df_evd, param_EV_MatchingTolerance, mq$raw_file_mapping)
-
+        
         ### 
         ###     MBR: ID transfer
         ###
@@ -499,7 +500,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
           stop("RT peak width module did not run, but is required for MBR metrics. Enable it and try again or switch off MBR metrics!")
         } 
         lst_qcMetrics[["qcMetric_EVD_MBRIdTransfer"]]$setData(df_evd, avg_peak_width)
-
+        
         
         ##
         ## MBR: Tree Clustering (experimental)
@@ -507,7 +508,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
         ## MBR: additional evidence by matching MS1 by AMT across files
         ##
         lst_qcMetrics[["qcMetric_EVD_MBRaux"]]$setData(df_evd)
-
+        
       } ## MBR has data
     } ## retention.time.difference column exists
     
@@ -518,12 +519,12 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
     ##  (this uses genuine peptides only -- no MBR!)
     ## 
     lst_qcMetrics[["qcMetric_EVD_Charge"]]$setData(df_evd)
-
+    
     ##
     ## peptides per RT
     ##
     lst_qcMetrics[["qcMetric_EVD_IDoverRT"]]$setData(df_evd)
-
+    
     ##
     ## barplots of mass error
     ##
@@ -554,247 +555,247 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
     }
     
     lst_qcMetrics[["qcMetric_EVD_PreCal"]]$setData(df_evd, df_idrate, param_EV_PrecursorTolPPM, param_EV_PrecursorOutOfCalSD)
-
+    
     
     ##
     ## MS1 post calibration
     ##
     
-
+    
     lst_qcMetrics[["qcMetric_EVD_PostCal"]]$setData(df_evd, df_idrate, param_EV_PrecursorTolPPM, param_EV_PrecursorOutOfCalSD, param_EV_PrecursorTolPPMmainSearch)
-
-
+    
+    
     ##
     ## Top5 contaminants
     ##
     lst_qcMetrics[["qcMetric_EVD_Top5Cont"]]$setData(df_evd)
-
+    
     ##
     ## Oversampling: determine peaks repeatedly sequenced
     ##
     lst_qcMetrics[["qcMetric_EVD_MS2OverSampling"]]$setData(df_evd)
-
+    
     ##
     ## missing values
     ##
     lst_qcMetrics[["qcMetric_EVD_MissingValues"]]$setData(df_evd)
-
+    
     ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
     if (!DEBUG_PTXQC) df_evd = df_evd[, c("id", "contaminant")]
-}
-
-
-######
-######  msms.txt ...
-######
-
-if (enabled_msms)
-{
-  ### missed cleavages (again)
-  ### this is the real missed cleavages estimate ... but slow
-  #df_msms_s = mq$readMQ(txt_files$msms, type="msms", filter = "", nrows=10)
-  #colnames(df_msms_s)
-  #head(df_msms)
-  df_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c(numeric = "Missed\\.cleavages",
-                                                                            "^Raw.file$",
-                                                                            "^mass.deviations",
-                                                                            "^masses$", "^mass.analyzer$", "fragmentation", "reverse",
-                                                                            numeric = "^evidence.id$"
-                                                                            ), check_invalid_lines = FALSE)
-  
-  ##
-  ##  MS2 fragment decalibration
-  ##
-  lst_qcMetrics[["qcMetric_MSMS_MSMSDecal"]]$setData(df_msms = df_msms, fc_raw_files = mq$raw_file_mapping$to)
-
-  ##
-  ## missed cleavages per Raw file
-  ##
-  if (exists("df_evd")) {
-    lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms, df_evd)
-  } else {
-    lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms)
   }
-
-  ## save RAM: msms.txt is not required any longer
-  rm(df_msms)
-  if (!DEBUG_PTXQC) rm(df_evd)
-}
-
-
-
-######
-######  msmsScans.txt ...
-######
-
-if (enabled_msmsscans)
-{
-  #df_msmsScan_h = mq$readMQ(txt_files$msmsScan, type="msms", filter = "", nrows=2)
-  #colnames(df_msmsScan_h)
-  #head(df_msmsScan_h)
-  df_msmsScan = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", 
-                         col_subset = c(numeric = "^ion.injection.time", 
-                                        numeric = "^retention.time$", 
-                                        "^Identified", 
-                                        "^Scan.event.number", 
-                                        "^total.ion.current",
-                                        "^base.?peak.intensity", ## basepeak.intensity (MQ1.2) and base.peak.intensity (MQ1.3+)
-                                        "^Raw.file",
-                                        "^dp.aa$",
-                                        "^dp.modification$"),
-                         check_invalid_lines = FALSE)
   
-  ##
-  ## MQ version 1.0.13 has very rudimentary MSMSscans.txt, with no header, so we need to skip the metrics of this file
-  ##
-  if (ncol(df_msmsScan) > 3)
+  
+  ######
+  ######  msms.txt ...
+  ######
+  
+  if (enabled_msms)
   {
-    # round RT to 2 min intervals
-    df_msmsScan$rRT = round(df_msmsScan$retention.time/2)*2
+    ### missed cleavages (again)
+    ### this is the real missed cleavages estimate ... but slow
+    #df_msms_s = mq$readMQ(txt_files$msms, type="msms", filter = "", nrows=10)
+    #colnames(df_msms_s)
+    #head(df_msms)
+    df_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c(numeric = "Missed\\.cleavages",
+                                                                               "^Raw.file$",
+                                                                               "^mass.deviations",
+                                                                               "^masses$", "^mass.analyzer$", "fragmentation", "reverse",
+                                                                               numeric = "^evidence.id$"
+    ), check_invalid_lines = FALSE)
     
     ##
-    ## TopN over RT
+    ##  MS2 fragment decalibration
     ##
-    lst_qcMetrics[["qcMetric_MSMSScans_TopNoverRT"]]$setData(df_msmsScan)
-
-    ##
-    ## Injection time over RT
-    ##
-    lst_qcMetrics[["qcMetric_MSMSScans_IonInjTime"]]$setData(df_msmsScan, param_MSMSScans_ionInjThresh)
-
-    ##
-    ## MS/MS intensity (TIC and base peak)
-    ##
-    lst_qcMetrics[["qcMetric_MSMSScans_MSMSIntensity"]]$setData(df_msmsScan)
+    lst_qcMetrics[["qcMetric_MSMS_MSMSDecal"]]$setData(df_msms = df_msms, fc_raw_files = mq$raw_file_mapping$to)
     
     ##
-    ## TopN counts
+    ## missed cleavages per Raw file
     ##
-    lst_qcMetrics[["qcMetric_MSMSScans_TopN"]]$setData(df_msmsScan)
-
-    ##
-    ## Scan event: % identified
-    ##
-    lst_qcMetrics[["qcMetric_MSMSScans_TopNID"]]$setData(df_msmsScan)
-    
-    ##
-    ## Dependent peptides (no score)
-    ##
-    if ("dp.modification" %in% colnames(df_msmsScan)) {
-      lst_qcMetrics[["qcMetric_MSMSScans_DepPep"]]$setData(df_msmsScan)
-    }
-    
-  } ## end MSMSscan from MQ > 1.0.13
-  
-  ## save RAM: msmsScans.txt is not required any longer
-  rm(df_msmsScan)
-}
-
-#####################################################################
-## list of qcMetric objects
-print("#Metrics: ")
-print(length(lst_qcMetrics))
-
-hm = getQCHeatMap(lst_qcMetrics, raw_file_mapping = mq$raw_file_mapping)
-#print(hm[["plot"]])
-write.table(hm[["table"]], file = rprt_fns$heatmap_values_file, quote = TRUE, sep = "\t", row.names = FALSE)
-
-## get MQ short name mapping plot (might be NULL if no mapping was required)
-pl_nameMapping = mq$plotNameMapping()
-
-##
-## plot it!!!
-##
-cat("Creating Report file ...")
-
-#
-#param_OutputFormats = "html pdf"
-#
-out_formats = unlist(strsplit(param_OutputFormats, "[ ,]+"))
-out_formats
-out_format_requested = out_formats_supported[match(out_formats, out_formats_supported)]
-if (any(is.na(out_format_requested)))
-{
-  stop("Output format(s) not supported: '", paste(out_formats[is.na(out_format_requested)], collapse="', '"), "'")
-}
-
-
-if ("html" %in% out_format_requested)
-{
-  if (pandoc_available()) {
-    ## HTML reports require Pandoc for converting Markdown to Html via the rmarkdown package
-    if (DEBUG_PTXQC) {
-      html_template = "Z:/projects/QC/PTXQC/package/inst/reportTemplate/PTXQC_report_template.Rmd"
+    if (exists("df_evd")) {
+      lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms, df_evd)
     } else {
-      html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
+      lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms)
     }
-    cat(paste0("HTML TEMPLATE: ", html_template, "\n"))
-    out_dir = dirname(rprt_fns$report_file_HTML)
-    file.copy(html_template, out_dir, overwrite = TRUE)
-    out_template = file.path(out_dir, basename(html_template))
-    ## Rmarkdown: convert to Markdown, and then to HTML (or PDF) ...
-    ## Intermediates_dir is required if inputdir!=outputdir, since Shiny server might not allow write-access to input file directory
-    render(out_template, output_file = rprt_fns$report_file_HTML) #, intermediates_dir = dirname(rprt_fns$report_file_HTML))
-  } else {
-    warning("The 'Pandoc' converter is not installed on your system or you do not have read-access to it!\n",
-            "Pandoc is required for HTML reports.\n",
-            "Please install Pandoc <http://pandoc.org/installing.html> or make sure you have access to pandoc(.exe).\n",
-            "Restart your R-session afterwards.",
-            immediate. = TRUE)
-  }
-}
-
-if ("plainPDF" %in% out_format_requested)
-{
-  report_file_PDF = rprt_fns$report_file_PDF
-  ## give the user a chance to close open reports which are currently blocked for writing
-  if (!wait_for_writable(report_file_PDF))
-  {
-    stop("Target file not writable")
+    
+    ## save RAM: msms.txt is not required any longer
+    rm(df_msms)
+    if (!DEBUG_PTXQC) rm(df_evd)
   }
   
-  if (param_PageNumbers == "on")
+  
+  
+  ######
+  ######  msmsScans.txt ...
+  ######
+  
+  if (enabled_msmsscans)
   {
-    printWithPage = function(gg_obj, page_nr, filename = report_file_PDF)
+    #df_msmsScan_h = mq$readMQ(txt_files$msmsScan, type="msms", filter = "", nrows=2)
+    #colnames(df_msmsScan_h)
+    #head(df_msmsScan_h)
+    df_msmsScan = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", 
+                            col_subset = c(numeric = "^ion.injection.time", 
+                                           numeric = "^retention.time$", 
+                                           "^Identified", 
+                                           "^Scan.event.number", 
+                                           "^total.ion.current",
+                                           "^base.?peak.intensity", ## basepeak.intensity (MQ1.2) and base.peak.intensity (MQ1.3+)
+                                           "^Raw.file",
+                                           "^dp.aa$",
+                                           "^dp.modification$"),
+                            check_invalid_lines = FALSE)
+    
+    ##
+    ## MQ version 1.0.13 has very rudimentary MSMSscans.txt, with no header, so we need to skip the metrics of this file
+    ##
+    if (ncol(df_msmsScan) > 3)
     {
-      filename = basename(filename)
-      printWithFooter(gg_obj, bottom_left = filename, bottom_right = page_nr)
-    }
-  } else {
-    ## no page number and filename at bottom of each page
-    printWithPage = function(gg_obj, page_nr, filename = report_file_PDF)
-    {
-      print(gg_obj)
+      # round RT to 2 min intervals
+      df_msmsScan$rRT = round(df_msmsScan$retention.time/2)*2
+      
+      ##
+      ## TopN over RT
+      ##
+      lst_qcMetrics[["qcMetric_MSMSScans_TopNoverRT"]]$setData(df_msmsScan)
+      
+      ##
+      ## Injection time over RT
+      ##
+      lst_qcMetrics[["qcMetric_MSMSScans_IonInjTime"]]$setData(df_msmsScan, param_MSMSScans_ionInjThresh)
+      
+      ##
+      ## MS/MS intensity (TIC and base peak)
+      ##
+      lst_qcMetrics[["qcMetric_MSMSScans_MSMSIntensity"]]$setData(df_msmsScan)
+      
+      ##
+      ## TopN counts
+      ##
+      lst_qcMetrics[["qcMetric_MSMSScans_TopN"]]$setData(df_msmsScan)
+      
+      ##
+      ## Scan event: % identified
+      ##
+      lst_qcMetrics[["qcMetric_MSMSScans_TopNID"]]$setData(df_msmsScan)
+      
+      ##
+      ## Dependent peptides (no score)
+      ##
+      if ("dp.modification" %in% colnames(df_msmsScan)) {
+        lst_qcMetrics[["qcMetric_MSMSScans_DepPep"]]$setData(df_msmsScan)
+      }
+      
+    } ## end MSMSscan from MQ > 1.0.13
+    
+    ## save RAM: msmsScans.txt is not required any longer
+    rm(df_msmsScan)
+  }
+  
+  #####################################################################
+  ## list of qcMetric objects
+  print("#Metrics: ")
+  print(length(lst_qcMetrics))
+  
+  hm = getQCHeatMap(lst_qcMetrics, raw_file_mapping = mq$raw_file_mapping)
+  #print(hm[["plot"]])
+  write.table(hm[["table"]], file = rprt_fns$heatmap_values_file, quote = TRUE, sep = "\t", row.names = FALSE)
+  
+  ## get MQ short name mapping plot (might be NULL if no mapping was required)
+  pl_nameMapping = mq$plotNameMapping()
+  
+  ##
+  ## plot it!!!
+  ##
+  cat("Creating Report file ...")
+  
+  #
+  #param_OutputFormats = "html pdf"
+  #
+  out_formats = unlist(strsplit(param_OutputFormats, "[ ,]+"))
+  out_formats
+  out_format_requested = out_formats_supported[match(out_formats, out_formats_supported)]
+  if (any(is.na(out_format_requested)))
+  {
+    stop("Output format(s) not supported: '", paste(out_formats[is.na(out_format_requested)], collapse="', '"), "'")
+  }
+  
+  
+  if ("html" %in% out_format_requested)
+  {
+    if (pandoc_available()) {
+      ## HTML reports require Pandoc for converting Markdown to Html via the rmarkdown package
+      if (DEBUG_PTXQC) {
+        html_template = "Z:/projects/QC/PTXQC/package/inst/reportTemplate/PTXQC_report_template.Rmd"
+      } else {
+        html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
+      }
+      cat(paste0("HTML TEMPLATE: ", html_template, "\n"))
+      out_dir = dirname(rprt_fns$report_file_HTML)
+      file.copy(html_template, out_dir, overwrite = TRUE)
+      out_template = file.path(out_dir, basename(html_template))
+      ## Rmarkdown: convert to Markdown, and then to HTML (or PDF) ...
+      ## Intermediates_dir is required if inputdir!=outputdir, since Shiny server might not allow write-access to input file directory
+      render(out_template, output_file = rprt_fns$report_file_HTML) #, intermediates_dir = dirname(rprt_fns$report_file_HTML))
+    } else {
+      warning("The 'Pandoc' converter is not installed on your system or you do not have read-access to it!\n",
+              "Pandoc is required for HTML reports.\n",
+              "Please install Pandoc <http://pandoc.org/installing.html> or make sure you have access to pandoc(.exe).\n",
+              "Restart your R-session afterwards.",
+              immediate. = TRUE)
     }
   }
-  pdf(report_file_PDF)
-  printWithPage(hm[["plot"]], "p. 1")      # summary heatmap
-  printWithPage(pl_nameMapping$plots, "p. 2")    # short file mapping
-  pc = 3; ## subsequent pages start at #4
-  for (qcm in lst_qcMetrics_ord)
+  
+  if ("plainPDF" %in% out_format_requested)
   {
-    for (p in qcm$plots)
+    report_file_PDF = rprt_fns$report_file_PDF
+    ## give the user a chance to close open reports which are currently blocked for writing
+    if (!wait_for_writable(report_file_PDF))
     {
-      printWithPage(p, paste("p.", pc))
-      pc = pc + 1
+      stop("Target file not writable")
     }
+    
+    if (param_PageNumbers == "on")
+    {
+      printWithPage = function(gg_obj, page_nr, filename = report_file_PDF)
+      {
+        filename = basename(filename)
+        printWithFooter(gg_obj, bottom_left = filename, bottom_right = page_nr)
+      }
+    } else {
+      ## no page number and filename at bottom of each page
+      printWithPage = function(gg_obj, page_nr, filename = report_file_PDF)
+      {
+        print(gg_obj)
+      }
+    }
+    pdf(report_file_PDF)
+    printWithPage(hm[["plot"]], "p. 1")      # summary heatmap
+    printWithPage(pl_nameMapping$plots, "p. 2")    # short file mapping
+    pc = 3; ## subsequent pages start at #4
+    for (qcm in lst_qcMetrics_ord)
+    {
+      for (p in qcm$plots)
+      {
+        printWithPage(p, paste("p.", pc))
+        pc = pc + 1
+      }
+    }
+    dev.off();
+    cat(" done\n")
   }
-  dev.off();
-  cat(" done\n")
-}
-
-## save plot object (for easier access, in case someone wants high-res plots)
-## (...disabled for now until concrete use case pops up)
-#cat("Dumping plot objects as Rdata file ...")
-#save(file = rprt_fns$R_plots_file, list = "GPL")
-#cat(" done\n")
-
-## write shortnames and sorting of filenames
-mq$writeMappingFile(rprt_fns$filename_sorting)
-
-cat(paste("Report file created at\n\n    ", rprt_fns$report_file_prefix, ".*\n\n", sep=""))
-cat(paste0("\n\nTime elapsed: ", round(as.double(Sys.time() - time_start, units="mins"), 1), " min\n\n"))
-
-## return path to PDF report and YAML config, etc
-return(rprt_fns)
+  
+  ## save plot object (for easier access, in case someone wants high-res plots)
+  ## (...disabled for now until concrete use case pops up)
+  #cat("Dumping plot objects as Rdata file ...")
+  #save(file = rprt_fns$R_plots_file, list = "GPL")
+  #cat(" done\n")
+  
+  ## write shortnames and sorting of filenames
+  mq$writeMappingFile(rprt_fns$filename_sorting)
+  
+  cat(paste("Report file created at\n\n    ", rprt_fns$report_file_prefix, ".*\n\n", sep=""))
+  cat(paste0("\n\nTime elapsed: ", round(as.double(Sys.time() - time_start, units="mins"), 1), " min\n\n"))
+  
+  ## return path to PDF report and YAML config, etc
+  return(rprt_fns)
 }
