@@ -31,7 +31,7 @@ test_that("createReport", {
   txt_folder = file.path(tempdir(), "txt")
   yaml_obj = list() ## so special config...
   
-  r = createReport(txt_folder, yaml_obj)
+  r = createReport_MQ(txt_folder, yaml_obj)
   expect_equal(c("yaml_file", "heatmap_values_file", "R_plots_file", "filename_sorting", "stats_file",         
                  "log_file", "report_file_prefix", "report_file_PDF", "report_file_HTML"), names(r))
   rep_files = c(r[["report_file_PDF"]], r[["report_file_HTML"]])

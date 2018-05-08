@@ -1230,8 +1230,15 @@ getMetricsObjects = function(DEBUG_PTXQC = FALSE)
   return(lst_qcMetrics)
 }
 
-# Hilfsfunktion fuer Mapping
-# identisch zu Funktion getshortnames in MQ-Reader
+#'
+#' Shorten a set of Raw file names and return a data frame with the mappings.
+#' 
+#' @param raw.files Vector of Raw files
+#' @param max_len Maximal length of shortening results, before resorting to canonical names (file 1,...) 
+#' @param fallbackStartNr Starting index for canonical names
+#' @return data.frame with mapping
+#' 
+#' @name getShortNames
 getShortNames = function(raw.files, max_len, fallbackStartNr = 1)
 {
   ##

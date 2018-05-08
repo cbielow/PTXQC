@@ -9,7 +9,10 @@
 #'        foo <- foo$read.mzTab("file.mztab")
 #'        file.mztab <- foo$ALL
 #'        metadata_from_file.mzTab <- foo$MTD 
-#'        
+#'    
+#' @importFrom plyr rename
+#' @export
+#'  
 
 mzTab = setRefClass("mzTab",
                     fields = list(ALL="data.frame",
@@ -30,7 +33,7 @@ mzTab = setRefClass("mzTab",
                         .self$SML = data.frame();
                         .self$rawFileMapping <- data.frame();
                       },
-                      #' function to read mzTab
+                      #function to read mzTab
                       read.mzTab = function(file){
                         
                         #get max number of columns

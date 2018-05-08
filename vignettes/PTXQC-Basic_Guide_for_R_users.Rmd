@@ -27,7 +27,7 @@ how a txt folder should look like.
 
 ## Generate a default report 
 
-This is the most simple invokation of PTXQC::createReport().
+This is the most simple invokation of PTXQC::createReport_MQ().
 
 ```{r, eval=TRUE}
 require(PTXQC)
@@ -55,7 +55,7 @@ if (1) {
   txt_folder = "c:/Proteomics/MouseLiver/combined/txt"
 }
 
-r = createReport(txt_folder)
+r = createReport_MQ(txt_folder)
 
 cat(paste0("\nReport generated as '", r$report_file, "'\n\n"))
 
@@ -105,7 +105,7 @@ if (file.exists(fh_out$yaml_file))
   yaml_config = list()
 }
 
-r = createReport(txt_folder, yaml_config)
+r = createReport_MQ(txt_folder, yaml_config)
 
 cat(paste0("\nReport generated as '", r$report_file, "'\n\n"))
 
