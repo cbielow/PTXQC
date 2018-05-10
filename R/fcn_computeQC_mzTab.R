@@ -449,7 +449,7 @@ createReport_mzTab = function(mzTab_file, yaml_obj = list(), report_filenames = 
     ## peptide & protein counts
     ##
     ## contains NA if 'genuine' ID
-    if(all(c("hasMTD","match.time.difference") %in% colnames(df_evd))){
+    if("match.time.difference" %in% colnames(df_evd)){
       df_evd$hasMTD = !is.na(df_evd$match.time.difference)
       ## report Match-between-runs data only if it was enabled
       reportMTD = any(df_evd$hasMTD)

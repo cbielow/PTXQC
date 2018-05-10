@@ -437,7 +437,7 @@ createReport_MQ = function(txt_folder, yaml_obj = list(), report_filenames = NUL
         lst_qcMetrics[["qcMetric_EVD_UserContaminant"]]$setData(df_evd, NULL, yaml_contaminants)
       }
     }
-    
+    browser()
     ##
     ## intensity of peptides
     ##
