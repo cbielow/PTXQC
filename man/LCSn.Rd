@@ -15,9 +15,21 @@ LCSn(strings, min_LCS_length = 0)
 longest common substring (or "" if shorter than \code{min_LCS_length})
 }
 \description{
-Warning: heuristic! This is not guaranteed to find the best solution, since its done pairwise with the shortest input string as reference.
+Warning: greedy heuristic! This is not guaranteed to find the best solution (or any solution at all), since its done pairwise with the shortest input string as reference.
 }
 \examples{
-LCSn(c("1_abcde...", "2_abcd...", "x_abc..."))  ## result: "_abc"
+LCSn(c("1_abcde...",
+       "2_abcd...",
+       "x_abc..."))  ## --> "_abc"
+LCSn(c("16_IMU008_CISPLA_E5_R11", 
+       "48_IMU008_CISPLA_P4_E7_R31",
+       "60_IMU008_CISPLA_E7_R11"), 3) ## -->"_IMU008_CISPLA_"
+LCSn(c("AAAAACBBBBB", 
+       "AAAAADBBBBB",
+       "AAAABBBBBEF",
+       "AAABBBBBDGH")) ## -->  "BBBBB"
+LCSn(c("AAAXXBBB",
+       "BBBXXDDD",
+       "XXAAADDD")) ## --> fails due to greedy approach; should be "XX"
 
 }

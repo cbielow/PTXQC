@@ -4,7 +4,8 @@
 \alias{shortenStrings}
 \title{Shorten a string to a maximum length and indicate shorting by appending '..'}
 \usage{
-shortenStrings(x, max_len = 20, verbose = TRUE, allow_duplicates = FALSE)
+shortenStrings(x, max_len = 20, verbose = TRUE,
+  allow_duplicates = FALSE)
 }
 \arguments{
 \item{x}{Vector of input strings}

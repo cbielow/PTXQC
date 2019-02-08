@@ -224,10 +224,19 @@ LCS <- function(s1, s2)
 #' @return longest common substring (or "" if shorter than \code{min_LCS_length})
 #' 
 #' @examples
-#' LCSn(c("1_abcde...", "2_abcd...", "x_abc..."))  ## --> "_abc"
-#' LCSn(c("16_IMU008_CISPLA_E5_R11", "48_IMU008_CISPLA_P4_E7_R31", "60_IMU008_CISPLA_E7_R11"), 3) ## -->"_IMU008_CISPLA_"
-#  LCSn(c("AAAAACBBBBB", "AAAAADBBBBB", "AAAABBBBBEF", "AAABBBBBDGH")) ## -->  "BBBBB"
-#' LCSn(c("AAAXXBBB", "BBBXXDDD", "XXAAADDD")) ## --> fails due to greedy approach; should be "XX"
+#' LCSn(c("1_abcde...",
+#'        "2_abcd...",
+#'        "x_abc..."))  ## --> "_abc"
+#' LCSn(c("16_IMU008_CISPLA_E5_R11", 
+#'        "48_IMU008_CISPLA_P4_E7_R31",
+#'        "60_IMU008_CISPLA_E7_R11"), 3) ## -->"_IMU008_CISPLA_"
+#' LCSn(c("AAAAACBBBBB", 
+#'        "AAAAADBBBBB",
+#'        "AAAABBBBBEF",
+#'        "AAABBBBBDGH")) ## -->  "BBBBB"
+#' LCSn(c("AAAXXBBB",
+#'        "BBBXXDDD",
+#'        "XXAAADDD")) ## --> fails due to greedy approach; should be "XX"
 #' 
 #' @export
 #' 

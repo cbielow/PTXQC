@@ -52,6 +52,6 @@ The YAML configuration file is created the first time you run PTXQC on a txt-fol
 Read more about `report_vXXX_filename_sort.txt` and `report_vXXX.yaml` in the [PTX-CustomizeReport][Ref_VignCust] vignette.
   
 
-  [MaxQuant]: http://www.maxquant.org
+  [MaxQuant]: https://maxquant.org
   [Ref_VignCust]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-CustomizeReport.Rmd
 

@@ -20,16 +20,23 @@ test_that("createReport", {
   ## redirects, but download the server message instead. Try 'curl' etc on the command line, to see
   ## what's going on and find the right URL (for GitHub: we need https and raw.github....)
   target_url = "https://raw.githubusercontent.com/cbielow/PTXQC_data/master/txt_Ecoli.zip"
+  dl = NULL
   tryCatch({
-    dl = download.file(target_url, destfile = local_zip)
-  }, error = function(err) {
+    dl = download.file(target_url, destfile = local_zip, quiet = TRUE)
+  }, silent = TRUE, warning = function(w) { }, error = function(err) {
     ## in case of error, try with Curl
-    dl = download.file(target_url, destfile = local_zip, method='curl') ## for Linux/MacOSX
+    tryCatch({
+      dl = download.file(target_url, destfile = local_zip, method='curl', quiet = TRUE) ## for Linux/MacOSX
+    }, silent = TRUE, warning = function(w) { }, error = function(err2) {
+      print("Internet down. Aborting test gracefully")
+      return(); ## fail gracefully
+    })
   })
-
+  if (is.null(dl)) return()
+  
   unzip(local_zip, exdir = tempdir()) ## extracts content
   txt_folder = file.path(tempdir(), "txt")
-  yaml_obj = list() ## so special config...
+  yaml_obj = list() ## no special config...
   
   r = createReport(txt_folder, yaml_obj)
   expect_equal(c("yaml_file", "heatmap_values_file", "R_plots_file", "filename_sorting", "stats_file",         

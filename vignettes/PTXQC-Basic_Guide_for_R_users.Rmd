@@ -29,7 +29,7 @@ how a txt folder should look like.
 
 This is the most simple invokation of PTXQC::createReport().
 
-```{r, eval=TRUE}
+```{r, eval=FALSE}
 require(PTXQC)
 
 ## the next require() is needed to prevent a spurious error in certain R versions (might be a bug in R or a package)
@@ -47,6 +47,7 @@ if (1) {
   }, error = function(err) {
     ## on Windows, one can get a 'cannot open URL' using the default method. So we try another
     download.file("ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2015/11/PXD003133/txt_20min.zip", destfile = local_zip, method= "internal")
+    
   })
   unzip(local_zip, exdir = tempdir()) ## extracts content
   txt_folder = file.path(tempdir(), "txt_20min")
