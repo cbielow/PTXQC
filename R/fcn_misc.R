@@ -307,10 +307,14 @@ simplifyNames = function(strings, infix_iterations = 2, min_LCS_length = 7, min_
   for (it in 1:infix_iterations)
   {
     lcs = LCSn(strings, min_LCS_length=min_LCS_length)
-    if (nchar(lcs)==0) return (strings) ## to infix of minimum length found
+    if (nchar(lcs)==0) return (strings) ## no infix of minimum length found
     ## replace infix with 'ab..yz'
-    strings_i = sub(paste0("(.*)", lcs, "(.*)"), 
-                    paste0("\\1", substring(lcs,1,2), "..", substring(lcs, nchar(lcs)-1), "\\2"), 
+    strings_i = sub(paste0("(.*)", gsub("([.|()\\^{}+$*?]|\\[|\\])", "\\\\\\1", lcs), "(.*)"), 
+                    paste0("\\1"
+                           , ifelse(substring(lcs,1,2) == "..", "", substring(lcs,1,2)) ## dont keep ".."
+                           , ".."
+                           , ifelse(substring(lcs, nchar(lcs)-1) == "..", "", substring(lcs, nchar(lcs)-1)) ## dont keep ".."
+                           , "\\2"), 
                     strings)
     if (min(nchar(strings_i)) < min_out_length) return(strings) ## result got too short...
     strings = strings_i

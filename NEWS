@@ -7,6 +7,9 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v0.92.5 -- 2019/03/14
+  - [FIX] issue #49 (Raw name simplification)
+
 [CRAN] v0.92.4 -- 2019/02/07
   - [FIX] More robust package vignette builds
 

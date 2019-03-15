@@ -67,6 +67,11 @@ test_that("simplifyNames", {
   expect_equal(simplifyNames(c("1abcdefgh", "2abcdefgh"), min_out_length=99), c("1abcdefgh", "2abcdefgh"))
   expect_equal(simplifyNames(c("1abcdefgh", "2abcdefgh"), min_out_length=3), c("1ab..gh", "2ab..gh"))
   
+  inp = unlist(strsplit("3265_Lumik3_Shakya_150IS_HCD_11A_1 3265_Lumik3_Shakya_150IS_HCD_11B_1 3265_Lumik3_Shakya_150IS_HCD_11C_1 3265_Lumik3_Shakya_150IS_HCD_11D_1 3265_Lumik3_Shakya_150IS_HCD_12A_1 3265_Lumik3_Shakya_150IS_HCD_12B_1 3265_Lumik3_Shakya_150IS_HCD_12C_1 3265_Lumik3_Shakya_150IS_HCD_12D_1 3265_Lumik3_Shakya_150IS_HCD_13A_1 3265_Lumik3_Shakya_150IS_HCD_13B_1 3265_Lumik3_Shakya_150IS_HCD_13C_1 3265_Lumik3_Shakya_150IS_HCD_13D_1 3265_Lumik3_Shakya_150IS_HCD_14A_1 3265_Lumik3_Shakya_150IS_HCD_14B_1 3265_Lumik3_Shakya_150IS_HCD_14C_1 3265_Lumik3_Shakya_150IS_HCD_14D_1", " "))
+  expc = unlist(strsplit("32.._11A_1,32.._11B_1,32.._11C_1,32.._11D_1,32.._12A_1,32.._12B_1,32.._12C_1,32.._12D_1,32.._13A_1,32.._13B_1,32.._13C_1,32.._13D_1,32.._14A_1,32.._14B_1,32.._14C_1,32.._14D_1", ","))
+  expect_equal(simplifyNames(inp, infix_iterations = 2), expc)
+
+  
   expect_equal(simplifyNames(c("bla", "foo"), min_LCS_length=99), c("bla", "foo"))
   ## internally, min_LCS_length>=6 is required
   expect_error(simplifyNames(c("bla", "foo"), min_LCS_length=5))
