@@ -41,14 +41,14 @@ MQDataReader <- proto()
 #'
 #' This class is used to read MQ data tables using readMQ() while holding
 #' the internal raw file --> short raw file name mapping (stored in a member called 
-#' 'raw_file_mapping') and updating/using it every time readMQ() is called.
+#' 'fn_map') and updating/using it every time readMQ() is called.
 #' 
 #' @name MQDataReader$new
 #' @import proto
 #' 
 MQDataReader$new <- function(.)
 {
-  proto(., raw_file_mapping = NULL, mq.data = NULL, mapping.creation = NULL, external.mapping.file = NULL)
+  proto(., mq.data = NULL, fn_map = FilenameMapper$new())
 }
 
 
@@ -338,35 +338,8 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   
   if (add_fs_col & "raw.file" %in% colnames(.$mq.data))
   {
-    cat(paste0("Adding fc.raw.file column ..."))
-    ## check if we already have a mapping
-    if (is.null(.$raw_file_mapping))
-    {
-      .$raw_file_mapping = .$getShortNames(unique(.$mq.data$raw.file), add_fs_col)
-      ## indicate to outside that a new table is ready
-      .$mapping.creation = .$getMappingCreation()['auto']
-    }
-    ## do the mapping    
-    .$mq.data$fc.raw.file = as.factor(.$raw_file_mapping$to[match(.$mq.data$raw.file, .$raw_file_mapping$from)])
-    ## check for NA's
-    if (any(is.na(.$mq.data$fc.raw.file)))
-    { ## if mapping is incomplete
-      missing = unique(.$mq.data$raw.file[is.na(.$mq.data$fc.raw.file)])
-      if (.$mapping.creation == .$getMappingCreation()['user'])
-      {
-        ## the user has re-run MaxQuant with more Raw files,
-        ## but the old _filename_sort.txt file was used to read the (now incomplete mapping)
-        warning("Incomplete mapping file '", .$external.mapping.file, "'.\nAugmenting shortened Raw files:\n  " %+% 
-                paste(missing, collapse="\n  ", sep="") %+% ".\nEdit the table if necessary and re-run PTXQC.")
-        ## augment
-        addon = .$getShortNames(missing, add_fs_col, nrow(.$raw_file_mapping) + 1)
-        .$raw_file_mapping = rbind(.$raw_file_mapping,
-                                   addon)
-      } else {
-        stop("Hithero unknown Raw files: " %+% paste(missing, collapse=", ", sep="") %+% " occurred in file '" %+% file %+% "' which were not present in previous txt files.")
-      }
-    } 
-    cat(paste0(" done\n"))
+    .$mq.data$fc.raw.file = .$fn_map$getShortNames(.$mq.data$raw.file, add_fs_col)
+    
   }
 
   if (type=="sm") { ## post processing for summary
@@ -377,228 +350,6 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
   return (.$mq.data);
 } ## end readMQ()
 
-
-#'
-#' Shorten a set of Raw file names and return a data frame with the mappings.
-#' 
-#' @param raw.files Vector of Raw files
-#' @param max_len Maximal length of shortening results, before resorting to canonical names (file 1,...) 
-#' @param fallbackStartNr Starting index for canonical names
-#' @return data.frame with mapping
-#' 
-#' @name MQDataReader$getShortNames
-#' 
-MQDataReader$getShortNames = function(., raw.files, max_len, fallbackStartNr = 1)
-{
-  ##
-  ## mapping will have: $from, $to and optionally $best.effort (if shorting was unsuccessful and numbers had to be used)
-  ##
-  rf_name = raw.files
-  ## remove prefix
-  rf_name_s = delLCP(rf_name, 
-                     min_out_length = 8,
-                     add_dots = TRUE)
-  ## remove infix (2 iterations)
-  rf_name_s = simplifyNames(rf_name_s, 
-                            2, 
-                            min_LCS_length = 7,
-                            min_out_length = 8)
-  
-  ## check if shorter filenames are still unique (they should be.. if not we have a problem!!)
-  if (length(rf_name) != length(unique(rf_name_s)))
-  {
-    cat("Original names:\n")
-    cat(rf_name)
-    cat("Short names:\n")
-    cat(rf_name_s)
-    stop("While loading MQ data: shortened raw filenames are not unique! This should not happen. Please contact the developers and provide the above names!")
-  }
-  df.mapping = data.frame(from = rf_name, to = rf_name_s, stringsAsFactors = FALSE)
-
-  ## always include 'best.effort' column
-  df.mapping[, "best.effort"] = df.mapping$to
-
-    ## check if the minimal length was reached
-  if (max(nchar(df.mapping$to)) > max_len)
-  { ## resort to short naming convention
-    cat("Filenames are longer than the maximal allowed size of '" %+% max_len %+% "'. Resorting to short versions 'file X'.\n\n")
-    maxl = length(raw.files) - 1 + fallbackStartNr
-    df.mapping$to = paste("file", sprintf(paste0("%0", nchar(maxl), "d"), fallbackStartNr:maxl)) ## with leading 0's if required
-  }
-  return(df.mapping)
-}
-
-#' Plots the current mapping of Raw file names to their shortened version.
-#'
-#' Convenience function to plot the mapping (e.g. to a PDF device for reporting).
-#' The data frame can be accessed directly via \code{.$raw_file_mapping}.
-#' If no mapping exists, the function prints a warning to console and returns NULL (which is safe to use in print(NULL)).
-#'
-#' @return if mapping is available, returns a list of plots 'plots' and a Html table string 'htmlTable' ; 'NULL' otherwise.
-#'
-#' @import ggplot2
-#'
-#' @name MQDataReader$plotNameMapping
-#' 
-MQDataReader$plotNameMapping <- function(.)
-{
-  if (!is.null(.$raw_file_mapping))
-  {
-    table_header = c("original", "short\nname")
-    xpos = c(9, 11)
-    extra = ""
-    has_best_effort = FALSE
-    if ("best.effort" %in% colnames(.$raw_file_mapping))
-    {
-      has_best_effort = TRUE
-      table_header = c(table_header, "best\neffort")
-      xpos = c(9, 11, 13)
-      if (all(.$raw_file_mapping$to != .$raw_file_mapping$best.effort)) {
-        extra = "\n(automatic shortening of names was not sufficient - see 'best effort')"
-      }
-      
-    }
-    
-    #mq_mapping = mq$raw_file_mapping
-    mq_mapping = .$raw_file_mapping
-    pl_title = "Mapping of Raw files to their short names\nMapping source: " %+% .$mapping.creation %+% extra;
-    
-    mappingChunk = function(mq_mapping)
-    {
-      mq_mapping$ypos = -(1:nrow(mq_mapping))
-      head(mq_mapping)
-      mq_mapping.long = melt(mq_mapping, id.vars = c("ypos"))
-      head(mq_mapping.long)
-      mq_mapping.long$variable = as.character(mq_mapping.long$variable)
-      mq_mapping.long$col = "#000000";
-      mq_mapping.long$col[mq_mapping.long$variable=="to"] = "#5F0000"
-      mq_mapping.long$variable[mq_mapping.long$variable=="from"] = xpos[1]
-      mq_mapping.long$variable[mq_mapping.long$variable=="to"] = xpos[2]
-      if (nchar(extra)) mq_mapping.long$variable[mq_mapping.long$variable=="best.effort"] = xpos[3]
-      mq_mapping.long$variable = as.numeric(mq_mapping.long$variable)
-      mq_mapping.long$size = 2;
-      
-      df.header = data.frame(ypos = 1, variable = xpos, value = table_header, col = "#000000", size=3)
-      mq_mapping.long2 = rbind(mq_mapping.long, df.header)
-      mq_mapping.long2$hpos = 0 ## left aligned,  1=right aligned
-      mq_mapping.long2$hpos[mq_mapping.long2$variable==xpos[1]] = 1
-      mq_mapping.long2$hpos[mq_mapping.long2$variable==xpos[2]] = 0
-      if (nchar(extra)) mq_mapping.long2$hpos[mq_mapping.long2$variable==xpos[3]] = 0
-      
-      mqmap_pl = ggplot(mq_mapping.long2, aes_string(x = "variable", y = "ypos"))  +
-        geom_text(aes_string(label="value"), color = mq_mapping.long2$col, hjust=mq_mapping.long2$hpos, size=mq_mapping.long2$size) +
-        coord_cartesian(xlim=c(0,20)) +
-        theme_bw() +
-        theme(plot.margin = grid::unit(c(1,1,1,1), "cm"), line = element_blank(), 
-              axis.title = element_blank(), panel.border = element_blank(),
-              axis.text = element_blank(), strip.text = element_blank(), legend.position = "none") +
-        ggtitle(pl_title)
-      return(mqmap_pl)
-    }
-    l_plots = byXflex(mq_mapping, 1:nrow(mq_mapping), 20, mappingChunk, sort_indices = FALSE);
-    return (list(plots = l_plots, htmlTable = getHTMLTable(.$raw_file_mapping, pl_title)))
-  } else {
-    cat("No mapping found. Omitting plot.")
-    return (NULL);
-  }
-    
-  return (NULL);  
-}
-
-
-#'
-#' Writes a mapping table of full Raw file names to shortened names.
-#'
-#' The internal structure \code{raw_file_mapping} is written to the
-#' file specified.
-#' File is only created if mapping exists (in .$raw_file_mapping).
-#' 
-#' @param filename  Target filename to create.
-#' @return Returns NULL.
-#'
-#' @name MQDataReader$writeMappingFile
-#'
-MQDataReader$writeMappingFile = function(., filename)
-{
-  dfs = data.frame(orig.Name = .$raw_file_mapping$from, new.Name = .$raw_file_mapping$to)
-  if (nrow(dfs) == 0) return(NULL)
-  
-  if ("best.effort" %in% colnames(.$raw_file_mapping)) {
-    dfs$best.effort = .$raw_file_mapping[, "best.effort"]
-  }
-  
-  ## use a file handle to avoid warning from write.table() when appending
-  ## a table with column names 'Warning(): appending column names to file'
-  FH = file(filename, "w")
-  cat(file = FH,
-      "# This file can be used to manually substitute Raw file names within the report.",
-      "# The ordering of Raw files in the report can be changed by re-arranging the rows.",
-      sep = "\n")
-  write.table(x = dfs, file = FH, quote = FALSE, sep="\t", row.names = FALSE)
-  close(FH) ## flush
-  return(NULL)
-}
-
-
-#'
-#' Reads a mapping table of full Raw file names to shortened names.
-#'
-#' The internal structure \code{raw_file_mapping} is created using this file.
-#' If the file is missing, nothing is done.
-#' 
-#' The file must have two columns named: 'orig.Name' and 'new.Name' and use Tab as separator.
-#' I.e.
-#' \preformatted{# This file can be used to manually substitute Raw file names within the report.
-#' # The ordering of Raw files in the report can be changed by re-arranging the rows.
-#' orig.Name  new.Name
-#' 2011_05_30_ALH_OT_21_VIL_TMT_FR01   myfile A
-#' 2011_05_30_ALH_OT_22_VIL_TMT_FR02   another B
-#' }
-#' 
-#' @param filename  Source filename to read.
-#' @return Returns \code{TRUE} if file was read, \code{FALSE} if it does not exist.
-#'
-#' @name MQDataReader$readMappingFile
-#'
-MQDataReader$readMappingFile = function(., filename)
-{
-  if (file.exists(filename))
-  {
-    message(paste0("Reading mapping file '", filename, "'\n"))
-    dfs = read.delim(filename, comment.char="#", stringsAsFactors = FALSE)
-    colnames(dfs) = gsub("_", ".", colnames(dfs)) ## legacy support for old "best_effort" column (now "best.effort")
-    req_cols = c(from = "orig.Name", to = "new.Name")
-    if (!all(req_cols %in% colnames(dfs)))
-    {
-      stop("Input file '", filename, "' does not contain the columns '", paste(req_cols, collapse="' and '"), "'.",
-           " Please fix and re-run PTXQC!")
-    }
-    req_cols = c(req_cols, best.effort = "best.effort") ## augment 
-    colnames(dfs) = names(req_cols)[match(colnames(dfs), req_cols)]
-    
-    if (any(duplicated(dfs$from)) | any(duplicated(dfs$to)))
-    {
-      dups = c(dfs$from[duplicated(dfs$from)], dfs$to[duplicated(dfs$to)])
-      stop("Input file '", filename_sorting, "' has duplicate entries ('", paste(dups, collapse=", "), ")'!",
-           " Please fix and re-run PTXQC!")
-    }
-    dfs
-    dfs$to = factor(dfs$to, levels = unique(dfs$to), ordered = TRUE) ## keep the order
-    dfs$from = factor(dfs$from, levels = unique(dfs$from), ordered = TRUE) ## keep the order
-    ## set internal mapping
-    .$raw_file_mapping = dfs
-    ## set who defined it
-    .$mapping.creation = 'file (user-defined)'
-    .$external.mapping.file = filename; ## remember filename for later error messages
-    return (TRUE)
-  }
-  return (FALSE)
-}
-
-MQDataReader$getMappingCreation = function(.)
-{
-  return(c(user = 'file (user-defined)', auto = 'automatic'))
-}
 
 #' Replaces values in the mq.data member with (binary) values.
 #'
