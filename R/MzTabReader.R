@@ -1,14 +1,39 @@
 #'
-#' Read a mzTab file into a list of 5 data.frames (one df per mzTab section).
-#'
-#' Data.frames in the resulting list are named as follows:
-#' "MTD", "PRT", "PEP", "PSM", "SML"
+#' Class to read an mzTab file and store the tables internally.
 #' 
-#' Additionally, "filename" and "comments" are valid list elements.
+#' The 'sections' field is initialized after $readMzTab was called.
+#' The 'fn_map' fields should be initialized via ...$fn_map$readMappingFile(...) manually if user-defined filename mappings are desired
+#' and is automatically updated/queried when $readMzTab is called.
 #' 
-#' @param file A path to an mzTab file to read in.
+#' @field sections MzTab sections as list. Valid list entries are: "MTD", "PRT", "PEP", "PSM", "SML", "filename" and "comments"
+#' @field fn_map FilenameMapper which can translate raw filenames into something shorter
 #'
+#'
+#'
+MzTabReader = setRefClass("MzTabReader",
+                       
+                       fields = list(sections = "list",
+                                     fn_map = "FilenameMapper"
+                       ),
+                       methods = list(
+                         initialize=function(sections = NA_character_,
+                                             workerFcn = function(){},
+                                             qcCat = NA_character_,
+                                             qcName = NA_character_,
+                                             orderNr = NaN) {
+                           .self$sections = list();
+                           .self$fn_map = NULL;
+                           
+                           return(.self)
+                         },
+                         #'
 readMzTab = function(file) {
+  "Read a mzTab file into a list of 5 data.frames (one df per mzTab section).
+   Data.frames in the resulting list are named as follows:
+     'MTD', 'PRT', 'PEP', 'PSM', 'SML',.
+   Additionally, 'filename' and 'comments' are valid list elements."
+
+  
   ## this implementation is derived from with minor modifications
   ## https://github.com/lgatto/MSnbase/blob/master/R/MzTab.R
   
@@ -50,6 +75,9 @@ readMzTab = function(file) {
   
   res[["filename"]] = file
   res[["comments"]] = comments
-  
-  return (res)
+  .self$sections = res
+  return (NULL)
 }
+
+) # methods
+) # class

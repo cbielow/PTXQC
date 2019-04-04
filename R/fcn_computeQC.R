@@ -32,7 +32,8 @@
 #'
 createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
 {
-  
+  DEBUG_PTXQC = FALSE
+  time_start = Sys.time()
   ##mztab_file = "c:\\temp\\test.mzTab"
   ##mztab_file = NULL
   
@@ -45,19 +46,27 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   {
     stop("Please provide EITHER mz_folder or mztab_file. Both are currently missing!")
   }
-  DEBUG_PTXQC = FALSE
   
+  ###
+  ###  prepare the YAML config
+  ###
+  if (class(yaml_obj) != "list")
+  {
+    stop(paste0("Argument 'yaml_obj' is not of type list\n"));
+  }
+  yc = YAMLClass$new(yaml_obj)
+  
+
   MZTAB_MODE = !is.null(mztab_file)  ## will be TRUE if mzTab is detected
-  
-  time_start = Sys.time()
   
   if (MZTAB_MODE)
   {
     base_folder = dirname(mztab_file)
-    
-    stop("mzTab parsing is not implemented ATM")
-    
-  } else {
+    mzt = MzTabReader$new()
+    mzt$readMzTab(mztab_file)
+    stop("mzTab handling is not implemented ATM")
+  } else 
+  {
     if (!any(file.info(txt_folder)$isdir, na.rm = TRUE))
     {
       stop(paste0("Argument txt_folder with value '", txt_folder, "' is not a valid directory\n"));
@@ -72,17 +81,11 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     txt_files$msmsScan = "msmsScans.txt"
     txt_files$mqpar = "mqpar.xml"
     txt_files = lapply(txt_files, function(file) file.path(txt_folder, file))
+    
+    ## prepare for readMQ()
+    mq = MQDataReader$new()
+    
   }
-  
-  ###
-  ###  prepare the YAML config
-  ###
-  if (class(yaml_obj) != "list")
-  {
-    stop(paste0("Argument 'yaml_obj' is not of type list\n"));
-  }
-  yc = YAMLClass$new(yaml_obj)
-  
   ## create names of output files (report PDF, YAML, stats, etc...)
   if (is.null(report_filenames)) {
     use_extended_reportname = yc$getYAML("PTXQC$ReportFilename$extended", TRUE)
@@ -90,6 +93,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   } else {
     rprt_fns = report_filenames
   }
+  ## read manual filename shortening & sorting (if available)
+  mq$fn_map$readMappingFile(rprt_fns$filename_sorting)
+  
   
   ## stats_file:not used at the moment
   #unlink(rprt_fns$stats_file)
@@ -272,12 +278,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ######
   ######
   
-  ## prepare for readMQ()
-  mq = MQDataReader$new()
-  
-  ## read manual filename shortening & sorting (if available)
-  mq$fn_map$readMappingFile(rprt_fns$filename_sorting)
-  
+
   
   ######
   ######  parameters.txt ...
@@ -588,8 +589,6 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## MS1 post calibration
     ##
-    
-
     lst_qcMetrics[["qcMetric_EVD_PostCal"]]$setData(df_evd, df_idrate, param_EV_PrecursorTolPPM, param_EV_PrecursorOutOfCalSD, param_EV_PrecursorTolPPMmainSearch)
 
 

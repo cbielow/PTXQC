@@ -4,18 +4,22 @@
 \name{FilenameMapper-class}
 \alias{FilenameMapper-class}
 \alias{FilenameMapper}
-\title{Make sure to call
- 
- $new()
- and then
- $readMappingFile(some_file)}
+\title{Make sure to call $readMappingFile(some_file) if you want to support a user-defined file mapping.
+ Otherwise, calls to $getShortNames() will create/augment the mapping for filenames.}
 \description{
-Make sure to call
- 
- $new()
- and then
- $readMappingFile(some_file)
+Make sure to call $readMappingFile(some_file) if you want to support a user-defined file mapping.
+ Otherwise, calls to $getShortNames() will create/augment the mapping for filenames.
 }
+\section{Fields}{
+
+\describe{
+\item{\code{raw_file_mapping}}{Data.frame with columns 'from', 'to' and maybe 'best.effort' (if shorting was unsuccessful)}
+
+\item{\code{mapping.creation}}{how the current mapping was obtained (user or auto)}
+
+\item{\code{external.mapping.file}}{Filename of user-defined mapping file; only defined if readMappingFile() was called}
+}}
+
 \section{Methods}{
 
 \describe{
@@ -29,3 +33,8 @@ Make sure to call
  \subsection{Return Value}{ data.frame with mapping.}}
 }}
 
+\examples{
+a = FilenameMapper$new()
+a$readMappingFile('filenamemapping.txt') 
+
+}

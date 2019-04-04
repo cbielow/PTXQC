@@ -1,18 +1,28 @@
 #'
-#'  Make sure to call
-#'  
-#'  $new()
-#'  and then
-#'  $readMappingFile(some_file)
+#'  Make sure to call $readMappingFile(some_file) if you want to support a user-defined file mapping.
+#'  Otherwise, calls to $getShortNames() will create/augment the mapping for filenames.
 #' 
+#'
+#'
+#' @field raw_file_mapping Data.frame with columns 'from', 'to' and maybe 'best.effort' (if shorting was unsuccessful)
+#' @field mapping.creation how the current mapping was obtained (user or auto)
+#' @field external.mapping.file Filename of user-defined mapping file; only defined if readMappingFile() was called
+#'
+#' @import methods
 #' @import ggplot2
-#'
-#'
+#' 
+#' @exportClass FilenameMapper
+#' @export FilenameMapper
+#' 
+#' @examples 
+#' a = FilenameMapper$new()
+#' a$readMappingFile('filenamemapping.txt') 
+#' 
 FilenameMapper = setRefClass("FilenameMapper",
                        
-                       fields = list(raw_file_mapping = "data.frame", ## with cols 'from', to' and maybe 'best.effort' 
-                                     mapping.creation = "character",  ## how the mapping was obtained (user or auto)
-                                     external.mapping.file = "character" ## filename of user-defined mapping file
+                       fields = list(raw_file_mapping = "data.frame", ## with cols 'from', to' and maybe 'best.effort' (if shorting was unsuccessful)
+                                     mapping.creation = "character",  ## how the current mapping was obtained (user or auto)
+                                     external.mapping.file = "character" ## filename of user-defined mapping file; only defined if readMappingFile() was called
                        ),
                        methods = list(
 
