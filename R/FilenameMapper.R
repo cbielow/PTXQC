@@ -33,19 +33,35 @@ initialize=function() {
  return(.self)
 },
 
-
-
-getShortNames = function(.self, raw.filenames, max_length)
+mapRunsToShort = function(.self, ms_runs)
 {
-  "Uses the internal mapping (or augments it if possible) and maps the input raw names to shorter output names. Returns a vector of the same length."
+  "Given a vector of ms_runs, return a data.frame of identical length with columns 'raw.file' and 'fc.raw.file'."
+  
+  if (!"ms_run" %in% colnames(.self$raw_file_mapping)) stop("Mapping is missing 'ms_run' from mzTab!")
+  
+  res = .self$raw_file_mapping[ match(ms_runs, .self$raw_file_mapping$ms_run), c("from", "to")]
+  colnames(res) = c("raw.file", "fc.raw.file")
+  return (res)
+},
+
+getShortNames = function(.self, raw.filenames, max_length = 10, ms_runs = NULL)
+{
+  "Uses the internal mapping (or augments it if possible) and maps the input raw names to shorter output names. 
+    Returns a vector of the same length."
   #rf <<- raw.filenames
   #raw.filenames = rf
 
+  if (!is.null(ms_runs) && length(ms_runs) != length(raw.filenames)) stop("raw.filenames and ms_runs do not have the same length!")
+  
   cat(paste0("Adding fc.raw.file column ..."))
   ## check if we already have a mapping
   if (nrow(.self$raw_file_mapping) == 0)
   {
-    .self$raw_file_mapping = .self$getShortNamesStatic(unique(raw.filenames), max_length)
+    rfm = .self$getShortNamesStatic(unique(raw.filenames), max_length)
+    if (!is.null(ms_runs)) {
+      rfm$ms_run = ms_runs[ match(rfm$from, raw.filenames)  ]
+    }
+    .self$raw_file_mapping = rfm
     ## indicate to outside that a new table is ready
     .self$mapping.creation = .self$getMappingCreation()['auto']
   }
@@ -66,6 +82,10 @@ getShortNames = function(.self, raw.filenames, max_length)
               paste(missing, collapse="\n  ", sep="") %+% ".\nEdit the table if necessary and re-run PTXQC.")
     ## augment
     addon = .self$getShortNamesStatic(missing, max_length, nrow(.self$raw_file_mapping) + 1)
+    if (!is.null(ms_runs)) {
+      missing_msrun = ms_runs [ match( missing, raw.filenames ) ]
+      addon$ms_run = missing_msrun [ match( addon$from, missing) ]
+    }
     .self$raw_file_mapping = rbind(.self$raw_file_mapping, addon)
     ## redo mapping with full map
     v.result = as.factor(.self$raw_file_mapping$to[match(raw.filenames, .self$raw_file_mapping$from)])

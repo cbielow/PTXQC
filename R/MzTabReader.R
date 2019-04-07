@@ -16,22 +16,19 @@ MzTabReader = setRefClass("MzTabReader",
                                      fn_map = "FilenameMapper"
                        ),
                        methods = list(
-                         initialize=function(sections = NA_character_,
-                                             workerFcn = function(){},
-                                             qcCat = NA_character_,
-                                             qcName = NA_character_,
-                                             orderNr = NaN) {
+                         initialize=function() {
                            .self$sections = list();
-                           .self$fn_map = NULL;
+                           .self$fn_map = FilenameMapper$new();
                            
                            return(.self)
                          },
                          #'
-readMzTab = function(file) {
+readMzTab = function(.self, file) {
   "Read a mzTab file into a list of 5 data.frames (one df per mzTab section).
    Data.frames in the resulting list are named as follows:
      'MTD', 'PRT', 'PEP', 'PSM', 'SML',.
-   Additionally, 'filename' and 'comments' are valid list elements."
+   Additionally, 'filename' and 'comments' are valid list elements.
+  "
 
   
   ## this implementation is derived from with minor modifications
@@ -64,20 +61,91 @@ readMzTab = function(file) {
       linesByType[c("MT", "PR", "PE", "PS", "SM")],
       function(x) {
         if (length(x) == 0) return(data.frame())
-        return(read.delim(text = x,
-                          na.strings = c("", "null"),
-                          stringsAsFactors = FALSE)[,-1])
+        ## MTD section has no header...
+        if (startsWith(x[1], "MTD")) {
+          d = read.delim(text = x,
+                         header = FALSE,
+                         col.names = c("MTD", "key", "value"),
+                         na.strings = c("", "null"),
+                         stringsAsFactors = FALSE)
+        } else 
+          d = read.delim(text = x,
+                         header = TRUE,
+                         na.strings = c("", "null"),
+                         stringsAsFactors = FALSE)
+        return(d[,-1])
       }),
     c("MTD", "PRT", "PEP", "PSM", "SML"))
   
   ## rewrite MetaData as named vector
-  res[["MTD"]] = setNames(res[["MTD"]][,2], res[["MTD"]][, 1])
+  #res[["MTD"]] = setNames(res[["MTD"]][,2], res[["MTD"]][, 1])
+  
+  ## create Raw filename mapping internally
+  mtd = res[["MTD"]]
+  idx_run = grep("^ms_run\\[\\d\\]-location", mtd$key, value = FALSE)
+  ms_runs = gsub("[.]*-location", "\\1", mtd$key[idx_run])
+  raw_filenames = mtd$value[idx_run]
+  .self$fn_map$getShortNames(raw_filenames, ms_runs = ms_runs)
+  
   
   res[["filename"]] = file
   res[["comments"]] = comments
   .self$sections = res
   return (NULL)
+},
+
+getParameters = function()
+{
+  "Converts internal mzTab metadata section to a two column key-value data.frame similar to MaxQuants parameters.txt."
+  
+  # just return the whole metadata section for now
+  return (.self$sections[["MTD"]])
+},
+
+getSummary = function()
+{
+  "Converts internal mzTab metadata section to a two data.frame with columns 'fc.raw.file', 'ms.ms.identified....'
+   similar to MaxQuants summary.txt."
+  
+  res = .self$fn_map$raw_file_mapping[ , c("from", "to")]
+  colnames(res) = c("raw.file", "fc.raw.file")
+  
+  ## todo: read TIC metadata and attach to current table
+  res$ms.ms.identified.... = NULL
+  
+  # just return the whole metadata section for now
+  return (.self$sections[["MTD"]])
+},
+
+## MaxQuant-like representation of PEP table, i.e. augmented this with more columns (or renamed) if a metric requires it
+getEvidence = function()
+{
+  "Basically the PEP table and additionally columns named 'raw.file' and 'fc.raw.file'."
+  
+  res = .self$sections$PEP
+  ## augment PEP with fc.raw.file
+  ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
+  ms_runs = sub("[.]*:.*", "\\1", res$spectra_ref)
+  res = cbind(res, mzt$fn_map$mapRunsToShort(ms_runs))
+  
+  return ( res )
+},
+
+## MaxQuant-like representation of PSM table, i.e. augmented this with more columns (or renamed) if a metric requires it
+getMSMSScans = function()
+{
+  
+  "Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'."
+  
+  res = .self$sections$PSM
+  ## augment PSM with fc.raw.file
+  ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
+  ms_runs = sub("[.]*:.*", "\\1", res$spectra_ref)
+  res = cbind(res, mzt$fn_map$mapRunsToShort(ms_runs))
+  
+  return ( res )
 }
+
 
 ) # methods
 ) # class

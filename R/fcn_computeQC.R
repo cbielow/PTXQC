@@ -286,7 +286,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   
   if (enabled_parameters)
   {
-    d_parAll = mq$readMQ(txt_files$param, type="par")
+    if (MZTAB_MODE) d_parAll = mzt$getParameters()
+    else d_parAll = mq$readMQ(txt_files$param, type="par")
     lst_qcMetrics[["qcMetric_PAR"]]$setData(d_parAll)
   }
   
@@ -296,12 +297,13 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   
   if (enabled_summary)
   {
-    d_smy = mq$readMQ(txt_files$summary, type="sm", add_fs_col = add_fs_col)
+    if (MZTAB_MODE) d_smy = mzt$getSummary()
+    else d_smy = mq$readMQ(txt_files$summary, type="sm", add_fs_col = add_fs_col)$raw
     #colnames(d_smy)
     #colnames(d_smy[[1]])
     
     ### MS/MS identified [%]
-    lst_qcMetrics[["qcMetric_SM_MSMSIdRate"]]$setData(d_smy$raw, id_rate_bad, id_rate_great)
+    lst_qcMetrics[["qcMetric_SM_MSMSIdRate"]]$setData(d_smy, id_rate_bad, id_rate_great)
   }  
   
   
