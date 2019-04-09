@@ -286,7 +286,8 @@ writeMappingFile = function(.self, filename)
   "
   if (nrow(.self$raw_file_mapping) == 0)
   {
-    stop("No mapping found. Writing not possible!")
+    cat("No mapping found. Writing not possible!")
+    return (FALSE)
   }
   
   dfs = data.frame(orig.Name = .self$raw_file_mapping$from, new.Name = .self$raw_file_mapping$to)
@@ -305,7 +306,7 @@ writeMappingFile = function(.self, filename)
       sep = "\n")
   write.table(x = dfs, file = FH, quote = FALSE, sep="\t", row.names = FALSE)
   close(FH) ## flush
-  return(NULL)
+  return (TRUE)
 },
 
 

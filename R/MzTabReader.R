@@ -113,8 +113,17 @@ getSummary = function()
   ## todo: read TIC metadata and attach to current table
   res$ms.ms.identified.... = NULL
   
-  # just return the whole metadata section for now
-  return (.self$sections[["MTD"]])
+  return (res)
+},
+
+## MaxQuant-like representation of PRT table, i.e. augmented this with more columns (or renamed) if a metric requires it
+getProteins = function()
+{
+  "Basically the PRT table ..."
+  
+  res = .self$sections$PRT
+
+  return ( res )
 },
 
 ## MaxQuant-like representation of PEP table, i.e. augmented this with more columns (or renamed) if a metric requires it

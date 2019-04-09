@@ -27,6 +27,8 @@ and is automatically updated/queried when $readMzTab is called.
 
 \item{\code{getParameters()}}{Converts internal mzTab metadata section to a two column key-value data.frame similar to MaxQuants parameters.txt.}
 
+\item{\code{getProteins()}}{Basically the PRT table ...}
+
 \item{\code{getSummary()}}{Converts internal mzTab metadata section to a two data.frame with columns 'fc.raw.file', 'ms.ms.identified....'
 similar to MaxQuants summary.txt.}
 }}

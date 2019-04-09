@@ -93,19 +93,25 @@ qcMetric = setRefClass("qcMetric",
          }
          return (TRUE)
        },
-       setData = function(...) { ## fill with MQ data and compute results
+       setData = function(df, ...) { ## fill with MQ data and compute results
          cat("Starting to work on", gsub("~", " ", .self$qcName), "...\n")
          if (.self$orderNr < 0)
          {
            cat("  Metric disabled. Skipping...\n")
-           return(NULL)
+           return (NULL)
+         }
+         
+         if (is.null(df))
+         {
+           cat("  No data available. Skipping...\n")
+           return (NULL)
          }
          
          ## GC stats
          mem_before = gc(verbose = FALSE, reset = TRUE) ## resetting Max to see how much this metric uses
          t_before = proc.time()
          
-         r = workerFcn(.self, ...)
+         r = workerFcn(.self, df, ...)
          
          ## clean memory to get a clean picture of each metrics memory footprint
          ## to enable the user to skip expensive metrics

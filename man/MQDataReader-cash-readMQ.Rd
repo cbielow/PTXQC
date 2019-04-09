@@ -6,7 +6,7 @@
 \arguments{
 \item{.}{A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!}
 
-\item{file}{(Relative) path to a MQ txt file ()}
+\item{file}{(Relative) path to a MQ txt file.}
 
 \item{filter}{Searched for "C" and "R". If present, [c]ontaminants and [r]everse hits are removed if the respective columns are present.
 E.g. to filter both, \code{filter = "C+R"}}
@@ -70,5 +70,6 @@ Example of usage:
   d_evd = mq$readMQ("evidence.txt", type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration")) 
 }
 
-If the file is empty, this function stops with an error.
+If the file is empty, this function shows a warning and returns NULL.
+If the file is present but cannot be read, the program will stop.
 }

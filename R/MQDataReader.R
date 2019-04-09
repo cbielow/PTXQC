@@ -85,10 +85,11 @@ MQDataReader$new <- function(.)
 #'   d_evd = mq$readMQ("evidence.txt", type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration")) 
 #' }
 #' 
-#' If the file is empty, this function stops with an error.
+#' If the file is empty, this function shows a warning and returns NULL.
+#' If the file is present but cannot be read, the program will stop.
 #'
 #' @param .      A 'this' pointer. Use it to refer/change internal members. It's implicitly added, thus not required too call the function!
-#' @param file   (Relative) path to a MQ txt file ()
+#' @param file   (Relative) path to a MQ txt file.
 #' @param filter Searched for "C" and "R". If present, [c]ontaminants and [r]everse hits are removed if the respective columns are present.
 #'               E.g. to filter both, \code{filter = "C+R"}
 #' @param type   Allowed values are:
@@ -124,6 +125,11 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
 {
   # . = MQDataReader$new() ## debug
   # ... = NULL
+
+  if (!file.exists(file)) {
+    cat(paste0("MaxQuant file ", file, " was not found. Reading skipped.\n"))
+    return (NULL);
+  }
   cat(paste("Reading file", file,"...\n"))
   ## error message if failure should occur below
   msg_parse_error = paste0("\n\nParsing the file '", file, "' failed. See message above why. If the file is not usable but other files are ok, disable the corresponding section in the YAML config. You might also be running a foreign locale (e.g. Chinese) - switch to an English locale and make sure that txt files are encoded in ASCII (Latin-1)!")

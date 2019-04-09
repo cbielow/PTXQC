@@ -18,7 +18,8 @@ If the param is unknown, create it with the given default value and return the d
 \section{Methods}{
 
 \describe{
-\item{\code{getYAML(param_name, default)}}{Query this YAML object for a certain parameter and return its value. If it does not exist it is created with a default value.}
+\item{\code{getYAML(param_name, default, min = NA, max = NA)}}{Query this YAML object for a certain parameter and return its value. If it does not exist it is created with a default value.
+An optional min/max range can be specified and will be enforced if the value is known (default will be used upon violation).}
 
 \item{\code{setYAML(param_name, value)}}{Set a YAML parameter to a certain value. Overwrites the old value or creates a new entry if hithero unknown.}
 
