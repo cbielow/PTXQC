@@ -21,9 +21,13 @@ and is automatically updated/queried when $readMzTab is called.
 \section{Methods}{
 
 \describe{
-\item{\code{readMzTab(file)}}{Read a mzTab file into a list of 5 data.frames (one df per mzTab section).
-Data.frames in the resulting list are named as follows:
-  'MTD', 'PRT', 'PEP', 'PSM', 'SML',.
-Additionally, 'filename' and 'comments' are valid list elements.}
+\item{\code{getEvidence()}}{Basically the PEP table and additionally columns named 'raw.file' and 'fc.raw.file'.}
+
+\item{\code{getMSMSScans()}}{Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'.}
+
+\item{\code{getParameters()}}{Converts internal mzTab metadata section to a two column key-value data.frame similar to MaxQuants parameters.txt.}
+
+\item{\code{getSummary()}}{Converts internal mzTab metadata section to a two data.frame with columns 'fc.raw.file', 'ms.ms.identified....'
+similar to MaxQuants summary.txt.}
 }}
 

@@ -5,7 +5,7 @@ library(PTXQC)
 ##    Error in Scales$new : could not find function "loadMethod"
 require(methods)
 
-context("fcn_computeQC.R")
+context("createReport.R")
 
 test_that("createReport", {
   ## this is a rather lengthy function, and its hard to test in all its granularity (hence we test
