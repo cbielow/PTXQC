@@ -127,7 +127,7 @@ Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3
       
       ## QC measure for intensity ratio below expected threshold (3x-10x by default)
       qc_MSMSint = ddply(dd.ratio, "fc.raw.file", 
-                     function(x) data.frame(val = qualLinThresh(x$ratio - score_min_factor, t = score_max_factor - score_min_factor)))
+                     function(x) data.frame(val = qualLinThresh(pmax(0, x$ratio - score_min_factor), t = score_max_factor - score_min_factor)))
       colnames(qc_MSMSint)[colnames(qc_MSMSint) == "val"] = .self$qcName
       
       return(list(plots = lpl, qcScores = qc_MSMSint))
