@@ -24,6 +24,15 @@ See [NEWS][News_File] file for a version history.
   - Linux
   - MacOSX
   
+### Citation
+
+Please cite PTXQC when using it to check data in your publications:
+
+**Proteomics Quality Control: Quality Control Software for MaxQuant Results**
+Chris Bielow, Guido Mastrobuoni, and Stefan Kempa
+*J. Proteome Res.*, 2016, 15 (3), pp 777-787.
+DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
+  
 ### Features
   - plethora of quality metrics
     - intensity distributions
@@ -127,14 +136,7 @@ In certain situations, the whole txt-folder or a single MaxQuant file might be h
 
 If you want to see a new metric, or have ideas how to improve the existing ones, just open an issue ticket and leave a description.
   
-### Citation
-
-PTXQC is published at JPR:
-
-**Proteomics Quality Control: Quality Control Software for MaxQuant Results**
-Chris Bielow, Guido Mastrobuoni, and Stefan Kempa
-*J. Proteome Res.*, 2016, 15 (3), pp 777-787.
-DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
+### Misc
 
 Use [PTXQC v0.69.3][JPR_PTXQC] if you want the version which was used in the paper, i.e.
 use `install_github(..., ref="v0.69.3")` when following the [Installation](#installation) procedure.
