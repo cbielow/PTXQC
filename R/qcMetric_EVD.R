@@ -887,7 +887,7 @@ Heatmap score [EVD: ID rate over RT]: Scored using 'Uniform' scoring function, i
       
       ## QC measure for uniform-ness
       qcScore = ddply(df_evd[, c("retention.time",  "fc.raw.file")], "fc.raw.file", 
-                      function(x) data.frame(metric = qualUniform(x$retention.time)))
+                      function(x) data.frame(metric = qualUniform(na.omit(x$retention.time))))
       colnames(qcScore)[colnames(qcScore)=="metric"] = .self$qcName
       
       return(list(plots = lpl, qcScores = qcScore))

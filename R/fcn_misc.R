@@ -1217,7 +1217,7 @@ getECDF = function(samples, y_eval = (1:100)/100)
 #'   
 peakWidthOverTime = function(data, RT_bin_width = 2) 
 {      
-  r = range(data$retention.time)
+  r = range(data$retention.time, na.rm = TRUE)
   brs = seq(from = r[1], to = r[2] + RT_bin_width, by = RT_bin_width)
   data$bin = findInterval(data$retention.time, brs, all.inside = TRUE) ## faster than cut(..., labels = FALSE)
   #data$bin = cut(data$retention.time, breaks = brs, include.lowest = TRUE, labels = FALSE)

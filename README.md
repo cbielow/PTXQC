@@ -8,6 +8,7 @@ PTXQC
 
 ### Latest changes / Change log
 
+  - v0.92.06 - Apr 2019: Bug Fixes
   - v0.92.05 - Mar 2019: Raw name simplification fix
   - v0.92.04 - Feb 2019: More robust package vignette builds
   - v0.92.03 - Feb 2018: Full List of Metrics added as vignette
