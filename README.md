@@ -8,6 +8,7 @@ PTXQC
 
 ### Latest changes / Change log
 
+  - v0.92.06 - Apr 2019: Bug Fixes
   - v0.92.05 - Mar 2019: Raw name simplification fix
   - v0.92.04 - Feb 2019: More robust package vignette builds
   - v0.92.03 - Feb 2018: Full List of Metrics added as vignette
@@ -22,6 +23,15 @@ See [NEWS][News_File] file for a version history.
   - Windows (recommended for convenience to make use of the [drag'n'drop][1] batch file provided)
   - Linux
   - MacOSX
+  
+### Citation
+
+Please cite PTXQC when using it to check data in your publications:
+
+**Proteomics Quality Control: Quality Control Software for MaxQuant Results**
+Chris Bielow, Guido Mastrobuoni, and Stefan Kempa
+*J. Proteome Res.*, 2016, 15 (3), pp 777-787.
+DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
   
 ### Features
   - plethora of quality metrics
@@ -126,14 +136,7 @@ In certain situations, the whole txt-folder or a single MaxQuant file might be h
 
 If you want to see a new metric, or have ideas how to improve the existing ones, just open an issue ticket and leave a description.
   
-### Citation
-
-PTXQC is published at JPR:
-
-**Proteomics Quality Control: Quality Control Software for MaxQuant Results**
-Chris Bielow, Guido Mastrobuoni, and Stefan Kempa
-*J. Proteome Res.*, 2016, 15 (3), pp 777-787.
-DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
+### Misc
 
 Use [PTXQC v0.69.3][JPR_PTXQC] if you want the version which was used in the paper, i.e.
 use `install_github(..., ref="v0.69.3")` when following the [Installation](#installation) procedure.

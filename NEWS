@@ -7,6 +7,10 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v0.92.6 -- 2019/03/14
+  - [FIX] issue #51 (crash on MSMSScans)
+  - [FIX] issue #54 (timsTOF data fix)
+
 [CRAN] v0.92.5 -- 2019/03/14
   - [FIX] issue #49 (Raw name simplification)
 
