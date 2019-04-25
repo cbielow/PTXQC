@@ -34,7 +34,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
 {
   DEBUG_PTXQC = FALSE
   time_start = Sys.time()
-  ##mztab_file = "c:\\temp\\test.mzTab"
+  #mztab_file = "c:\\temp\\test.mzTab"
   ##mztab_file = NULL
   
   in_count =  (!is.null(mztab_file)) + (!is.null(txt_folder))
@@ -138,7 +138,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   yaml_contaminants = yc$getYAML("File$Evidence$SpecialContaminants", contaminant_default)
   
   param_EV_MatchingTolerance = yc$getYAML("File$Evidence$MQpar_MatchingTimeWindow_num", 1)
-  if (param_useMQPAR) {
+  if (param_useMQPAR &! MZTAB_MODE) {
     v = getMQPARValue(txt_files$mqpar, "matchingTimeWindow") ## will also warn() if file is missing
     if (!is.null(v)) {
       param_EV_MatchingTolerance = yc$setYAML("File$Evidence$MQpar_MatchingTimeWindow_num", as.numeric(v))
@@ -147,7 +147,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   param_evd_mbr = yc$getYAML("File$Evidence$MatchBetweenRuns_wA", "auto")
   
   param_EV_PrecursorTolPPM = yc$getYAML("File$Evidence$MQpar_firstSearchTol_num", 20)
-  if (param_useMQPAR) {
+  if (param_useMQPAR & !MZTAB_MODE) {
     v = getMQPARValue(txt_files$mqpar, "firstSearchTol") ## will also warn() if file is missing
     if (!is.null(v)) {
       param_EV_PrecursorTolPPM = yc$setYAML("File$Evidence$MQpar_firstSearchTol_num", as.numeric(v))
@@ -158,7 +158,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   
   ## we do not dare to have a default, since it ranges from 6 - 4.5 ppm across MQ versions
   param_EV_PrecursorTolPPMmainSearch = yc$getYAML("File$Evidence$MQpar_mainSearchTol_num", NA)
-  if (param_useMQPAR) {
+  if (param_useMQPAR & !MZTAB_MODE) {
     v = getMQPARValue(txt_files$mqpar, "mainSearchTol") ## will also warn() if file is missing
     if (!is.null(v)) {
       param_EV_PrecursorTolPPMmainSearch = yc$setYAML("File$Evidence$MQpar_mainSearchTol_num", as.numeric(v))
