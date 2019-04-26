@@ -32,7 +32,7 @@
 #'
 createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
 {
-  DEBUG_PTXQC = FALSE
+  DEBUG_PTXQC = TRUE
   time_start = Sys.time()
   #mztab_file = "c:\\temp\\test.mzTab"
   ##mztab_file = NULL
