@@ -30,7 +30,7 @@
 #' 
 #' @export
 #'
-#createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
+createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
 {
   DEBUG_PTXQC = TRUE
   time_start = Sys.time()

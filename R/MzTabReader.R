@@ -154,7 +154,7 @@ getMSMSScans = function()
   ## augment PSM with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
-  res = cbind(res, mzt$fn_map$mapRunsToShort(ms_runs))
+  res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
   
   return ( res )
 }
