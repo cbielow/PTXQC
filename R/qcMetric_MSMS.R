@@ -142,7 +142,7 @@ current study. ",
     workerFcn = function(.self, df_msms, df_evd = NULL)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file"), colnames(df_msms)))
+      stopifnot(.self$checkInput(c("fc.raw.file", "missed.cleavages"), colnames(df_msms)))
       if (!is.null(df_evd)) stopifnot(.self$checkInput(c("contaminant", "id"), colnames(df_evd)))
       
       max_mc = max(-Inf, df_msms$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
@@ -152,11 +152,10 @@ current study. ",
         msg_cont_removed = "(includes contaminants -- no evidence.txt read)"
         if (!is.null(df_evd)) {
           msg_cont_removed = "(excludes contaminants)"
-          df_msms$contaminant = df_evd$contaminant[match(df_msms$evidence.id, df_evd$id)]
-          summary(df_msms$contaminant)
+          df_msms = df_msms[!df_evd$contaminant[match(df_msms$evidence.id, df_evd$id)], ]
         }
         
-        st_bin = ddply(df_msms[!df_msms$contaminant, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
+        st_bin = ddply(df_msms[, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
           t = table(x$missed.cleavages)/nrow(x)
           r = rep(0, max_mc + 1)
           names(r) = as.character(0:max_mc)

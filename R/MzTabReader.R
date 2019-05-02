@@ -68,11 +68,13 @@ readMzTab = function(.self, file) {
                          col.names = c("MTD", "key", "value"),
                          na.strings = c("", "null"),
                          stringsAsFactors = FALSE)
-        } else 
+        } else {
           d = read.delim(text = x,
                          header = TRUE,
                          na.strings = c("", "null"),
                          stringsAsFactors = FALSE)
+          colnames(d) = make.names(colnames(d), allow_ = FALSE)
+        }
         return(d[,-1])
       }),
     c("MTD", "PRT", "PEP", "PSM", "SML"))
@@ -111,7 +113,7 @@ getSummary = function()
   colnames(res) = c("raw.file", "fc.raw.file")
   
   ## todo: read TIC metadata and attach to current table
-  res$ms.ms.identified.... = NULL
+  res$ms.ms.identified.... = NA
   
   return (res)
 },
@@ -129,13 +131,15 @@ getProteins = function()
 ## MaxQuant-like representation of PEP table, i.e. augmented this with more columns (or renamed) if a metric requires it
 getEvidence = function()
 {
+   
   "Basically the PEP table and additionally columns named 'raw.file' and 'fc.raw.file'."
   
   res = .self$sections$PEP
   ## augment PEP with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
-  ms_runs = sub("[.]*:.*", "\\1", res$spectra_ref)
-  res = cbind(res, mzt$fn_map$mapRunsToShort(ms_runs))
+  ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
+  res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
+  res$match.time.difference = NA
   
   return ( res )
 },
@@ -149,8 +153,8 @@ getMSMSScans = function()
   res = .self$sections$PSM
   ## augment PSM with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
-  ms_runs = sub("[.]*:.*", "\\1", res$spectra_ref)
-  res = cbind(res, mzt$fn_map$mapRunsToShort(ms_runs))
+  ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
+  res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
   
   return ( res )
 }

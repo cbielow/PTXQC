@@ -32,7 +32,7 @@
 #'
 createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
 {
-  DEBUG_PTXQC = FALSE
+  DEBUG_PTXQC = TRUE
   time_start = Sys.time()
   #mztab_file = "c:\\temp\\test.mzTab"
   ##mztab_file = NULL
@@ -94,7 +94,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   } else {
     rprt_fns = report_filenames
   }
-  ## read manual filename shortening & sorting (if available)
+  ## read manual filename shortening & sorting (if available)  
   eval(expr_fn_map)$readMappingFile(rprt_fns$filename_sorting)
   
   ##
@@ -412,7 +412,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ## peptide & protein counts
     ##
     ## contains NA if 'genuine' ID
-    if (!is.null(df_evd)) df_evd$hasMTD = !is.na(df_evd$match.time.difference)
+    if (!is.null(df_evd)) df_evd$hasMTD = !is.na(df_evd$match.time.difference) 
 
     lst_qcMetrics[["qcMetric_EVD_ProteinCount"]]$setData(df_evd, param_EV_protThresh)
 
@@ -674,7 +674,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     if (pandoc_available()) {
       ## HTML reports require Pandoc for converting Markdown to Html via the rmarkdown package
       if (DEBUG_PTXQC) {
-        html_template = "Z:/projects/QC/PTXQC/package/inst/reportTemplate/PTXQC_report_template.Rmd"
+        #html_template = "Z:/projects/QC/PTXQC/package/inst/reportTemplate/PTXQC_report_template.Rmd"
+        html_template = paste0(getwd(), "/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd")
+        if (!file.exists(html_template)) stop("Wrong working directroy. Please set your working directory to the parent of PTXQC such that 'paste0(getwd(), '/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd')' is a valid file.")
       } else {
         html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
       }

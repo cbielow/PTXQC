@@ -36,10 +36,9 @@ initialize=function() {
 mapRunsToShort = function(.self, ms_runs)
 {
   "Given a vector of ms_runs, return a data.frame of identical length with columns 'raw.file' and 'fc.raw.file'."
+  if (!"ms.run" %in% colnames(.self$raw_file_mapping)) stop("Mapping is missing 'ms.run' from mzTab!")
   
-  if (!"ms_run" %in% colnames(.self$raw_file_mapping)) stop("Mapping is missing 'ms_run' from mzTab!")
-  
-  res = .self$raw_file_mapping[ match(ms_runs, .self$raw_file_mapping$ms_run), c("from", "to")]
+  res = .self$raw_file_mapping[ match(ms_runs, .self$raw_file_mapping$ms.run), c("from", "to")]
   colnames(res) = c("raw.file", "fc.raw.file")
   return (res)
 },
@@ -59,7 +58,7 @@ getShortNames = function(.self, raw.filenames, max_length = 10, ms_runs = NULL)
   {
     rfm = .self$getShortNamesStatic(unique(raw.filenames), max_length)
     if (!is.null(ms_runs)) {
-      rfm$ms_run = ms_runs[ match(rfm$from, raw.filenames)  ]
+      rfm$ms.run = ms_runs[ match(rfm$from, raw.filenames)  ]
     }
     .self$raw_file_mapping = rfm
     ## indicate to outside that a new table is ready
@@ -84,7 +83,7 @@ getShortNames = function(.self, raw.filenames, max_length = 10, ms_runs = NULL)
     addon = .self$getShortNamesStatic(missing, max_length, nrow(.self$raw_file_mapping) + 1)
     if (!is.null(ms_runs)) {
       missing_msrun = ms_runs [ match( missing, raw.filenames ) ]
-      addon$ms_run = missing_msrun [ match( addon$from, missing) ]
+      addon$ms.run = missing_msrun [ match( addon$from, missing) ]
     }
     .self$raw_file_mapping = rbind(.self$raw_file_mapping, addon)
     ## redo mapping with full map
@@ -250,7 +249,7 @@ readMappingFile = function(.self, filename)
       stop("Input file '", filename, "' does not contain the columns '", paste(req_cols, collapse="' and '"), "'.",
            " Please fix and re-run PTXQC!")
     }
-    req_cols = c(req_cols, best.effort = "best.effort") ## augment 
+    req_cols = c(req_cols, best.effort = "best.effort", ms.run = "ms.run") ## augment 
     colnames(dfs) = names(req_cols)[match(colnames(dfs), req_cols)]
     
     if (any(duplicated(dfs$from)) | any(duplicated(dfs$to)))
@@ -295,6 +294,10 @@ writeMappingFile = function(.self, filename)
   
   if ("best.effort" %in% colnames(.self$raw_file_mapping)) {
     dfs$best.effort = .self$raw_file_mapping[, "best.effort"]
+  }
+  
+  if ("ms.run" %in% colnames(.self$raw_file_mapping)) {
+    dfs$ms.run = .self$raw_file_mapping[,"ms.run"]
   }
   
   ## use a file handle to avoid warning from write.table() when appending
