@@ -94,7 +94,7 @@
   } else {
     rprt_fns = report_filenames
   }
-  ## read manual filename shortening & sorting (if available)  ##### 1.Fehlermeldung!!!!
+  ## read manual filename shortening & sorting (if available)  
   eval(expr_fn_map)$readMappingFile(rprt_fns$filename_sorting)
   
   ##
@@ -412,7 +412,7 @@
     ## peptide & protein counts
     ##
     ## contains NA if 'genuine' ID
-    if (!is.null(df_evd)) df_evd$hasMTD = !is.na(df_evd$match.time.difference) #Fehler is.null zu is.na ?
+    if (!is.null(df_evd)) df_evd$hasMTD = !is.na(df_evd$match.time.difference) 
 
     lst_qcMetrics[["qcMetric_EVD_ProteinCount"]]$setData(df_evd, param_EV_protThresh)
 
@@ -676,6 +676,7 @@
       if (DEBUG_PTXQC) {
         #html_template = "Z:/projects/QC/PTXQC/package/inst/reportTemplate/PTXQC_report_template.Rmd"
         html_template = paste0(getwd(), "/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd")
+        if (!file.exists(html_template)) stop("Wrong working directroy. Please set your working directory to the parent of PTXQC such that 'paste0(getwd(), '/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd')' is a valid file.")
       } else {
         html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
       }

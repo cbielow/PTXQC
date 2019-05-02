@@ -68,11 +68,13 @@ readMzTab = function(.self, file) {
                          col.names = c("MTD", "key", "value"),
                          na.strings = c("", "null"),
                          stringsAsFactors = FALSE)
-        } else 
+        } else {
           d = read.delim(text = x,
                          header = TRUE,
                          na.strings = c("", "null"),
                          stringsAsFactors = FALSE)
+          colnames(d) = make.names(colnames(d), allow_ = FALSE)
+        }
         return(d[,-1])
       }),
     c("MTD", "PRT", "PEP", "PSM", "SML"))
@@ -133,7 +135,6 @@ getEvidence = function()
   "Basically the PEP table and additionally columns named 'raw.file' and 'fc.raw.file'."
   
   res = .self$sections$PEP
-  colnames(res) = make.names(colnames(res), allow_ = FALSE)
   ## augment PEP with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
@@ -150,7 +151,6 @@ getMSMSScans = function()
   "Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'."
   
   res = .self$sections$PSM
-  colnames(res) = make.names(colnames(res), allow_ = FALSE)
   ## augment PSM with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
