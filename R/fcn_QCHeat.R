@@ -27,7 +27,7 @@ HEATMAP_NA_VALUE = -Inf
 #' @importFrom reshape2 dcast
 #' 
 #' 
-getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
+#getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
 {
   if (length(lst_qcMetrics) == 0) stop("Heatmap: List of Qc metrics is empty!")
   lst.QCM = lapply(lst_qcMetrics, function(qcm) {
@@ -60,7 +60,8 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
   ## create summary column
   lst_qcMetrics[["qcMetric_AverageQualOverall"]]$setData(df.QCM)
   ## ... add it
-  df.QCMa = merge(df.QCM, lst_qcMetrics[["qcMetric_AverageQualOverall"]]$qcScores)
+  df.AverageQual = lst_qcMetrics[["qcMetric_AverageQualOverall"]]$qcScores
+  if (empty(df.AverageQual)) df.QCMa = df.QCM  else df.QCMa = merge(df.QCM, df.AverageQual)
 
   ## get order and names for each metric
   df.meta = getMetaData(lst_qcMetrics)

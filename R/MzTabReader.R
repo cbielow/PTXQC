@@ -134,12 +134,18 @@ getEvidence = function()
    
   "Basically the PEP table and additionally columns named 'raw.file' and 'fc.raw.file'."
   
-  res = .self$sections$PEP
+  res = .self$sections$PSM
   ## augment PEP with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
-  res$match.time.difference = NA
+  if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
+  {
+    res$match.time.difference = res$opt.global.rt.raw - res$opt.global.rt.align
+  }
+  else {res$match.time.difference = NA}
+  
+  colnames(res)[colnames(res)=="PSM.ID"] <- "id"
   
   return ( res )
 },
