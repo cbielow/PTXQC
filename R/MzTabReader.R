@@ -134,12 +134,47 @@ getEvidence = function()
    
   "Basically the PEP table and additionally columns named 'raw.file' and 'fc.raw.file'."
   
-  res = .self$sections$PEP
+  res = .self$sections$PSM
   ## augment PEP with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
+  
+  #pep=.self$sections$PEP
+  #ms_runs = sub("[.]*:.*", "\\1", pep$spectra.ref)
+  #pep = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
+  
+  if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
+  {
+    colnames(res)[colnames(res)=="opt.global.rt.raw"] <- "retention.time"
+    colnames(res)[colnames(res)=="opt.global.rt.align"] <- "calibrated.retention.time"
+    res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
+  }
+  else res$retention.time.calibration = NA
+  
   res$match.time.difference = NA
+  
+  colnames(res)[colnames(res)=="PSM.ID"] <- "id"
+  colnames(res)[colnames(res)=="opt.global.motified.sequence"] <- "modified.sequence"
+  colnames(res)[colnames(res)=="opt.global.modified.sequence"]<-"contaminant"
+  colnames(res)[colnames(res)=="opt.global.calibrated.mz.error.ppm"]<-"mass.error..ppm"
+  colnames(res)[colnames(res)=="opt.global.uncalibrated.mz.error.ppm"]<-"uncalibrated.mass.error..ppm"
+  colnames(res)[colnames(res)=="opt.global.is.contaminant"] <- "contaminant"
+  
+  #write wide table to long table for intensity = peptide_abundance_study_variable[x]
+  #study_variables=c()
+  #for i in 1:length(summary$raw.file)
+  #  study_variables=c(study_variable,peptide.abundance.study.variable[i])
+  
+  #melt(pep, measure.vars=startsWith(peptide.abundance.study.variable), variable.name="raw.file", value.name="intensity")
+  
+  #ms.ms.count (for MS2-Oversampling: check for duplicated sequences: if charge, ID and opt_global_modified_sequence same --> count,
+  #if sequence,accession,charge,opt_global_modified_sequence,are the same, or id different and sequence same??
+  
+  #same id, same modified sequence --> together -->all duplicated peptide because they exist in different proteins removed
+  #delete column accession and delete duplicates
+  
+  #res <- unique(subset(res, select = -c(accession,database)))
   
   return ( res )
 },
@@ -155,10 +190,33 @@ getMSMSScans = function()
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
+
+  colnames(res)[colnames(res)==""] <- "id"
+  colnames(res)[colnames(res)=="opt.global.identified"] <- "identified"
+  colnames(res)[colnames(res)=="opt.global.scaneventnumber"] <- "scan.event.number"
   
   return ( res )
-}
+},
 
+getMSMS = function()
+  
+{
+  res = .self$sections$PSM
+  ms_runs = sub("[.]*:.*", "\\1", res$spectra_ref)
+  res = cbind(res, mzt$fn_map$mapRunsToShort(ms_runs))
+  
+  #cbind(.self$sections$PSM$PSM_ID, .self$sections$PSM$PSM_ID$opt.global.missed.cleavages,.self$sections$PSM$PSM_ID$opt.global.target.decoy,mzt$fn_map$mapRunsToShort(ms_runs))
+  colnames(res)[colnames(res)=="PSM_ID"] <- "id"
+  colnames(res)[colnames(res)=="opt.global.missed.cleavages"]<- "missed.cleavages"
+  colnames(res)[colnames(res)=="opt.global.target.decoy"]<- "reverse"
+  res$reverse[df=="decoy"]<-TRUE
+  res$reverse[df!=TRUE]<-FALSE
+  colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.da"]<- "mass.deviations..da."
+  colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.ppm"]<- "mass.deviations..ppm."
+  
+  return ( res )
+  
+}
 
 ) # methods
 ) # class

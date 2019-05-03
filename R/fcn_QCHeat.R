@@ -60,7 +60,8 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
   ## create summary column
   lst_qcMetrics[["qcMetric_AverageQualOverall"]]$setData(df.QCM)
   ## ... add it
-  df.QCMa = merge(df.QCM, lst_qcMetrics[["qcMetric_AverageQualOverall"]]$qcScores)
+  df.AverageQual = lst_qcMetrics[["qcMetric_AverageQualOverall"]]$qcScores
+  if (empty(df.AverageQual)) df.QCMa = df.QCM  else df.QCMa = merge(df.QCM, df.AverageQual)
 
   ## get order and names for each metric
   df.meta = getMetaData(lst_qcMetrics)
@@ -79,7 +80,7 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
   df.QCMa = df.QCMa[, c("fc.raw.file", qc_names_all_scores)]
   ## add column numbering (ignore first column, which is 'fc.raw.file')
   df.QCMan = df.QCMa
-  idx = 2:(ncol(df.QCMan)-1)
+  idx = 2:(ncol(df.QCMan))
   colnames(df.QCMan)[idx] = paste0(colnames(df.QCMa)[idx], "~\"[", idx-1, "]\"")
   colnames_wNum_map = data.frame(name = colnames(df.QCMa), nameWnum = colnames(df.QCMan))
   
