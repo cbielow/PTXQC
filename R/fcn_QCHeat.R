@@ -27,7 +27,7 @@ HEATMAP_NA_VALUE = -Inf
 #' @importFrom reshape2 dcast
 #' 
 #' 
-#getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
+getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
 {
   if (length(lst_qcMetrics) == 0) stop("Heatmap: List of Qc metrics is empty!")
   lst.QCM = lapply(lst_qcMetrics, function(qcm) {
@@ -80,7 +80,7 @@ HEATMAP_NA_VALUE = -Inf
   df.QCMa = df.QCMa[, c("fc.raw.file", qc_names_all_scores)]
   ## add column numbering (ignore first column, which is 'fc.raw.file')
   df.QCMan = df.QCMa
-  idx = 2:(ncol(df.QCMan)-1)
+  idx = 2:(ncol(df.QCMan))
   colnames(df.QCMan)[idx] = paste0(colnames(df.QCMa)[idx], "~\"[", idx-1, "]\"")
   colnames_wNum_map = data.frame(name = colnames(df.QCMa), nameWnum = colnames(df.QCMan))
   
