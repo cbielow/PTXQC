@@ -152,12 +152,13 @@ getEvidence = function()
   colnames(data)[colnames(data)=="opt.global.is.contaminant"] = "contaminant"
   if (all(c("opt.global.rt.raw","opt.global.rt.align") %in% colnames(res)))
   {
-    colnames(data)[colnames(data)=="opt.global.rt.raw"] = "retention.time"
-    colnames(data)[colnames(data)=="opt.global.rt.align"] = "calibrated.retention.time"
-    res$retention.time.calibration=res$retention.time-res$calibrated.retention.time
+    colnames(res)[colnames(res)=="opt.global.rt.raw"] <- "retention.time"
+    colnames(res)[colnames(res)=="opt.global.rt.align"] <- "calibrated.retention.time"
+    res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
-  else res$match.time.difference=NA
+  else res$retention.time.calibration=NA
   
+  res$match.time.difference = NA
   #write wide table to long table for intensity = peptide_abundance_study_variable[x]
   #study_variables=c()
   #for i in 1:length(summary$raw.file)
