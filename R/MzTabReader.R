@@ -134,12 +134,54 @@ getEvidence = function()
    
   "Basically the PEP table and additionally columns named 'raw.file' and 'fc.raw.file'."
   
-  res = .self$sections$PEP
+  res = .self$sections$PSM
   ## augment PEP with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
-  res$match.time.difference = NA
+  
+  pep=.self$sections$PSM
+  ms_runs = sub("[.]*:.*", "\\1", pep$spectra.ref)
+  pep = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
+  
+  colnames(data)[colnames(data)=="psm.id"] = "id"
+  colnames(data)[colnames(data)=="opt.global.modified.sequence"]="modified.sequence"
+  colnames(data)[colnames(data)=="opt.global.modified.sequence"]="contaminant"
+  colnames(data)[colnames(data)=="opt.global.calibrated.mz.error.ppm"]="mass.error..ppm"
+  colnames(data)[colnames(data)=="opt.global.uncalibrated.mz.error.ppm"]="uncalibrated.mass.error..ppm"
+  colnames(data)[colnames(data)=="opt.global.is.contaminant"] = "contaminant"
+  if (all(c("opt.global.rt.raw","opt.global.rt.align") %in% colnames(res)))
+  {
+    colnames(data)[colnames(data)=="opt.global.rt.raw"] = "retention.time"
+    colnames(data)[colnames(data)=="opt.global.rt.align"] = "calibrated.retention.time"
+    res$retention.time.calibration=res$retention.time-res$calibrated.retention.time
+  }
+  else res$match.time.difference=NA
+  
+  #write wide table to long table for intensity = peptide_abundance_study_variable[x]
+  #study_variables=c()
+  #for i in 1:length(summary$raw.file)
+  #  study_variables=c(study_variable,peptide.abundance.study.variable[i])
+  #melt(pep, measure.vars=startsWith(peptide.abundance.study.variable), variable.name="raw.file", value.name="intensity")
+  
+  #ms.ms.count (for MS2-Oversampling: check for duplicated sequences: if charge, ID and opt_global_modified_sequence same --> count, 
+  #if sequence,accession,charge,opt_global_modified_sequence,are the same, or id different and sequence same??
+  
+  #same id, same modified sequence --> together -->all duplicated peptide because they exist in different proteins removed
+  #delete column accession and delete duplicates
+  res <- unique(subset(res, select = -c(accession,database))
+  
+  #id nicht beachten, seq die in modified_sequence, charge �bereinstimmen, zusammenfassen in neue column ms.ms.count frequenz eintragen
+  library(dplyr)
+  exp <- data.frame(id = c (1,1,2,3,3,4,4,5,5), accession=c("AB","BA","AB","AB","AB","AB","BA", "CA", "AC"), modified.sequence = c("AB","AB","CD","CE","CE","AB","AB","AB","AB"),charge = c(2,2,2,2,2,3,3,2,2))
+  exp <- unique(subset(exp, select = -accession))
+  #exp[,"ms.ms.count"] = NA
+  exp %>% group_by(modified.sequence,charge) %>% mutate(ms.ms.count = row_number())
+  
+  ordered_data=exp[order(exp$modified.sequence, exp$charge),]
+  ordered_data[!duplicated(ordered_data$modified.sequence, ordered_data$charge),]
+ 
+  aggregate(cbind(ms.ms.count = id) ~ modified.sequence+charge, data = exp, FUN = function(x){NROW(x)})
   
   return ( res )
 },
@@ -153,12 +195,21 @@ getMSMSScans = function()
   res = .self$sections$PSM
   ## augment PSM with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
-  ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
-  res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
+  ms_runs = sub("[.]*:.*", "\\1", res$spectra_ref)
+  res = cbind(res, mzt$fn_map$mapRunsToShort(ms_runs))
+  colnames(data)[colnames(data)=="PSM_ID"] = "id"
+  colnames(data)[colnames(data)=="opt.global.missed.cleavages"]= "missed.cleavages"
+  colnames(data)[colnames(data)=="opt.global.target.decoy"]= "reverse"
+  res$reverse[res$reverse=="decoy"]=TRUE
+  res$reverse[res$reverse!=TRUE]=FALSE
+  colnames(data)[colnames(data)=="opt.global.target.fragment.mass.error.da"]= "mass.deviations..da."
+  colnames(data)[colnames(data)=="opt.global.target.fragment.mass.error.ppm"]= "mass.deviations..ppm."
+  colnames(data)[colnames(data)=="opt.global.identified"] = "identified"
+  colnames(data)[colnames(data)=="opt.global.scaneventnumber"] = "scan.event.number"
   
   return ( res )
 }
-
+###########new#####################################
 
 ) # methods
 ) # class
