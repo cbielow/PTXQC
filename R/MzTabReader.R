@@ -139,28 +139,26 @@ getEvidence = function()
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
-  
+
   #pep=.self$sections$PEP
   #ms_runs = sub("[.]*:.*", "\\1", pep$spectra.ref)
   #pep = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
   
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    colnames(res)[colnames(res)=="opt.global.rt.raw"] <- "retention.time"
-    colnames(res)[colnames(res)=="opt.global.rt.align"] <- "calibrated.retention.time"
+    colnames(res)[colnames(res)=="opt.global.rt.raw"] = "retention.time"
+    colnames(res)[colnames(res)=="opt.global.rt.align"] = "calibrated.retention.time"
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else res$retention.time.calibration = NA
   
   res$match.time.difference = NA
   
-  colnames(res)[colnames(res)=="PSM.ID"] <- "id"
-  colnames(res)[colnames(res)=="opt.global.motified.sequence"] <- "modified.sequence"
-  colnames(res)[colnames(res)=="opt.global.modified.sequence"]<-"contaminant"
-  colnames(res)[colnames(res)=="opt.global.calibrated.mz.error.ppm"]<-"mass.error..ppm"
-  colnames(res)[colnames(res)=="opt.global.uncalibrated.mz.error.ppm"]<-"uncalibrated.mass.error..ppm"
-  colnames(res)[colnames(res)=="opt.global.is.contaminant"] <- "contaminant"
-  
+  colnames(res)[colnames(res)=="PSM.ID"] = "id"
+  colnames(res)[colnames(res)=="opt.global.motified.sequence"] = "modified.sequence"
+  colnames(res)[colnames(res)=="opt.global.calibrated.mz.error.ppm"] = "mass.error..ppm"
+  colnames(res)[colnames(res)=="opt.global.uncalibrated.mz.error.ppm"] = "uncalibrated.mass.error..ppm"
+  colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
   #write wide table to long table for intensity = peptide_abundance_study_variable[x]
   #study_variables=c()
   #for i in 1:length(summary$raw.file)
@@ -175,6 +173,9 @@ getEvidence = function()
   #delete column accession and delete duplicates
   
   #res <- unique(subset(res, select = -c(accession,database)))
+  
+  ## temp workaround
+  res = res[!is.na(res$fc.raw.file),]
   
   return ( res )
 },
@@ -191,15 +192,29 @@ getMSMSScans = function()
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
 
-  colnames(res)[colnames(res)==""] <- "id"
-  colnames(res)[colnames(res)=="opt.global.identified"] <- "identified"
-  colnames(res)[colnames(res)=="opt.global.scaneventnumber"] <- "scan.event.number"
+  if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
+  {
+    colnames(res)[colnames(res)=="opt.global.rt.raw"] = "retention.time"
+    colnames(res)[colnames(res)=="opt.global.rt.align"] = "calibrated.retention.time"
+    res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
+  }
+  else res$retention.time.calibration = NA
+  colnames(res)[colnames(res)==""] = "id"
+  colnames(res)[colnames(res)=="opt.global.identified"] = "identified"
+  colnames(res)[colnames(res)=="opt.global.ScanEventNumber"] = "scan.event.number"
+  colnames(res)[colnames(res)=="opt.global.missed.cleavages"] = "missed.cleavages"
+  colnames(res)[colnames(res)=="opt.global.target.decoy"] = "reverse"
+  res$reverse = (res$reverse=="decoy"])
+  colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.da"] = "mass.deviations..da."
+  colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.ppm"] = "mass.deviations..ppm."
+  colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
   
+  ## temp workaround
+  res = res[!is.na(res$contaminant),]
   return ( res )
 },
 
 getMSMS = function()
-  
 {
   res = .self$sections$PSM
   ms_runs = sub("[.]*:.*", "\\1", res$spectra_ref)
