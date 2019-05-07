@@ -159,13 +159,13 @@ current study. ",
         }
         
         st_bin = ddply(df_msms[, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
+          cat(dim(x), "\n")
           t = table(x$missed.cleavages)/nrow(x)
           r = rep(0, max_mc + 1)
           names(r) = as.character(0:max_mc)
           r[names(t)] = t
           return (r)
         })
-        st_bin[complete.cases(st_bin),]
         
         lpl =
           byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, sort_indices = TRUE, title_sub = msg_cont_removed) 

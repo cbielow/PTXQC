@@ -139,7 +139,7 @@ getEvidence = function()
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
-  
+  res = res[!is.na(res$fc.raw.file),]
   #pep=.self$sections$PEP
   #ms_runs = sub("[.]*:.*", "\\1", pep$spectra.ref)
   #pep = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
@@ -207,6 +207,8 @@ getMSMSScans = function()
   colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.ppm"] = "mass.deviations..ppm."
   colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
   
+  ##temp workariound
+  res = res[!is.na(res$contaminant),]
   return ( res )
 },
 

@@ -569,7 +569,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   
   }
   ## save RAM: msms.txt is not required any longer
-  rm(df_msms)
+  #rm(df_msms)
   if (!DEBUG_PTXQC) rm(df_evd)
   
 
@@ -637,7 +637,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     
   }
   ## save RAM: msmsScans.txt is not required any longer
-  rm(df_msmsScan)
+  #rm(df_msmsScan)
     
     
   #####################################################################

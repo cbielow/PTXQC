@@ -443,7 +443,6 @@ supCount <- function(x, prefix_l=1)
 #'  
 correctSetSize = function(item_count, initial_set_size)
 {
-  cat(paste0(item_count, " ", initial_set_size))
   blocks = seq(from = 1, to = item_count, by = initial_set_size)
   blockcount = length(blocks)
   lastblocksize = item_count - tail(blocks, n = 1) + 1
