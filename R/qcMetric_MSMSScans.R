@@ -225,6 +225,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN high]: rewards if TopN was reached on 
       {
         ## sort x by scan event
         event_count = x$n
+        print(event_count)
         ## verify its monotonically increasing
         if (is.unsorted(rev(event_count))) {
           #print(x)
