@@ -201,8 +201,7 @@ getMSMSScans = function()
   colnames(res)[colnames(res)=="opt.global.ScanEventNumber"] = "scan.event.number"
   colnames(res)[colnames(res)=="opt.global.missed.cleavages"] = "missed.cleavages"
   colnames(res)[colnames(res)=="opt.global.target.decoy"] = "reverse"
-  res$reverse[res$reverse=="decoy"] = TRUE  
-  res$reverse[res$reverse!=TRUE] = FALSE
+  res$reverse = (res$reverse=="decoy"])
   colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.da"] = "mass.deviations..da."
   colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.ppm"] = "mass.deviations..ppm."
   colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
