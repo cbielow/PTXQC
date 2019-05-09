@@ -36,6 +36,9 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
         ##
         ##  Forwards
         ##
+        print(str(x$reverse))
+        print(1)
+        x$reverse = as.logical(x$reverse)
         if (any(!x$reverse))
         {
           idx_nr = which(!x$reverse)
@@ -89,6 +92,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
         qc_MS2_decal = ddply(ms2_decal[ms2_decal$mass.analyzer==analyzer, ], "fc.raw.file", 
                              function(x)
                              {
+                               print(x$msErr)
                                xx = na.omit(x$msErr);
                                return(data.frame(X1 = qualCentered(xx)))
                              })

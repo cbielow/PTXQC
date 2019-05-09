@@ -153,12 +153,17 @@ getEvidence = function()
   else res$retention.time.calibration = NA
   
   res$match.time.difference = NA
+  res$type = "MULTI-MSMS"
   
-  colnames(res)[colnames(res)=="PSM.ID"] = "id"
-  colnames(res)[colnames(res)=="opt.global.motified.sequence"] = "modified.sequence"
-  colnames(res)[colnames(res)=="opt.global.calibrated.mz.error.ppm"] = "mass.error..ppm"
-  colnames(res)[colnames(res)=="opt.global.uncalibrated.mz.error.ppm"] = "uncalibrated.mass.error..ppm"
-  colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
+  setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm", "exp.mass.to.charge", "opt.global.mass"), new = c("mass.error..ppm.","uncalibrated.mass.error..ppm.", "m.z", "mass"))
+  setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant","opt.global.fragment.mass.error.da"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant","mass.deviations..da."))
+
+  
+  #colnames(res)[colnames(res)=="PSM.ID"] = "id"
+  #colnames(res)[colnames(res)=="opt.global.motified.sequence"] = "modified.sequence"
+  #colnames(res)[colnames(res)=="opt.global.calibrated.mz.error.ppm"] = "mass.error..ppm"
+  #colnames(res)[colnames(res)=="opt.global.uncalibrated.mz.error.ppm"] = "uncalibrated.mass.error..ppm"
+  #colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
   #write wide table to long table for intensity = peptide_abundance_study_variable[x]
   #study_variables=c()
   #for i in 1:length(summary$raw.file)
@@ -173,6 +178,7 @@ getEvidence = function()
   #delete column accession and delete duplicates
   
   #res <- unique(subset(res, select = -c(accession,database)))
+  res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
   
   return ( res )
 },
@@ -189,6 +195,7 @@ getMSMSScans = function()
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
 
+  #colnames(res)[colnames(res)=="PSM.ID"] = "id"
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
     colnames(res)[colnames(res)=="retention.time"] = "retention.time.pep" #rename existing retention.time column
@@ -197,20 +204,31 @@ getMSMSScans = function()
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else res$retention.time.calibration = NA
-  colnames(res)[colnames(res)==""] = "id"
-  colnames(res)[colnames(res)=="opt.global.identified"] = "identified"
-  colnames(res)[colnames(res)=="opt.global.ScanEventNumber"] = "scan.event.number"
+  
+  setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm", "exp.mass.to.charge", "opt.global.mass", "opt.global.fragment.mass.error.da", "opt.global.fragment.mass.error.ppm"), 
+           new = c("mass.error..ppm.","uncalibrated.mass.error..ppm.", "m.z", "mass", "mass.deviations..da.", "mass.deviations..ppm." ))
+  setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant"))
+  
+  #colnames(res)[colnames(res)=="opt.global.identified"] = "identified"
+  #colnames(res)[colnames(res)=="opt.global.ScanEventNumber"] = "scan.event.number"
   colnames(res)[colnames(res)=="opt.global.missed.cleavages"] = "missed.cleavages"
   colnames(res)[colnames(res)=="opt.global.target.decoy"] = "reverse"
   res$reverse[res$reverse=="decoy"] = TRUE  
   res$reverse[res$reverse!=TRUE] = FALSE
-  colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.da"] = "mass.deviations..da."
+  #colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.da"] = "mass.deviations..da."
   colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.ppm"] = "mass.deviations..ppm."
-  colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
+  #colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
+  res$fragmentation = "CID"
+  #res$mass.deviations..ppm. = gsub("\\[|\\]", "", res$mass.deviations..ppm.)
+  #res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
+  #res$mass.deviation..da. = gsub("\\[|\\]", "",  res$mass.deviation..da.)
+  #res$mass.deviation..da. =  gsub(",", ";", res$mass.deviation..da.)
   
   ##temp workariound
   res = res[!is.na(res$contaminant),]
   res = res[order(res$fc.raw.file, res$retention.time), ]
+  res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
+
   return ( res )
 },
 
