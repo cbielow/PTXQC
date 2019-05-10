@@ -155,7 +155,7 @@ getEvidence = function()
   res$match.time.difference = NA
   res$type = "MULTI-MSMS"
   
-  setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm", "exp.mass.to.charge", "opt.global.mass"), new = c("mass.error..ppm.","uncalibrated.mass.error..ppm.", "m.z", "mass"))
+  setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm", "exp.mass.to.charge", "opt.global.mass", "opt.global.FWHM"), new = c("mass.error..ppm.","uncalibrated.mass.error..ppm.", "m.z", "mass", "retention.length"))
   setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant","opt.global.fragment.mass.error.da"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant","mass.deviations..da."))
 
   
@@ -226,7 +226,7 @@ getMSMSScans = function()
   res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
   res$mass.deviations..da. = gsub("\\[|\\]", "",  res$mass.deviations..da.)
   res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da.)
-  res$reverse = (res$reverse=="decoy"])
+  res$reverse = (res$reverse=="decoy")
 
   
   ## temp workaround
