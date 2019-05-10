@@ -204,7 +204,6 @@ getMSMSScans = function()
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else res$retention.time.calibration = NA
-  
   setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm", "exp.mass.to.charge", "opt.global.mass", "opt.global.fragment.mass.error.da", "opt.global.fragment.mass.error.ppm"), 
            new = c("mass.error..ppm.","uncalibrated.mass.error..ppm.", "m.z", "mass", "mass.deviations..da.", "mass.deviations..ppm." ))
   setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant"))
@@ -216,13 +215,13 @@ getMSMSScans = function()
   res$reverse[res$reverse=="decoy"] = TRUE  
   res$reverse[res$reverse!=TRUE] = FALSE
   #colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.da"] = "mass.deviations..da."
-  colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.ppm"] = "mass.deviations..ppm."
+  #colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.ppm"] = "mass.deviations..ppm."
   #colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
   res$fragmentation = "CID"
-  #res$mass.deviations..ppm. = gsub("\\[|\\]", "", res$mass.deviations..ppm.)
-  #res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
-  #res$mass.deviation..da. = gsub("\\[|\\]", "",  res$mass.deviation..da.)
-  #res$mass.deviation..da. =  gsub(",", ";", res$mass.deviation..da.)
+  res$mass.deviations..ppm. = gsub("\\[|\\]|_", "", res$mass.deviations..ppm.)
+  res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
+  res$mass.deviations..da. = gsub("\\[|\\]", "",  res$mass.deviations..da.)
+  res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da.)
   
   ##temp workariound
   res = res[!is.na(res$contaminant),]
