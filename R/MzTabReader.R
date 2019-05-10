@@ -139,7 +139,7 @@ getEvidence = function()
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
-  res = res[!is.na(res$fc.raw.file),]
+
   #pep=.self$sections$PEP
   #ms_runs = sub("[.]*:.*", "\\1", pep$spectra.ref)
   #pep = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
@@ -180,6 +180,9 @@ getEvidence = function()
   #res <- unique(subset(res, select = -c(accession,database)))
   res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
   
+  ## temp workaround
+  res = res[!is.na(res$fc.raw.file),]
+  
   return ( res )
 },
 
@@ -212,8 +215,9 @@ getMSMSScans = function()
   #colnames(res)[colnames(res)=="opt.global.ScanEventNumber"] = "scan.event.number"
   colnames(res)[colnames(res)=="opt.global.missed.cleavages"] = "missed.cleavages"
   colnames(res)[colnames(res)=="opt.global.target.decoy"] = "reverse"
-  res$reverse[res$reverse=="decoy"] = TRUE  
-  res$reverse[res$reverse!=TRUE] = FALSE
+
+  #res$reverse[res$reverse=="decoy"] = TRUE  
+  #res$reverse[res$reverse!=TRUE] = FALSE
   #colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.da"] = "mass.deviations..da."
   #colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.ppm"] = "mass.deviations..ppm."
   #colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
@@ -222,8 +226,10 @@ getMSMSScans = function()
   res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
   res$mass.deviations..da. = gsub("\\[|\\]", "",  res$mass.deviations..da.)
   res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da.)
+  res$reverse = (res$reverse=="decoy"])
+
   
-  ##temp workariound
+  ## temp workaround
   res = res[!is.na(res$contaminant),]
   res = res[order(res$fc.raw.file, res$retention.time), ]
   res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
