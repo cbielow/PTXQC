@@ -164,6 +164,10 @@ getEvidence = function()
     res$retention.time.calibration=NA
   }
   if("opt.global.FWHM" %in% colnames(res)) {  setnames(res, old = c("opt.global.FWHM"), new = c("retention.length")) }
+  #contaminant:
+  #res$contaminant[res$is.contaminant==0]='-'
+  #res$contaminant[res$is.contaminant==1]='+'
+  
   
   #ms.ms.count: 
   #1.all different accessions and databases per ID in one row; 2.all IDs only one time; 
@@ -179,15 +183,20 @@ getEvidence = function()
   res_dt[toNA, ms.ms.count:=NA]
   res=as.data.frame(res_dt)
   
+  #print(head(res))
+  #print(length(which(!is.na(res$ms.ms.count))))
+  #print(length(which(is.na(res$ms.ms.count))))
+  
   #intensity from PEP to PSM: only labelfree
+  
   pep_df=.self$sections$PEP
   res$pep.id= as.numeric(NA)
   res$intensity=as.numeric(NA)
   res$ms_run_number=as.numeric(NA)
  
-   #divide data.frame rev in res_df and empty entrys
-  empty_entries=res[which(is.na(res$spectra.ref)),]
-  res_df=res[which(!is.na(res$spectra.ref)),]
+   #spli data.frame rev in res_df and empty entrys
+  empty_entries=res[is.na(res$spectra.ref),]
+  res_df=res[!is.na(res$spectra.ref),]
   retention.time=res_df$retention.time
   
   res_df$pep.id= match(res_df$spectra.ref, pep_df$spectra.ref, nomatch = NA_integer_)
@@ -238,7 +247,8 @@ getMSMSScans = function()
   else res$retention.time.calibration = NA
  
  #set reverse to needed values
-  res$reverse = (res$reverse=="decoy"])
+  res$reverse[res$reverse=="decoy"]=TRUE
+  res$reverse[res$reverse!=TRUE]=FALSE
 
   ## temp workaround
   res = res[!is.na(res$contaminant),]

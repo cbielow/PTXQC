@@ -95,6 +95,7 @@ boxplotCompare = function(data,
     data$cat[grepl("^M", data$group) | grepl("^intensity\\.m\\.", data$group)] = cat[3]
     data$cat[grepl("^H", data$group) | grepl("^intensity\\.h\\.", data$group)] = cat[4]
   }
+
   data$cat[data$contaminant] = cat[5]
   
   ## compute global y-limits (so we can fix it across plots)
