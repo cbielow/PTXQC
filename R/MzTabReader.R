@@ -146,11 +146,13 @@ getEvidence = function()
   ## The `spectra_ref` looks like Â´ms_run[x]:index=y|ms_runÂ´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
+
+  
   res$match.time.difference = NA
   
   setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm", "opt.global.activation.method"), new = c("mass.error..ppm.","uncalibrated.mass.error..ppm.","fragmentation"))
   setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant","opt.global.fragment.mass.error.da","opt.global.fragment.mass.error.ppm"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant","mass.deviations..da.","mass.deviations..ppm."))
-  
+
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
     setnames(res, old = c("opt.global.rt.raw","opt.global.rt.align"), new = c("retention.time","calibrated.retention.time"))
@@ -177,14 +179,7 @@ getEvidence = function()
   res_dt[toNA, ms.ms.count:=NA]
   res=as.data.frame(res_dt)
   
-  #print(head(res))
-  #print(length(which(!is.na(res$ms.ms.count))))
-  #print(length(which(is.na(res$ms.ms.count))))
-  
-  #only labelfree, intensity from PEP to PSM
-  
- # pep_df= data.frame(count = c (1,2,3), "peptide.abundance.study.variable.1."=c (10,20,30), "peptide.abundance.study.variable.2."=c (100,200,300),spectra.ref=c("ms_run[1]:controllerType=0 controllerNumber=1 scan=6396", "ms_run[2]:controllerType=0 controllerNumber=1 scan=5396", "ms_run[1]:controllerType=0 controllerNumber=1 scan=7396"))
-  #res= data.frame(spectra.ref=c("ms_run[1]:controllerType=0 controllerNumber=1 scan=6396","ms_run[1]:controllerType=0 controllerNumber=1 scan=8396", "ms_run[2]:controllerType=0 controllerNumber=1 scan=5396", "ms_run[1]:controllerType=0 controllerNumber=1 scan=7396","ms_run[1]:controllerType=0 controllerNumber=1 scan=6396" ,NA), opt.global.cf.id=c(1,1,2,2,2,NA),psm.id=c(11,12,13,14,15,NA),opt.global.map.index=c(21,21,23,24,25,NA))
+  #intensity from PEP to PSM: only labelfree
   pep_df=.self$sections$PEP
   res$pep.id= as.numeric(NA)
   res$intensity=as.numeric(NA)
@@ -209,7 +204,9 @@ getEvidence = function()
   #apply empty entrys, in res_df ddply function retention.time disappear
   res_df=cbind(res_df,retention.time)
   res=rbind(res_df, empty_entries)
-  print(res_df$intensity)
+
+  ## temp workaround
+  res = res[!is.na(res$fc.raw.file),]
   return ( res )
 },
 
@@ -224,19 +221,29 @@ getMSMSScans = function()
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
-  
+
   if("opt.global.ion.injection.time" %in% colnames(res))
   {
     setnames(res, old = c("opt.global.ion.injection.time"), new = c("ion.injection.time"))
   }
   setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant","opt.global.fragment.mass.error.da","opt.global.fragment.mass.error.ppm", "opt.global.missed.cleavages","opt.global.target.decoy"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant","mass.deviations..da.","mass.deviations..ppm.","missed.cleavages","reverse"))
-  #setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber"), new = c("identified","scan.event.number"))
   setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm","opt.global.activation.method"), new = c("mass.error..ppm","uncalibrated.mass.error..ppm","fragmentation"))
-  
-  res$reverse[res$reverse=="decoy"]=TRUE
-  res$reverse[res$reverse!=TRUE]=FALSE
+
+  if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
+  {
+    colnames(res)[colnames(res)=="opt.global.rt.raw"] = "retention.time"
+    colnames(res)[colnames(res)=="opt.global.rt.align"] = "calibrated.retention.time"
+    res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
+  }
+  else res$retention.time.calibration = NA
  
+ #set reverse to needed values
+  res$reverse = (res$reverse=="decoy"])
+
+  ## temp workaround
+  res = res[!is.na(res$contaminant),]
   return ( res )
 }
+
 ) # methods
 ) # class

@@ -150,7 +150,10 @@ current study. ",
       { ## MC's require an enzyme to be set
         ## remove contaminants
         msg_cont_removed = "(includes contaminants -- no evidence.txt read)"
-        if (!is.null(df_evd)) {
+        if ("contaminant" %in% colnames(df_msms)) { # for MzTab
+          df_msms = df_msms[!df_msms$contaminant,]
+        }
+        else if (!is.null(df_evd)) {
           msg_cont_removed = "(excludes contaminants)"
           df_msms = df_msms[!df_evd$contaminant[match(df_msms$evidence.id, df_evd$id)], ]
         }
@@ -162,8 +165,9 @@ current study. ",
           r[names(t)] = t
           return (r)
         })
+        
         lpl =
-          byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, title_sub = msg_cont_removed, sort_indices = TRUE)
+          byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, sort_indices = TRUE, title_sub = msg_cont_removed) 
         
         ## QC measure for missed-cleavages variation
         qc_score = data.frame(fc.raw.file = st_bin$fc.raw.file, valMC = st_bin[, "0"])

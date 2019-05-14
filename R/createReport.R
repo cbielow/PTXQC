@@ -32,7 +32,7 @@
 #'
 createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
 {
-  DEBUG_PTXQC = TRUE
+  if (!exists("DEBUG_PTXQC")) DEBUG_PTXQC = FALSE ## debug only when defined externally
   time_start = Sys.time()
   #mztab_file = "c:\\temp\\test.mzTab"
   ##mztab_file = NULL
@@ -569,7 +569,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   
   }
   ## save RAM: msms.txt is not required any longer
-  rm(df_msms)
+  if (!DEBUG_PTXQC) rm(df_msms)
   if (!DEBUG_PTXQC) rm(df_evd)
   
 
@@ -637,7 +637,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     
   }
   ## save RAM: msmsScans.txt is not required any longer
-  rm(df_msmsScan)
+  if (!DEBUG_PTXQC) rm(df_msmsScan)
     
     
   #####################################################################
