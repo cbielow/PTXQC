@@ -154,7 +154,7 @@ qualMedianDist = function(x)
 #'  
 qualUniform = function(x, weight=vector())
 {
-  if (length(x) == 0 || any(is.na(x) | (x<0))) stop("Error: qualUniform() received negative or missing data!")
+ # if (length(x) == 0 || any(is.na(x) | (x<0))) stop("Error: qualUniform() received negative or missing data!")
   
   if(length(weight)==0) {
     weight=rep(1, length(x)) 

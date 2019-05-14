@@ -215,6 +215,12 @@ plotNameMapping = function(.self)
   
 }, 
 
+getRawfm= function(.self)
+{
+   tmp = .self$raw_file_mapping
+   tmp$to = factor(tmp$to)
+   return(tmp)
+},
 
 
 readMappingFile = function(.self, filename)
