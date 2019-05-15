@@ -307,13 +307,9 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
       df.ratio = ddply(DF, c("scan.event.number", "fc.raw.file"), function(x)
       {
         xp = xm = 0
-        if(c("+","-") %in% x$identified){
-          if ("+" %in% x$identified) xp = x$n[x$identified=="+"]
-          if ("-" %in% x$identified) xm = x$n[x$identified=="-"]
-          ratio = xp * 100 / sum(xp, xm)} else{
-          if (1 %in% x$identified) xp = x$n[x$identified==1]
-          if (0 %in% x$identified) xm = x$n[x$identified==0]
-          ratio = xp * 100 / sum(xp, xm)}
+        if ("+" %in% x$identified) xp = x$n[x$identified=="+"]
+        if ("-" %in% x$identified) xm = x$n[x$identified=="-"]
+        ratio = xp * 100 / sum(xp, xm)
         
         return (data.frame(ratio = ratio, count = sum(x$n)))
       })
