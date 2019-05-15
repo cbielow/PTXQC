@@ -633,8 +633,7 @@ plot_IDsOverRT = function(data, x_lim = range(data$RT), y_max = max(data$counts)
 #'
 plot_IDRate = function(data, id_rate_bad, id_rate_great, label_ID)
 {
-  print(data$fc.raw.file)
-  p = ggplot(data, aes_string(y = "fc.raw.file", x = "ms.ms.identified....")) +
+    p = ggplot(data, aes_string(y = "fc.raw.file", x = "ms.ms.identified....")) +
         geom_point(aes_string(colour = "cat")) +
         geom_vline(xintercept = id_rate_bad, color=(label_ID)[1]) +
         geom_vline(xintercept = id_rate_great, color=(label_ID)[3]) +

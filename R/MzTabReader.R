@@ -155,7 +155,7 @@ getEvidence = function()
 
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), new = c("retention.time.pep"," retention.time","calibrated.retention.time"))
+    setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), new = c("retention.time.pep","retention.time","calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else 
@@ -207,8 +207,7 @@ getEvidence = function()
 
   ## temp workaround
   res = res[!is.na(res$fc.raw.file),]
-  # res_con=res[which(res$contaminant==1),]
-  # print(res_con[,c("spectra.ref","ms_run_number","pep.id","intensity","opt.global.cf.id")])
+ 
   return ( res )
 },
 
@@ -241,7 +240,10 @@ getMSMSScans = function()
  
  #set reverse to needed values
   res$reverse=(res$reverse=="decoy")
-
+  
+  #set identified to needed values
+  res$identified[which(res$identified==0)] = "-"
+  res$identified[which(res$identified==1)] = "+"
 
   ## temp workaround
   res = res[!is.na(res$contaminant),]
