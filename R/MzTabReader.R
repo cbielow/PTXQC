@@ -101,7 +101,13 @@ getParameters = function()
   "Converts internal mzTab metadata section to a two column key-value data.frame similar to MaxQuants parameters.txt."
   
   # just return the whole metadata section for now
-  return (.self$sections[["MTD"]])
+  res = .self$sections[["MTD"]]
+  setnames(res, old = "key", new = "parameter")
+  res = rbind(res, data.frame(parameter= "fasta file", value = paste(basename(unique(.self$sections$PSM$database)), collapse=";")))
+  res = res[-(grep("custom",res$parameter)),]
+  res[is.na(res)]= "NULL" # temp workaround
+  
+  return (res)
 },
 
 getSummary = function()
@@ -155,29 +161,22 @@ getEvidence = function()
   res$match.time.difference = NA
   res$type = "MULTI-MSMS"
   
-  setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm", "exp.mass.to.charge", "opt.global.mass", "opt.global.FWHM"), new = c("mass.error..ppm.","uncalibrated.mass.error..ppm.", "m.z", "mass", "retention.length"))
-  setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant","opt.global.fragment.mass.error.da"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant","mass.deviations..da."))
-
+  name = list(opt.global.calibrated.mz.error.ppm = "mass.error..ppm.",
+              opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
+              exp.mass.to.charge = "m.z", 
+              opt.global.mass = "mass", 
+              opt.global.FWHM = "retention.length",
+              opt.global.identified = "identified",
+              opt.global.ScanEventNumber = "scan.event.number",
+              PSM.ID = "id", 
+              opt.global.modified.sequence = "modified.sequence",
+              opt.global.is.contaminant = "contaminant",
+              opt.global.fragment.mass.error.da = "mass.deviations..da.",
+              opt.global.total.ion.count = "total.ion.current",
+              opt.global.base.peak.intensity = "base.peak.intensity")
   
-  #colnames(res)[colnames(res)=="PSM.ID"] = "id"
-  #colnames(res)[colnames(res)=="opt.global.motified.sequence"] = "modified.sequence"
-  #colnames(res)[colnames(res)=="opt.global.calibrated.mz.error.ppm"] = "mass.error..ppm"
-  #colnames(res)[colnames(res)=="opt.global.uncalibrated.mz.error.ppm"] = "uncalibrated.mass.error..ppm"
-  #colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
-  #write wide table to long table for intensity = peptide_abundance_study_variable[x]
-  #study_variables=c()
-  #for i in 1:length(summary$raw.file)
-  #  study_variables=c(study_variable,peptide.abundance.study.variable[i])
-  
-  #melt(pep, measure.vars=startsWith(peptide.abundance.study.variable), variable.name="raw.file", value.name="intensity")
-  
-  #ms.ms.count (for MS2-Oversampling: check for duplicated sequences: if charge, ID and opt_global_modified_sequence same --> count,
-  #if sequence,accession,charge,opt_global_modified_sequence,are the same, or id different and sequence same??
-  
-  #same id, same modified sequence --> together -->all duplicated peptide because they exist in different proteins removed
-  #delete column accession and delete duplicates
-  
-  #res <- unique(subset(res, select = -c(accession,database)))
+  setnames(res, old = names(name), new = unlist(name))
+   
   res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
   
   ## temp workaround
@@ -198,7 +197,6 @@ getMSMSScans = function()
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
 
-  #colnames(res)[colnames(res)=="PSM.ID"] = "id"
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
     colnames(res)[colnames(res)=="retention.time"] = "retention.time.pep" #rename existing retention.time column
@@ -207,22 +205,27 @@ getMSMSScans = function()
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else res$retention.time.calibration = NA
-  setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm", "exp.mass.to.charge", "opt.global.mass", "opt.global.fragment.mass.error.da", "opt.global.fragment.mass.error.ppm"), 
-           new = c("mass.error..ppm.","uncalibrated.mass.error..ppm.", "m.z", "mass", "mass.deviations..da.", "mass.deviations..ppm." ))
-  setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant"))
   
-  #colnames(res)[colnames(res)=="opt.global.identified"] = "identified"
-  #colnames(res)[colnames(res)=="opt.global.ScanEventNumber"] = "scan.event.number"
-  colnames(res)[colnames(res)=="opt.global.missed.cleavages"] = "missed.cleavages"
-  colnames(res)[colnames(res)=="opt.global.target.decoy"] = "reverse"
-
-  #res$reverse[res$reverse=="decoy"] = TRUE  
-  #res$reverse[res$reverse!=TRUE] = FALSE
-  #colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.da"] = "mass.deviations..da."
-  #colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.ppm"] = "mass.deviations..ppm."
-  #colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"
-  res$fragmentation = "CID"
-  res$mass.deviations..ppm. = gsub("\\[|\\]|_", "", res$mass.deviations..ppm.)
+  if("opt.global.ion.injection.time" %in% colnames(res)){setnames(res, old = "opt.global.ion.injection.time", new = "ion.injection.time")}
+  
+  name = list(opt.global.calibrated.mz.error.ppm = "mass.error..ppm",
+              opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
+              exp.mass.to.charge = "m.z", 
+              opt.global.mass = "mass", 
+              opt.global.fragment.mass.error.da = "mass.deviations..da.", 
+              opt.global.fragment.mass.error.ppm = "mass.deviations..ppm.",
+              opt.global.identified = "identified",
+              opt.global.ScanEventNumber = "scan.event.number",
+              PSM.ID = "id", 
+              opt.global.modified.sequence = "modified.sequence",
+              opt.global.is.contaminant = "contaminant",
+              opt.global.missed.cleavages = "missed.cleavages",
+              opt.global.target.decoy = "reverse",
+              opt.global.activation.method = "fragmentation")
+ 
+  setnames(res, old = names(name), new = unlist(name))
+  
+  res$mass.deviations..ppm. = gsub("\\[|\\]", "", res$mass.deviations..ppm.)
   res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
   res$mass.deviations..da. = gsub("\\[|\\]", "",  res$mass.deviations..da.)
   res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da.)
