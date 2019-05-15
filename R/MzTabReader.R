@@ -155,20 +155,16 @@ getEvidence = function()
 
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    setnames(res, old = c("opt.global.rt.raw","opt.global.rt.align"), new = c("retention.time","calibrated.retention.time"))
+    setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), new = c("retention.time.pep"," retention.time","calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else 
   {
-    colnames(res)[colnames(res)=="opt.global.rt.raw"]= "retention.time"
     res$retention.time.calibration=NA
   }
+  
   if("opt.global.FWHM" %in% colnames(res)) {  setnames(res, old = c("opt.global.FWHM"), new = c("retention.length")) }
-  #contaminant:
-  #res$contaminant[res$is.contaminant==0]='-'
-  #res$contaminant[res$is.contaminant==1]='+'
-  
-  
+
   #ms.ms.count: 
   #1.all different accessions and databases per ID in one row; 2.all IDs only one time; 
   #3.add ms.ms.count (size of groups with same sequence, modified.sequence and charge; 4. set in all groups ms.ms.count all cells but one to NA )
@@ -183,35 +179,30 @@ getEvidence = function()
   res_dt[toNA, ms.ms.count:=NA]
   res=as.data.frame(res_dt)
   
-  #print(head(res))
-  #print(length(which(!is.na(res$ms.ms.count))))
-  #print(length(which(is.na(res$ms.ms.count))))
-  
   #intensity from PEP to PSM: only labelfree
   
-  pep_df=.self$sections$PEP
-  res$pep.id= as.numeric(NA)
-  res$intensity=as.numeric(NA)
-  res$ms_run_number=as.numeric(NA)
+  pep_df = .self$sections$PEP
+  res$pep.id = as.numeric(NA)
+  res$intensity = as.numeric(NA)
+  res$ms_run_number = as.numeric(NA)
  
-   #spli data.frame rev in res_df and empty entrys
+   #split data.frame rev in res_df and empty entrys
   empty_entries=res[is.na(res$spectra.ref),]
   res_df=res[!is.na(res$spectra.ref),]
-  retention.time=res_df$retention.time
-  
+
   res_df$pep.id= match(res_df$spectra.ref, pep_df$spectra.ref, nomatch = NA_integer_)
   res_df$ms_run_number=as.numeric(sub("\\].*","", sub(".*\\[","", res_df$spectra.ref)))
   pep_intensity_df = pep_df[ ,grepl( "peptide.abundance.study.variable." , names(pep_df))]
 
-  res_df=ddply(res_df,"opt.global.cf.id",function(x){
+  res_df2=ddply(res_df,"opt.global.cf.id",function(x){
              pep_row=first(na.omit(x$pep.id))
              x$intensity=as.numeric(pep_intensity_df[pep_row, x$ms_run_number]) 
              return(x)}) 
+  
   res_df$intensity[duplicated(res_df[,c("opt.global.map.index","opt.global.cf.id")])]=NA
 
   
-  #apply empty entrys, in res_df ddply function retention.time disappear
-  res_df=cbind(res_df,retention.time)
+  #apply empty entrys
   res=rbind(res_df, empty_entries)
 
   ## temp workaround
@@ -247,8 +238,8 @@ getMSMSScans = function()
   else res$retention.time.calibration = NA
  
  #set reverse to needed values
-  res$reverse[res$reverse=="decoy"]=TRUE
-  res$reverse[res$reverse!=TRUE]=FALSE
+  res$reverse=(res$reverse=="decoy")
+
 
   ## temp workaround
   res = res[!is.na(res$contaminant),]
