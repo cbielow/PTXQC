@@ -187,14 +187,14 @@ getEvidence = function()
   res$ms_run_number = as.numeric(NA)
  
    #split data.frame rev in res_df and empty entrys
-  empty_entries=res[is.na(res$spectra.ref),]
-  res_df=res[!is.na(res$spectra.ref),]
+  empty_entries = res[is.na(res$spectra.ref),]
+  res_df = res[!is.na(res$spectra.ref),]
 
-  res_df$pep.id= match(res_df$spectra.ref, pep_df$spectra.ref, nomatch = NA_integer_)
-  res_df$ms_run_number=as.numeric(sub("\\].*","", sub(".*\\[","", res_df$spectra.ref)))
+  res_df$pep.id = match(res_df$spectra.ref, pep_df$spectra.ref, nomatch = NA_integer_)
+  res_df$ms_run_number = as.numeric(sub("\\].*","", sub(".*\\[","", res_df$spectra.ref)))
   pep_intensity_df = pep_df[ ,grepl( "peptide.abundance.study.variable." , names(pep_df))]
 
-  res_df2=ddply(res_df,"opt.global.cf.id",function(x){
+  res_df=ddply(res_df,"opt.global.cf.id",function(x){
              pep_row=first(na.omit(x$pep.id))
              x$intensity=as.numeric(pep_intensity_df[pep_row, x$ms_run_number]) 
              return(x)}) 
@@ -207,6 +207,8 @@ getEvidence = function()
 
   ## temp workaround
   res = res[!is.na(res$fc.raw.file),]
+  # res_con=res[which(res$contaminant==1),]
+  # print(res_con[,c("spectra.ref","ms_run_number","pep.id","intensity","opt.global.cf.id")])
   return ( res )
 },
 
