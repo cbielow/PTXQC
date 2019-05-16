@@ -153,18 +153,10 @@ getEvidence = function()
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
 
-  
   res$match.time.difference = NA
-  
-  #setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm", "opt.global.activation.method"), new = c("mass.error..ppm.","uncalibrated.mass.error..ppm.","fragmentation"))
-  #setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant","opt.global.fragment.mass.error.da","opt.global.fragment.mass.error.ppm"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant","mass.deviations..da.","mass.deviations..ppm."))
-
+ 
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    #colnames(res)[colnames(res)=="retention.time"] = "retention.time.pep" #rename existing retention.time column
-    #colnames(res)[colnames(res)=="opt.global.rt.raw"] = "retention.time"
-    #colnames(res)[colnames(res)=="opt.global.rt.align"] = "calibrated.retention.time"
-    #res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
     setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), new = c("retention.time.pep","retention.time","calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
@@ -177,7 +169,6 @@ getEvidence = function()
               opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
               exp.mass.to.charge = "m.z", 
               opt.global.mass = "mass", 
-              opt.global.FWHM = "retention.length",
               opt.global.identified = "identified",
               opt.global.ScanEventNumber = "scan.event.number",
               PSM.ID = "id", 
@@ -189,11 +180,14 @@ getEvidence = function()
   
   setnames(res, old = names(name), new = unlist(name))
    
-  res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
+  #res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
 
   
-  #if("opt.global.FWHM" %in% colnames(res)) {  setnames(res, old = c("opt.global.FWHM"), new = c("retention.length")) }
+  if("opt.global.FWHM" %in% colnames(res)) {  setnames(res, old = c("opt.global.FWHM"), new = c("retention.length")) }
 
+  # remove empty PepIDs from evidence
+  res = res[!is.na(res$opt.global.cf.id),]
+  
   #ms.ms.count: 
   #1.all different accessions and databases per ID in one row; 2.all IDs only one time; 
   #3.add ms.ms.count (size of groups with same sequence, modified.sequence and charge; 4. set in all groups ms.ms.count all cells but one to NA )
@@ -201,7 +195,7 @@ getEvidence = function()
   accessions=(res_dt[, .(accession=list(accession)),by=id])$accession
   databases=(res_dt[, .(database=list(database)),by=id])$database
   res_dt=unique(res_dt, by = "id")
-  res_dt$accession=accessions
+  res_dt$proteins=lapply(accessions, paste, collapse=";")
   res_dt$database=databases
   res_dt[,ms.ms.count:=.N, by=list(raw.file,modified.sequence,charge)]
   toNA=res_dt[, .(toNA = .I[c(1L:.N-1)]), by=list(raw.file,modified.sequence,charge)]$toNA
@@ -235,7 +229,10 @@ getEvidence = function()
 
   ## temp workaround
   res = res[!is.na(res$fc.raw.file),]
- 
+  
+  ## temp workaround (broken UID mapping)
+  res = res[!is.na(res$contaminant),]
+  
   return ( res )
 },
 
@@ -251,19 +248,8 @@ getMSMSScans = function()
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
 
- # if("opt.global.ion.injection.time" %in% colnames(res))
-  #{
-   # setnames(res, old = c("opt.global.ion.injection.time"), new = c("ion.injection.time"))
-#  }
- # setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant","opt.global.fragment.mass.error.da","opt.global.fragment.mass.error.ppm", "opt.global.missed.cleavages","opt.global.target.decoy"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant","mass.deviations..da.","mass.deviations..ppm.","missed.cleavages","reverse"))
-#  setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm","opt.global.activation.method"), new = c("mass.error..ppm","uncalibrated.mass.error..ppm","fragmentation"))
-
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    #colnames(res)[colnames(res)=="retention.time"] = "retention.time.pep" #rename existing retention.time column
-    #colnames(res)[colnames(res)=="opt.global.rt.raw"] = "retention.time"
-    #colnames(res)[colnames(res)=="opt.global.rt.align"] = "calibrated.retention.time"
-    #res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
     setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), new = c("retention.time.pep","retention.time","calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
