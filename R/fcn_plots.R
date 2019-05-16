@@ -1228,3 +1228,38 @@ plot_ScanIDRate = function(data)
         ggtitle(paste0("MSMSscans: TopN % identified over N"))
   return (p)
 }
+
+#'
+#' Plot Total Ion Count over time
+#' 
+#' The input is a data.frame with already averaged counts over binned RT-slices.
+#' 
+#' @param data A data.frame with columns 'fc.raw.file', 'RT', 'peakWidth'
+#' @param x_lim Plot range of x-axis
+#' @param y_lim Plot range of y-axis
+#' @return GGplot object
+#'
+#' @import ggplot2
+#' @export
+#' 
+#' @examples 
+#' 
+#'  data = data.frame(fc.raw.file = rep(c("file A", "file B", "file C"), each=81),
+#'                    RT = c(20:100), 
+#'                    peakWidth = c(rnorm(81, mean=20), rnorm(81, mean=10), rnorm(81, mean=30)))
+#'  plot_RTPeakWidth(data, c(10, 100), c(0, 40))
+#' 
+plot_TIC = function(data, x_lim, y_lim)
+{
+  p = ggplot(data) +
+    geom_line(aes_string(x = "RT", y = "intensity", colour = "fc.raw.file"), size=1, alpha=0.7) +
+    scale_color_manual(values = brewer.pal.Safe(length(unique(data$fc.raw.file)), "Set1")) +
+    guides(color = guide_legend(title = "Raw file\n(avg. peak width)")) +
+    xlab("retention time [min]") +
+    ylab("intensity") +
+    coord_cartesian(xlim = x_lim, ylim = y_lim) + ## zoom in y -- do not cut data (preserve lines)
+    ggtitle("SM: Total Ion Count") +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  #print(p)
+  return(p)
+}

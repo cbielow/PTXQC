@@ -71,5 +71,44 @@ Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the th
   )
     return(.self)
   })
+  
+  
+  qcMetric_SM_TIC =  setRefClass(
+    "qcMetric_SM_TIC",
+    contains = "qcMetric",
+    methods = list(initialize=function() {  callSuper(
+      helpTextTemplate = 
+        "Total Ion Count. Reflects the summed intensity of all masses identified at any point of time.
+",
+      workerFcn = function(.self, d_smy)
+      {
+        ## completeness check
+        stopifnot(.self$checkInput(c("fc.raw.file", "TIC"), colnames(d_smy)))
+        
+        df_long = ddply(d_smy, "fc.raw.file", function(x) {
+        
+          n = lenght(x$TIC)
+          return(data.frame(intensity=x$TIC[seq(1,n,2)], RT=x$TIC[seq(2,n,2)]))
+        })
+        
+        head(df_long)
+        
+        lpl =
+          byXflex(df_long, df_long$fc.raw.file, 6, plot_TIC, sort_indices = FALSE)
+        
+        ## QC measure for smoothness of TopN over RT
+        qc_TIC = ddply(df_long, "fc.raw.file", function(x) data.frame(val = qualUniform(x$intensity)))
+        colnames(qc_TIC)[colnames(qc_TIC) == "val"] = .self$qcName
+        
+        return(list(plots = lpl, qcScores = qc_TIC))
+      }, 
+      qcCat = "LC", 
+      qcName = "TIC", 
+      orderNr = 0025
+    )
+      return(.self)
+    })
+  )
+  
 )
 
