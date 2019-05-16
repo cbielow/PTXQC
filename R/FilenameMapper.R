@@ -215,29 +215,37 @@ plotNameMapping = function(.self)
   
 }, 
 
+getRawfm = function(.self)
+{
+  "Wrapper function for member 'raw_file_mapping', ensuring that $to is a factor"
+  
+  tmp = .self$raw_file_mapping
+  tmp$to = factor(tmp$to)
+  return(tmp)
+},
 
 
 readMappingFile = function(.self, filename)
 {
-  " Reads a mapping table of full Raw file names to shortened names.
+  "Reads a mapping table of full Raw file names to shortened names.
 
- The internal structure \\verb{raw_file_mapping} is created using this file.
- If the file is missing, nothing is done.
+  The internal structure \\verb{raw_file_mapping} is created using this file.
+  If the file is missing, nothing is done.
  
- The file must have two columns named: 'orig.Name' and 'new.Name' and use Tab as separator.
- This file can be used to manually substitute Raw file names within the report.
- The ordering of Raw files in the report can be changed by re-arranging the rows.
- I.e.
- \\preformatted{
- orig.Name  new.Name
- 2011_05_30_ALH_OT_21_VIL_TMT_FR01   myfile A
- 2011_05_30_ALH_OT_22_VIL_TMT_FR02   another B
- }
+  The file must have two columns named: 'orig.Name' and 'new.Name' and use Tab as separator.
+  This file can be used to manually substitute Raw file names within the report.
+  The ordering of Raw files in the report can be changed by re-arranging the rows.
+  I.e.
+  \\preformatted{
+  orig.Name  new.Name
+  2011_05_30_ALH_OT_21_VIL_TMT_FR01   myfile A
+  2011_05_30_ALH_OT_22_VIL_TMT_FR02   another B
+  }
  
- @param filename  Source filename to read.
- @return Returns \\verb{TRUE} if file was read, \\verb{FALSE} if it does not exist.
-
+  @param filename  Source filename to read.
+  @return Returns \\verb{TRUE} if file was read, \\verb{FALSE} if it does not exist.
 "
+  
   if (file.exists(filename))
   {
     message(paste0("Reading mapping file '", filename, "'\n"))

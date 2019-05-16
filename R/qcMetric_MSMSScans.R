@@ -310,6 +310,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
         if ("+" %in% x$identified) xp = x$n[x$identified=="+"]
         if ("-" %in% x$identified) xm = x$n[x$identified=="-"]
         ratio = xp * 100 / sum(xp, xm)
+        
         return (data.frame(ratio = ratio, count = sum(x$n)))
       })
       head(df.ratio)
