@@ -105,17 +105,42 @@ getParameters = function()
 },
 
 getSummary = function()
+  
 {
+  
   "Converts internal mzTab metadata section to a two data.frame with columns 'fc.raw.file', 'ms.ms.identified....'
+
    similar to MaxQuants summary.txt."
   
-  res = .self$fn_map$raw_file_mapping[ , c("from", "to")]
+  res = .self$fn_map$getRawfm()[ , c("from", "to")]
+  
   colnames(res) = c("raw.file", "fc.raw.file")
   
-  ## todo: read TIC metadata and attach to current table
-  res$ms.ms.identified.... = NA
+  
+  
+  #read custom entrys
+  
+  mtd_custom_df= .self$sections$MTD[grep("custom", .self$sections$MTD$key),]
+  
+  
+  ##ms2-ID-Rate
+  
+  ms2_df=mtd_custom_df[grep("identification", mtd_custom_df$value),]
+  
+  res$ms.ms.identified....=unlist(lapply(lapply(strsplit(gsub("]","",as.character(ms2_df$value)),","), "[[", 4),as.numeric))
+  
+  
+  
+  ## read TIC
+  
+  tic_df=mtd_custom_df[grep("total ion current", mtd_custom_df$value),]
+  
+  res$TIC=lapply(strsplit(sub(".* \\[(.*)\\]", "\\1", tic_df$value), ","), as.numeric)
+  
+  
   
   return (res)
+  
 },
 
 ## MaxQuant-like representation of PRT table, i.e. augmented this with more columns (or renamed) if a metric requires it
@@ -204,7 +229,7 @@ getMSMSScans = function()
   colnames(res)[colnames(res)=="opt.global.ScanEventNumber"] = "scan.event.number"
   colnames(res)[colnames(res)=="opt.global.missed.cleavages"] = "missed.cleavages"
   colnames(res)[colnames(res)=="opt.global.target.decoy"] = "reverse"
-  res$reverse = (res$reverse=="decoy"])
+  res$reverse = (res$reverse=="decoy")
   colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.da"] = "mass.deviations..da."
   colnames(res)[colnames(res)=="opt.global.target.fragment.mass.error.ppm"] = "mass.deviations..ppm."
   colnames(res)[colnames(res)=="opt.global.is.contaminant"] = "contaminant"

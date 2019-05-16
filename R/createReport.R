@@ -30,7 +30,7 @@
 #' 
 #' @export
 #'
-createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
+#createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
 {
   if (!exists("DEBUG_PTXQC")) DEBUG_PTXQC = FALSE ## debug only when defined externally
   time_start = Sys.time()
@@ -230,6 +230,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
  
   ### MS/MS identified [%]
   lst_qcMetrics[["qcMetric_SM_MSMSIdRate"]]$setData(d_smy, id_rate_bad, id_rate_great)
+  
+  lst_qcMetrics[["qcMetric_SM_TIC"]]$setData(d_smy)
+  
   
   ######
   ######  proteinGroups.txt ...
