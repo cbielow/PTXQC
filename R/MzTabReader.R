@@ -152,6 +152,7 @@ getEvidence = function()
   
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
+    colnames(res)[colnames(res)=="retention.time"] = "retention.time.pep" #rename existing retention.time column
     colnames(res)[colnames(res)=="opt.global.rt.raw"] = "retention.time"
     colnames(res)[colnames(res)=="opt.global.rt.align"] = "calibrated.retention.time"
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
