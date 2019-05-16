@@ -124,7 +124,7 @@ getSummary = function()
   
   ## read TIC
   tic_df=mtd_custom_df[grep("total ion current", mtd_custom_df$value),] 
-  res$TIC=lapply(strsplit(sub(".* \\[(.*)\\]", "\\1", tic_df$value), ","), as.numeric)
+  res$TIC=lapply(strsplit(sub(".* \\[(.*)\\]\\]", "\\1", tic_df$value), ","), as.numeric)
 
   return (res)
   
