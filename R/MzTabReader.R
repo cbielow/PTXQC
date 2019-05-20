@@ -112,11 +112,11 @@ getSummary = function()
   colnames(res) = c("raw.file", "fc.raw.file")
   
   #read custom entrys
-  mtd_custom_df= .self$sections$MTD[grep("custom", .self$sections$MTD$key),]
+  mtd_custom_df = .self$sections$MTD[grep("custom", .self$sections$MTD$key), ]
  
   ##ms2-ID-Rate
-  ms2_df=mtd_custom_df[grep("identification", mtd_custom_df$value),] 
-  res$ms.ms.identified....=unlist(lapply(lapply(strsplit(gsub("]","",as.character(ms2_df$value)),","), "[[", 4),as.numeric))
+  ms2_df = mtd_custom_df[grep("MS2 identification rate", mtd_custom_df$value), ] 
+  res$ms.ms.identified.... = unlist(lapply(lapply(strsplit(gsub("]","",as.character(ms2_df$value)),","), "[[", 4), as.numeric))
   
   ## read TIC
   tic_df=mtd_custom_df[grep("total ion current", mtd_custom_df$value),] 
@@ -219,7 +219,7 @@ getMSMSScans = function()
   
   res = .self$sections$PSM
   ## augment PSM with fc.raw.file
-  ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
+  ## The `spectra_ref` looks like ?ms_run[x]:index=y|ms_run?
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
 

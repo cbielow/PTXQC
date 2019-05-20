@@ -23,11 +23,6 @@
 #'                         If not provided, will be created internally by calling \code{\link{getReportFilenames}}.
 #' @return List with named filename strings, e.g. $yaml_file, $report_file etc..
 #'          
-#' @importFrom plyr ddply dlply ldply llply adply summarise mapvalues
-#' @importFrom reshape2 melt
-#' @importFrom rmarkdown render pandoc_available
-#' @importFrom grDevices dev.off pdf
-#' 
 #' @export
 #'
 createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
@@ -671,12 +666,11 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   
   if ("html" %in% out_format_requested)
   {
-    if (pandoc_available()) {
+    if (rmarkdown::pandoc_available()) {
       ## HTML reports require Pandoc for converting Markdown to Html via the rmarkdown package
       if (DEBUG_PTXQC) {
-        #html_template = "Z:/projects/QC/PTXQC/package/inst/reportTemplate/PTXQC_report_template.Rmd"
-        html_template = paste0(getwd(), "/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd")
-        if (!file.exists(html_template)) stop("Wrong working directroy. Please set your working directory to the parent of PTXQC such that 'paste0(getwd(), '/PTXQC/inst/reportTemplate/PTXQC_report_template.Rmd')' is a valid file.")
+        html_template = paste0(getwd(), "/inst/reportTemplate/PTXQC_report_template.Rmd")
+        if (!file.exists(html_template)) stop("Wrong working directroy. Please set your working directory to the PTXQC main dir such that 'paste0(getwd(), '/inst/reportTemplate/PTXQC_report_template.Rmd')' is a valid file.")
       } else {
         html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
       }
@@ -686,7 +680,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
       out_template = file.path(out_dir, basename(html_template))
       ## Rmarkdown: convert to Markdown, and then to HTML (or PDF) ...
       ## Intermediates_dir is required if inputdir!=outputdir, since Shiny server might not allow write-access to input file directory
-      render(out_template, output_file = rprt_fns$report_file_HTML) #, intermediates_dir = dirname(rprt_fns$report_file_HTML))
+      rmarkdown::render(out_template, output_file = rprt_fns$report_file_HTML) #, intermediates_dir = dirname(rprt_fns$report_file_HTML))
     } else {
       warning("The 'Pandoc' converter is not installed on your system or you do not have read-access to it!\n",
               "Pandoc is required for HTML reports.\n",
@@ -719,7 +713,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         print(gg_obj)
       }
     }
-    pdf(report_file_PDF)
+    grDevices::pdf(report_file_PDF)
     printWithPage(hm[["plot"]], "p. 1")      # summary heatmap
     printWithPage(pl_nameMapping$plots, "p. 2")    # short file mapping
     pc = 3; ## subsequent pages start at #4
@@ -731,7 +725,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         pc = pc + 1
       }
     }
-    dev.off();
+    grDevices::dev.off();
     cat(" done\n")
   }
   
