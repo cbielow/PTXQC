@@ -118,7 +118,7 @@ getSummary = function()
   colnames(res) = c("raw.file", "fc.raw.file")
   
   #read custom entrys
-  mtd_custom_df= .self$sections$MTD[grep("custom", .self$sections$MTD$parameter),]
+  mtd_custom_df = .self$sections$MTD[grep("custom", .self$sections$MTD$key),]
  
   ##ms2-ID-Rate
   ms2_df=mtd_custom_df[grep("identification", mtd_custom_df$value),] 
