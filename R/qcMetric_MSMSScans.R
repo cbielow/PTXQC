@@ -155,6 +155,11 @@ Heatmap score [MS<sup>2</sup> Scans: Ion Inj Time]: Linear score as fraction of 
     workerFcn = function(.self, df_msmsScans, threshold_iit)
     {
       ## completeness check
+      # mzTab might not have iij
+      if ( any(!("ion.injection.time" %in% colnames(df_msmsScans)), all(is.na(df_msmsScans$ion.injection.time)) ) ) {
+        return(NULL)
+      } 
+      
       stopifnot(.self$checkInput(c("fc.raw.file", "ion.injection.time", "rRT"), colnames(df_msmsScans)))
       
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory

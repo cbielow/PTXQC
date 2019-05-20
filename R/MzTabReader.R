@@ -100,8 +100,8 @@ getParameters = function()
 {
   "Converts internal mzTab metadata section to a two column key-value data.frame similar to MaxQuants parameters.txt."
   
-  # just return the whole metadata section for now
-  res = .self$sections[["MTD"]]
+  # copy the whole MTD for now, since R likes shallow copies and we are about to rename columns by reference (see ?setnames)
+  res = data.table::copy(.self$sections[["MTD"]])
   setnames(res, old = "key", new = "parameter")
   res = rbind(res, data.frame(parameter= "fasta file", value = paste(basename(unique(.self$sections$PSM$database)), collapse=";")))
   res = res[-(grep("custom",res$parameter)),]
@@ -117,16 +117,16 @@ getSummary = function()
   res = .self$fn_map$getRawfm()[ , c("from", "to")]
   colnames(res) = c("raw.file", "fc.raw.file")
   
-  #read custom entrys
+  ## read custom entries
   mtd_custom_df = .self$sections$MTD[grep("custom", .self$sections$MTD$key), ]
 
-  ##ms2-ID-Rate
+  ## ms2-ID-Rate
   ms2_df = mtd_custom_df[grep("MS2 identification rate", mtd_custom_df$value), ] 
   res$ms.ms.identified.... = unlist(lapply(lapply(strsplit(gsub("]","",as.character(ms2_df$value)),","), "[[", 4), as.numeric))
   
   ## read TIC
-  tic_df=mtd_custom_df[grep("total ion current", mtd_custom_df$value),] 
-  res$TIC=lapply(strsplit(sub(".* \\[(.*)\\]", "\\1", tic_df$value), ","), as.numeric)
+  tic_df = mtd_custom_df[grep("total ion current", mtd_custom_df$value),] 
+  res$TIC = lapply(strsplit(sub(".* \\[(.*)\\]", "\\1", tic_df$value), ","), as.numeric)
 
   return (res)
 },
@@ -157,7 +157,8 @@ getEvidence = function()
  
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), new = c("retention.time.pep","retention.time","calibrated.retention.time"))
+    setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), 
+                  new = c("retention.time.pep","retention.time","calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else res$retention.time.calibration = NA
@@ -182,7 +183,7 @@ getEvidence = function()
    
   #res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
 
-  
+  ## optional in MzTab (depending on which FeatureFinder was used)
   if("opt.global.FWHM" %in% colnames(res)) {  setnames(res, old = c("opt.global.FWHM"), new = c("retention.length")) }
 
   # remove empty PepIDs from evidence
@@ -191,12 +192,12 @@ getEvidence = function()
   #ms.ms.count: 
   #1.all different accessions and databases per ID in one row; 2.all IDs only one time; 
   #3.add ms.ms.count (size of groups with same sequence, modified.sequence and charge; 4. set in all groups ms.ms.count all cells but one to NA )
-  res_dt=setDT(res)
-  accessions=(res_dt[, .(accession=list(accession)),by=id])$accession
-  databases=(res_dt[, .(database=list(database)),by=id])$database
+  res_dt = setDT(res)
+  accessions = (res_dt[, .(accession=list(accession)), by=id])$accession
+  databases = (res_dt[, .(database=list(database)), by=id])$database
   res_dt=unique(res_dt, by = "id")
-  res_dt$proteins=lapply(accessions, paste, collapse=";")
-  res_dt$database=databases
+  res_dt$proteins = unlist(lapply(accessions, paste, collapse=";"))
+  res_dt$database = databases
   res_dt[,ms.ms.count:=.N, by=list(raw.file,modified.sequence,charge)]
   toNA=res_dt[, .(toNA = .I[c(1L:.N-1)]), by=list(raw.file,modified.sequence,charge)]$toNA
   res_dt[toNA, ms.ms.count:=NA]
@@ -224,7 +225,7 @@ getEvidence = function()
   
   res_df$intensity[duplicated(res_df[,c("opt.global.map.index","opt.global.cf.id")])]=NA
   
-  #apply empty entrys
+  ## apply empty entries
   res=rbind(res_df, empty_entries)
 
   ## temp workaround
@@ -255,7 +256,10 @@ getMSMSScans = function()
   }
   else res$retention.time.calibration = NA
   
-  if("opt.global.ion.injection.time" %in% colnames(res)){setnames(res, old = "opt.global.ion.injection.time", new = "ion.injection.time")}
+  if("opt.global.ion.injection.time" %in% colnames(res))
+  {
+    setnames(res, old = "opt.global.ion.injection.time", new = "ion.injection.time")
+  }
   
   name = list(opt.global.calibrated.mz.error.ppm = "mass.error..ppm",
               opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 

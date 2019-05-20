@@ -1068,6 +1068,7 @@ Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = samp
       
       df_evd.totalInt = sum(as.numeric(df_evd$intensity), na.rm = TRUE)
       df_evd.cont.only = df_evd[df_evd$contaminant,]
+
       cont.top = by(df_evd.cont.only, df_evd.cont.only$pname, function(x) sum(as.numeric(x$intensity), na.rm = TRUE) / df_evd.totalInt*100)
       cont.top.sort = sort(cont.top, decreasing = TRUE)
       #head(cont.top.sort)
