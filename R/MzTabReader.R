@@ -101,7 +101,13 @@ getParameters = function()
   "Converts internal mzTab metadata section to a two column key-value data.frame similar to MaxQuants parameters.txt."
   
   # just return the whole metadata section for now
-  return (.self$sections[["MTD"]])
+  res = .self$sections[["MTD"]]
+  setnames(res, old = "key", new = "parameter")
+  res = rbind(res, data.frame(parameter= "fasta file", value = paste(basename(unique(.self$sections$PSM$database)), collapse=";")))
+  res = res[-(grep("custom",res$parameter)),]
+  res[is.na(res)]= "NULL" # temp workaround
+  
+  return (res)
 },
 
 getSummary = function()
@@ -113,7 +119,7 @@ getSummary = function()
   
   #read custom entrys
   mtd_custom_df = .self$sections$MTD[grep("custom", .self$sections$MTD$key), ]
- 
+
   ##ms2-ID-Rate
   ms2_df = mtd_custom_df[grep("MS2 identification rate", mtd_custom_df$value), ] 
   res$ms.ms.identified.... = unlist(lapply(lapply(strsplit(gsub("]","",as.character(ms2_df$value)),","), "[[", 4), as.numeric))
@@ -147,24 +153,41 @@ getEvidence = function()
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
 
-  
   res$match.time.difference = NA
-  
-  setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm", "opt.global.activation.method"), new = c("mass.error..ppm.","uncalibrated.mass.error..ppm.","fragmentation"))
-  setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant","opt.global.fragment.mass.error.da","opt.global.fragment.mass.error.ppm"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant","mass.deviations..da.","mass.deviations..ppm."))
-
+ 
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
     setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), new = c("retention.time.pep","retention.time","calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
-  else 
-  {
-    res$retention.time.calibration=NA
-  }
+  else res$retention.time.calibration = NA
+  
+  res$match.time.difference = NA
+  res$type = "MULTI-MSMS"
+  
+  name = list(opt.global.calibrated.mz.error.ppm = "mass.error..ppm.",
+              opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
+              exp.mass.to.charge = "m.z", 
+              opt.global.mass = "mass", 
+              opt.global.identified = "identified",
+              opt.global.ScanEventNumber = "scan.event.number",
+              PSM.ID = "id", 
+              opt.global.modified.sequence = "modified.sequence",
+              opt.global.is.contaminant = "contaminant",
+              opt.global.fragment.mass.error.da = "mass.deviations..da.",
+              opt.global.total.ion.count = "total.ion.current",
+              opt.global.base.peak.intensity = "base.peak.intensity")
+  
+  setnames(res, old = names(name), new = unlist(name))
+   
+  #res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
+
   
   if("opt.global.FWHM" %in% colnames(res)) {  setnames(res, old = c("opt.global.FWHM"), new = c("retention.length")) }
 
+  # remove empty PepIDs from evidence
+  res = res[!is.na(res$opt.global.cf.id),]
+  
   #ms.ms.count: 
   #1.all different accessions and databases per ID in one row; 2.all IDs only one time; 
   #3.add ms.ms.count (size of groups with same sequence, modified.sequence and charge; 4. set in all groups ms.ms.count all cells but one to NA )
@@ -172,7 +195,7 @@ getEvidence = function()
   accessions=(res_dt[, .(accession=list(accession)),by=id])$accession
   databases=(res_dt[, .(database=list(database)),by=id])$database
   res_dt=unique(res_dt, by = "id")
-  res_dt$accession=accessions
+  res_dt$proteins=lapply(accessions, paste, collapse=";")
   res_dt$database=databases
   res_dt[,ms.ms.count:=.N, by=list(raw.file,modified.sequence,charge)]
   toNA=res_dt[, .(toNA = .I[c(1L:.N-1)]), by=list(raw.file,modified.sequence,charge)]$toNA
@@ -200,14 +223,16 @@ getEvidence = function()
              return(x)}) 
   
   res_df$intensity[duplicated(res_df[,c("opt.global.map.index","opt.global.cf.id")])]=NA
-
   
   #apply empty entrys
   res=rbind(res_df, empty_entries)
 
   ## temp workaround
   res = res[!is.na(res$fc.raw.file),]
- 
+  
+  ## temp workaround (broken UID mapping)
+  res = res[!is.na(res$contaminant),]
+  
   return ( res )
 },
 
@@ -223,20 +248,36 @@ getMSMSScans = function()
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
 
-  if("opt.global.ion.injection.time" %in% colnames(res))
-  {
-    setnames(res, old = c("opt.global.ion.injection.time"), new = c("ion.injection.time"))
-  }
-  setnames(res, old = c("opt.global.identified","opt.global.ScanEventNumber","PSM.ID", "opt.global.modified.sequence","opt.global.is.contaminant","opt.global.fragment.mass.error.da","opt.global.fragment.mass.error.ppm", "opt.global.missed.cleavages","opt.global.target.decoy"), new = c("identified","scan.event.number","id", "modified.sequence","contaminant","mass.deviations..da.","mass.deviations..ppm.","missed.cleavages","reverse"))
-  setnames(res, old = c("opt.global.calibrated.mz.error.ppm","opt.global.uncalibrated.mz.error.ppm","opt.global.activation.method"), new = c("mass.error..ppm","uncalibrated.mass.error..ppm","fragmentation"))
-
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    colnames(res)[colnames(res)=="opt.global.rt.raw"] = "retention.time"
-    colnames(res)[colnames(res)=="opt.global.rt.align"] = "calibrated.retention.time"
+    setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), new = c("retention.time.pep","retention.time","calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else res$retention.time.calibration = NA
+  
+  if("opt.global.ion.injection.time" %in% colnames(res)){setnames(res, old = "opt.global.ion.injection.time", new = "ion.injection.time")}
+  
+  name = list(opt.global.calibrated.mz.error.ppm = "mass.error..ppm",
+              opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
+              exp.mass.to.charge = "m.z", 
+              opt.global.mass = "mass", 
+              opt.global.fragment.mass.error.da = "mass.deviations..da.", 
+              opt.global.fragment.mass.error.ppm = "mass.deviations..ppm.",
+              opt.global.identified = "identified",
+              opt.global.ScanEventNumber = "scan.event.number",
+              PSM.ID = "id", 
+              opt.global.modified.sequence = "modified.sequence",
+              opt.global.is.contaminant = "contaminant",
+              opt.global.missed.cleavages = "missed.cleavages",
+              opt.global.target.decoy = "reverse",
+              opt.global.activation.method = "fragmentation")
+ 
+  setnames(res, old = names(name), new = unlist(name))
+  
+  res$mass.deviations..ppm. = gsub("\\[|\\]", "", res$mass.deviations..ppm.)
+  res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
+  res$mass.deviations..da. = gsub("\\[|\\]", "",  res$mass.deviations..da.)
+  res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da.)
  
  #set reverse to needed values
   res$reverse=(res$reverse=="decoy")
@@ -247,6 +288,9 @@ getMSMSScans = function()
 
   ## temp workaround
   res = res[!is.na(res$contaminant),]
+  res = res[order(res$fc.raw.file, res$retention.time), ]
+  res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
+
   return ( res )
 }
 

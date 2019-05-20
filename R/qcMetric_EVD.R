@@ -1042,7 +1042,7 @@ Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = samp
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
-      stopifnot(c("intensity", "contaminant", "fc.raw.file") %in% colnames(df_evd))
+      stopifnot(c("intensity", "contaminant", "fc.raw.file", "proteins") %in% colnames(df_evd))
       
       ##
       ## elaborate contaminant fraction per Raw.file (this is not possible from PG, since raw files could be merged)
