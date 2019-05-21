@@ -820,8 +820,8 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
 #' @export
 #' 
 print.PTXQC_table = function(x, ...) {
-  gridd::grid.newpage();
-  gridd::grid.draw(x)
+  grid::grid.newpage();
+  grid::grid.draw(x)
   return(NULL)
 }
 
