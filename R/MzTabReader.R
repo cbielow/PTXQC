@@ -36,6 +36,7 @@ readMzTab = function(.self, file) {
   
   f_con = file(mztab_file, open = "r") ## for better error messages
   lines = readLines(f_con)
+  close(f_con)
   # remove empty lines
   lines = lines[ nzchar(lines) ]
   
@@ -68,12 +69,14 @@ readMzTab = function(.self, file) {
                          header = FALSE,
                          col.names = c("MTD", "key", "value"),
                          na.strings = c("", "null"),
-                         stringsAsFactors = FALSE)
+                         stringsAsFactors = FALSE,
+                         fill = FALSE)
         } else {
           d = read.delim(text = x,
                          header = TRUE,
                          na.strings = c("", "null"),
-                         stringsAsFactors = FALSE)
+                         stringsAsFactors = FALSE,
+                         fill = FALSE)
           colnames(d) = make.names(colnames(d), allow_ = FALSE)
         }
         return(d[,-1])
@@ -125,10 +128,10 @@ getSummary = function()
   ## ms2-ID-Rate
   ms2_df = mtd_custom_df[grep("MS2 identification rate", mtd_custom_df$value), ] 
   res$ms.ms.identified.... = unlist(lapply(lapply(strsplit(gsub("]","",as.character(ms2_df$value)),","), "[[", 4), as.numeric))
-  
+
   ## read TIC
   tic_df = mtd_custom_df[grep("total ion current", mtd_custom_df$value),] 
-  res$TIC = lapply(strsplit(sub(".* \\[(.*)\\]", "\\1", tic_df$value), ","), as.numeric)
+  res$TIC = lapply(strsplit(sub(".* \\[(.*)\\]]", "\\1", tic_df$value), ","), as.numeric)
 
   return (res)
 },
@@ -157,7 +160,7 @@ getEvidence = function()
 
   res$match.time.difference = NA
  
-  if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
+  if (all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
     setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), 
                   new = c("retention.time.pep","retention.time","calibrated.retention.time"))
