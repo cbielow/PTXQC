@@ -22,10 +22,8 @@ HEATMAP_NA_VALUE = -Inf
 #' @param lst_qcMetrics List of QCMetric objects
 #' @param raw_file_mapping Data.frame with 'from' and 'to' columns for name mapping to unify names from list entries
 #' @return A ggplot object for printing
-#'
-#' @importFrom plyr compact ldply
-#' @importFrom reshape2 dcast
 #' 
+#' @import ggplot2
 #' 
 getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
 {
@@ -47,7 +45,7 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
     }
     return(qcm_sc)
   })
-  lst.QCM = compact(lst.QCM) ## remove 'NULL' entries
+  lst.QCM = plyr::compact(lst.QCM) ## remove 'NULL' entries
   ## final heat map of QC metrics
   df.QCM = Reduce(function(a,b) merge(a,b,all = TRUE), lst.QCM)
 
@@ -84,7 +82,7 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
   colnames(df.QCMan)[idx] = paste0(colnames(df.QCMa)[idx], "~\"[", idx-1, "]\"")
   colnames_wNum_map = data.frame(name = colnames(df.QCMa), nameWnum = colnames(df.QCMan))
   
-  QCM_final.m = melt(df.QCMan, id.vars="fc.raw.file")
+  QCM_final.m = reshape2::melt(df.QCMan, id.vars="fc.raw.file")
   QCM_final.m$variable = factor(QCM_final.m$variable, ordered = TRUE)
   
   ## some files might not be in the original list (will receive 'bad' score in table)
@@ -145,7 +143,7 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
     xlab("") +
     ylab("Raw file")
   #print(p)
-  return(list(plot = p, table = dcast(QCM_final.m, fc.raw.file ~ variable)))
+  return(list(plot = p, table = reshape2::dcast(QCM_final.m, fc.raw.file ~ variable)))
 }  
 
 #'
@@ -157,7 +155,7 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
 #'
 getMetaData = function(lst_qcMetrics)
 {
-  df.meta = ldply(lst_qcMetrics, function(qcm) {
+  df.meta = plyr::ldply(lst_qcMetrics, function(qcm) {
     #qq <<- qcm
     qcm_sc = qcm$qcScores
     if (empty(qcm_sc)) {

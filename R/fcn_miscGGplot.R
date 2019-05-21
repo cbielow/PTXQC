@@ -7,15 +7,14 @@
 #' @param col Colour of text (excluding the title)
 #' @return ggplot object
 #' 
-#' @import ggplot2
 #'
 ggText = function(title, text, col = "black") {
   pl = ggplot(data.frame(text = text, ypos=1, xpos=1), 
-              aes_string(x = "xpos", y = "ypos"))  +
+                       aes_string(x = "xpos", y = "ypos"))  +
     geom_text(aes_string(label = "text"), colour = col, family="mono") +
     theme_bw() +
     theme(plot.margin = grid::unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
-          axis.text = element_blank(), strip.text = element_blank(), legend.position="none") +
+                   axis.text = element_blank(), strip.text = element_blank(), legend.position="none") +
     ggtitle(title)
   return(pl)
 }
@@ -27,34 +26,31 @@ ggText = function(title, text, col = "black") {
 #' @param bottom_left Footer text for bottom left side
 #' @param bottom_right Footer text for bottom right side
 #' @return -
-#' 
-#' @import ggplot2
-#' @importFrom grid textGrob gpar grid.draw
 #'
 printWithFooter = function(gg_obj, bottom_left = NULL, bottom_right = NULL) 
 {
   print(gg_obj)
   if (!is.null(bottom_left))
   {
-    label = textGrob(bottom_left,
-                     x = 0.02,  # left side
-                     y = 0.0,   # bottom
-                     just="left", 
-                     hjust = NULL,
-                     vjust = -.5,
-                     gp=gpar(fontsize=7, col="#333333"))  
-    grid.draw(label)
+    label = grid::textGrob(bottom_left,
+                           x = 0.02,  # left side
+                           y = 0.0,   # bottom
+                           just = "left", 
+                           hjust = NULL,
+                           vjust = -.5,
+                           gp = grid::gpar(fontsize=7, col="#333333"))  
+    grid::grid.draw(label)
   }
   if (!is.null(bottom_right))
   {
-    label = textGrob(bottom_right,
-                     x = 0.98,  # right side
-                     y = 0.0,   # bottom
-                     just="right", 
-                     hjust = NULL,
-                     vjust = -.5,
-                     gp=gpar(fontsize=7, col="#333333"))
-    grid.draw(label)
+    label = grid::textGrob(bottom_right,
+                           x = 0.98,  # right side
+                           y = 0.0,   # bottom
+                           just = "right", 
+                           hjust = NULL,
+                           vjust = -.5,
+                           gp = grid::gpar(fontsize=7, col="#333333"))
+    grid::grid.draw(label)
   }
 }
 
@@ -65,6 +61,8 @@ printWithFooter = function(gg_obj, bottom_left = NULL, bottom_right = NULL)
 #' @param ... Other arguments forwarded to 'scale_y_discrete()'
 #' @return ggplot object, concatenatable with '+'
 #'
+#' @import ggplot2
+#' 
 scale_x_discrete_reverse = function(values, ...)
 {
   if (!("factor" %in% class(values))) stop("Cannot use scale_x_discrete_reverse() on non-factor()")
@@ -78,6 +76,8 @@ scale_x_discrete_reverse = function(values, ...)
 #' @param values The vector of values as given to the y aestetic
 #' @param ... Other arguments forwarded to 'scale_y_discrete()'
 #' @return ggplot object, concatenatable with '+'
+#' 
+#' @import ggplot2
 #'
 scale_y_discrete_reverse = function(values, ...)
 {
@@ -132,11 +132,9 @@ ggAxisLabels = function(x, n = 20)
 #' @return A ggplot object
 #' 
 #' @import ggplot2
-#' 
 #' @export
 #' 
 addGGtitle = function(main, sub = NULL){
-  #require(ggplot2)
   if (is.null(sub) || sub=="") {
     pl = ggtitle(main)
   } else {
@@ -160,7 +158,6 @@ addGGtitle = function(main, sub = NULL){
 #' @return ggplot object with new geom_point 
 #' 
 #' @import ggplot2
-#' 
 #' @export
 #' 
 pointsPutX = function(x_range, x_section, y, col = NA){
@@ -182,16 +179,15 @@ pointsPutX = function(x_range, x_section, y, col = NA){
 #' @return A ggplot2 object, representing an empty theme
 #' 
 #' @import ggplot2
-#' 
 #' @export
 #' 
 theme_blank = function()
 {
-  theme_blank <- theme_bw()
-  theme_blank$line <- element_blank()
-  theme_blank$rect <- element_blank()
-  theme_blank$strip.text <- element_blank()
-  theme_blank$axis.title <- element_blank()
+  theme_blank = theme_bw()
+  theme_blank$line = element_blank()
+  theme_blank$rect = element_blank()
+  theme_blank$strip.text = element_blank()
+  theme_blank$axis.title = element_blank()
   return (theme_blank)
 }
 
@@ -205,13 +201,11 @@ theme_blank = function()
 #' @param palette Name of palette (e.g. "set1")
 #' @return character vector of colors
 #' 
-#' @importFrom RColorBrewer brewer.pal brewer.pal.info
-#' 
 brewer.pal.Safe = function(n = 3, palette = "Set1")
 {
-  idx = which(rownames(brewer.pal.info) == palette)
+  idx = which(rownames(RColorBrewer::brewer.pal.info) == palette)
   if (length(idx) != 1) stop("Palette ", palette," unknown!")
-  if (brewer.pal.info$maxcolors[idx] < n) stop("Palette ", palette, " provides ", brewer.pal.info$maxcolors[idx], " colors, but not ", n, " as requested!")
+  if (RColorBrewer::brewer.pal.info$maxcolors[idx] < n) stop("Palette ", palette, " provides ", RColorBrewer::brewer.pal.info$maxcolors[idx], " colors, but not ", n, " as requested!")
   
-  return (brewer.pal(n, palette))
+  return (RColorBrewer::brewer.pal(n, palette))
 }

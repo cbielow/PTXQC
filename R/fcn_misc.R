@@ -870,12 +870,11 @@ thinOut = function(data, filterColname, binsize)
 #' @param batchColname Name of the split column as string
 #' @param binCount Number of bins in the 'filterColname' dimension.
 #' @return Data.frame with reduced rows, but identical input columns
-#'
-#' @importFrom plyr ddply
+#' 
 thinOutBatch = function(data, filterColname, batchColname, binCount = 1000)
 {
   binsize = (max(data[, filterColname], na.rm=TRUE) - min(data[, filterColname], na.rm=TRUE)) / binCount
-  r = ddply(data, batchColname, thinOut, filterColname, binsize)
+  r = plyr::ddply(data, batchColname, thinOut, filterColname, binsize)
   return (r)  
 }
 
@@ -931,14 +930,12 @@ getAbundanceClass = function(x) {
 #'         with list entries: 
 #'         yaml_file, heatmap_values_file, R_plots_file, filename_sorting, stats_file, log_file, report_file_prefix, report_file_PDF, report_file_HTML
 #' 
-#' @import utils
-#' 
 #' @export
 #' 
 getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
 {
   ## package version: added to output filename
-  pv = try(packageVersion("PTXQC"))
+  pv = try(utils::packageVersion("PTXQC"))
   if (inherits(pv, "try-error")) pv = "_unknown"
   report_version = paste0("v", pv)  
   
@@ -1012,7 +1009,7 @@ getProteinCounts = function(d_evidence) {
   ## report Match-between-runs data only if if it was enabled
   reportMTD = any(d_evidence$hasMTD)
   
-  prot_counts = ddply(d_evidence, "fc.raw.file", .fun = function(x, reportMTD)
+  prot_counts = plyr::ddply(d_evidence, "fc.raw.file", .fun = function(x, reportMTD)
   {
     ## proteins
     x$group_mtdinfo = paste(x$protein.group.ids, x$hasMTD, sep="_")
@@ -1086,7 +1083,7 @@ getPeptideCounts = function(d_evidence) {
   ## report Match-between-runs data only if if it was enabled
   reportMTD = any(d_evidence$hasMTD)
   
-  pep_counts = ddply(d_evidence, "fc.raw.file", .fun = function(x, reportMTD)
+  pep_counts = plyr::ddply(d_evidence, "fc.raw.file", .fun = function(x, reportMTD)
   {
     #pep_count_genuineAll = sum(!x$hasMTD) # (we count double sequences... could be charge +2, +3,... or oversampling)
     pep_set_genuineUnique = unique(x$modified.sequence[!x$hasMTD]) ## unique sequences (discarding PTM's)
@@ -1204,8 +1201,6 @@ getECDF = function(samples, y_eval = (1:100)/100)
 #' @param RT_bin_width Bin size in minutes
 #' @return Data.frame with columns 'bin', 'RT', 'peakWidth'
 #' 
-#' @importFrom plyr ddply
-#' 
 #' @export
 #' 
 #' @examples
@@ -1221,7 +1216,7 @@ peakWidthOverTime = function(data, RT_bin_width = 2)
   brs = seq(from = r[1], to = r[2] + RT_bin_width, by = RT_bin_width)
   data$bin = findInterval(data$retention.time, brs, all.inside = TRUE) ## faster than cut(..., labels = FALSE)
   #data$bin = cut(data$retention.time, breaks = brs, include.lowest = TRUE, labels = FALSE)
-  retLStats = ddply(data, "bin", .fun = function(xb) {
+  retLStats = plyr::ddply(data, "bin", .fun = function(xb) {
     data.frame(RT = brs[xb$bin[1]], peakWidth = median(xb$retention.length, na.rm = TRUE))
   })
   return(retLStats)

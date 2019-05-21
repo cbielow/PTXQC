@@ -274,7 +274,7 @@ qualBestKS = function(x) {
     {
       if (j>length(x)) next;
       rr[i,j] = 1 - suppressWarnings(  ## brags about '-value will be approximate in the presence of ties'
-                      ks.test(x[[i]], x[[j]])$statistic
+                      stats::ks.test(x[[i]], x[[j]])$statistic
                     )    
     }
   }

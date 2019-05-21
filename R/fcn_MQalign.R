@@ -15,8 +15,6 @@
 #' 
 #' @param data The data.frame with columns 'retention.time.calibration' and 'raw.file'
 #' @return List of reference raw files (usually just one)
-#' 
-#' @importFrom plyr ddply
 #'
 findAlignReference = function(data)
 {
@@ -29,7 +27,7 @@ findAlignReference = function(data)
   {
     stop("findAlignReference(): Error, could not find column 'raw.file' in data. Aborting!")  
   }
-  fr = ddply(data, "raw.file", function(x) data.frame(range = diff(range(x$retention.time.calibration, na.rm = TRUE))))
+  fr = plyr::ddply(data, "raw.file", function(x) data.frame(range = diff(range(x$retention.time.calibration, na.rm = TRUE))))
   ref = as.character(fr$raw.file[fr$range <= min(fr$range)])
   return (ref)  
 }
@@ -59,8 +57,6 @@ findAlignReference = function(data)
 #' @param referenceFile A raw file name as occuring in data$raw.file, serving as alignment reference (when no fractions are used).
 #' @return A data.frame containing the RT diff for each feature found in a Raw file and the reference.
 #'
-#' @importFrom plyr ddply empty
-#' 
 alignmentCheck = function(data, referenceFile) {
   colnames(data) = tolower(colnames(data))
   
@@ -113,7 +109,7 @@ alignmentCheck = function(data, referenceFile) {
     data_round = data[data$modified.sequence %in% data$modified.sequence[data$raw.file==file_ref] &
                       data$raw.file %in% file_clients,]
     
-    alignQ_round = ddply(data_round, c("modified.sequence", "charge"), function(x)
+    alignQ_round = plyr::ddply(data_round, c("modified.sequence", "charge"), function(x)
     {
       ## reference must be present
       if ((nrow(x)==1) | (sum(x$raw.file == file_ref)==0) | (sum(duplicated(x$raw.file))>0)) {
@@ -134,7 +130,7 @@ alignmentCheck = function(data, referenceFile) {
     })
     ## alignQ_round might be an empty data.frame now, if
     ## there was only one fraction with no neighbours
-    if (!empty(alignQ_round))
+    if (!plyr::empty(alignQ_round))
     {
       alignQ_round$refFile = file_ref
       ## remove matches to self (i.e. with rtDiff==0)
@@ -158,8 +154,6 @@ alignmentCheck = function(data, referenceFile) {
 #' @param allowed.deltaRT The allowed matching difference (1 minute by default)
 #' @return A data.frame with one row for each raw.file and columns 'raw.file' and 'withinRT' (0-1)
 #' 
-#' @importFrom plyr ddply
-#' 
 ScoreInAlignWindow = function(data, allowed.deltaRT = 1)
 {
   colnames(data) = tolower(colnames(data))
@@ -168,7 +162,7 @@ ScoreInAlignWindow = function(data, allowed.deltaRT = 1)
   {
     stop("alignmentCheck(): columns missing!")  
   }
-  alignQC = ddply(data, "raw.file", function(x) {
+  alignQC = plyr::ddply(data, "raw.file", function(x) {
     withinRT = sum(abs(x$rtdiff) < allowed.deltaRT, na.rm = TRUE) / sum(!is.na(x$rtdiff))
     return(data.frame(withinRT = withinRT))
   })
@@ -198,8 +192,6 @@ ScoreInAlignWindow = function(data, allowed.deltaRT = 1)
 #' @param data A data.frame with columns 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'raw.file'
 #' @return A data.frame containing the RT diff for each ID-group found in a Raw file (bg = genuine).
 #'
-#' @importFrom plyr ddply
-#' 
 idTransferCheck = function(data) {
   colnames(data) = tolower(colnames(data))
   
@@ -231,15 +223,15 @@ idTransferCheck = function(data) {
   }
   
   data$seq_charge = paste(factor(data$modified.sequence), data$charge, sep="_")
-  alignQ = ddply(data[,c("fc.raw.file", "type", "calibrated.retention.time", "seq_charge")],
-                 "fc.raw.file",
-                 function(x) {
+  alignQ = plyr::ddply(data[,c("fc.raw.file", "type", "calibrated.retention.time", "seq_charge")],
+                       "fc.raw.file",
+                       function(x) {
     # unique(data$fc.raw.file)
     # x = data[ data$fc.raw.file == "..3_P..14", ]
     
     ## genuine groups only (within this Raw file):
     x_genuine = x[x$type=="MULTI-MSMS",]
-    rt_diffs_genuine = ddply(x_genuine, "seq_charge", 
+    rt_diffs_genuine = plyr::ddply(x_genuine, "seq_charge", 
                              function(x2) {
                                if (nrow(x2)==1) return(NULL) ## we do not want singlets
                                return (data.frame(rtdiff_genuine = diff(range(x2$calibrated.retention.time))))
@@ -251,7 +243,7 @@ idTransferCheck = function(data) {
     ## retain only IDs which have at least one transferred ID
     x_mixed = x[x$seq_charge %in% x$seq_charge[x$type=="MULTI-MATCH"], ]
     if (nrow(x_mixed)>0) {    
-      rt_diffs_mixed = ddply(x_mixed, "seq_charge", 
+      rt_diffs_mixed = plyr::ddply(x_mixed, "seq_charge", 
                              function(x2) {
                                if (nrow(x2)==1) return(NULL) ## we do not want singlets
                                return (data.frame(rtdiff_mixed = diff(range(x2$calibrated.retention.time))))
@@ -284,9 +276,7 @@ idTransferCheck = function(data) {
 #' @param data A data.frame with columns 'fc.raw.file' and !colname (param)
 #' @param df.allowed.deltaRT The allowed matching difference for each Raw file (as data.frame(fc.rawfile, m))
 #' @return A data.frame with one row for each raw.file and columns 'raw.file' and score 'withinRT' (0-1)
-#' 
-#' @importFrom plyr ddply
-#' 
+#'
 inMatchWindow = function(data, df.allowed.deltaRT)
 {
   ## 'data' columns of interest : 
@@ -299,7 +289,7 @@ inMatchWindow = function(data, df.allowed.deltaRT)
     return (data.frame(fc.raw.file = NA, withinRT_genuine = NA, withinRT_mixed = NA, withinRT_all = NA)[numeric(0), ])
   }
   
-  alignQC = ddply(data, "fc.raw.file", function(x) {
+  alignQC = plyr::ddply(data, "fc.raw.file", function(x) {
     # x=data[ data$fc.raw.file=="file 01",]
     allowed.deltaRT = df.allowed.deltaRT$m[match(x$fc.raw.file[1], df.allowed.deltaRT$fc.raw.file)]
     
@@ -344,8 +334,6 @@ inMatchWindow = function(data, df.allowed.deltaRT)
 #'           2) % of single peaks (group of size=1) using only groups which have at at one transferred evidence
 #'           3) % of single peaks using all groups
 #'
-#' @importFrom plyr ddply
-#'
 peakSegmentation = function(d_evd)
 {
   if (!all(c("match.time.difference", "fc.raw.file", "modified.sequence", "charge", 'type') %in% colnames(d_evd)))
@@ -366,12 +354,12 @@ peakSegmentation = function(d_evd)
   d_evd$hasMTD = !is.na(d_evd$match.time.difference) ## all the MULTI-MATCH hits, i.e. transferred IDs
   
   cols = c("hasMTD", "fc.raw.file", "modified.sequence", "charge")
-  countSeqs = ddply(d_evd[d_evd$type!="MSMS", cols], cols[-1], function(x)
+  countSeqs = plyr::ddply(d_evd[d_evd$type!="MSMS", cols], cols[-1], function(x)
   {
     return(data.frame(nNative = sum(!x$hasMTD), nMatched = sum(x$hasMTD)))#, ratio = ratio))
   })
   
-  mbr_score = ddply(countSeqs, "fc.raw.file", function(countSeqs_sub)
+  mbr_score = plyr::ddply(countSeqs, "fc.raw.file", function(countSeqs_sub)
   {
     #unique(countSeqs$fc.raw.file)
     #countSeqs_sub = countSeqs[countSeqs$fc.raw.file == "..1_P..14", ]
@@ -438,8 +426,6 @@ peakSegmentation = function(d_evd)
 #' @param qMBRSeg_Dist_inGroup A data.frame as computed by inMatchWindow()
 #' @return A data.frame which details the distribution of singlets and pairs (inRT and outRT) for each Raw file and genuine vs. all
 #' 
-#' @importFrom plyr ddply
-#' 
 computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_inGroup)
 {
   ## data might look like this:
@@ -459,7 +445,7 @@ computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_inGroup)
   
   ## compute percentage of outside dRT peaks in genuine, matched and combined(=all)
   ## then calc the drop.
-  f = ddply(qMBR, "fc.raw.file", function(x) {
+  f = plyr::ddply(qMBR, "fc.raw.file", function(x) {
     #x = qMBR[3, , drop = FALSE]
     rr = qMBRSeg_Dist_inGroup$fc.raw.file==x$fc.raw.file
     
@@ -505,9 +491,6 @@ computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_inGroup)
 #' @return ggplot object containing the correlation tree
 #' 
 #' @import ggplot2
-#' @import ggdendro
-#' @importFrom reshape2 dcast
-#' 
 #' @export
 #'
 RTalignmentTree = function(d_evd, col_fraction = c())
@@ -522,7 +505,7 @@ RTalignmentTree = function(d_evd, col_fraction = c())
          setdiff(req_cols, colnames(d_evd)), "!")
   }
   
-  d_cast = dcast(d_evd, modified.sequence + charge ~ fc.raw.file, mean, value.var = "calibrated.retention.time")
+  d_cast = reshape2::dcast(d_evd, modified.sequence + charge ~ fc.raw.file, mean, value.var = "calibrated.retention.time")
   
   head(d_cast[,-(1:2)])
   d_cast.m = as.matrix(d_cast[,-(1:2)])
@@ -545,14 +528,14 @@ RTalignmentTree = function(d_evd, col_fraction = c())
   } else {
     ddata$labels$col = "black"
   }
-  p = ggplot(segment(ddata)) + 
-    geom_segment(aes_string(x = "x", y = "y", xend = "xend", yend = "yend")) +
-    scale_x_continuous(breaks=ddata$labels$x, labels=ddata$labels$label) +
-    theme_blank() +
-    theme(axis.text.y = element_text(colour=ddata$labels$col),
-          axis.text.x = element_blank()) +
-    coord_flip() +
-    addGGtitle("[experimental] EVD: Clustering Tree of Raw files", "by Correlation of Corrected Retention Times")
+  p = ggplot(ggdendro::segment(ddata)) + 
+      geom_segment(aes_string(x = "x", y = "y", xend = "xend", yend = "yend")) +
+      scale_x_continuous(breaks = ddata$labels$x, labels = ddata$labels$label) +
+      theme_blank() +
+      theme(axis.text.y = element_text(colour = ddata$labels$col),
+                     axis.text.x = element_blank()) +
+      coord_flip() +
+      addGGtitle("[experimental] EVD: Clustering Tree of Raw files", "by Correlation of Corrected Retention Times")
   #p
   return(p)
 }

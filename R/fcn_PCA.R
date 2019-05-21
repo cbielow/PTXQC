@@ -12,18 +12,11 @@
 #'                                 and "plots": list of plot objects (one or two)
 #' 
 #' @import ggplot2
-#' @import stats
-#' @importFrom seqinr circle
-#' 
 #' @export
 #' 
 getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
 {
-  #require(ggplot2)
-  #require(stats)
-  #require(seqinr)
-  
-  pc = prcomp(data, scale. = TRUE)
+  pc = stats::prcomp(data, scale. = TRUE)
   useOrd = !is.na(connect_line_order[1])
   # create data frame with scores
   scores = as.data.frame(pc$x)
@@ -58,7 +51,7 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
     pl = pl + 
               gg_layer + 
               geom_point(aes_string(colour = "ord"), size = 1) +
-              geom_text(size = 3, angle=0, aes_string(label = "class", colour = "ord", vjust = "1")) +
+              geom_text(aes_string(label = "class", colour = "ord", vjust = "1"), size = 3, angle=0) +
               geom_hline(yintercept=0, colour="gray65") +
               #theme(panel.background=element_rect("black")) +
               geom_vline(xintercept=0, colour="gray65") +
@@ -80,7 +73,7 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
       yy = center[1] + r * sin(tt)
       return(data.frame(x = xx, y = yy))
     }
-    corcir = circle(c(0,0), npoints = 100)
+    corcir = seqinr::circle(c(0,0), npoints = 100)
     # create data frame with correlations between variables and PCs
     correlations = as.data.frame(cor(data, pc$x))
     # data frame with arrows coordinates
@@ -90,9 +83,9 @@ getPCA = function(data, do_plot = TRUE, connect_line_order = NA, gg_layer)
     
     lpl[[2]] = 
       ggplot() +
-      geom_path(data=corcir, aes_string(x = "x", y = "y"), colour="gray65") +  ## open circles
-      geom_segment(data=arrows, aes_string(x = "x1", y = "y1", xend = "x2", yend = "y2"), colour="gray65") +
-      geom_text(data=correlations, aes_string(x  = "PC1", y = "PC2", label = "rownames(correlations)")) +
+      geom_path(data = corcir, aes_string(x = "x", y = "y"), colour="gray65") +  ## open circles
+      geom_segment(data = arrows, aes_string(x = "x1", y = "y1", xend = "x2", yend = "y2"), colour="gray65") +
+      geom_text(data = correlations, aes_string(x  = "PC1", y = "PC2", label = "rownames(correlations)")) +
       geom_hline(yintercept = 0, colour = "gray65") +
       geom_vline(xintercept = 0, colour = "gray65") +
       xlim(-1.1,1.1) + ylim(-1.1,1.1) +

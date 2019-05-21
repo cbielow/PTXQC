@@ -24,9 +24,6 @@
 #' @return List of ggplot objects
 #' 
 #' @import ggplot2
-#' @importFrom plyr ddply
-#' @importFrom grDevices boxplot.stats
-#' 
 #' @export
 #' 
 boxplotCompare = function(data, 
@@ -64,7 +61,7 @@ boxplotCompare = function(data,
   if (!("factor" %in% class(data$group))) data$group = factor(data$group)
   
   ## actual number of entries in each column (e.g. LFQ often has 0)
-  ncol.stat = ddply(data, "group", function(x){
+  ncol.stat = plyr::ddply(data, "group", function(x){
     notNA = sum(!is.infinite(x$value) & !is.na(x$value));
     data.frame(n = nrow(x), notNA = notNA, newname = paste0(x$group[1], " (n=", notNA, ")"))})
   head(ncol.stat)
@@ -108,15 +105,14 @@ boxplotCompare = function(data,
   
   fcn_boxplot_internal = function(data, abline = NA) 
   {
-    #require(ggplot2)
     pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat")) + ## do not use col="cat", since this will dodge bars and loose scaling
       geom_boxplot(varwidth = TRUE) +
       xlab("") + 
       ylab(ylab) +
       ylim(ylims) +
       scale_alpha(guide = FALSE) +
-      scale_fill_manual(values=cols, name = "Category") + 
-      scale_color_manual(values=cols, name = "Category") + 
+      scale_fill_manual(values = cols, name = "Category") + 
+      scale_color_manual(values = cols, name = "Category") + 
       theme(axis.text.x = element_text(angle=90, vjust = 0.5)) +
       theme(legend.position=ifelse(length(cols)==1, "none", "right")) +
       addGGtitle(mainlab, sublab) + 
@@ -235,7 +231,7 @@ fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2,
   ## then ID's are supposedly random
   ## -- alt: we use the 1%-to-99% quantile range: if > 10ppm
   ## -- uninformative for detection is the distribution (it's still Gaussian for a strange reason)
-  MS1_decal_smr = ddply(df_evd, "fc.raw.file", function(x) 
+  MS1_decal_smr = plyr::ddply(df_evd, "fc.raw.file", function(x) 
     data.frame(n = nrow(x), 
                sd = round(sd(x$mass.error..ppm., na.rm = TRUE), 1), 
                range = diff(quantile(x$mass.error..ppm., c(0.01, 0.99), na.rm = TRUE)),
@@ -267,7 +263,7 @@ fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2,
     df_evd$uncalibrated.mass.error..ppm.2 = df_evd$mass.error..ppm.2 + df_evd$uncalibrated...calibrated.m.z..ppm.
     
     ## check if fix worked
-    de_cal2 = ddply(df_evd, "fc.raw.file", .fun = function(x)  data.frame(q = (median(abs(x$uncalibrated.mass.error..ppm.2), na.rm = TRUE) > 1e3)))
+    de_cal2 = plyr::ddply(df_evd, "fc.raw.file", .fun = function(x)  data.frame(q = (median(abs(x$uncalibrated.mass.error..ppm.2), na.rm = TRUE) > 1e3)))
     if (any(de_cal2$q, na.rm = TRUE))
     { ## fix did not work
       MS1_decal_smr$hasMassErrorBug_unfixable[ MS1_decal_smr$fc.raw.file %in% de_cal2$fc.raw.file[de_cal2$q] ] = TRUE

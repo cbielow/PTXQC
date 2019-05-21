@@ -9,7 +9,6 @@
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#'
 #' @export
 #' 
 #' @examples 
@@ -63,7 +62,8 @@ plot_ContsPG = function(data)
 #'                    value = c(10, 20, 15, 9, 21, 14, 0, 1, 1, 0.3, 0.01, 0.04))
 #'  plot_ContUser(data, "myco", 5, "subtitle")
 #' 
-plot_ContUser = function(data, name_contaminant, extra_limit, subtitle = NULL) {
+plot_ContUser = function(data, name_contaminant, extra_limit, subtitle = NULL)
+{
   datav = subset(data, data$variable %in% c('spectralCount', "intensity"))
   datav$section = assignBlocks(datav$fc.raw.file, set_size = 40, sort_values = TRUE)
   dataAT = subset(data, data$variable %in% c('above.thresh'))
@@ -88,7 +88,7 @@ plot_ContUser = function(data, name_contaminant, extra_limit, subtitle = NULL) {
         scale_fill_discrete(name = "Method") +
         geom_hline(yintercept = extra_limit, linetype = 'dashed')
   ## group(NULL) seems important in geom_text()
-  if (nrow(dataKS)>0) p = p + geom_text(data = dataKS, aes_string(label = "value", y = maxY * 1.05, group=NULL))
+  if (nrow(dataKS)>0) p = p + geom_text(data = dataKS, aes_string(label = "value", y = maxY * 1.05, group = NULL))
   p = p + facet_wrap(~ section, ncol = 1, scales = "free_x")
   #print(p)
   return(p)
@@ -123,10 +123,10 @@ plot_ContUser = function(data, name_contaminant, extra_limit, subtitle = NULL) {
 #' 
 plot_ContUserScore = function(data, raw.file, score) {
   p = ggplot(data) + 
-        geom_line(aes_string(x = "x", y = "y", col = "condition")) + 
-        ggtitle(paste0("Empirical CDF of '", raw.file, "'\np = ", round(score, 2))) + 
-        ylab("Pr") +
-        xlab("Andromeda score")
+    geom_line(aes_string(x = "x", y = "y", col = "condition")) + 
+    ggtitle(paste0("Empirical CDF of '", raw.file, "'\np = ", round(score, 2))) + 
+    ylab("Pr") +
+    xlab("Andromeda score")
   return(p)
 }
 
@@ -139,7 +139,6 @@ plot_ContUserScore = function(data, raw.file, score) {
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#' @importFrom plyr summarize
 #' @export
 #' 
 #' @examples 
@@ -166,11 +165,12 @@ plot_ContEVD = function(data, top5)
   data.sub[!(data.sub$pname %in% top5), "pname"] = 'other'
   ## aggregate identical proteins
   ##  use sum(as.numeric(.)) to prevent overflow
-  d_sum = ddply(data.sub[, c("intensity", "pname", "fc.raw.file")], c("pname", "fc.raw.file"), 
-                function(x) summarise(x, s.intensity=sum(as.numeric(intensity), na.rm = TRUE)))
+  d_sum = plyr::ddply(data.sub[, c("intensity", "pname", "fc.raw.file")], c("pname", "fc.raw.file"), 
+                function(x) plyr::summarise(x, s.intensity=sum(as.numeric(intensity), na.rm = TRUE)))
   ## normalize by total intensity of raw file
-  d_norm = ddply(data[, c("intensity", "fc.raw.file")],  "fc.raw.file", 
-                 function(x) summarise(x, total.intensity=sum(as.numeric(intensity), na.rm = TRUE)))
+  d_norm = plyr::ddply(data[, c("intensity", "fc.raw.file")],  "fc.raw.file", 
+                 function(x) plyr::summarise(x, total.intensity=sum(as.numeric(intensity), na.rm = TRUE)))
+  
   d_sum$total.intensity = d_norm$total.intensity[match(d_sum$fc.raw.file, d_norm$fc.raw.file)]
   d_sum$Log10Diff = getAbundanceClass(log10(d_sum$total.intensity))
   d_sum$s.intensity = d_sum$s.intensity / d_sum$total.intensity * 100
@@ -186,9 +186,9 @@ plot_ContEVD = function(data, top5)
   ## order of pname determines order of bars    
   d_sum = rbind(d_sum[d_sum$pname!="other",], d_sum[d_sum$pname=="other",])
 
-    ## value of factors determines order in the legend
+  ## value of factors determines order in the legend
   ## --> make proteins a factor, with 'other' being the first
-  d_sum$Protein = factor(d_sum$pname, levels=unique(c("other", d_sum$pname)), ordered = TRUE)
+  d_sum$Protein = factor(d_sum$pname, levels = unique(c("other", d_sum$pname)), ordered = TRUE)
   head(d_sum)
   
   ## plot
@@ -202,8 +202,8 @@ plot_ContEVD = function(data, top5)
         theme_bw() +
         ggtitle("EVD: Top5 Contaminants per Raw file") +
         ylab("contaminant (% intensity)") +
-        scale_fill_manual(values = brewer.pal(6,"Accent")) + 
-        scale_colour_manual(values = brewer.pal(6,"Accent")) +
+        scale_fill_manual(values = RColorBrewer::brewer.pal(6,"Accent")) + 
+        scale_colour_manual(values = RColorBrewer::brewer.pal(6,"Accent")) +
         geom_hline(aes_string(yintercept = "5"), linetype='dashed') +
         #guides(alpha=NULL, fill = guide_legend(nrow = 2, ncol = 3, byrow = TRUE, reverse = TRUE)) +
         #theme(legend.position="top", legend.title=element_blank()) +
@@ -229,7 +229,6 @@ plot_ContEVD = function(data, top5)
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#' @importFrom RColorBrewer brewer.pal
 #' @export
 #' 
 #' @examples 
@@ -255,8 +254,8 @@ plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
     geom_area(aes_string(alpha = "ltype", fill = "col")) +
     xlab("ratio")  +
     ylab("density")  +
-    scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide_legend(legend_title)) + 
-    scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=40)) +
+    scale_fill_manual(values = rep(RColorBrewer::brewer.pal(6,"Accent"), times=40), guide_legend(legend_title)) + 
+    scale_colour_manual(values = rep(RColorBrewer::brewer.pal(6,"Accent"), times=40)) +
     scale_alpha_discrete(range = c(1, 0.2), 
                          labels=c("dotted"="unimodal", "solid"="multimodal"),
                          guide_legend("shape")
@@ -661,50 +660,47 @@ plot_IDRate = function(data, id_rate_bad, id_rate_great, label_ID)
 #' @param just (ignored)
 #' @return gTable
 #'
-#' @import gtable
-#' @importFrom grid rectGrob textGrob unit.c grobHeight grobWidth
-#'
 plotTableRaw = function(data, colours="black", fill=NA, just="centre")
 {
   
-  label_matrix <- as.matrix(data)
+  label_matrix = as.matrix(data)
   
-  nc <- ncol(label_matrix)
-  nr <- nrow(label_matrix)
-  n <- nc*nr
+  nc = ncol(label_matrix)
+  nr = nrow(label_matrix)
+  n = nc*nr
   
   colours <- rep(colours, length.out = n)
-  justs <- rep(just, length.out = n)
   fill <- rep(fill, length.out = n)
+  justs <- rep(just, length.out = n)
   
   ## text for each cell
   labels <- lapply(seq_len(n), function(ii)
-    textGrob(as.character(label_matrix[ii]), gp=gpar(fontsize=8, col=colours[ii]), just="left", x = grid::unit(0.05, "npc")))
+    grid::textGrob(as.character(label_matrix[ii]), gp = grid::gpar(fontsize=8, col=colours[ii]), just="left", x = grid::unit(0.05, "npc")))
   label_grobs <- matrix(labels, ncol=nc)
   
   ## define the fill background of cells
   fill <- lapply(seq_len(n), function(ii) 
-    rectGrob(gp=gpar(fill=fill[ii])))
+    grid::rectGrob(gp = grid::gpar(fill=fill[ii])))
   
   ## some calculations of cell sizes
   row_heights <- function(m){
-    do.call(unit.c, apply(m, 1, function(l)
-      max(do.call(unit.c, lapply(l, grobHeight)))))
+    do.call(grid::unit.c, apply(m, 1, function(l)
+      max(do.call(grid::unit.c, lapply(l, grid::grobHeight)))))
   }
   col_widths <- function(m){
-    do.call(unit.c, apply(m, 2, function(l)
-      max(do.call(unit.c, lapply(l, grobWidth)))))
+    do.call(grid::unit.c, apply(m, 2, function(l)
+      max(do.call(grid::unit.c, lapply(l, grid::grobWidth)))))
   }
   
   ## place labels in a gtable
-  g <- gtable_matrix("table", grobs=label_grobs, 
-                     widths=col_widths(label_grobs) + grid::unit(2,"mm"), 
-                     heights=row_heights(label_grobs) + grid::unit(2,"mm"))
+  g <- gtable::gtable_matrix("table", grobs = label_grobs, 
+                             widths = col_widths(label_grobs) + grid::unit(2,"mm"), 
+                             heights = row_heights(label_grobs) + grid::unit(2,"mm"))
   
   ## add the background
   xt <- rep(seq_len(nr), each=nc)
   xl <- rep(seq_len(nc), times=nr)
-  g <- gtable_add_grob(g, fill, t=xt, l=xl, z=0, name="fill")
+  g <- gtable::gtable_add_grob(g, fill, t=xt, l=xl, z=0, name="fill")
   
   return(g)
 }
@@ -718,8 +714,6 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
 #' @param font_size Html font size
 #' @return table as character string for cat()'ing into html
 #'
-#' @importFrom knitr kable
-#' @import kableExtra
 #' @export 
 #' 
 #' @examples
@@ -731,13 +725,13 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
 #' 
 getHTMLTable = function(data, header = NA, font_size = 12)
 {
-  tbl = kable(data, row.names = FALSE, format = "html") %>%
-           kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE, font_size = font_size)
+  tbl = kableExtra::kable(data, row.names = FALSE, format = "html") %>%
+                          kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE, font_size = font_size)
   
   if (!any(is.na(header)))
   {
     header__ = header;
-    tbl = tbl %>% add_header_above(c(header__ = ncol(data)))
+    tbl = tbl %>% kableExtra::add_header_above(c(header__ = ncol(data)))
     tbl = gsub("header__", paste(header__, sep = "", collapse = "<br>"), as.character(tbl))
   } 
 
@@ -758,9 +752,6 @@ getHTMLTable = function(data, header = NA, font_size = 12)
 #' @param just (ignored)
 #' @return gTree object with class 'PTXQC_table'
 #'
-#' @importFrom grid textGrob gTree gList grobHeight
-#' @import gridExtra
-#' @import gtable
 #' @export 
 #' 
 #' @examples
@@ -784,34 +775,34 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
                        colours = unlist(lapply(col, function(cc) c("black", rep(cc, nrow(data))))), ## col-wise
                        just = c(rep("centre", ncol(data)), rep(just, each=nrow(data), length.out=nd))) 
   
-  colhead = lapply(col_names, function(ii) textGrob(ii, gp=gpar(fontsize=12, col="black", fontface="bold", fill="grey")))
+  colhead = lapply(col_names, function(ii) grid::textGrob(ii, gp = grid::gpar(fontsize=12, col="black", fontface="bold", fill="grey")))
   ## replace column names
   table = gtable_add_grob(table, colhead, t = 1, l = 1:ncol(data))
 
   #table = tableGrob(data, rows = NULL, cols = c("Raw file", "% identified"))
   if (nchar(title[1]) > 0)
   {
-    gtitle = textGrob(title, gp = gpar(fontsize = 14))
+    gtitle = grid::textGrob(title, gp = grid::gpar(fontsize = 14))
     padding = grid::unit(1.5, "line")
     ## add heading (white space)
-    table = gtable_add_rows(table, heights = grobHeight(gtitle) + padding, pos = 0)
+    table = gtable::gtable_add_rows(table, heights = grid::grobHeight(gtitle) + padding, pos = 0)
     ## add heading (text as overlay)
-    table = gtable_add_grob(table, list(gtitle), t = 1, l = 1, r = ncol(table), clip = "off")
+    table = gtable::gtable_add_grob(table, list(gtitle), t = 1, l = 1, r = ncol(table), clip = "off")
   }
   if (nchar(footer[1]) > 0)
   {
-    gfooter = textGrob(footer, gp = gpar(fontsize = 10))
+    gfooter = grid::textGrob(footer, gp = grid::gpar(fontsize = 10))
     padding = grid::unit(1.5, "line")
     ## add heading (white space)
-    table = gtable_add_rows(table, heights = grobHeight(gfooter) + padding, pos = -1) ## bottom
+    table = gtable::gtable_add_rows(table, heights = grid::grobHeight(gfooter) + padding, pos = -1) ## bottom
     ## add heading (text as overlay)
-    table = gtable_add_grob(table, list(gfooter), t = nrow(table), l = 1, r = ncol(table), clip = "off")
+    table = gtable::gtable_add_grob(table, list(gfooter), t = nrow(table), l = 1, r = ncol(table), clip = "off")
   }
   
   
   ## neat trick to enable calling print(g), to mimic ggplot-behaviour on this object
   ## in combination with print.PTXQC_table() -- see below
-  p = gTree(children = gList(table), cl = c("PTXQC_table"))
+  p = grid::gTree(children = grid::gList(table), cl = c("PTXQC_table"))
   
   ## hide the table name inside (for qcMetric::getTitles())
   p$labels$title = title
@@ -829,8 +820,8 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
 #' @export
 #' 
 print.PTXQC_table = function(x, ...) {
-  grid.newpage();
-  grid.draw(x)
+  gridd::grid.newpage();
+  gridd::grid.draw(x)
   return(NULL)
 }
 
@@ -849,7 +840,6 @@ print.PTXQC_table = function(x, ...) {
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#' @importFrom RColorBrewer brewer.pal
 #' @export
 #' 
 #' @examples
@@ -881,7 +871,7 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
 
   p = ggplot(data, col=data$col) +
         geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth = TRUE, outlier.shape = NA) +
-        scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide=showColLegend) +
+        scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide = showColLegend) +
         ylab(expression(Delta~"mass [ppm]")) +
         xlab("") +
         ylim(y_lim) +
@@ -911,7 +901,6 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
 #' @return GGplot object
 #' 
 #' @import ggplot2
-#' @importFrom RColorBrewer brewer.pal
 #' @export
 #' 
 #' @examples
@@ -941,7 +930,7 @@ plot_CalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit
   
   ## plot
   p = ggplot(data, col=data$col) +
-    geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm.", col="col"), varwidth=TRUE, outlier.shape = NA) +
+    geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm.", col="col"), varwidth = TRUE, outlier.shape = NA) +
     scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide = showColLegend) +
     ylab(expression(Delta~"mass [ppm]")) +
     xlab("") +
@@ -1066,10 +1055,10 @@ plot_MissedCleavages = function(data, title_sub = "")
   st_bin.m = melt(data, id.vars = c("fc.raw.file"))
   p =
     ggplot(data = st_bin.m, aes_string(x = "factor(fc.raw.file)", y = "value", fill = "variable")) + 
-        geom_col(position=position_stack(reverse = TRUE)) +
+        geom_col(position = position_stack(reverse = TRUE)) +
         xlab("Raw file") +  
         ylab("missed cleavages [%]") + 
-        theme(legend.title=element_blank()) +
+        theme(legend.title = element_blank()) +
         scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000", "#800080", "#000000"), 10)) +
         geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
         coord_flip() +
