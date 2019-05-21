@@ -34,7 +34,8 @@ readMzTab = function(.self, file) {
   ## this implementation is derived from with minor modifications
   ## https://github.com/lgatto/MSnbase/blob/master/R/MzTab.R
   
-  lines = readLines(file)
+  f_con = file(mztab_file, open = "r") ## for better error messages
+  lines = readLines(f_con)
   # remove empty lines
   lines = lines[ nzchar(lines) ]
   
@@ -102,11 +103,12 @@ getParameters = function()
   
   # copy the whole MTD for now, since R likes shallow copies and we are about to rename columns by reference (see ?setnames)
   res = data.table::copy(.self$sections[["MTD"]])
-  setnames(res, old = "key", new = "parameter")
-  res = rbind(res, data.frame(parameter= "fasta file", value = paste(basename(unique(.self$sections$PSM$database)), collapse=";")))
-  res = res[-(grep("custom",res$parameter)),]
-  res[is.na(res)]= "NULL" # temp workaround
+  res = rbind(res, data.frame(key= "fasta file", value = paste(basename(unique(.self$sections$PSM$database)), collapse=";")))
+  res = res[-(grep("custom", res$key)),]
+  res[is.na(res)] = "NULL" # temp workaround
   
+  setnames(res, old = "key", new = "parameter") ## todo: remove at some point, since it forces us to use `::copy`
+
   return (res)
 },
 
@@ -175,9 +177,7 @@ getEvidence = function()
               PSM.ID = "id", 
               opt.global.modified.sequence = "modified.sequence",
               opt.global.is.contaminant = "contaminant",
-              opt.global.fragment.mass.error.da = "mass.deviations..da.",
-              opt.global.total.ion.count = "total.ion.current",
-              opt.global.base.peak.intensity = "base.peak.intensity")
+              opt.global.fragment.mass.error.da = "mass.deviations..da.")
   
   setnames(res, old = names(name), new = unlist(name))
    
@@ -251,7 +251,9 @@ getMSMSScans = function()
 
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), new = c("retention.time.pep","retention.time","calibrated.retention.time"))
+    setnames(res,
+             old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"),
+             new = c("retention.time.pep","retention.time","calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else res$retention.time.calibration = NA
@@ -274,7 +276,9 @@ getMSMSScans = function()
               opt.global.is.contaminant = "contaminant",
               opt.global.missed.cleavages = "missed.cleavages",
               opt.global.target.decoy = "reverse",
-              opt.global.activation.method = "fragmentation")
+              opt.global.activation.method = "fragmentation",
+              opt.global.total.ion.count = "total.ion.current",
+              opt.global.base.peak.intensity = "base.peak.intensity")
  
   setnames(res, old = names(name), new = unlist(name))
   
