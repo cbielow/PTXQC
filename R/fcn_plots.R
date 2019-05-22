@@ -444,7 +444,7 @@ plot_MBRAlign = function(data, y_lim, title_sub, match_tol)
 #' 
 plot_MBRIDtransfer = function(data)
 {
-  data.m = melt(data, id.vars=c("fc.raw.file", "sample"))
+  data.m = reshape2::melt(data, id.vars=c("fc.raw.file", "sample"))
   data.m$value = data.m$value * 100 ## used to be scores in [0-1]
   if (all(is.na(data.m$value)))
   {# the slice of Raw file we are looking at could have no MBR data -- and ggplot needs something to plot...
@@ -725,13 +725,15 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
 #' 
 getHTMLTable = function(data, header = NA, font_size = 12)
 {
-  tbl = kableExtra::kable(data, row.names = FALSE, format = "html") %>%
-                          kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE, font_size = font_size)
-  
+  tbl = kableExtra::kable_styling(kableExtra::kable(data, row.names = FALSE, format = "html"),
+                                  bootstrap_options = c("striped", "hover", "condensed"), 
+                                  full_width = FALSE, 
+                                  font_size = font_size)
+
   if (!any(is.na(header)))
   {
     header__ = header;
-    tbl = tbl %>% kableExtra::add_header_above(c(header__ = ncol(data)))
+    tbl = kableExtra::add_header_above(tbl, c(header__ = ncol(data)))
     tbl = gsub("header__", paste(header__, sep = "", collapse = "<br>"), as.character(tbl))
   } 
 
@@ -777,7 +779,7 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
   
   colhead = lapply(col_names, function(ii) grid::textGrob(ii, gp = grid::gpar(fontsize=12, col="black", fontface="bold", fill="grey")))
   ## replace column names
-  table = gtable_add_grob(table, colhead, t = 1, l = 1:ncol(data))
+  table = gtable::gtable_add_grob(table, colhead, t = 1, l = 1:ncol(data))
 
   #table = tableGrob(data, rows = NULL, cols = c("Raw file", "% identified"))
   if (nchar(title[1]) > 0)
@@ -1052,7 +1054,7 @@ plot_MS2Decal = function(data)
 #'
 plot_MissedCleavages = function(data, title_sub = "")
 {
-  st_bin.m = melt(data, id.vars = c("fc.raw.file"))
+  st_bin.m = reshape2::melt(data, id.vars = c("fc.raw.file"))
   p =
     ggplot(data = st_bin.m, aes_string(x = "factor(fc.raw.file)", y = "value", fill = "variable")) + 
         geom_col(position = position_stack(reverse = TRUE)) +

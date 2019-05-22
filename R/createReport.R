@@ -347,7 +347,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     
     if (length(ratio_cols) > 0)
     {
-      lst_qcMetrics[["qcMetric_PG_Ratio"]]$setData(df_pg = df_pg, ratio_cols = ratio_cols, thresh_LabelIncorp = pg_ratioLabIncThresh, GL_name_min_length = GL_name_min_length)
+      lst_qcMetrics[["qcMetric_PG_Ratio"]]$setData(df_pg, ratio_cols = ratio_cols, thresh_LabelIncorp = pg_ratioLabIncThresh, GL_name_min_length = GL_name_min_length)
     }
   }
   

@@ -58,13 +58,13 @@ test_that("qualUniform", {
  expect_equal(qualUniform(c(4,0,0), c(1,0,0)), 1)
  expect_equal(qualUniform(c(4,0,0), c(0,1,0)), 1)
  expect_equal(qualUniform(c(0,4,0)), 0)
- expect_less_than(abs(qualUniform(c(3,2,1))-0.58578), 0.0001)
- expect_less_than(abs(qualUniform(c(1,2,3))-0.58578), 0.0001)
+ expect_lt(abs(qualUniform(c(3,2,1))-0.58578), 0.0001)
+ expect_lt(abs(qualUniform(c(1,2,3))-0.58578), 0.0001)
  expect_equal(qualUniform(c(1,2,3), c(0,1,0)), 1)
- expect_less_than(abs(qualUniform(c(1,2,3))-0.58578), 0.0001)
- expect_less_than(abs(qualUniform(c(1,2,3), c(0,1,1))- 0.590316), 0.0001)
- expect_less_than(abs(qualUniform(c(2,3), c(1,1))-0.552786), 0.0001)
- expect_less_than(abs(qualUniform(1:120)-0.38661), 0.0001)
+ expect_lt(abs(qualUniform(c(1,2,3))-0.58578), 0.0001)
+ expect_lt(abs(qualUniform(c(1,2,3), c(0,1,1))- 0.590316), 0.0001)
+ expect_lt(abs(qualUniform(c(2,3), c(1,1))-0.552786), 0.0001)
+ expect_lt(abs(qualUniform(1:120)-0.38661), 0.0001)
 })
 
 
@@ -103,7 +103,7 @@ test_that("qualBestKS", {
     
   expect_equal(max(r$ks_best[1:3]), 1)
   expect_true(all(r$ks_best[1:3] > 0.7)) ## the three similar ones, should score good (one of them the the reference)
-  expect_less_than(r$ks_best[4], 0.2) ## outlier should score badly
+  expect_lt(r$ks_best[4], 0.2) ## outlier should score badly
 })
 
 

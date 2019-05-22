@@ -96,7 +96,7 @@ boxplotCompare = function(data,
   data$cat[data$contaminant] = cat[5]
   
   ## compute global y-limits (so we can fix it across plots)
-  ylims = boxplot.stats(data$value)$stats[c(1, 5)]
+  ylims = grDevices::boxplot.stats(data$value)$stats[c(1, 5)]
   ## make sure to inlude abline (if existing)
   if (!is.na(abline))
   {

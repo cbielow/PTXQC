@@ -268,11 +268,10 @@ automatically assumes a pulsed experiment and reports the label incorporation in
 
 Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to Raw files)
 ",
-    workerFcn=function(.self, df_pg, ratio_cols, thresh_LabelIncorp, GL_name_min_length)
+    workerFcn = function(.self, df_pg, ratio_cols, thresh_LabelIncorp, GL_name_min_length)
     {
       ## completeness check
       stopifnot(c(ratio_cols, "contaminant", "reverse") %in% colnames(df_pg))
-      
       
       ## remove reverse and contaminants (might skew the picture)
       idx_row = !df_pg$contaminant & !df_pg$reverse

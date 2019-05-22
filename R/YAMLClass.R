@@ -13,8 +13,6 @@
 #' 
 #' @field yamlObj A Yaml object as created by \code{\link[yaml]{yaml.load}}
 #'
-#' @importFrom yaml as.yaml
-#' 
 #' @exportClass YAMLClass
 #' @export YAMLClass
 #' 
@@ -135,7 +133,7 @@ YAMLClass = setRefClass(
 #
 #
 "
-      cat(paste0(yaml.user.warning, as.yaml(.self$yamlObj)), file=filename)
+      cat(paste0(yaml.user.warning, yaml::as.yaml(.self$yamlObj)), file=filename)
       
       return (TRUE);
     }

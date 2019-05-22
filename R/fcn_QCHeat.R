@@ -30,7 +30,7 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
   if (length(lst_qcMetrics) == 0) stop("Heatmap: List of Qc metrics is empty!")
   lst.QCM = lapply(lst_qcMetrics, function(qcm) {
     qcm_sc = qcm$qcScores
-    if (empty(qcm_sc)) return(NULL) ## if metric was not computed, default DF is empty
+    if (plyr::empty(qcm_sc)) return(NULL) ## if metric was not computed, default DF is empty
     if ("raw.file" %in% colnames(qcm_sc)) {
       qcm_sc$fc.raw.file = renameFile(qcm_sc$raw.file, raw_file_mapping)  ## create short name column
       qcm_sc = qcm_sc[, !(colnames(qcm_sc) %in% "raw.file")]  ## remove raw.file column
@@ -59,7 +59,7 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
   lst_qcMetrics[["qcMetric_AverageQualOverall"]]$setData(df.QCM)
   ## ... add it
   df.AverageQual = lst_qcMetrics[["qcMetric_AverageQualOverall"]]$qcScores
-  if (empty(df.AverageQual)) df.QCMa = df.QCM  else df.QCMa = merge(df.QCM, df.AverageQual)
+  if (plyr::empty(df.AverageQual)) df.QCMa = df.QCM  else df.QCMa = merge(df.QCM, df.AverageQual)
 
   ## get order and names for each metric
   df.meta = getMetaData(lst_qcMetrics)
@@ -158,7 +158,7 @@ getMetaData = function(lst_qcMetrics)
   df.meta = plyr::ldply(lst_qcMetrics, function(qcm) {
     #qq <<- qcm
     qcm_sc = qcm$qcScores
-    if (empty(qcm_sc)) {
+    if (plyr::empty(qcm_sc)) {
       ## if metric was not computed, default DF is empty
       name = qcm$qcName
     } else {
@@ -168,6 +168,6 @@ getMetaData = function(lst_qcMetrics)
     data.frame(name = name, order = qcm$orderNr, cat = qcm$qcCat)
   })
   ## order meta
-  if (!empty(df.meta)) df.meta = df.meta[order(df.meta$order), ]
+  if (!plyr::empty(df.meta)) df.meta = df.meta[order(df.meta$order), ]
   return(df.meta)
 }
