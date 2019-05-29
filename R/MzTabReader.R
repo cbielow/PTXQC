@@ -11,7 +11,6 @@
 #'
 #'
 MzTabReader = setRefClass("MzTabReader",
-                       
                        fields = list(sections = "list",
                                      fn_map = "FilenameMapper"
                        ),
@@ -153,13 +152,18 @@ getEvidence = function()
   "Basically the PEP table and additionally columns named 'raw.file' and 'fc.raw.file'."
   
   res = .self$sections$PSM
-  ## augment PEP with fc.raw.file
+  
+  # remove empty PepIDs (with no ConsensusFeature group or unassigned PepIDs (-1); corresponding to unidentfied MS2 scans)
+  res = res[!is.na(res$opt.global.cf.id),]
+  
+  
+  ## augment with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
   ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
   res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
-
-  res$match.time.difference = NA
- 
+  stopifnot(all(!is.na(res$fc.raw.file))) # Spectra-Ref in PSM table not set for all entries
+  
+  
   if (all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
     setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), 
@@ -187,10 +191,10 @@ getEvidence = function()
   #res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
 
   ## optional in MzTab (depending on which FeatureFinder was used)
-  if("opt.global.FWHM" %in% colnames(res)) {  setnames(res, old = c("opt.global.FWHM"), new = c("retention.length")) }
+  if("opt.global.FWHM" %in% colnames(res)) {
+    setnames(res, old = c("opt.global.FWHM"), new = c("retention.length"))
+  }
 
-  # remove empty PepIDs from evidence
-  res = res[!is.na(res$opt.global.cf.id),]
   
   #ms.ms.count: 
   #1.all different accessions and databases per ID in one row; 2.all IDs only one time; 
@@ -198,44 +202,30 @@ getEvidence = function()
   res_dt = setDT(res)
   accessions = (res_dt[, .(accession=list(accession)), by=id])$accession
   databases = (res_dt[, .(database=list(database)), by=id])$database
-  res_dt=unique(res_dt, by = "id")
+  res_dt = unique(res_dt, by = "id")
   res_dt$proteins = unlist(lapply(accessions, paste, collapse=";"))
   res_dt$database = databases
-  res_dt[,ms.ms.count:=.N, by=list(raw.file,modified.sequence,charge)]
-  toNA=res_dt[, .(toNA = .I[c(1L:.N-1)]), by=list(raw.file,modified.sequence,charge)]$toNA
-  res_dt[toNA, ms.ms.count:=NA]
-  res=as.data.frame(res_dt)
+  res_dt[, ms.ms.count := .N, by = list(raw.file, modified.sequence,charge)]
+  toNA = res_dt[, .(toNA = .I[c(1L:.N-1)]), by=list(raw.file, modified.sequence,charge)]$toNA
+  res_dt[toNA, ms.ms.count := NA]
+  res = as.data.frame(res_dt)
   
-  #intensity from PEP to PSM: only labelfree
-  
+  # intensity from PEP to PSM: only labelfree
   pep_df = .self$sections$PEP
-  res$pep.id = as.numeric(NA)
-  res$intensity = as.numeric(NA)
-  res$ms_run_number = as.numeric(NA)
- 
-   #split data.frame rev in res_df and empty entrys
-  empty_entries = res[is.na(res$spectra.ref),]
-  res_df = res[!is.na(res$spectra.ref),]
 
-  res_df$pep.id = match(res_df$spectra.ref, pep_df$spectra.ref, nomatch = NA_integer_)
-  res_df$ms_run_number = as.numeric(sub("\\].*","", sub(".*\\[","", res_df$spectra.ref)))
-  pep_intensity_df = pep_df[ ,grepl( "peptide.abundance.study.variable." , names(pep_df))]
+  res$pep.id = match(res$spectra.ref, pep_df$spectra.ref, nomatch = NA_integer_)
+  res$ms_run_number = as.numeric(sub("\\].*","", sub(".*\\[","", res$spectra.ref)))
+  pep_intensity_df = pep_df[, grepl( "peptide.abundance.study.variable." , names(pep_df))]
 
-  res_df=ddply(res_df,"opt.global.cf.id",function(x){
-             pep_row=first(na.omit(x$pep.id))
-             x$intensity=as.numeric(pep_intensity_df[pep_row, x$ms_run_number]) 
-             return(x)}) 
+  res = ddply(res, "opt.global.cf.id", function(x){
+              pep_row = first(na.omit(x$pep.id))
+              x$intensity = as.numeric(pep_intensity_df[pep_row, x$ms_run_number]) 
+              return(x)}) 
   
-  res_df$intensity[duplicated(res_df[,c("opt.global.map.index","opt.global.cf.id")])]=NA
-  
-  ## apply empty entries
-  res=rbind(res_df, empty_entries)
+  res$intensity[duplicated(res[,c("opt.global.map.index","opt.global.cf.id")])] = NA
 
-  ## temp workaround
-  res = res[!is.na(res$fc.raw.file),]
-  
-  ## temp workaround (broken UID mapping)
-  res = res[!is.na(res$contaminant),]
+  ## just check if there are no invalid entries
+  stopifnot(all(!is.na(res$contaminant)))
   
   return ( res )
 },
