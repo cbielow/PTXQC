@@ -126,7 +126,7 @@ getSummary = function()
 
   ## ... and subselect the ms2-ID-Rate
   ms2_df = mtd_custom_df[grep("MS2 identification rate", mtd_custom_df$value), ] 
-  res$ms.ms.identified.... = unlist(lapply(strsplit(gsub("]","", as.character(ms2_df$value)), ",")[[4]]), as.numeric)
+  res$ms.ms.identified.... = unlist(lapply(strsplit(gsub("]","", as.character(ms2_df$value)), ",")[[4]], as.numeric))
 
   ## read TIC
   tic_df = mtd_custom_df[grep("total ion current", mtd_custom_df$value),] 
