@@ -87,7 +87,7 @@ readMzTab = function(.self, file) {
   
   ## create Raw filename mapping internally
   mtd = res[["MTD"]]
-  idx_run = grep("^ms_run\\[\\d\\]-location", mtd$key, value = FALSE)
+  idx_run = grep("^ms_run\\[\\d*\\]-location", mtd$key, value = FALSE)
   ms_runs = gsub("[.]*-location", "\\1", mtd$key[idx_run])
   raw_filenames = mtd$value[idx_run]
   .self$fn_map$getShortNames(raw_filenames, ms_runs = ms_runs)
@@ -121,12 +121,12 @@ getSummary = function()
   res = .self$fn_map$getRawfm()[ , c("from", "to")]
   colnames(res) = c("raw.file", "fc.raw.file")
   
-  ## read custom entries
-  mtd_custom_df = .self$sections$MTD[grep("custom", .self$sections$MTD$key), ]
+  ## read all custom entries
+  mtd_custom_df = .self$sections$MTD[grep("^custom", .self$sections$MTD$key), ]
 
-  ## ms2-ID-Rate
+  ## ... and subselect the ms2-ID-Rate
   ms2_df = mtd_custom_df[grep("MS2 identification rate", mtd_custom_df$value), ] 
-  res$ms.ms.identified.... = unlist(lapply(lapply(strsplit(gsub("]","",as.character(ms2_df$value)),","), "[[", 4), as.numeric))
+  res$ms.ms.identified.... = unlist(lapply(strsplit(gsub("]","", as.character(ms2_df$value)), ",")[[4]]), as.numeric))
 
   ## read TIC
   tic_df = mtd_custom_df[grep("total ion current", mtd_custom_df$value),] 
