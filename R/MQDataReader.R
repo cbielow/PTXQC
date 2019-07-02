@@ -35,7 +35,7 @@ read.MQ <- function(file, filter = "", type = "pg", col_subset = NA, add_fs_col 
 
 
 ## CLASS 'MQDataReader'
-MQDataReader <- proto()
+MQDataReader <- proto::proto()
 
 #' Constructor for class 'MQDataReader'.
 #'
@@ -48,7 +48,7 @@ MQDataReader <- proto()
 #' 
 MQDataReader$new <- function(.)
 {
-  proto(., mq.data = NULL, fn_map = FilenameMapper$new())
+  proto::proto(., mq.data = NULL, fn_map = FilenameMapper$new())
 }
 
 

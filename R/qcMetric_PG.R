@@ -21,7 +21,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       ## completeness check
       stopifnot(c(int_cols, "contaminant") %in% colnames(df_pg))
       
-      df.con_stats = adply(int_cols, .margins=1, function(group) {
+      df.con_stats = plyr::adply(int_cols, .margins=1, function(group) {
         #cat(group)
         total_int = sum(as.numeric(df_pg[, group]), na.rm = TRUE)
         return(data.frame(group_long = as.character(group),
@@ -78,7 +78,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       medians = sort(apply(log2(df_pg[, int_cols, drop = FALSE]+1), 2, quantile, na.rm = TRUE, probs=0.5)) # + c(0,0,0,0,0,0))
       int_dev = RSD(medians)
       int_dev.s = pastet("INT RSD [%]", round(int_dev, 3))
-      lpl = boxplotCompare(data = melt(df_pg[, c(int_cols, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
+      lpl = boxplotCompare(data = reshape2::melt(df_pg[, c(int_cols, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
                            log2 = TRUE, 
                            mainlab = "PG: intensity distribution",
                            ylab = expression(log[2]*" intensity"),
@@ -128,7 +128,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       ## do not remove zeros (but add +1 since RSD is 'NA' when 'inf' is included in log-data)
       medians = sort(apply(log2(df_pg[, int_cols, drop = FALSE]+1), 2, quantile, na.rm = TRUE, probs=0.5)) # + c(0,0,0,0,0,0))
       int_dev = RSD(medians)
-      lpl = boxplotCompare(data = melt(df_pg[, c(int_cols, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
+      lpl = boxplotCompare(data = reshape2::melt(df_pg[, c(int_cols, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
                            log2 = TRUE, 
                            mainlab = "PG: LFQ intensity distribution",
                            ylab = expression(log[2]*" intensity"),
@@ -179,7 +179,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       ## do not remove zeros (but add +1 since RSD is 'NA' when 'inf' is included in log-data)
       medians = sort(apply(log2(df_pg[, int_cols, drop = FALSE]+1), 2, quantile, probs=0.5, na.rm = TRUE)) # + c(0,0,0,0,0,0))
       reprt_dev = RSD(medians)
-      lpl = boxplotCompare(   data = melt(df_pg[, c(int_cols, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
+      lpl = boxplotCompare(   data = reshape2::melt(df_pg[, c(int_cols, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
                               log2 = TRUE, 
                               ylab = expression(log[2]*" reporter intensity"),
                               mainlab = "PG: reporter intensity distribution",
@@ -321,7 +321,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       
       
       ## compute label incorporation?
-      ratio.mode = ddply(ratio.densities, "col", .fun = function(x) {
+      ratio.mode = plyr::ddply(ratio.densities, "col", .fun = function(x) {
         mode = x$x[which.max(x$y)]
         return (data.frame(mode = mode))
       })

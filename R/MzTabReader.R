@@ -109,7 +109,7 @@ getParameters = function()
   res = res[-(grep("custom", res$key)),]
   res[is.na(res)] = "NULL" # temp workaround
   
-  setnames(res, old = "key", new = "parameter") ## todo: remove at some point, since it forces us to use `::copy`
+  data.table::setnames(res, old = "key", new = "parameter") ## todo: remove at some point, since it forces us to use `::copy`
 
   return (res)
 },
@@ -166,7 +166,7 @@ getEvidence = function()
   
   if (all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), 
+    data.table::setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), 
                   new = c("retention.time.pep","retention.time","calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
@@ -186,20 +186,20 @@ getEvidence = function()
               opt.global.is.contaminant = "contaminant",
               opt.global.fragment.mass.error.da = "mass.deviations..da.")
   
-  setnames(res, old = names(name), new = unlist(name))
+  data.table::setnames(res, old = names(name), new = unlist(name))
    
   #res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
 
   ## optional in MzTab (depending on which FeatureFinder was used)
   if("opt.global.FWHM" %in% colnames(res)) {
-    setnames(res, old = c("opt.global.FWHM"), new = c("retention.length"))
+    data.table::setnames(res, old = c("opt.global.FWHM"), new = c("retention.length"))
   }
 
   
   #ms.ms.count: 
   #1.all different accessions and databases per ID in one row; 2.all IDs only one time; 
   #3.add ms.ms.count (size of groups with same sequence, modified.sequence and charge; 4. set in all groups ms.ms.count all cells but one to NA )
-  res_dt = setDT(res)
+  res_dt = data.table::setDT(res)
   accessions = (res_dt[, .(accession=list(accession)), by=id])$accession
   databases = (res_dt[, .(database=list(database)), by=id])$database
   res_dt = unique(res_dt, by = "id")
@@ -217,8 +217,8 @@ getEvidence = function()
   res$ms_run_number = as.numeric(sub("\\].*","", sub(".*\\[","", res$spectra.ref)))
   pep_intensity_df = pep_df[, grepl( "peptide.abundance.study.variable." , names(pep_df))]
 
-  res = ddply(res, "opt.global.cf.id", function(x){
-              pep_row = first(na.omit(x$pep.id))
+  res = plyr::ddply(res, "opt.global.cf.id", function(x){
+              pep_row = data.table::first(na.omit(x$pep.id))
               x$intensity = as.numeric(pep_intensity_df[pep_row, x$ms_run_number]) 
               return(x)}) 
   
@@ -244,7 +244,7 @@ getMSMSScans = function()
 
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    setnames(res,
+    data.table::setnames(res,
              old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"),
              new = c("retention.time.pep","retention.time","calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
@@ -253,7 +253,7 @@ getMSMSScans = function()
   
   if("opt.global.ion.injection.time" %in% colnames(res))
   {
-    setnames(res, old = "opt.global.ion.injection.time", new = "ion.injection.time")
+    data.table::setnames(res, old = "opt.global.ion.injection.time", new = "ion.injection.time")
   }
   
   name = list(opt.global.calibrated.mz.error.ppm = "mass.error..ppm",
@@ -273,7 +273,7 @@ getMSMSScans = function()
               opt.global.total.ion.count = "total.ion.current",
               opt.global.base.peak.intensity = "base.peak.intensity")
  
-  setnames(res, old = names(name), new = unlist(name))
+  data.table::setnames(res, old = names(name), new = unlist(name))
   
   res$mass.deviations..ppm. = gsub("\\[|\\]", "", res$mass.deviations..ppm.)
   res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)

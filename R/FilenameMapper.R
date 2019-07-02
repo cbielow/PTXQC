@@ -182,7 +182,7 @@ plotNameMapping = function(.self)
   {
     mq_mapping$ypos = -(1:nrow(mq_mapping))
     head(mq_mapping)
-    mq_mapping.long = melt(mq_mapping, id.vars = c("ypos"))
+    mq_mapping.long = reshape2::melt(mq_mapping, id.vars = c("ypos"))
     head(mq_mapping.long)
     mq_mapping.long$variable = as.character(mq_mapping.long$variable)
     mq_mapping.long$col = "#000000";

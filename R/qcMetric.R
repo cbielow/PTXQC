@@ -211,9 +211,9 @@ qcMetric_AverageQualOverall =
                     helpTextTemplate = "Internal metric to compute the average quality across all other metrics",
                     workerFcn = function(.self, df.QCM)
                     {
-                      if (empty(df.QCM)) stop("AverageQual_qc::workerFcn(): input empty!")
+                      if (plyr::empty(df.QCM)) stop("AverageQual_qc::workerFcn(): input empty!")
                       lpl = list() ## empty...
-                      qcScore = ddply(df.QCM, "fc.raw.file", function(df.row) {
+                      qcScore = plyr::ddply(df.QCM, "fc.raw.file", function(df.row) {
                         df.row.raw = unlist(df.row[,!grepl("fc.raw.file", colnames(df.row))])
                         df.row.raw[is.infinite(df.row.raw)] = NA  ## mask explicitly missing values, since it will bias the mean otherwise
                         return (data.frame(val = mean(df.row.raw, na.rm = TRUE)))

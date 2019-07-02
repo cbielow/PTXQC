@@ -88,7 +88,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
           ## do not trust MBR here. We want real evidence!
           evd_realMS = !grepl("MATCH", df_evd$type)
           ## for each Raw file: find unique peptides of our contaminant
-          cont_data.l = dlply(df_evd[evd_uniqueGroup & evd_realMS, ], "fc.raw.file",
+          cont_data.l = plyr::dlply(df_evd[evd_uniqueGroup & evd_realMS, ], "fc.raw.file",
                               function(x) {
                                 if (length(grep(";", x$protein.group.ids))) stop("more than one proteinGroup for supposedly unique peptide...")
                                 
@@ -100,7 +100,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
                                 above.thresh = (sc > ca_thresh) | (int > ca_thresh)
                                 cont_scoreECDF = NULL;
                                 if ("score" %in% colnames(x)) {
-                                  cont_scoreECDF = ddply(x, "idx_cont", function(xx) {
+                                  cont_scoreECDF = plyr::ddply(x, "idx_cont", function(xx) {
                                     if (length(unique(xx$score)) < 2) return(NULL) ## not enough data for ECDF
                                     r = getECDF(xx$score)
                                     r$condition = c("sample", "contaminant")[xx$idx_cont[1]+1]
@@ -123,7 +123,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
           
           ## melt
           cont_data = ldply(cont_data.l, function(l) { l$cont_data })
-          cont_data.long = melt(cont_data, id.vars="fc.raw.file")
+          cont_data.long = reshape2::melt(cont_data, id.vars="fc.raw.file")
           
           # 
           # old: not_found = all(cont_data.long$value[cont_data.long$variable == "above.thresh"] == FALSE)
@@ -212,7 +212,7 @@ Heatmap score [EVD: Pep Intensity (>%1.1f)]:
       ## update helpText
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_intensity, thresh_intensity)
       
-      medians_pep = ddply(df_evd[ , c("fc.raw.file", "intensity")], "fc.raw.file",
+      medians_pep = plyr::ddply(df_evd[ , c("fc.raw.file", "intensity")], "fc.raw.file",
                           function(x) data.frame(med = log2(quantile(x$intensity, probs=0.5, na.rm = TRUE))))
       
       int_dev_pep = RSD((medians_pep$med))
@@ -293,7 +293,7 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
         
       
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
-      df_reps = melt(df_evd[, c("fc.raw.file", cols_reporter)], 
+      df_reps = reshape2::melt(df_evd[, c("fc.raw.file", cols_reporter)], 
                      id.vars ="fc.raw.file", 
                      value.name = "intensity",
                      variable.name = "channel")
@@ -393,12 +393,12 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
       protC = getProteinCounts(df_evd[, c("fc.raw.file", "protein.group.ids", "match.time.difference")])
       protC$block = factor(assignBlocks(protC$fc.raw.file, 30))
       
-      max_prot = max(unlist(dlply(protC, "fc.raw.file", function(x) sum(x$counts))))
+      max_prot = max(unlist(plyr::dlply(protC, "fc.raw.file", function(x) sum(x$counts))))
       ## average gain in percent
       reportMTD = any(!is.na(df_evd$match.time.difference))
       gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(protC$MBRgain, na.rm = TRUE)), "")
       
-      lpl = dlply(protC, "block", .fun = function(x)
+      lpl = plyr::dlply(protC, "block", .fun = function(x)
       {
         p = plot_CountData(data = x, 
                            y_max = max(thresh_protCount, max_prot)*1.1,
@@ -409,7 +409,7 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
       })
       
       ## QC measure for protein ID performance
-      qc_protc = ddply(protC, "fc.raw.file", function(x){
+      qc_protc = plyr::ddply(protC, "fc.raw.file", function(x){
         if (nrow(x) == 3 && length(grep("^genuine", x$category))!= 2){
           stop("expected two categories to start with 'genuine...'")
         }
@@ -463,12 +463,12 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
       pepC = getPeptideCounts(df_evd[, c("fc.raw.file", "modified.sequence", "match.time.difference")])
       pepC$block = factor(assignBlocks(pepC$fc.raw.file, 30))
       
-      max_pep = max(unlist(dlply(pepC, "fc.raw.file", function(x) sum(x$counts))))
+      max_pep = max(unlist(plyr::dlply(pepC, "fc.raw.file", function(x) sum(x$counts))))
       ## average gain in percent
       reportMTD = any(!is.na(df_evd$match.time.difference))
       gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pepC$MBRgain, na.rm = TRUE)), "")
       
-      lpl = dlply(pepC, "block", .fun = function(x)
+      lpl = plyr::dlply(pepC, "block", .fun = function(x)
       {
         p = plot_CountData(data = x, 
                            y_max = max(thresh_pepCount, max_pep)*1.1,
@@ -479,7 +479,7 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
       })
       
       ## QC measure for peptide ID performance
-      qc_pepc = ddply(pepC, "fc.raw.file", function(x){
+      qc_pepc = plyr::ddply(pepC, "fc.raw.file", function(x){
         if (nrow(x) == 3 && length(grep("^genuine", x$category))!= 2){
           stop("expected two categories to start with 'genuine...'")
         }
@@ -521,10 +521,10 @@ Heatmap score [EVD: RT Peak Width]: Scored using BestKS function, i.e. the D sta
       stopifnot(c("retention.time", "retention.length", "fc.raw.file") %in% colnames(df_evd))
       
       ## compute some summary stats before passing data to ggplot (performance issue for large experiments) 
-      df_evd.m.d = ddply(df_evd[,c("retention.time", "retention.length", "fc.raw.file")], "fc.raw.file", .fun = peakWidthOverTime)
+      df_evd.m.d = plyr::ddply(df_evd[,c("retention.time", "retention.length", "fc.raw.file")], "fc.raw.file", .fun = peakWidthOverTime)
       head(df_evd.m.d)
       ## median peak width
-      df_evd.m.d_avg = ddply(df_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = function(x) {
+      df_evd.m.d_avg = plyr::ddply(df_evd[,c("retention.length","fc.raw.file")], "fc.raw.file", .fun = function(x) {
         #fcr = as.character(x$fc.raw.file[1])
         #cat(fcr)
         m = median(x$retention.length, na.rm = TRUE);
@@ -534,7 +534,7 @@ Heatmap score [EVD: RT Peak Width]: Scored using BestKS function, i.e. the D sta
       .self$outData[["avg_peak_width"]] = df_evd.m.d_avg
       
       ## augment Raw filename with avg. RT peak width
-      df_evd.m.d$fc.raw.file = mapvalues(df_evd.m.d$fc.raw.file, df_evd.m.d_avg$fc.raw.file, df_evd.m.d_avg$fc.raw.file_aug)
+      df_evd.m.d$fc.raw.file = plyr::mapvalues(df_evd.m.d$fc.raw.file, df_evd.m.d_avg$fc.raw.file, df_evd.m.d_avg$fc.raw.file_aug)
       df_evd.m.d$block = factor(assignBlocks(df_evd.m.d$fc.raw.file, 6)) ## color set is 9, so do not increase this (6*150%)
       ## identical limits for all plots
       df_evd.xlim = range(df_evd.m.d$RT, na.rm = TRUE)
@@ -550,7 +550,7 @@ Heatmap score [EVD: RT Peak Width]: Scored using BestKS function, i.e. the D sta
       
       ## QC measure for reproducibility of peak shape
       ##.. create a list of distributions
-      l_dists = dlply(df_evd[,c("retention.length", "fc.raw.file")], "fc.raw.file", function(x) return(x$retention.length))
+      l_dists = plyr::dlply(df_evd[,c("retention.length", "fc.raw.file")], "fc.raw.file", function(x) return(x$retention.length))
       qc_evd_PeakShape = qualBestKS(l_dists)
       colnames(qc_evd_PeakShape) = c("fc.raw.file", .self$qcName)
       
@@ -655,7 +655,7 @@ Heatmap score [EVD: MBR Align]: fraction of 'green' vs. 'green+red' peptides.
           }
           ## amend fc.raw.file with % good ID pairs
           qcAlign$newlabel = paste0(qcAlign$newlabel, " (sc: ", round(qcAlign$withinRT*100), "%)")
-          evd_RT_t$fc.raw.file_ext = mapvalues(evd_RT_t$fc.raw.file, qcAlign$fc.raw.file, qcAlign$newlabel)
+          evd_RT_t$fc.raw.file_ext = plyr::mapvalues(evd_RT_t$fc.raw.file, qcAlign$fc.raw.file, qcAlign$newlabel)
           
           evd_RT_t$RTdiff_in = c("green", "red")[(abs(evd_RT_t$rtdiff) > tolerance_matching)+1]
           
@@ -793,7 +793,7 @@ Heatmap score: none.
       ## MBR: additional evidence by matching MS1 by AMT across files
       if (any(!is.na(df_evd$match.time.difference))) {
         ## gain for each raw file: absolute gain, and percent gain
-        mtr.df = ddply(df_evd, "fc.raw.file", function(x) {
+        mtr.df = plyr::ddply(df_evd, "fc.raw.file", function(x) {
           match_count_abs = sum(!is.na(x$match.time.difference))
           ## if only matched IDs are present, this would be 'Inf' -- we limit that to 1e4
           match_count_pc  = min(1e4, round(100*match_count_abs/(nrow(x)-match_count_abs))) ## newIDs / oldIDs
@@ -841,7 +841,7 @@ Heatmap score [EVD: Charge]: Deviation of the charge 2 proportion from a represe
         byXflex(d_charge, d_charge$Var1, 30, plot_Charge, sort_indices = TRUE)
       
       ## QC measure for charge centeredness
-      qc_charge = ddply(df_evd[!df_evd$hasMTD, c("charge",  "fc.raw.file")], "fc.raw.file", function(x) data.frame(c = (sum(x$charge==2)/nrow(x))))
+      qc_charge = plyr::ddply(df_evd[!df_evd$hasMTD, c("charge",  "fc.raw.file")], "fc.raw.file", function(x) data.frame(c = (sum(x$charge==2)/nrow(x))))
       qc_charge[, .self$qcName] = qualMedianDist(qc_charge$c)
       
       return(list(plots = lpl, qcScores = qc_charge[, c("fc.raw.file", .self$qcName)]))
@@ -878,7 +878,7 @@ Heatmap score [EVD: ID rate over RT]: Scored using 'Uniform' scoring function, i
       raws_perPlot = 6
       
       rt_range = range(df_evd$retention.time, na.rm = TRUE)
-      df_idRT = ddply(df_evd, "fc.raw.file", function(x) {
+      df_idRT = plyr::ddply(df_evd, "fc.raw.file", function(x) {
         h = hist(x$retention.time, breaks=seq(from=rt_range[1]-3, to=rt_range[2]+3, by=3), plot = FALSE)
         return(data.frame(RT = h$mid, counts = h$counts))
       })
@@ -886,7 +886,7 @@ Heatmap score [EVD: ID rate over RT]: Scored using 'Uniform' scoring function, i
         byXflex(df_idRT, df_idRT$fc.raw.file, raws_perPlot, plot_IDsOverRT, sort_indices = TRUE)
       
       ## QC measure for uniform-ness
-      qcScore = ddply(df_evd[, c("retention.time",  "fc.raw.file")], "fc.raw.file", 
+      qcScore = plyr::ddply(df_evd[, c("retention.time",  "fc.raw.file")], "fc.raw.file", 
                       function(x) data.frame(metric = qualUniform(na.omit(x$retention.time))))
       colnames(qcScore)[colnames(qcScore)=="metric"] = .self$qcName
       
@@ -940,7 +940,7 @@ Heatmap score [EVD: MS Cal Pre (%1.1f)]: the centeredness (function CenteredRef)
                 title_sub = fix_cal$recal_message)
       
       ## scores
-      qc_MS1deCal = ddply(fix_cal$df_evd, "fc.raw.file", 
+      qc_MS1deCal = plyr::ddply(fix_cal$df_evd, "fc.raw.file", 
                           function(x) {
                             xd = na.omit(x$uncalibrated.mass.error..ppm.)
                             if (length(xd)==0) {
@@ -999,7 +999,7 @@ Heatmap score [EVD: MS Cal-Post]: The variance and centeredness around zero of t
       
       ## QC measure for post-calibration ppm error
       ## .. assume 0 centered and StdDev of observed data
-      obs_par = ddply(fix_cal$df_evd[, c("mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
+      obs_par = plyr::ddply(fix_cal$df_evd[, c("mass.error..ppm.", "fc.raw.file")], "fc.raw.file", 
                       function(x) data.frame(mu = mean(x$mass.error..ppm., na.rm = TRUE), 
                                              sd = sd(x$mass.error..ppm., na.rm = TRUE)))
       qc_MS1Cal = data.frame(fc.raw.file = obs_par$fc.raw.file, 
@@ -1087,7 +1087,7 @@ Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = samp
       }
       
       ## QC measure for contamination
-      qc_cont = ddply(df_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
+      qc_cont = plyr::ddply(df_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
                       function(x) {
                         val = ifelse(is.null(cont.top5.names), 
                                      HEATMAP_NA_VALUE, ## use NA in heatmap if there are no contaminants
@@ -1129,7 +1129,7 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
       ## completeness check
       stopifnot(c("fc.raw.file", "ms.ms.count") %in% colnames(df_evd))
       
-      d_dups = ddply(df_evd, "fc.raw.file", function(x) {
+      d_dups = plyr::ddply(df_evd, "fc.raw.file", function(x) {
         tt = as.data.frame(table(x$ms.ms.count), stringsAsFactors = FALSE)
         tt$Count = as.numeric(tt$Var1)
         ## remove "0", since this would be MBR-features
@@ -1137,7 +1137,7 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
         ## summarize everything above 3 counts
         if (any(tt$Count >= 3)) {
           tt$Count[tt$Count >= 3] = "3+"
-          tt = ddply(tt, "Count", function(x) data.frame(Freq=sum(x$Freq)))
+          tt = plyr::ddply(tt, "Count", function(x) data.frame(Freq=sum(x$Freq)))
         }
         ## make counts relative
         fraction = tt$Freq / sum(tt$Freq) * 100
@@ -1206,7 +1206,7 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
       }
       
       ## make peptides unique per Raw file
-      df_u = ddply(df_evd[ , c("fc.raw.file", "modified.sequence")], "fc.raw.file",
+      df_u = plyr::ddply(df_evd[ , c("fc.raw.file", "modified.sequence")], "fc.raw.file",
                    function(x) {
                      return(x[!duplicated(x$modified.sequence),])
                   })
@@ -1215,7 +1215,7 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
       global_peps_count = length(global_peps)
       
       ## percent identified in each Raw file
-      pep_set = ddply(df_u[ , c("fc.raw.file", "modified.sequence")], "fc.raw.file",
+      pep_set = plyr::ddply(df_u[ , c("fc.raw.file", "modified.sequence")], "fc.raw.file",
                       function(x) {
                         score = 100*length(intersect(global_peps, x$modified.sequence)) / global_peps_count
                         return(data.frame(idFraction = score))
@@ -1257,7 +1257,7 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
       
       lpl_dens = byXflex(df_evd[, c("modified.sequence", "fc.raw.file", "logInt")], df_evd$fc.raw.file,
                          subset_size = 5, FUN = function(dx) {
-        d_mat = dcast(dx, modified.sequence ~ fc.raw.file, fun.aggregate = mean, value.var = "logInt")
+        d_mat = reshape2::dcast(dx, modified.sequence ~ fc.raw.file, fun.aggregate = mean, value.var = "logInt")
         
         ## ... normalization factors
         d_mat_mult = sapply(2:ncol(d_mat), function(x) {
@@ -1272,7 +1272,7 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
         head(d_mat_n)
         ## find impute value
         pep_mean = rowMeans(d_mat_n[, -1, drop=FALSE], na.rm = TRUE)
-        df_missing = ddply(df_mult, "fc.raw.file", function(x) {
+        df_missing = plyr::ddply(df_mult, "fc.raw.file", function(x) {
           ## get set of missing values
           values = pep_mean[is.na(d_mat_n[, as.character(x$fc.raw.file)])]
           ## de-normalize (back to old intensity range)
@@ -1286,8 +1286,8 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
           geom_freqpoly(data = dx, aes_string(x = "logInt", col="fc.raw.file"), binwidth = 0.5, size = 1.2) +
           xlab("Intensity [log2]") +
           ggtitle(" [experimental] EVD: Imputed Peptide Intensity Distribution of Missing Values") +
-          scale_fill_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide = guide_legend("")) +
-          scale_colour_manual(values = rep(brewer.pal(6,"Accent"), times=40), guide = "none")
+          scale_fill_manual(values = rep(RColorBrewer::brewer.pal(6,"Accent"), times=40), guide = guide_legend("")) +
+          scale_colour_manual(values = rep(RColorBrewer::brewer.pal(6,"Accent"), times=40), guide = "none")
         return(pl)
       })
       
