@@ -476,6 +476,11 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     
     
     ##
+    ## upSet plot
+    ##
+    lst_qcMetrics[["qcMetric_EVD_UpSet"]]$setData(df_evd)
+    
+    ##
     ## barplots of mass error
     ##
     ## MQ seems to mess up mass recal on some (iTRAQ/TMT) samples, by reporting ppm errors which include modifications

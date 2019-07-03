@@ -1311,4 +1311,33 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
 
 #####################################################################
 
-
+qcMetric_EVD_UpSet =  setRefClass(
+  "qcMetric_EVD_UpSet",
+  contains = "qcMetric",
+  methods = list(initialize=function() {  callSuper(    
+    helpTextTemplate = 
+      "later",
+    workerFcn = function(.self, df_evd)
+    {
+      
+      lf = tapply(df_evd$modified.sequence, df_evd$fc.raw.file, list)
+      
+      lpl = list(UpSetR::upset(UpSetR::fromList(lf)))
+      title = list("EDV: UpSet")
+      
+      score = sapply(1:length(names(lf)), function(x){
+        union = unique(unlist(lf[-x]))
+        inters = intersect(lf[[x]], union)
+        score = length(inters)/length(union)
+        return(EVD_UpSet = score)
+        })
+      qcScore = data.frame(fc.raw.file = names(lf), EVD_upSet = qcScore)
+      
+      return(list(plots = lpl, title = title, qcScores = qcScore))
+    }, 
+    qcName = "EVD:~UpSet", 
+    orderNr = 0500  # just before peptide count
+  )
+    return(.self)
+  })
+)

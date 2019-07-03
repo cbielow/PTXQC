@@ -56,6 +56,7 @@ qcMetric = setRefClass("qcMetric",
                  workerFcn = "function",  ## returns list(plots =, [qcScores=])
                  plots = "list",
                  htmlTable = "character",
+                 title = "list",
                  ## the following members are related to the heatmap only
                  qcScores = "data.frame", ## with columns "raw.file", "score"
                  qcCat = "character", ## one of "prep", "LC", "MS" or empty (e.g. for PG)
@@ -75,6 +76,7 @@ qcMetric = setRefClass("qcMetric",
            .self$plots = list();  ## obtained from worker
            .self$htmlTable = NA_character_;  ## obtained from worker
            .self$qcScores = data.frame();  ## obtained from worker
+           .self$title = list();
            .self$qcCat = qcCat;
            .self$qcName = qcName;
            .self$orderNr = orderNr;
@@ -138,6 +140,8 @@ qcMetric = setRefClass("qcMetric",
          
          if ("htmlTable" %in% names(r)) .self$htmlTable = r[["htmlTable"]];
          if ("qcScores" %in% names(r)) .self$qcScores = r[["qcScores"]];
+         if ("title" %in% names(r)) .self$title = r[["title"]]
+         
          
          cat("...", gsub("~", " ", .self$qcName), " done\n")
          return(NULL)
@@ -158,7 +162,10 @@ qcMetric = setRefClass("qcMetric",
        getTitles = function(stopOnMissing = TRUE, subtitle_sep = " - ") {
          labels = sapply(1:length(.self$plots), 
                          function(idx) {
-                           if ("title" %in% names(.self$plots[[idx]]$labels)){
+                           if (length(.self$title) != 0){
+                             return(.self$title[[idx]])
+                           }
+                           else if ("title" %in% names(.self$plots[[idx]]$labels)){
                              title = .self$plots[[idx]]$labels$title
                              #title = 'atop("PG: PCA of 'reporter intensity'", scriptstyle("(excludes contaminants)"))'
                              title
