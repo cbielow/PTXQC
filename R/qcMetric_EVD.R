@@ -1323,7 +1323,7 @@ qcMetric_EVD_UpSet =  setRefClass(
       lf = tapply(df_evd$modified.sequence, df_evd$fc.raw.file, list)
       
       lpl = list(UpSetR::upset(UpSetR::fromList(lf)))
-      title = list("EDV: UpSet")
+      title = list("EVD: UpSet")
       
       score = sapply(1:length(names(lf)), function(x){
         union = unique(unlist(lf[-x]))
