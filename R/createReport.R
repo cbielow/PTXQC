@@ -473,7 +473,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ## peptides per RT
     ##
     lst_qcMetrics[["qcMetric_EVD_IDoverRT"]]$setData(df_evd)
-
+    
+    
     ##
     ## barplots of mass error
     ##
