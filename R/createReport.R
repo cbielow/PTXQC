@@ -532,13 +532,13 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
 ######  msms.txt ...
 ######
 
-  if (MZTAB_MODE) df_msms = mzt$getMSMSScans()
+  if (MZTAB_MODE) df_msms = mzt$getMSMSScans(identified_only = TRUE)
   else df_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c(numeric = "Missed\\.cleavages",
                                                                                     "^Raw.file$",
                                                                                     "^mass.deviations",
                                                                                     "^masses$", "^mass.analyzer$", "fragmentation", "reverse",
                                                                                     numeric = "^evidence.id$"
-  ), check_invalid_lines = FALSE)
+                                                                                  ), check_invalid_lines = FALSE)
   
   ## just a scope
   {
@@ -572,8 +572,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
 ######
 ######  msmsScans.txt ...
 ######
-  if (MZTAB_MODE) df_msmsScan = mzt$getMSMSScans()
-  else df_msmsScan = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", 
+  if (MZTAB_MODE) df_msmsScans = mzt$getMSMSScans()
+  else df_msmsScans = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", 
                                col_subset = c(numeric = "^ion.injection.time", 
                                               numeric = "^retention.time$", 
                                               "^Identified", 
@@ -590,41 +590,41 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## MQ version 1.0.13 has very rudimentary MSMSscans.txt, with no header, so we need to skip the metrics of this file
     ##
-    if (!is.null(df_msmsScan) && ncol(df_msmsScan) > 3)
+    if (!is.null(df_msmsScans) && ncol(df_msmsScans) > 3)
     {
       # round RT to 2 min intervals
-      df_msmsScan$rRT = round(df_msmsScan$retention.time/2)*2
+      df_msmsScans$rRT = round(df_msmsScans$retention.time/2)*2
       
       ##
       ## TopN over RT
       ##
-      lst_qcMetrics[["qcMetric_MSMSScans_TopNoverRT"]]$setData(df_msmsScan)
+      lst_qcMetrics[["qcMetric_MSMSScans_TopNoverRT"]]$setData(df_msmsScans)
   
       ##
       ## Injection time over RT
       ##
-      lst_qcMetrics[["qcMetric_MSMSScans_IonInjTime"]]$setData(df_msmsScan, param_MSMSScans_ionInjThresh)
+      lst_qcMetrics[["qcMetric_MSMSScans_IonInjTime"]]$setData(df_msmsScans, param_MSMSScans_ionInjThresh)
   
       ##
       ## MS/MS intensity (TIC and base peak)
       ##
-      lst_qcMetrics[["qcMetric_MSMSScans_MSMSIntensity"]]$setData(df_msmsScan)
+      lst_qcMetrics[["qcMetric_MSMSScans_MSMSIntensity"]]$setData(df_msmsScans)
       
       ##
       ## TopN counts
       ##
-      lst_qcMetrics[["qcMetric_MSMSScans_TopN"]]$setData(df_msmsScan)
+      lst_qcMetrics[["qcMetric_MSMSScans_TopN"]]$setData(df_msmsScans)
   
       ##
       ## Scan event: % identified
       ##
-      lst_qcMetrics[["qcMetric_MSMSScans_TopNID"]]$setData(df_msmsScan)
+      lst_qcMetrics[["qcMetric_MSMSScans_TopNID"]]$setData(df_msmsScans)
       
       ##
       ## Dependent peptides (no score)
       ##
-      if ("dp.modification" %in% colnames(df_msmsScan)) {
-        lst_qcMetrics[["qcMetric_MSMSScans_DepPep"]]$setData(df_msmsScan)
+      if ("dp.modification" %in% colnames(df_msmsScans)) {
+        lst_qcMetrics[["qcMetric_MSMSScans_DepPep"]]$setData(df_msmsScans)
       }
       
     } ## end MSMSscan from MQ > 1.0.13
@@ -632,7 +632,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     
   }
   ## save RAM: msmsScans.txt is not required any longer
-  if (!DEBUG_PTXQC) rm(df_msmsScan)
+  if (!DEBUG_PTXQC) rm(df_msmsScans)
     
     
   #####################################################################

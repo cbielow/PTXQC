@@ -125,8 +125,8 @@ getSummary = function()
   mtd_custom_df = .self$sections$MTD[grep("^custom", .self$sections$MTD$key), ]
 
   ## ... and subselect the ms2-ID-Rate
-  ms2_df = mtd_custom_df[grep("MS2 identification rate", mtd_custom_df$value), ] 
-  res$ms.ms.identified.... = unlist(lapply(strsplit(gsub("]","", as.character(ms2_df$value)), ",")[[4]], as.numeric))
+  ms2_df = mtd_custom_df[grep("^\\[MS2 identification rate", mtd_custom_df$value), ] 
+  res$ms.ms.identified.... = unlist(lapply(gsub(".*, ?(\\d*\\.\\d*)\\]", "\\1", ms2_df$value), as.numeric))
 
   ## read TIC
   tic_df = mtd_custom_df[grep("total ion current", mtd_custom_df$value),] 
@@ -184,7 +184,8 @@ getEvidence = function()
               PSM.ID = "id", 
               opt.global.modified.sequence = "modified.sequence",
               opt.global.is.contaminant = "contaminant",
-              opt.global.fragment.mass.error.da = "mass.deviations..da.")
+              opt.global.fragment.mass.error.da = "mass.deviations..da."
+          )
   
   setnames(res, old = names(name), new = unlist(name))
    
@@ -204,6 +205,8 @@ getEvidence = function()
   databases = (res_dt[, .(database=list(database)), by=id])$database
   res_dt = unique(res_dt, by = "id")
   res_dt$proteins = unlist(lapply(accessions, paste, collapse=";"))
+  res_dt$protein.group.ids = res_dt$proteins ## todo: these are protein names not IDs, but the code does not care (its not very clean though)
+  
   res_dt$database = databases
   res_dt[, ms.ms.count := .N, by = list(raw.file, modified.sequence,charge)]
   toNA = res_dt[, .(toNA = .I[c(1L:.N-1)]), by=list(raw.file, modified.sequence,charge)]$toNA
@@ -231,16 +234,29 @@ getEvidence = function()
 },
 
 ## MaxQuant-like representation of PSM table, i.e. augmented this with more columns (or renamed) if a metric requires it
-getMSMSScans = function()
+getMSMSScans = function(identified_only = FALSE)
 {
-  
-  "Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'."
+  "Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'. 
+   If identified_only is TRUE, only MS2 scans which were identified (i.e. a PSM) are returned -- this is equivalent to msms.txt in MaxQuant."
   
   res = .self$sections$PSM
-  ## augment PSM with fc.raw.file
-  ## The `spectra_ref` looks like ?ms_run[x]:index=y|ms_run?
-  ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
-  res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
+  res = as.data.table(res)
+  data.table::setkey(res, PSM.ID)
+  
+  if (identified_only) {
+    res = res[opt.global.identified == 1, ]
+  }
+  
+  ## de-duplicate PSM.ID column: take first row for each PSM.ID 
+  res_temp = res[!duplicated(res$PSM.ID), ]
+  ## ... and append accessions of the complete subset (.SD)
+  res_temp$accessions = res[, paste0(.SD$accession, collapse=";"), by = "PSM.ID"]$V1
+  res = res_temp
+  
+  ## Augment fc.raw.file column
+  ## ... the `spectra_ref` looks like "ms_run[12]:controllerType=0 controllerNumber=1 scan=25337"
+  ms_runs = sub("^(ms_run\\[\\d*\\]):.*", "\\1", res$spectra.ref)
+  res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs)) ## gives c("ms_run[1]", "ms_run[2]", ...)
 
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
@@ -275,23 +291,24 @@ getMSMSScans = function()
  
   setnames(res, old = names(name), new = unlist(name))
   
-  res$mass.deviations..ppm. = gsub("\\[|\\]", "", res$mass.deviations..ppm.)
-  res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
-  res$mass.deviations..da. = gsub("\\[|\\]", "",  res$mass.deviations..da.)
-  res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da.)
+  res$mass.deviations..ppm. = substr(res$mass.deviations..ppm., 2, nchar(res$mass.deviations..ppm.) - 2)
+  res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm., fixed = TRUE)
+  res$mass.deviations..da. = substr(res$mass.deviations..da., 2, nchar(res$mass.deviations..da.) - 2)
+  res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da., fixed = TRUE)
  
- #set reverse to needed values
-  res$reverse=(res$reverse=="decoy")
+  # set reverse to TRUE/FALSE
+  res$reverse = (res$reverse == "decoy")
   
-  #set identified to needed values
-  res$identified[which(res$identified==0)] = "-"
-  res$identified[which(res$identified==1)] = "+"
+  # set identified to MaxQuant values (+/-)
+  stopifnot(unique(res$identified) %in% c(0,1)) ## make sure the column has the expected values (0/1)
+  res$identified = c("-", "+")[(res$identified==1) + 1]
 
   ## temp workaround
-  res = res[!is.na(res$contaminant),]
+  #res = res[!is.na(res$contaminant),]
+  
+  ## order by file and RT
   res = res[order(res$fc.raw.file, res$retention.time), ]
-  res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
-
+  
   return ( res )
 }
 

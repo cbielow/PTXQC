@@ -1153,7 +1153,7 @@ plot_IonInjectionTimeOverRT = function(data, stats, extra_limit)
         geom_hline(yintercept = extra_limit, linetype = 'dashed') +
         guides(color=guide_legend(title="Raw file with\naverage inj. time")) +
         ggtitle("MSMSscans: Ion Injection Time over RT") +
-        pointsPutX(x_range=range(data$rRT), x_section=c(0.03,0.08), y=stats_sub$mean, col=stats_sub$fc.raw.file[,drop = TRUE])
+        pointsPutX(x_range = range(data$rRT), x_section = c(0.03, 0.08), y = stats_sub$mean, col = stats_sub$fc.raw.file[,drop = TRUE])
   
   #print(p)
   return(p)

@@ -154,8 +154,7 @@ Heatmap score [MS<sup>2</sup> Scans: Ion Inj Time]: Linear score as fraction of 
 ",
     workerFcn = function(.self, df_msmsScans, threshold_iit)
     {
-      ## completeness check
-      # mzTab might not have iij
+      ## completeness check (mzTab might not have IIJ)
       if ( any(!("ion.injection.time" %in% colnames(df_msmsScans)), all(is.na(df_msmsScans$ion.injection.time)) ) ) {
         return(NULL)
       } 
