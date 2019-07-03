@@ -31,7 +31,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
         return (sort(sample.int(x, size = max)))
       }
       
-      ms2_decal = ddply(df_msms, c("fc.raw.file", "mass.analyzer"), .fun = function(x) {
+      ms2_decal = plyr::ddply(df_msms, c("fc.raw.file", "mass.analyzer"), .fun = function(x) {
         df.ms = NULL
         ##
         ##  Forwards
@@ -67,7 +67,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
       #ms2_decal$msErr = round(ms2_decal$msErr, digits=ceiling(-log10(ms2_binwidth)+1))
       
       ## separate plots for each mass analyzer, since we want to keep 'fixed' scales for all raw.files (comparability)
-      lpl = dlply(ms2_decal, "mass.analyzer", function(ms2_decal) {
+      lpl = plyr::dlply(ms2_decal, "mass.analyzer", function(ms2_decal) {
         ## create filename inside, since we need to retain the factor levels (i.e. ordering)
         ## and this only works if raw file + massanalyzer is unique
         ms2_decal$new_filename = paste(ms2_decal$fc.raw.file, paste(ms2_decal$mass.analyzer, ms2_decal$unit), sep="\n")
@@ -86,7 +86,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
       qcScore = list()
       for (analyzer in unique(ms2_decal$mass.analyzer)) {
         qc_name = sprintf(.self$qcName, analyzer)
-        qc_MS2_decal = ddply(ms2_decal[ms2_decal$mass.analyzer==analyzer, ], "fc.raw.file", 
+        qc_MS2_decal = plyr::ddply(ms2_decal[ms2_decal$mass.analyzer==analyzer, ], "fc.raw.file", 
                              function(x)
                              {
                                xx = na.omit(x$msErr);
@@ -158,7 +158,7 @@ current study. ",
           df_msms = df_msms[!df_evd$contaminant[match(df_msms$evidence.id, df_evd$id)], ]
         }
         
-        st_bin = ddply(df_msms[, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
+        st_bin = plyr::ddply(df_msms[, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
           t = table(x$missed.cleavages)/nrow(x)
           r = rep(0, max_mc + 1)
           names(r) = as.character(0:max_mc)
