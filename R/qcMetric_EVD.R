@@ -1316,9 +1316,15 @@ qcMetric_EVD_UpSet =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "This metric shows an upset plot. All files mean the number of all sequences that occur in all files. Two files (A,B) mean the number of all sequences that occur 
-      in A and B but not in the other files and just one file means the number of sequences that are unique for this file.
-      Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in common with all other files.
+      "This metric shows an upset plot. 
+There are three different modes: distinct, intersection and union.<br>
+<p>
+<b>distinct:</b> shows the number of sequences that are unique for this quantity/quantities. For three files this means all sequences which occur in A and B but not in C.<br>
+<b>intersection:</b> shows the number of sequences that occurs in all considered sets. <br>
+<b>union:</b> shows the number of sequences that occurs in total. For two files that are all sequences that occurs either in A or in B.<br>
+<p>
+Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in common with all other files.
+
     ",
     workerFcn = function(.self, df_evd)
     {
@@ -1328,7 +1334,7 @@ qcMetric_EVD_UpSet =  setRefClass(
           comb = combn(names(dl),numElem)
           sapply(1:ncol(comb), function(x){
               sets = comb[,x]
-              exp = as.expression(paste(sets, collapse = as.character("&")))
+              exp = as.expression(paste(sets, collapse = "&"))
               value = length(Reduce(mode, dl[sets]))
               names(value) = exp
               return(value)
@@ -1336,10 +1342,14 @@ qcMetric_EVD_UpSet =  setRefClass(
         }))
       }
       
-      lf = tapply(df_evd$modified.sequence, df_evd$fc.raw.file, list)
+      lf = tapply(df_evd$modified.sequence, df_evd$fc.raw.file, function(x){return(list(unique(x)))})
       
-      lpl = list(UpSetR::upset(UpSetR::fromList(lf)), UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, intersect))), UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, union))))
-      title = list("EVD: UpSet distinct", "EVD: UpSet intersect","EVD: UpSet union")
+      lpl = list(UpSetR::upset(UpSetR::fromList(lf)), 
+                 UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, intersect))), 
+                 UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, union))))
+      title = list("EVD: UpSet distinct", 
+                   "EVD: UpSet intersect",
+                   "EVD: UpSet union")
       
       score = sapply(1:length(names(lf)), function(x){
         union = unique(unlist(lf[-x]))
@@ -1347,7 +1357,8 @@ qcMetric_EVD_UpSet =  setRefClass(
         score = length(inters)/length(union)
         return(EVD_UpSet = score)
         })
-      qcScore = data.frame(fc.raw.file = names(lf), EVD_upSet = qcScore)
+      
+      qcScore = data.frame(fc.raw.file = names(lf), EVD_upSet = score)
       
       return(list(plots = lpl, title = title, qcScores = qcScore))
     }, 
