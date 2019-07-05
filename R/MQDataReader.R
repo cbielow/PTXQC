@@ -44,7 +44,6 @@ MQDataReader <- proto::proto()
 #' 'fn_map') and updating/using it every time readMQ() is called.
 #' 
 #' @name MQDataReader$new
-#' @import proto
 #' 
 MQDataReader$new <- function(.)
 {
@@ -116,9 +115,6 @@ MQDataReader$new <- function(.)
 #' @return A data.frame of the respective file
 #' 
 #' @name MQDataReader$readMQ
-#' @import utils
-#' @import graphics
-#'
 #'
 # (not exported!)
 MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, add_fs_col=10, check_invalid_lines = TRUE, LFQ_action=FALSE, ...)

@@ -148,8 +148,7 @@ getProteins = function()
 ## MaxQuant-like representation of PEP table, i.e. augmented this with more columns (or renamed) if a metric requires it
 getEvidence = function()
 {
-   
-  "Basically the PEP table and additionally columns named 'raw.file' and 'fc.raw.file'."
+  "Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'."
   
   res = .self$sections$PSM
   
@@ -233,14 +232,14 @@ getEvidence = function()
   return ( res )
 },
 
-## MaxQuant-like representation of PSM table, i.e. augmented this with more columns (or renamed) if a metric requires it
+
 getMSMSScans = function(identified_only = FALSE)
 {
-  "Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'. 
+  "Basically the PSM table (partially renamed columns) and additionally two columns 'raw.file' and 'fc.raw.file'. 
    If identified_only is TRUE, only MS2 scans which were identified (i.e. a PSM) are returned -- this is equivalent to msms.txt in MaxQuant."
   
   res = .self$sections$PSM
-  res = as.data.table(res)
+  res = data.table::as.data.table(res)
   data.table::setkey(res, PSM.ID)
   
   if (identified_only) {

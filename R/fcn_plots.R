@@ -814,10 +814,9 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
 }
 
 #' helper S3 class, enabling print(some-plot_Table-object)
-#' @importFrom grid grid.newpage grid.draw
 #' @param x Some Grid object to plot
-#' @param ... further arguments (not used, but required for consistency with other print methods)
-#' @return A function
+#' @param ... Further arguments (not used, but required for consistency with other print methods)
+#' @return NULL
 #' 
 #' @export
 #' 

@@ -8,7 +8,6 @@
 #' @field mapping.creation how the current mapping was obtained (user or auto)
 #' @field external.mapping.file Filename of user-defined mapping file; only defined if readMappingFile() was called
 #'
-#' @import methods
 #' @import ggplot2
 #' 
 #' @exportClass FilenameMapper

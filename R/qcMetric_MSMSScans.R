@@ -4,8 +4,6 @@
 #'
 #' Metric for msmsscans.txt, showing TopN over RT.
 #'
-#' @importFrom data.table as.data.table setkey
-#'
 qcMetric_MSMSScans_TopNoverRT =  setRefClass(
   "qcMetric_MSMSScans_TopNoverRT",
   contains = "qcMetric",

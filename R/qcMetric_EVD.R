@@ -122,7 +122,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
           head(cont_data.l)
           
           ## melt
-          cont_data = ldply(cont_data.l, function(l) { l$cont_data })
+          cont_data = plyr::ldply(cont_data.l, function(l) { l$cont_data })
           cont_data.long = reshape2::melt(cont_data, id.vars="fc.raw.file")
           
           # 
@@ -137,13 +137,13 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
           lpl = append(lpl, list(pl_cont))
         } else {
           ## plot User-Contaminants
-          lpl_i = byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, 
-                          FUN = plot_ContUser, sort_indices = TRUE, 
+          lpl_i = byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120,
+                          FUN = plot_ContUser, sort_indices = TRUE,
                           name_contaminant = ca, extra_limit = ca_thresh, subtitle = paste("search realm:", search_realm))
           lpl = append(lpl, lpl_i)
           
           ## plot Andromeda score distribution of contaminant vs. sample
-          pl_andr = llply(cont_data.l, function(l)
+          pl_andr = plyr::llply(cont_data.l, function(l)
           {
             if (l$cont_data$above.thresh == FALSE ||
                 is.null(l$cont_scoreECDF))
@@ -154,7 +154,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
             #print(p)
             return(p)
           })
-          pl_andr_nonNull = compact(pl_andr) ## remove 'NULL' entries from plot list
+          pl_andr_nonNull = plyr::compact(pl_andr) ## remove 'NULL' entries from plot list
           lpl = append(lpl, pl_andr_nonNull)
           
           ## add heatmap column
@@ -173,8 +173,8 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
       
       return(list(plots = lpl, qcScores = local_qcScores))
     }, 
-    qcCat = "Prep", 
-    qcName = "EVD:Contaminant~(%s)", 
+    qcCat = "Prep",
+    qcName = "EVD:Contaminant~(%s)",
     orderNr = 0020
   )
     return(.self)
@@ -298,7 +298,7 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
                      value.name = "intensity",
                      variable.name = "channel")
       head(df_reps)
-      dt_reps = data.table(df_reps)
+      dt_reps = data.table::data.table(df_reps)
 
       ## do NOT remove -inf and NA's and 0's -- we need them to count labeling-efficiency (#entries with intensity > 0 vs. ALL)
 

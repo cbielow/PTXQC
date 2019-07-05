@@ -14,8 +14,6 @@
 #' @field qcName [placeholder] Name of the qcScore in the heatmap
 #' @field orderNr [placeholder] column index during heatmap generation and for the general order of plots
 #'
-#' @import methods
-#' 
 #' @exportClass qcMetric
 #' @export qcMetric
 #' 
