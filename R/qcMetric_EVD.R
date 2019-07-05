@@ -1324,8 +1324,7 @@ There are three different modes: distinct, intersection and union.<br>
 <b>union:</b> shows the number of sequences that occurs in total. For two files that are all sequences that occurs either in A or in B.<br>
 <p>
 Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in common with all other files.
-
-    ",
+",
     workerFcn = function(.self, df_evd)
     {
       
