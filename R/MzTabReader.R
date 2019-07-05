@@ -210,6 +210,10 @@ getEvidence = function()
   res_dt[, ms.ms.count := .N, by = list(raw.file, modified.sequence,charge)]
   toNA = res_dt[, .(toNA = .I[c(1L:.N-1)]), by=list(raw.file, modified.sequence,charge)]$toNA
   res_dt[toNA, ms.ms.count := NA]
+
+  
+  RTUnitCorrection(res_dt)
+  
   res = as.data.frame(res_dt)
   
   # intensity from PEP to PSM: only labelfree
@@ -228,6 +232,7 @@ getEvidence = function()
 
   ## just check if there are no invalid entries
   stopifnot(all(!is.na(res$contaminant)))
+
   
   return ( res )
 },
@@ -305,10 +310,23 @@ getMSMSScans = function(identified_only = FALSE)
   ## temp workaround
   #res = res[!is.na(res$contaminant),]
   
+  RTUnitCorrection(res)
+
+  
   ## order by file and RT
   res = res[order(res$fc.raw.file, res$retention.time), ]
   
   return ( res )
+},
+
+RTUnitCorrection = function(dt)
+{
+  "Convert all RT columns from seconds (OpenMS default) to minutes (MaxQuant default)"
+  
+  cn_rt = grepv("retention.time", names(dt))
+  dt[, c(cn_rt) := lapply(.SD, function(x)  x / 60), .SDcols = cn_rt]
+  #dt[, ..cn_rt]
+  return(NULL)
 }
 
 ) # methods
