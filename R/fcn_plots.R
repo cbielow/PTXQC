@@ -1226,7 +1226,7 @@ plot_ScanIDRate = function(data)
 #' 
 #' The input is a data.frame with already averaged counts over binned RT-slices.
 #' 
-#' @param data A data.frame with columns 'fc.raw.file', 'RT', 'peakWidth'
+#' @param data A data.frame with columns 'fc.raw.file', 'RT', 'intensity'
 #' @param x_lim Plot range of x-axis
 #' @param y_lim Plot range of y-axis
 #' @return GGplot object
@@ -1238,8 +1238,8 @@ plot_ScanIDRate = function(data)
 #' 
 #'  data = data.frame(fc.raw.file = rep(c("file A", "file B", "file C"), each=81),
 #'                    RT = c(20:100), 
-#'                    peakWidth = c(rnorm(81, mean=20), rnorm(81, mean=10), rnorm(81, mean=30)))
-#'  plot_RTPeakWidth(data, c(10, 100), c(0, 40))
+#'                    intensity = c(rnorm(81, mean=20), rnorm(81, mean=10), rnorm(81, mean=30)))
+#'  plot_TIC(data, c(10, 100), c(0, 40))
 #' 
 plot_TIC = function(data, x_lim, y_lim)
 {

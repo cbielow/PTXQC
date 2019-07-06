@@ -1316,11 +1316,10 @@ qcMetric_EVD_UpSet =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "This metric shows an upset plot. 
-There are three different modes: distinct, intersection and union.<br>
+      "The metric shows an upSet plot based on the number of modified peptide sequences per Raw file, intersected or merged with other Raw files (see below for details).<br>
 <p>
-<b>distinct:</b> shows the number of sequences that are unique for this quantity/quantities. For three files this means all sequences which occur in A and B but not in C.<br>
-<b>intersection:</b> shows the number of sequences that occurs in all considered sets. <br>
+<b>distinct:</b> shows the number of sequences that are present in ALL active sets. For three Raw files and active sets A and B, this would mean all sequences which occur in A and B, but not in C.<br>
+<b>intersection:</b> shows the number of sequences that occurs in all active sets. <br>
 <b>union:</b> shows the number of sequences that occurs in total. For two files that are all sequences that occurs either in A or in B.<br>
 <p>
 Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in common with all other files.
@@ -1361,6 +1360,7 @@ Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in com
       
       return(list(plots = lpl, title = title, qcScores = qcScore))
     }, 
+    qcCat = "LC",
     qcName = "EVD:~UpSet", 
     orderNr = 0500  # just before peptide count
   )

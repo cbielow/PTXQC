@@ -227,7 +227,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   lst_qcMetrics[["qcMetric_SM_MSMSIdRate"]]$setData(d_smy, id_rate_bad, id_rate_great)
   
   ### TIC
-  if (MZTAB_MODE)lst_qcMetrics[["qcMetric_SM_TIC"]]$setData(d_smy)
+  if (MZTAB_MODE) lst_qcMetrics[["qcMetric_SM_TIC"]]$setData(d_smy)
   
   ######
   ######  proteinGroups.txt ...
