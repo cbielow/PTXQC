@@ -1311,4 +1311,59 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
 
 #####################################################################
 
-
+qcMetric_EVD_UpSet =  setRefClass(
+  "qcMetric_EVD_UpSet",
+  contains = "qcMetric",
+  methods = list(initialize=function() {  callSuper(    
+    helpTextTemplate = 
+      "The metric shows an upSet plot based on the number of modified peptide sequences per Raw file, intersected or merged with other Raw files (see below for details).<br>
+<p>
+<b>distinct:</b> shows the number of sequences that are present in ALL active sets. For three Raw files and active sets A and B, this would mean all sequences which occur in A and B, but not in C.<br>
+<b>intersection:</b> shows the number of sequences that occurs in all active sets. <br>
+<b>union:</b> shows the number of sequences that occurs in total. For two files that are all sequences that occurs either in A or in B.<br>
+<p>
+Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in common with all other files.
+",
+    workerFcn = function(.self, df_evd)
+    {
+      
+      getOutputWithMod = function(dl, mode){
+        unlist(sapply(1:length(dl), function(numElem){
+          comb = combn(names(dl),numElem)
+          sapply(1:ncol(comb), function(x){
+              sets = comb[,x]
+              exp = as.expression(paste(sets, collapse = "&"))
+              value = length(Reduce(mode, dl[sets]))
+              names(value) = exp
+              return(value)
+          })
+        }))
+      }
+      
+      lf = tapply(df_evd$modified.sequence, df_evd$fc.raw.file, function(x){return(list(unique(x)))})
+      
+      lpl = list(UpSetR::upset(UpSetR::fromList(lf)), 
+                 UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, intersect))), 
+                 UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, union))))
+      title = list("EVD: UpSet distinct", 
+                   "EVD: UpSet intersect",
+                   "EVD: UpSet union")
+      
+      score = sapply(1:length(names(lf)), function(x){
+        union = unique(unlist(lf[-x]))
+        inters = intersect(lf[[x]], union)
+        score = length(inters)/length(union)
+        return(EVD_UpSet = score)
+        })
+      
+      qcScore = data.frame(fc.raw.file = names(lf), EVD_upSet = score)
+      
+      return(list(plots = lpl, title = title, qcScores = qcScore))
+    }, 
+    qcCat = "LC",
+    qcName = "EVD:~UpSet", 
+    orderNr = 0500  # just before peptide count
+  )
+    return(.self)
+  })
+)

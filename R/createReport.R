@@ -226,6 +226,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ### MS/MS identified [%]
   lst_qcMetrics[["qcMetric_SM_MSMSIdRate"]]$setData(d_smy, id_rate_bad, id_rate_great)
   
+  ### TIC
+  if (MZTAB_MODE) lst_qcMetrics[["qcMetric_SM_TIC"]]$setData(d_smy)
+  
   ######
   ######  proteinGroups.txt ...
   ######
@@ -474,6 +477,11 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     lst_qcMetrics[["qcMetric_EVD_IDoverRT"]]$setData(df_evd)
     
+    
+    ##
+    ## upSet plot
+    ##
+    lst_qcMetrics[["qcMetric_EVD_UpSet"]]$setData(df_evd)
     
     ##
     ## barplots of mass error
