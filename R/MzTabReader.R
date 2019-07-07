@@ -29,6 +29,7 @@ readMzTab = function(.self, file) {
    Additionally, 'filename' and 'comments' are valid list elements.
   "
 
+  cat("Reading mzTab '", file, "' ...", sep = "")
   
   ## this implementation is derived from with minor modifications
   ## https://github.com/lgatto/MSnbase/blob/master/R/MzTab.R
