@@ -13,7 +13,9 @@ The thresholds for the bins are
 %s
 
 
-Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the threshold for 'great' is reached or exceeded. ",
+Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the threshold for 'great' is reached or exceeded. 
+",
+
     workerFcn = function(.self, df_summary, id_rate_bad, id_rate_great)
     {
       stopifnot(.self$checkInput(c("fc.raw.file", "ms.ms.identified...."), colnames(df_summary)))
@@ -79,7 +81,9 @@ qcMetric_SM_TIC =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(
     helpTextTemplate = 
-      "Total Ion Count. Reflects the summed intensity of all masses identified at any point of time.
+      "Total Ion Count: Returns the summed intensity of all MS1 signals (regardless of identification state).
+
+Heatmap score [SM: TIC]: reaches 1 (=100%%) if the TIC is uniform (i.e. a flat line)
 ",
     workerFcn = function(.self, d_smy)
     {
@@ -87,9 +91,11 @@ qcMetric_SM_TIC =  setRefClass(
       stopifnot(.self$checkInput(c("fc.raw.file", "TIC"), colnames(d_smy)))
       
       df_long = plyr::ddply(d_smy, "fc.raw.file", function(x) {
-        
         n = length(x$TIC[[1]])
-        return(data.frame(intensity=x$TIC[[1]][seq(1,n,2)], RT=x$TIC[[1]][seq(2,n,2)]))
+        df = data.frame(RT = x$TIC[[1]][seq(1,n,2)], intensity = x$TIC[[1]][seq(2,n,2)])
+        df$RT = round(df$RT / 60) ## seconds to minutes
+        df2 = data.frame(RT = df$RT[!duplicated(df$RT)], intensity = tapply(df$intensity, df$RT, FUN = mean))
+        return(df2)
       })
       
       head(df_long)
@@ -104,7 +110,7 @@ qcMetric_SM_TIC =  setRefClass(
       return(list(plots = lpl, qcScores = qc_TIC))
     }, 
     qcCat = "LC", 
-    qcName = "TIC", 
+    qcName = "SM:~TIC", 
     orderNr = 0025
   )
     return(.self)

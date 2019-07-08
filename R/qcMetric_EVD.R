@@ -1342,23 +1342,27 @@ Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in com
       
       lf = tapply(df_evd$modified.sequence, df_evd$fc.raw.file, function(x){return(list(unique(x)))})
       
-      lpl = list(UpSetR::upset(UpSetR::fromList(lf)), 
-                 UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, intersect))), 
-                 UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, union))))
-      title = list("EVD: UpSet distinct", 
-                   "EVD: UpSet intersect",
-                   "EVD: UpSet union")
+      lpl = list(UpSetR::upset(UpSetR::fromList(lf), nsets = min(30, length(lf)), keep.order = TRUE, mainbar.y.label = "distinct size"))
+      if (length(lf) < 6)
+      { ## performance for enumerating all supersets forbids doing it on larger sets until we make this code smarter...
+        lpl[[2]] = UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, intersect)), mainbar.y.label = "intersection size")
+        lpl[[3]] = UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, union)), mainbar.y.label = "union size")
+      }
+      titles = list("EVD: UpSet distinct", 
+                    "EVD: UpSet intersect",
+                    "EVD: UpSet union")[1:length(lpl)]
       
       score = sapply(1:length(names(lf)), function(x){
         union = unique(unlist(lf[-x]))
         inters = intersect(lf[[x]], union)
         score = length(inters)/length(union)
-        return(EVD_UpSet = score)
-        })
+        return(score)
+      })
       
-      qcScore = data.frame(fc.raw.file = names(lf), EVD_upSet = score)
+      qcScore = data.frame(fc.raw.file = names(lf), score = score)
+      colnames(qcScore)[2] = .self$qcName
       
-      return(list(plots = lpl, title = title, qcScores = qcScore))
+      return(list(plots = lpl, title = titles, qcScores = qcScore))
     }, 
     qcCat = "LC",
     qcName = "EVD:~UpSet", 
