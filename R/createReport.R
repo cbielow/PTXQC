@@ -25,7 +25,7 @@
 #'          
 #' @export
 #'
-createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
+#createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
 {
   if (!exists("DEBUG_PTXQC")) DEBUG_PTXQC = FALSE ## debug only when defined externally
   time_start = Sys.time()
@@ -60,6 +60,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     mzt = MzTabReader$new()
     mzt$readMzTab(mztab_file)
     expr_fn_map = quote(mzt$fn_map)
+    ### Erinnerung
+    #mzt$sections$PSM = mzt$sections$PSM[colnames(mzt$sections$PSM)!="PSM.ID"]
   } else 
   {
     if (!any(file.info(txt_folder)$isdir, na.rm = TRUE))

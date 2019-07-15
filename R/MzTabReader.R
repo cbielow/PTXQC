@@ -109,7 +109,7 @@ getParameters = function()
   res = res[-(grep("custom", res$key)),]
   res[is.na(res)] = "NULL" # temp workaround
   
-  data.table::setnames(res, old = "key", new = "parameter") ## todo: remove at some point, since it forces us to use `::copy`
+  data.table::setnames(res, old = "key", new = "parameter", skip_absent = TRUE) ## todo: remove at some point, since it forces us to use `::copy`
 
   return (res)
 },
@@ -186,7 +186,7 @@ getEvidence = function()
               opt.global.is.contaminant = "contaminant",
               opt.global.fragment.mass.error.da = "mass.deviations..da.")
   
-  data.table::setnames(res, old = names(name), new = unlist(name))
+  data.table::setnames(res, old = names(name), new = unlist(name), skip_absent = TRUE)
    
   #res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
 
@@ -273,7 +273,7 @@ getMSMSScans = function()
               opt.global.total.ion.count = "total.ion.current",
               opt.global.base.peak.intensity = "base.peak.intensity")
  
-  data.table::setnames(res, old = names(name), new = unlist(name))
+  data.table::setnames(res, old = names(name), new = unlist(name), skip_absent = TRUE)
   
   res$mass.deviations..ppm. = gsub("\\[|\\]", "", res$mass.deviations..ppm.)
   res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
