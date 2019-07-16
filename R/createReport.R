@@ -434,12 +434,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     if (("retention.time.calibration" %in% colnames(df_evd)))
     {
       ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
-      MBR_HAS_DATA = (sum(df_evd$type == "MULTI-MATCH") > 0)
+      MBR_HAS_DATA = (sum(df_evd$type == "MULTI-MATCH") > 0) || MZTAB_MODE
 
-      if ((param_evd_mbr == FALSE) || (MBR_HAS_DATA == FALSE))
-      {
-        ## MBR is not evaluated
-      } else
+      if (!(param_evd_mbr == FALSE) & MBR_HAS_DATA)
       {
         lst_qcMetrics[["qcMetric_EVD_MBRAlign"]]$setData(df_evd, param_EV_MatchingTolerance, eval(expr_fn_map)$raw_file_mapping)
 
