@@ -252,10 +252,12 @@ readMappingFile = function(.self, filename)
     dfs$to = factor(dfs$to, levels = unique(dfs$to), ordered = TRUE) ## keep the order
     dfs$from = factor(dfs$from, levels = unique(dfs$from), ordered = TRUE) ## keep the order
     ## set internal mapping
-    if (nrow(.self$raw_file_mapping) != nrow(dfs))
+    if (nrow(.self$raw_file_mapping) > 0 &  ## was initialized before...
+        setequal(.self$raw_file_mapping$from, dfs$from)) ## .. and has different data
     {
-      stop(paste0("Raw filename mapping in file '", filename, "' has different number of raw files than current data. Please remove '", filename, "' or fix it",
-                  "\nold:")) ## todo... name files:
+      stop(paste0("Raw filename mapping in file '", filename, "' has different set of raw files than current data. Please remove '", 
+                  filename, "' or fix it",
+                  "\nold filenames in mapping:\n", paste(.self$raw_file_mapping$from, collapse="\n"), "\nnew filenames from data:\n", paste(dfs$from, collapse="\n")))
     }
     .self$raw_file_mapping = dfs
     ## set who defined it
