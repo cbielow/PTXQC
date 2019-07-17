@@ -5,7 +5,7 @@
 \title{Extract the number of peptides observed per Raw file
 from an evidence table.}
 \usage{
-getPeptideCounts(d_evidence)
+getPeptideCounts(df_evd)
 }
 \arguments{
 \item{d_evidence}{Data.frame of evidence.txt as read by MQDataReader}
@@ -14,7 +14,7 @@ getPeptideCounts(d_evidence)
 Data.frame with columns 'fc.raw.file', 'counts', 'category', 'MBRgain'
 }
 \description{
-Required columns are "fc.raw.file", "modified.sequence" and "match.time.difference".
+Required columns are "fc.raw.file", "modified.sequence" and "hasMTD".
 }
 \details{
 If match-between-runs was enabled during the MaxQuant run,

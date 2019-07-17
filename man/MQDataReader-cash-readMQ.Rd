@@ -14,6 +14,7 @@ E.g. to filter both, \code{filter = "C+R"}}
 \item{type}{Allowed values are:
 "pg" (proteinGroups) [default], adds abundance index columns (*AbInd*, replacing 'intensity')
 "sm" (summary), splits into three row subsets (raw.file, condition, total)
+"ev" (evidence), will fix empty modified.sequence cells for older MQ versions (when MBR is active)
 Any other value will not add any special columns}
 
 \item{col_subset}{A vector of column names as read by read.delim(), e.g., spaces are replaced by dot already.

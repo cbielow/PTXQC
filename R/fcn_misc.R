@@ -979,7 +979,7 @@ getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
 #' Extract the number of protein groups observed per Raw file
 #' from an evidence table.
 #'
-#' Required columns are "protein.group.ids", "fc.raw.file" and "match.time.difference".
+#' Required columns are "protein.group.ids", "fc.raw.file" and "hasMTD".
 #' 
 #' If match-between-runs was enabled during the MaxQuant run,
 #' the data.frame returned will contain separate values for 'transferred' evidence
@@ -991,21 +991,11 @@ getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
 #'
 getProteinCounts = function(d_evidence) {
     
-  required_cols = c("protein.group.ids", "fc.raw.file", "match.time.difference")
+  required_cols = c("protein.group.ids", "fc.raw.file", "hasMTD")
   if (!all(required_cols %in% colnames(d_evidence))) {
     stop("getProteinCounts(): Missing columns!")
   }
-  
-  
-  ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
-  #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
-  #head(dsub[is.na(dsub[,2]),])
-  #sum(0==(dsub[,1]) & is.na(dsub[,2]))
-  ##
-  ## MQ1.4 MTD is either: NA or a number
-  ##
-  d_evidence$hasMTD = !is.na(d_evidence$match.time.difference)
-  
+
   ## report Match-between-runs data only if if it was enabled
   reportMTD = any(d_evidence$hasMTD)
   
@@ -1053,7 +1043,7 @@ getProteinCounts = function(d_evidence) {
 #' Extract the number of peptides observed per Raw file
 #' from an evidence table.
 #'
-#' Required columns are "fc.raw.file", "modified.sequence" and "match.time.difference".
+#' Required columns are "fc.raw.file", "modified.sequence" and "hasMTD".
 #' 
 #' If match-between-runs was enabled during the MaxQuant run,
 #' the data.frame returned will contain separate values for 'transferred' evidence
@@ -1063,28 +1053,19 @@ getProteinCounts = function(d_evidence) {
 #' @return Data.frame with columns 'fc.raw.file', 'counts', 'category', 'MBRgain'
 #'
 #'
-getPeptideCounts = function(d_evidence) {
+getPeptideCounts = function(df_evd) {
   
-  required_cols = c("fc.raw.file", "modified.sequence", "match.time.difference")
-  if (!all(required_cols %in% colnames(d_evidence))) {
+  required_cols = c("fc.raw.file", "modified.sequence", "hasMTD")
+  if (!all(required_cols %in% colnames(df_evd))) {
     stop("getPeptideCounts(): Missing columns!")
   }
   
-  
-  ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
-  #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
-  #head(dsub[is.na(dsub[,2]),])
-  #sum(0==(dsub[,1]) & is.na(dsub[,2]))
-  ##
-  ## MQ1.4 MTD is either: NA or a number
-  ##
-  d_evidence$hasMTD = !is.na(d_evidence$match.time.difference)
-  
   ## report Match-between-runs data only if if it was enabled
-  reportMTD = any(d_evidence$hasMTD)
+  reportMTD = any(df_evd$hasMTD)
   
-  pep_counts = plyr::ddply(d_evidence, "fc.raw.file", .fun = function(x, reportMTD)
+  pep_counts = plyr::ddply(df_evd, "fc.raw.file", .fun = function(x, reportMTD)
   {
+    x <<- x
     #pep_count_genuineAll = sum(!x$hasMTD) # (we count double sequences... could be charge +2, +3,... or oversampling)
     pep_set_genuineUnique = unique(x$modified.sequence[!x$hasMTD]) ## unique sequences (discarding PTM's)
     pep_set_allMBRunique = unique(x$modified.sequence[x$hasMTD])

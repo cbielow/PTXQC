@@ -386,16 +386,16 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
     workerFcn = function(.self, df_evd, thresh_protCount)
     {
       ## completeness check
-      stopifnot(c("fc.raw.file", "protein.group.ids", "match.time.difference") %in% colnames(df_evd))
+      stopifnot(c("fc.raw.file", "protein.group.ids", "hasMTD") %in% colnames(df_evd))
       
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_protCount)
       
-      protC = getProteinCounts(df_evd[, c("fc.raw.file", "protein.group.ids", "match.time.difference")])
+      protC = getProteinCounts(df_evd)
       protC$block = factor(assignBlocks(protC$fc.raw.file, 30))
       
       max_prot = max(unlist(plyr::dlply(protC, "fc.raw.file", function(x) sum(x$counts))))
       ## average gain in percent
-      reportMTD = any(!is.na(df_evd$match.time.difference))
+      reportMTD = any(df_evd$hasMTD)
       gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(protC$MBRgain, na.rm = TRUE)), "")
       
       lpl = plyr::dlply(protC, "block", .fun = function(x)
@@ -456,16 +456,16 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
     workerFcn = function(.self, df_evd, thresh_pepCount)
     {
       ## completeness check
-      stopifnot(c("fc.raw.file", "modified.sequence", "match.time.difference") %in% colnames(df_evd))
+      stopifnot(c("fc.raw.file", "modified.sequence", "hasMTD") %in% colnames(df_evd))
       
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_pepCount)
       
-      pepC = getPeptideCounts(df_evd[, c("fc.raw.file", "modified.sequence", "match.time.difference")])
+      pepC = getPeptideCounts(df_evd)
       pepC$block = factor(assignBlocks(pepC$fc.raw.file, 30))
       
       max_pep = max(unlist(plyr::dlply(pepC, "fc.raw.file", function(x) sum(x$counts))))
       ## average gain in percent
-      reportMTD = any(!is.na(df_evd$match.time.difference))
+      reportMTD = any(df_evd$hasMTD)
       gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pepC$MBRgain, na.rm = TRUE)), "")
       
       lpl = plyr::dlply(pepC, "block", .fun = function(x)
@@ -775,7 +775,7 @@ Heatmap score: none.
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
-      stopifnot(c("type", "match.time.difference", "calibrated.retention.time", "fc.raw.file", "modified.sequence", "charge") %in% colnames(df_evd))
+      stopifnot(c("type", "hasMTD", "calibrated.retention.time", "fc.raw.file", "modified.sequence", "charge") %in% colnames(df_evd))
       
       if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
         ## fractions: there must be more than one, otherwise MQ will treat the samples as unfractionated
@@ -791,10 +791,10 @@ Heatmap score: none.
                         col_fraction = col_fraction)
       
       ## MBR: additional evidence by matching MS1 by AMT across files
-      if (any(!is.na(df_evd$match.time.difference))) {
+      if (any(df_evd$hasMTD)) {
         ## gain for each raw file: absolute gain, and percent gain
         mtr.df = plyr::ddply(df_evd, "fc.raw.file", function(x) {
-          match_count_abs = sum(!is.na(x$match.time.difference))
+          match_count_abs = sum(x$hasMTD)
           ## if only matched IDs are present, this would be 'Inf' -- we limit that to 1e4
           match_count_pc  = min(1e4, round(100*match_count_abs/(nrow(x)-match_count_abs))) ## newIDs / oldIDs
           return (data.frame(abs = match_count_abs, pc = match_count_pc))

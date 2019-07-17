@@ -94,6 +94,7 @@ MQDataReader$new <- function(.)
 #' @param type   Allowed values are:
 #'               "pg" (proteinGroups) [default], adds abundance index columns (*AbInd*, replacing 'intensity')
 #'               "sm" (summary), splits into three row subsets (raw.file, condition, total)
+#'               "ev" (evidence), will fix empty modified.sequence cells for older MQ versions (when MBR is active)
 #'               Any other value will not add any special columns
 #' @param col_subset A vector of column names as read by read.delim(), e.g., spaces are replaced by dot already.
 #'                   If given, only columns with these names (ignoring lower/uppercase) will be returned (regex allowed)
@@ -335,6 +336,25 @@ MQDataReader$readMQ <- function(., file, filter="", type="pg", col_subset=NA, ad
     raw.files = .$mq.data[1:(idx_group-1), ]
     total = .$mq.data
     .$mq.data = raw.files ## temporary, until we have assigned the fc.raw.files
+  } else if (type == "ev") {
+    ## check if data is missing
+    if (all(c("type", "modified.sequence") %in% colnames(.$mq.data)) &
+        any("MULTI-MATCH" %in% .$mq.data$type) &
+        all(.$mq.data$modified.sequence[.$mq.data$type=="MULTI-MATCH"]==""))
+    {
+      warning(immediate. = TRUE, "readMQ(): Input data has empty cells for column 'modified.sequence' of type 'MULTI-MATCH'. Early MaxQuant versions (e.g. 1.2.2) have this problem. We will try to reconstruct the data.")
+      ## use the preceeding sequence (and hope that there are no missing rows in between)
+      .$mq.data = .$mq.data[order(.$mq.data$id), ]
+      ## find blocks of MATCHed rows ...
+      idx_mm = which(.$mq.data$type=="MULTI-MATCH") ## row index
+      head(idx_mm)
+      idx_block_start = idx_mm[ c(1, which(diff(idx_mm)>1) + 1) ] ## index to block of MATCHES
+      head(idx_block_start)
+      idx_block_end = c(idx_mm[match(idx_block_start, idx_mm)[-1]-1], idx_mm[length(idx_mm)])
+      head(idx_block_end)
+      .$mq.data$modified.sequence[idx_mm] = rep(.$mq.data$modified.sequence[idx_block_start-1],
+                                                idx_block_end-idx_block_start+1)
+    }
   }
   
   

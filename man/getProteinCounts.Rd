@@ -14,7 +14,7 @@ getProteinCounts(d_evidence)
 Data.frame with columns 'fc.raw.file', 'counts', 'category', 'MBRgain'
 }
 \description{
-Required columns are "protein.group.ids", "fc.raw.file" and "match.time.difference".
+Required columns are "protein.group.ids", "fc.raw.file" and "hasMTD".
 }
 \details{
 If match-between-runs was enabled during the MaxQuant run,

@@ -172,7 +172,7 @@ getEvidence = function()
   }
   else res$retention.time.calibration = NA
   
-  res$match.time.difference = NA
+  res$match.time.difference = NA ## only set for MSMS-MATCH
   res$type = "MULTI-MSMS"
   
   name = list(opt.global.calibrated.mz.error.ppm = "mass.error..ppm.",
@@ -324,7 +324,7 @@ RTUnitCorrection = function(dt)
 {
   "Convert all RT columns from seconds (OpenMS default) to minutes (MaxQuant default)"
   
-  cn_rt = grepv("retention.time", names(dt))
+  cn_rt = grepv("retention.time|retention.length", names(dt))
   dt[, c(cn_rt) := lapply(.SD, function(x)  x / 60), .SDcols = cn_rt]
   #dt[, ..cn_rt]
   return(NULL)

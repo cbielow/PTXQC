@@ -180,8 +180,8 @@ ScoreInAlignWindow = function(data, allowed.deltaRT = 1)
 #' Note that this function must be given MS/MS identifications of type "MULTI-MSMS" and "MSMS-MATCH".
 #' It will stop() otherwise.
 #'  
-#' We compare for each peptide sequence (and charge) the RT difference within groups of genuine and mixed pairs.
-#' For every comparison made, we report the RT difference. If alignment worked perfectly, the differences are very small (<1 min),
+#' We compare for each peptide sequence (and charge) the RT difference within groups of either genuine as well as mixed pairs.
+#' For every comparison made, we report the RT span If alignment worked perfectly, the span are very small (<1 min),
 #' for the mixed group, i.e. the pairs are accidentally split 3D peaks. Alignment performance has no influence on the
 #' genuine-only groups.
 #' 
@@ -205,22 +205,6 @@ idTransferCheck = function(data) {
     stop('idTransferCheck(): scan types missing! Required: "MULTI-MSMS" and "MULTI-MATCH".')  
   }
   
-  ## check if data is missing
-  if (unique(data$modified.sequence[data$type=="MULTI-MATCH"])[1]=="")
-  {
-    warning(immediate. = TRUE, "idTransferCheck(): Input data has empty cells for column 'modified.sequence' of type 'MULTI-MATCH'. Early MaxQuant versions (e.g. 1.2.2) have this problem. We will try to reconstruct the data.")
-    ## use the preceeding sequence (and hope that there are no missing rows in between)
-    data = data[order(data$id), ]
-    ## find blocks of MATCHed rows ...
-    idx_mm = which(data$type=="MULTI-MATCH") ## row index
-    head(idx_mm)
-    idx_block_start = idx_mm[ c(1, which(diff(idx_mm)>1) + 1) ] ## index to block of MATCHES
-    head(idx_block_start)
-    idx_block_end = c(idx_mm[match(idx_block_start, idx_mm)[-1]-1], idx_mm[length(idx_mm)])
-    head(idx_block_end)
-    data$modified.sequence[idx_mm] = rep(data$modified.sequence[idx_block_start-1],
-                                         idx_block_end-idx_block_start+1)
-  }
   
   data$seq_charge = paste(factor(data$modified.sequence), data$charge, sep="_")
   alignQ = plyr::ddply(data[,c("fc.raw.file", "type", "calibrated.retention.time", "seq_charge")],
@@ -273,7 +257,7 @@ idTransferCheck = function(data) {
 #' 
 #' Returned value is between 0 (bad) and 1 (all within tolerance).
 #' 
-#' @param data A data.frame with columns 'fc.raw.file' and !colname (param)
+#' @param data A data.frame with columns 'fc.raw.file', 'rtdiff_mixed', 'rtdiff_genuine'
 #' @param df.allowed.deltaRT The allowed matching difference for each Raw file (as data.frame(fc.rawfile, m))
 #' @return A data.frame with one row for each raw.file and columns 'raw.file' and score 'withinRT' (0-1)
 #'
@@ -310,7 +294,7 @@ inMatchWindow = function(data, df.allowed.deltaRT)
 #' Determine fraction of evidence which causes segmentation, i.e. sibling peaks at different RTs
 #' confirmed either by genuine or transferred MS/MS.
 #'
-#' Sometimes, MQ split a feature into 2 or more if the chromatograpic conditions are not optimal and there
+#' Sometimes, MQ splits a feature into 2 or more if the chromatograpic conditions are not optimal and there
 #' is a drop in RT intensity.
 #' If both features contain successful MS/MS scans, we will find the same peptide twice (with slightly different RT)
 #' in the same charge state. This constitutes a natively split peak and is rare (95% of all genuine peaks are unique).
@@ -322,7 +306,7 @@ inMatchWindow = function(data, df.allowed.deltaRT)
 #' and thus the intensity is random.
 #' To find by how much these peak pairs differ in RT, use idTransferCheck() and inMatchWindow().
 #' 
-#' Required columns are 'match.time.difference', 'fc.raw.file', 'modified.sequence', 'charge', 'type'.
+#' Required columns are 'hasMTD', 'fc.raw.file', 'modified.sequence', 'charge', 'type'.
 #'
 #' Note that this function must be given MS/MS identifications of type "MULTI-MSMS" and "MSMS-MATCH".
 #' It will stop() otherwise.
@@ -331,30 +315,28 @@ inMatchWindow = function(data, df.allowed.deltaRT)
 #' @return A data.frame with one row per Raw file and 
 #'         three columns: 
 #'           1) % of native single peaks (ignoring transferred IDs)
-#'           2) % of single peaks (group of size=1) using only groups which have at at one transferred evidence
+#'           2) % of single peaks (group of size=1) using only groups which have one transferred evidence
 #'           3) % of single peaks using all groups
 #'
 peakSegmentation = function(d_evd)
 {
-  if (!all(c("match.time.difference", "fc.raw.file", "modified.sequence", "charge", 'type') %in% colnames(d_evd)))
+  if (!all(c("hasMTD", "fc.raw.file", "modified.sequence", "charge", 'type') %in% colnames(d_evd)))
   {
     stop("peakSegmentation(): columns missing!")  
   }
 
   if (!all(c("MULTI-MSMS", "MULTI-MATCH") %in% unique(d_evd$type)))
   {
-    stop('idTransferCheck(): scan types missing! Required: "MULTI-MSMS" and "MULTI-MATCH".')  
+    stop('peakSegmentation(): scan types missing! Required: "MULTI-MSMS" and "MULTI-MATCH".')  
   }
   
   fc.raw.files = unique(d_evd$fc.raw.file)
   
   ## just keep "MULTI-MATCH" and "MULTI-MSMS", to keep results comparable to idTransferCheck()
   d_evd = d_evd[d_evd$type %in% c("MULTI-MSMS", "MULTI-MATCH"), ]
-  
-  d_evd$hasMTD = !is.na(d_evd$match.time.difference) ## all the MULTI-MATCH hits, i.e. transferred IDs
-  
+
   cols = c("hasMTD", "fc.raw.file", "modified.sequence", "charge")
-  countSeqs = plyr::ddply(d_evd[d_evd$type!="MSMS", cols], cols[-1], function(x)
+  countSeqs = plyr::ddply(d_evd[, cols], cols[-1], function(x)
   {
     return(data.frame(nNative = sum(!x$hasMTD), nMatched = sum(x$hasMTD)))#, ratio = ratio))
   })

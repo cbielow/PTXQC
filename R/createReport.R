@@ -366,7 +366,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
                                   numeric = "retention.time.calibration", 
                                   numeric = "Retention.time$", 
                                   numeric = "Match.Time.Difference",
-                                  numeric = "^intensity$", "^Type$",
+                                  numeric = "^intensity$", 
+                                  "^Type$",
                                   numeric = "Mass\\.Error", 
                                   numeric = "^uncalibrated...calibrated." ,
                                   numeric = "^m.z$",
@@ -374,12 +375,24 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
                                   numeric = "^fraction$",  ## only available when fractions were given
                                   "Raw.file", "^Protein.Group.IDs$", "Contaminant",
                                   numeric = "[RK]\\.Count", 
-                                  numeric = "^Charge$", "modified.sequence",
-                                  numeric = "^Mass$", "^protein.names$",
+                                  numeric = "^Charge$", 
+                                  "modified.sequence",
+                                  numeric = "^Mass$",
+                                  "^protein.names$",
                                   numeric = "^ms.ms.count$",
                                   numeric = "^reporter.intensity.")) ## we want .corrected and .not.corrected
   
   {
+    ## contains NA if 'genuine' ID
+    ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
+    #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
+    #head(dsub[is.na(dsub[,2]),])
+    #sum(0==(dsub[,1]) & is.na(dsub[,2]))
+    ##
+    ## MQ1.4 MTD is either: NA or a number
+    ##
+    if (!is.null(df_evd)) df_evd$hasMTD = !is.na(df_evd$match.time.difference) 
+    
    
     ### warn of special contaminants!
     if (class(yaml_contaminants) == "list")  ## SC are requested
@@ -409,9 +422,6 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## peptide & protein counts
     ##
-    ## contains NA if 'genuine' ID
-    if (!is.null(df_evd)) df_evd$hasMTD = !is.na(df_evd$match.time.difference) 
-
     lst_qcMetrics[["qcMetric_EVD_ProteinCount"]]$setData(df_evd, param_EV_protThresh)
 
     lst_qcMetrics[["qcMetric_EVD_PeptideCount"]]$setData(df_evd, param_EV_pepThresh)
