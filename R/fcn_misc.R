@@ -985,21 +985,21 @@ getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
 #' the data.frame returned will contain separate values for 'transferred' evidence
 #' plus an 'MBRgain' column, which will give the extra MBR evidence in percent.
 #' 
-#' @param d_evidence Data.frame of evidence.txt as read by MQDataReader
+#' @param df_evd Data.frame of evidence.txt as read by MQDataReader
 #' @return Data.frame with columns 'fc.raw.file', 'counts', 'category', 'MBRgain'
 #'
 #'
-getProteinCounts = function(d_evidence) {
+getProteinCounts = function(df_evd) {
     
   required_cols = c("protein.group.ids", "fc.raw.file", "hasMTD")
-  if (!all(required_cols %in% colnames(d_evidence))) {
+  if (!all(required_cols %in% colnames(df_evd))) {
     stop("getProteinCounts(): Missing columns!")
   }
 
   ## report Match-between-runs data only if if it was enabled
-  reportMTD = any(d_evidence$hasMTD)
+  reportMTD = any(df_evd$hasMTD)
   
-  prot_counts = plyr::ddply(d_evidence, "fc.raw.file", .fun = function(x, reportMTD)
+  prot_counts = plyr::ddply(df_evd, "fc.raw.file", .fun = function(x, reportMTD)
   {
     ## proteins
     x$group_mtdinfo = paste(x$protein.group.ids, x$hasMTD, sep="_")
@@ -1049,7 +1049,7 @@ getProteinCounts = function(d_evidence) {
 #' the data.frame returned will contain separate values for 'transferred' evidence
 #' plus an 'MBRgain' column, which will give the extra MBR evidence in percent.
 #' 
-#' @param d_evidence Data.frame of evidence.txt as read by MQDataReader
+#' @param df_evd Data.frame of evidence.txt as read by MQDataReader
 #' @return Data.frame with columns 'fc.raw.file', 'counts', 'category', 'MBRgain'
 #'
 #'

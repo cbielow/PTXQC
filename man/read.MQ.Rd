@@ -9,23 +9,23 @@ read.MQ(file, filter = "", type = "pg", col_subset = NA,
   add_fs_col = 10, LFQ_action = FALSE, ...)
 }
 \arguments{
-\item{file}{see \code{\link{MQDataReader$readMQ}}}
+\item{file}{see \code{MQDataReader::readMQ()}}
 
-\item{filter}{see \code{\link{MQDataReader$readMQ}}}
+\item{filter}{see \code{MQDataReader::readMQ()}}
 
-\item{type}{see \code{\link{MQDataReader$readMQ}}}
+\item{type}{see \code{MQDataReader::readMQ()}}
 
-\item{col_subset}{see \code{\link{MQDataReader$readMQ}}}
+\item{col_subset}{see \code{MQDataReader::readMQ()}}
 
-\item{add_fs_col}{see \code{\link{MQDataReader$readMQ}}}
+\item{add_fs_col}{see \code{MQDataReader::readMQ()}}
 
-\item{LFQ_action}{see \code{\link{MQDataReader$readMQ}}}
+\item{LFQ_action}{see \code{MQDataReader::readMQ()}}
 
-\item{...}{see \code{\link{MQDataReader$readMQ}}}
+\item{...}{see \code{MQDataReader::readMQ()}}
 }
 \value{
-see \code{\link{MQDataReader$readMQ}}
+see \code{MQDataReader::readMQ()}
 }
 \description{
-For params, see \code{\link{MQDataReader$readMQ}}.
+For params, see \code{MQDataReader::readMQ()}.
 }

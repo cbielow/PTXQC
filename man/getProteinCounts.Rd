@@ -5,10 +5,10 @@
 \title{Extract the number of protein groups observed per Raw file
 from an evidence table.}
 \usage{
-getProteinCounts(d_evidence)
+getProteinCounts(df_evd)
 }
 \arguments{
-\item{d_evidence}{Data.frame of evidence.txt as read by MQDataReader}
+\item{df_evd}{Data.frame of evidence.txt as read by MQDataReader}
 }
 \value{
 Data.frame with columns 'fc.raw.file', 'counts', 'category', 'MBRgain'
