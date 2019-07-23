@@ -32,9 +32,18 @@ initialize=function() {
  return(.self)
 },
 
-mapRunsToShort = function(.self, ms_runs)
+specrefToRawfile = function(.self, specrefs)
+{
+  "Return a DF with 'ms_run', 'raw.file' and 'fc.raw.file' given a vector of spectraReferences, e.g. 'ms_run[1]:...', '...'"
+  
+  res = data.frame(ms_run = sub("[.]*:.*", "\\1", specrefs))
+  return (cbind(res, .self$msrunToRawfile(res$ms_run)))
+},
+
+msrunToRawfile = function(.self, ms_runs)
 {
   "Given a vector of ms_runs, return a data.frame of identical length with columns 'raw.file' and 'fc.raw.file'."
+  
   if (!"ms.run" %in% colnames(.self$raw_file_mapping)) stop("Mapping is missing 'ms.run' from mzTab!")
   
   res = .self$getRawfm()[ match(ms_runs, .self$raw_file_mapping$ms.run), c("from", "to")]

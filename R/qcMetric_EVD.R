@@ -708,20 +708,22 @@ This score is 'pessimistic' because if few ID's were transferred, but all of the
 the majority of peptides is still ok (because they are genuine). However, in this case MBR
 provides few (and wrong) additional information, and should be disabled.
 ",
-    workerFcn = function(.self, df_evd, avg_peak_width)
+    workerFcn = function(.self, df_evd, df_evd_tf, avg_peak_width)
     {
       ## completeness check
       #stopifnot(c("...") %in% colnames(df_evd))
-      
+
+      df_evd_all = merge(df_evd, df_evd_tf, all = TRUE)
+            
       ## increase of segmentation by MBR:
       ## three values returned: single peaks(%) in genuine, transferred and all(combined)
-      qMBR = peakSegmentation(df_evd)
+      qMBR = peakSegmentation(df_evd_all)
       head(qMBR)
       ## for groups: get their RT-spans
       ## ... genuine ID's only (as 'rtdiff_genuine') 
       ##  or genuine+transferred (as 'rtdiff_mixed'))
       ## Could be empty (i.e. no groups, just singlets) if data is really sparse ..
-      qMBRSeg_Dist = idTransferCheck(df_evd)
+      qMBRSeg_Dist = idTransferCheck(df_evd_all)
       #head(qMBRSeg_Dist)
       #head(qMBRSeg_Dist[qMBRSeg_Dist$fc.raw.file=="file 13",])
       

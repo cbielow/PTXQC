@@ -74,7 +74,7 @@ readMzTab = function(.self, file) {
         } else {
           d = read.delim(text = x,
                          header = TRUE,
-                         na.strings = c("", "null"),
+                         na.strings = c("", "null", "not mapped"),
                          stringsAsFactors = FALSE,
                          fill = FALSE)
           colnames(d) = make.names(colnames(d), allow_ = FALSE)
@@ -151,45 +151,39 @@ getEvidence = function()
 {
   "Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'."
   
-  res = .self$sections$PSM
+  res = data.table::as.data.table(.self$sections$PSM)
   
-  # remove empty PepIDs (with no ConsensusFeature group or unassigned PepIDs (-1); corresponding to unidentfied MS2 scans)
-  res = res[!is.na(res$opt.global.cf.id),]
-  
+  ## remove empty PepIDs 
+  ## ... unidentfied MS2 scans (NA)      or with no ConsensusFeature group (-1), i.e. unassigned PepIDs
+  res = res[!(is.na(res$opt.global.cf.id) | (res$opt.global.cf.id == -1)),]
+  stopifnot(min(res$opt.global.cf.id) > 0) ## would stop on NA as well
   
   ## augment with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
-  ms_runs = sub("[.]*:.*", "\\1", res$spectra.ref)
-  res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs))
+  res = cbind(res, .self$fn_map$specrefToRawfile(res$spectra.ref))
   stopifnot(all(!is.na(res$fc.raw.file))) # Spectra-Ref in PSM table not set for all entries
   
   
+  res$retention.time.calibration = NA
   if (all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    data.table::setnames(res, old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"), 
-                  new = c("retention.time.pep","retention.time","calibrated.retention.time"))
+    data.table::setnames(res, old = c("retention.time",     "opt.global.rt.raw", "opt.global.rt.align"), 
+                              new = c("retention.time.pep", "retention.time",    "calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
-  else res$retention.time.calibration = NA
-  
-  res$match.time.difference = NA ## only set for MSMS-MATCH
-  res$type = "MULTI-MSMS"
-  
-  name = list(opt.global.calibrated.mz.error.ppm = "mass.error..ppm.",
+
+  name = list(  opt.global.calibrated.mz.error.ppm = "mass.error..ppm.",
               opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
-              exp.mass.to.charge = "m.z", 
-              opt.global.mass = "mass", 
-              opt.global.identified = "identified",
-              opt.global.ScanEventNumber = "scan.event.number",
-              PSM.ID = "id", 
-              opt.global.modified.sequence = "modified.sequence",
-              opt.global.is.contaminant = "contaminant",
-              opt.global.fragment.mass.error.da = "mass.deviations..da."
+                                exp.mass.to.charge = "m.z", 
+                                   opt.global.mass = "mass", 
+                             opt.global.identified = "identified",
+                        opt.global.ScanEventNumber = "scan.event.number",
+                                            PSM.ID = "id", 
+                      opt.global.modified.sequence = "modified.sequence",
+                         opt.global.is.contaminant = "contaminant",
+                 opt.global.fragment.mass.error.da = "mass.deviations..da."
           )
-  
   data.table::setnames(res, old = names(name), new = unlist(name))
-   
-  #res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
 
   ## optional in MzTab (depending on which FeatureFinder was used)
   if("opt.global.FWHM" %in% colnames(res)) {
@@ -197,45 +191,118 @@ getEvidence = function()
   }
 
   
-  #ms.ms.count: 
-  #1.all different accessions and databases per ID in one row; 2.all IDs only one time; 
-  #3.add ms.ms.count (size of groups with same sequence, modified.sequence and charge; 4. set in all groups ms.ms.count all cells but one to NA )
-  res_dt = data.table::setDT(res)
-  accessions = (res_dt[, .(accession=list(accession)), by=id])$accession
-  databases = (res_dt[, .(database=list(database)), by=id])$database
-  res_dt = unique(res_dt, by = "id")
-  res_dt$proteins = unlist(lapply(accessions, paste, collapse=";"))
-  res_dt$protein.group.ids = res_dt$proteins ## todo: these are protein names not IDs, but the code does not care (its not very clean though)
+  ## de-duplicate protein-accession entries
+  accessions = (res[, .(accession=list(accession)), by=id])$accession
+  res = unique(res, by = "id")
+  res$proteins = unlist(lapply(accessions, paste, collapse=";"))
   
-  res_dt$database = databases
-  res_dt[, ms.ms.count := .N, by = list(raw.file, modified.sequence,charge)]
-  toNA = res_dt[, .(toNA = .I[c(1L:.N-1)]), by=list(raw.file, modified.sequence,charge)]$toNA
-  res_dt[toNA, ms.ms.count := NA]
+  ## todo: these are protein names not IDs, but the code does not care (its not very clean though)
+  res$protein.group.ids = res$proteins 
+  
+  ## annotate ms.ms.count for identical sequences per rawfile, but only the first member of the group; 
+  ## all others get NA to prevent double counting
+  res[, ms.ms.count := c(.N, rep(NA, .N-1)), by = list(raw.file, modified.sequence, charge)]
+  
+  ## convert values from seconds to minutes for all RT columns
+  RTUnitCorrection(res)
+
+  ##
+  ## intensity from PEP to PSM: only labelfree ('opt.global.cf.id' links all PSMs belonging to a ConsensusFeature)
+  ##
+  df_pep = data.table::as.data.table(.self$sections$PEP)[!is.na(sequence), ]
+  ## add raw.file...
+  df_pep = cbind(df_pep, .self$fn_map$specrefToRawfile(df_pep$spectra.ref))
+  ## .. a unique index
+  df_pep$idx = 1:nrow(df_pep)
+  ## map from PSM -> PEP row
+  ## ... do NOT use spectra.ref since this is ambiguous (IDMapper duplicates MS2 PepIDs to multiple features)
+  res$pep_idx = match(res$opt.global.feature.id, df_pep$opt.global.feature.id, nomatch = NA_integer_)
+  stopifnot(all(!is.na(res$pep_idx)))
+  
+  res$ms_run_number = as.numeric(gsub("^ms_run\\[(\\d*)\\].*", "\\1", res$ms_run))
+  col_abd_df_pep = grepv( "^peptide.abundance.study.variable.", names(df_pep))
+  col_RT_df_pep = grepv( "^opt.global.retention.time.study.variable", names(df_pep))
+  ## transposed matrix for all abundances (rows = study; cols = pep_idx)
+  ## .. this is a significant speedup compared to indexing into .SD[,] in subqueries, since that requires unlist()
+  m_pep_abd = t(df_pep[, ..col_abd_df_pep])
+  m_pep_rt = t(df_pep[, ..col_RT_df_pep])
+  N.studies = length(col_RT_df_pep)
+  stopifnot(N.studies == length(col_abd_df_pep))
+
+  if (0) { ## DEBUG
+    te = as.data.frame(df_pep[, ..col_abd_df_pep])
+    class(te[-1,])
+    te2 = te
+    te2[is.na(te) | !is.na(te)] = 1:length(unlist(te))
+    tail(te2)
+    te2[is.na(te)] = NA
+    df_pep[, col_abd_df_pep] = te2
+    df_pep[, ..col_abd_df_pep]
+  }
+  
+  ## assign intensity to genuine PSMs
+  res$intensity = NA_real_ ## unassigned PSMs have no MS1 intensity
+  NA_duplicates = function(vec_abd, idx) {
+    ## replaces duplicate indices into the same ms_run intensities with NA
+    ## (to avoid counting a feature more than once due to oversampled PSMs from one run assigned to a CF)
+    r = vec_abd[idx]
+    r[duplicated(idx)] = NA
+    return(r)
+  }
+  res[,
+      intensity := NA_duplicates(m_pep_abd[, .SD$pep_idx[1]], .SD$ms_run_number),
+      by = "opt.global.cf.id"]
+  summary(res$intensity)
+
 
   
-  RTUnitCorrection(res_dt)
-  
-  res = as.data.frame(res_dt)
-  
-  # intensity from PEP to PSM: only labelfree
-  pep_df = .self$sections$PEP
+  ##
+  ## Infer MBR 
+  ## --> find all subfeatures in a CF with abundance but missing PSM --> create as MBR-dummy-PSMs
 
-  res$pep.id = match(res$spectra.ref, pep_df$spectra.ref, nomatch = NA_integer_)
-  res$ms_run_number = as.numeric(sub("\\].*","", sub(".*\\[","", res$spectra.ref)))
-  pep_intensity_df = pep_df[, grepl( "peptide.abundance.study.variable." , names(pep_df))]
+  res_tf = df_pep[, {#print(idx)
+                     runs_with_MS2 = unique(res$ms_run_number[res$pep_idx == idx])
+                     runs_wo_MS2 = (1:N.studies)[-runs_with_MS2]
+                     df = .SD[rep(1, length(runs_wo_MS2)), c("charge", "opt.global.modified.sequence", "sequence", "raw.file", "fc.raw.file")]
+                     df$pep_idx = idx
+                     df$ms_run_number = runs_wo_MS2 ## vector
+                     df$retention.time.calibration = m_pep_rt[runs_wo_MS2, idx]
+                                      df$intensity = m_pep_abd[runs_wo_MS2, idx]
+                     df ## return
+                     }, by = "idx"] ## one row at a time
+  print(Sys.time() - st)
+  head(res_tf)
+  res$hasMTD = FALSE
+  res$type = "MULTI-MSMS"
+  res_tf$hasMTD = TRUE
+  res_tf$type = "MULTI-MATCH"
 
-  res = plyr::ddply(res, "opt.global.cf.id", function(x){
-              pep_row = data.table::first(na.omit(x$pep.id))
-              x$intensity = as.numeric(pep_intensity_df[pep_row, x$ms_run_number]) 
-              return(x)}) 
+  # all_PEP = na.omit(unlist(df_pep[, ..col_abd_df_pep]))
+  # all_PSM = na.omit(c(res$intensity, res_tf$intensity))
+  # ia=which(duplicated(all_PEP))
+  # all_PEP[all_PEP[ia] == all_PEP]
+  # ib=which(duplicated(all_PSM))
+  # ib
+  # setdiff(all_PEP, all_PSM)
+  # which(all_PEP == 1305)
+  # setdiff(all_PSM, all_PEP)
+  # 
+  # df_pep[, sum(.SD[, ..col_abd_df_pep], na.rm = TRUE)]
+  # sum(res$intensity, na.rm = TRUE) + sum(res_tf$intensity, na.rm = TRUE)
   
-  res$intensity[duplicated(res[,c("opt.global.map.index","opt.global.cf.id")])] = NA
+  ## check: summed intensities should be equal
+  stopifnot(sum(df_pep[, ..col_abd_df_pep], na.rm = TRUE) == sum(res$intensity, na.rm = TRUE) + sum(res_tf$intensity, na.rm = TRUE))
+
+  
+  ## remove the data.table info, since metrics will break due to different syntax
+  class(res) = "data.frame"
+  class(res_tf) = "data.frame"
+  
 
   ## just check if there are no invalid entries
   stopifnot(all(!is.na(res$contaminant)))
 
-  
-  return ( res )
+  return (list("genuine" = res, "transferred" = res_tf))
 },
 
 
@@ -244,12 +311,11 @@ getMSMSScans = function(identified_only = FALSE)
   "Basically the PSM table (partially renamed columns) and additionally two columns 'raw.file' and 'fc.raw.file'. 
    If identified_only is TRUE, only MS2 scans which were identified (i.e. a PSM) are returned -- this is equivalent to msms.txt in MaxQuant."
   
-  res = .self$sections$PSM
-  res = data.table::as.data.table(res)
-  data.table::setkey(res, PSM.ID)
-  
+  res = data.table::as.data.table(.self$sections$PSM)
+
+  stopifnot(all((res$opt.global.identified == 1) == (!is.na(res$sequence))))
   if (identified_only) {
-    res = res[opt.global.identified == 1, ]
+    res = res[opt.global.identified == 1, ] # == NA sequence
   }
   
   ## de-duplicate PSM.ID column: take first row for each PSM.ID 
@@ -260,14 +326,17 @@ getMSMSScans = function(identified_only = FALSE)
   
   ## Augment fc.raw.file column
   ## ... the `spectra_ref` looks like "ms_run[12]:controllerType=0 controllerNumber=1 scan=25337"
-  ms_runs = sub("^(ms_run\\[\\d*\\]):.*", "\\1", res$spectra.ref)
-  res = cbind(res, .self$fn_map$mapRunsToShort(ms_runs)) ## gives c("ms_run[1]", "ms_run[2]", ...)
+  res = cbind(res, .self$fn_map$specrefToRawfile(res$spectra.ref))
 
+  ## IDMapper might duplicate PepIDs if two or more features are a good match
+  ## ... but we only want each MS2 scan represented once here
+  res = unique(res, by = c("fc.raw.file", "spectra.ref"))
+  
   if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
     data.table::setnames(res,
-             old = c("retention.time","opt.global.rt.raw","opt.global.rt.align"),
-             new = c("retention.time.pep","retention.time","calibrated.retention.time"))
+             old = c("retention.time"    ,"opt.global.rt.raw","opt.global.rt.align"),
+             new = c("retention.time.pep","retention.time"   ,"calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else res$retention.time.calibration = NA
@@ -313,9 +382,13 @@ getMSMSScans = function(identified_only = FALSE)
   
   RTUnitCorrection(res)
 
+  ## remove the data.table info, since metrics will break due to different syntax
+  class(res) = "data.frame"
   
-  ## order by file and RT
-  res = res[order(res$fc.raw.file, res$retention.time), ]
+  ## order by file and specRef as RT proxy (do NOT use RT directly, since it might be NA or non-linearly transformed)
+  res = res[order(res$fc.raw.file, res$spectra.ref), ]
+  
+  #stopifnot(!is.unsorted(res$spectra.ref))
   
   return ( res )
 },

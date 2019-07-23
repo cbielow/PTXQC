@@ -359,30 +359,33 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ######
 
   ## protein.names is only available from MQ 1.4 onwards
-  if (MZTAB_MODE) df_evd = mzt$getEvidence()
-  else df_evd = mq$readMQ(txt_files$evd, type="ev", filter="R",
-                          col_subset=c("proteins",
-                                  numeric = "Retention.Length",
-                                  numeric = "retention.time.calibration", 
-                                  numeric = "Retention.time$", 
-                                  numeric = "Match.Time.Difference",
-                                  numeric = "^intensity$", 
-                                  "^Type$",
-                                  numeric = "Mass\\.Error", 
-                                  numeric = "^uncalibrated...calibrated." ,
-                                  numeric = "^m.z$",
-                                  numeric = "^score$", 
-                                  numeric = "^fraction$",  ## only available when fractions were given
-                                  "Raw.file", "^Protein.Group.IDs$", "Contaminant",
-                                  numeric = "[RK]\\.Count", 
-                                  numeric = "^Charge$", 
-                                  "modified.sequence",
-                                  numeric = "^Mass$",
-                                  "^protein.names$",
-                                  numeric = "^ms.ms.count$",
-                                  numeric = "^reporter.intensity.")) ## we want .corrected and .not.corrected
-  
-  {
+  if (MZTAB_MODE) {
+    all_evd = mzt$getEvidence()
+    df_evd = all_evd$genuine
+    df_evd_tf = all_evd$transferred
+  }
+  else {
+    all_evd = mq$readMQ(txt_files$evd, type="ev", filter="R",
+                       col_subset=c("proteins",
+                                    numeric = "Retention.Length",
+                                    numeric = "retention.time.calibration", 
+                                    numeric = "Retention.time$", 
+                                    numeric = "Match.Time.Difference",
+                                    numeric = "^intensity$", 
+                                    "^Type$",
+                                    numeric = "Mass\\.Error", 
+                                    numeric = "^uncalibrated...calibrated." ,
+                                    numeric = "^m.z$",
+                                    numeric = "^score$", 
+                                    numeric = "^fraction$",  ## only available when fractions were given
+                                    "Raw.file", "^Protein.Group.IDs$", "Contaminant",
+                                    numeric = "[RK]\\.Count", 
+                                    numeric = "^Charge$", 
+                                    "modified.sequence",
+                                    numeric = "^Mass$",
+                                    "^protein.names$",
+                                    numeric = "^ms.ms.count$",
+                                    numeric = "^reporter.intensity.")) ## we want .corrected and .not.corrected
     ## contains NA if 'genuine' ID
     ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
     #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
@@ -391,7 +394,14 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## MQ1.4 MTD is either: NA or a number
     ##
-    if (!is.null(df_evd)) df_evd$hasMTD = !is.na(df_evd$match.time.difference) 
+    if (!is.null(all_evd)) all_evd$hasMTD = (all_evd$type == "MULTI-MATCH")
+    
+    df_evd = all_evd[all_evd$type != "MULTI-MATCH", ]
+    df_evd_tf = all_evd[all_evd$type == "MULTI-MATCH", ]
+    
+  }
+## just a local scope to fold evidence metrics in the editor...
+  {
     
    
     ### warn of special contaminants!
@@ -408,7 +418,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## intensity of peptides
     ##
-    lst_qcMetrics[["qcMetric_EVD_PeptideInt"]]$setData(df_evd, param_EV_intThresh)
+    lst_qcMetrics[["qcMetric_EVD_PeptideInt"]]$setData(df_evd, param_EV_intThresh)  ## todo, add MBR evd
 
     ##
     ## MS2/MS3 labeled (TMT/ITRAQ) only: reporter intensity of peptides
@@ -422,9 +432,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## peptide & protein counts
     ##
-    lst_qcMetrics[["qcMetric_EVD_ProteinCount"]]$setData(df_evd, param_EV_protThresh)
+    lst_qcMetrics[["qcMetric_EVD_ProteinCount"]]$setData(df_evd, param_EV_protThresh) ## todo, add MBR evd
 
-    lst_qcMetrics[["qcMetric_EVD_PeptideCount"]]$setData(df_evd, param_EV_pepThresh)
+    lst_qcMetrics[["qcMetric_EVD_PeptideCount"]]$setData(df_evd, param_EV_pepThresh)  ## todo, add MBR evd
 
     ####
     #### peak length (not supported in MQ 1.0.13)
@@ -458,7 +468,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         if (is.null(avg_peak_width)) {
           stop("RT peak width module did not run, but is required for MBR metrics. Enable it and try again or switch off MBR metrics!")
         } 
-        lst_qcMetrics[["qcMetric_EVD_MBRIdTransfer"]]$setData(df_evd, avg_peak_width)
+        lst_qcMetrics[["qcMetric_EVD_MBRIdTransfer"]]$setData(df_evd, df_evd_tf, avg_peak_width)
 
         
         ##
@@ -588,7 +598,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
 ######
 ######  msmsScans.txt ...
 ######
-  if (MZTAB_MODE) df_msmsScans = mzt$getMSMSScans()
+  if (MZTAB_MODE) df_msmsScans = mzt$getMSMSScans(identified_only = FALSE)
   else df_msmsScans = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", 
                                col_subset = c(numeric = "^ion.injection.time", 
                                               numeric = "^retention.time$", 

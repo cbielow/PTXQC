@@ -311,32 +311,32 @@ inMatchWindow = function(data, df.allowed.deltaRT)
 #' Note that this function must be given MS/MS identifications of type "MULTI-MSMS" and "MSMS-MATCH".
 #' It will stop() otherwise.
 #' 
-#' @param d_evd A data.frame of evidences containing the above columns
+#' @param df_evd_all A data.frame of evidences containing the above columns
 #' @return A data.frame with one row per Raw file and 
 #'         three columns: 
 #'           1) % of native single peaks (ignoring transferred IDs)
 #'           2) % of single peaks (group of size=1) using only groups which have one transferred evidence
 #'           3) % of single peaks using all groups
 #'
-peakSegmentation = function(d_evd)
+peakSegmentation = function(df_evd_all)
 {
-  if (!all(c("hasMTD", "fc.raw.file", "modified.sequence", "charge", 'type') %in% colnames(d_evd)))
+  if (!all(c("hasMTD", "fc.raw.file", "modified.sequence", "charge", 'type') %in% colnames(df_evd_all)))
   {
     stop("peakSegmentation(): columns missing!")  
   }
 
-  if (!all(c("MULTI-MSMS", "MULTI-MATCH") %in% unique(d_evd$type)))
+  if (!all(c("MULTI-MSMS", "MULTI-MATCH") %in% unique(df_evd_all$type)))
   {
     stop('peakSegmentation(): scan types missing! Required: "MULTI-MSMS" and "MULTI-MATCH".')  
   }
   
-  fc.raw.files = unique(d_evd$fc.raw.file)
+  fc.raw.files = unique(df_evd_all$fc.raw.file)
   
   ## just keep "MULTI-MATCH" and "MULTI-MSMS", to keep results comparable to idTransferCheck()
-  d_evd = d_evd[d_evd$type %in% c("MULTI-MSMS", "MULTI-MATCH"), ]
+  df_evd_all = df_evd_all[df_evd_all$type %in% c("MULTI-MSMS", "MULTI-MATCH"), ]
 
   cols = c("hasMTD", "fc.raw.file", "modified.sequence", "charge")
-  countSeqs = plyr::ddply(d_evd[, cols], cols[-1], function(x)
+  countSeqs = plyr::ddply(df_evd_all[, cols], cols[-1], function(x)
   {
     return(data.frame(nNative = sum(!x$hasMTD), nMatched = sum(x$hasMTD)))#, ratio = ratio))
   })
@@ -344,7 +344,7 @@ peakSegmentation = function(d_evd)
   mbr_score = plyr::ddply(countSeqs, "fc.raw.file", function(countSeqs_sub)
   {
     #unique(countSeqs$fc.raw.file)
-    #countSeqs_sub = countSeqs[countSeqs$fc.raw.file == "..1_P..14", ]
+    #countSeqs_sub = countSeqs[countSeqs$fc.raw.file == "file 02", ]
     
     ddt = table(countSeqs_sub[, c("nMatched", "nNative")])
     ### ddt might look like this:
@@ -468,26 +468,26 @@ computeMatchRTFractions = function(qMBR, qMBRSeg_Dist_inGroup)
 #' If not, MaxQuant's fraction settings should be optimized.
 #' Note that introducing fractions in MaxQuant will naturally lead to a clustering here (it's somewhat circular).
 #' 
-#' @param d_evd  Evidence table containing calibrated retention times and sequence information.
+#' @param df_evd  Evidence table containing calibrated retention times and sequence information.
 #' @param col_fraction Empty vector or 1-values vector giving the name of the fraction column (if existing)
 #' @return ggplot object containing the correlation tree
 #' 
 #' @import ggplot2
 #' @export
 #'
-RTalignmentTree = function(d_evd, col_fraction = c())
+RTalignmentTree = function(df_evd, col_fraction = c())
 {
-  #d_evd$fc.raw.file=d_evd$raw.file
-  head(d_evd)
+  #df_evd$fc.raw.file=df_evd$raw.file
+  head(df_evd)
   
   req_cols = c("calibrated.retention.time", "fc.raw.file", col_fraction, "modified.sequence", "charge")
-  if (!all(req_cols %in% colnames(d_evd)))
+  if (!all(req_cols %in% colnames(df_evd)))
   {
     stop("RTalignmentTree: Missing columns! Please fix the code: ", 
-         setdiff(req_cols, colnames(d_evd)), "!")
+         setdiff(req_cols, colnames(df_evd)), "!")
   }
   
-  d_cast = reshape2::dcast(d_evd, modified.sequence + charge ~ fc.raw.file, mean, value.var = "calibrated.retention.time")
+  d_cast = reshape2::dcast(df_evd, modified.sequence + charge ~ fc.raw.file, mean, value.var = "calibrated.retention.time")
   
   head(d_cast[,-(1:2)])
   d_cast.m = as.matrix(d_cast[,-(1:2)])
@@ -505,8 +505,8 @@ RTalignmentTree = function(d_evd, col_fraction = c())
   
   if (length(col_fraction))
   {
-    idx_raw = match(ddata$labels$label, d_evd$fc.raw.file)
-    ddata$labels$col = factor(d_evd[idx_raw, col_fraction])
+    idx_raw = match(ddata$labels$label, df_evd$fc.raw.file)
+    ddata$labels$col = factor(df_evd[idx_raw, col_fraction])
   } else {
     ddata$labels$col = "black"
   }
