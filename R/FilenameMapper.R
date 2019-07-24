@@ -53,7 +53,7 @@ msrunToRawfile = function(.self, ms_runs)
 
 getShortNames = function(.self, raw_filenames, max_length = 10, ms_runs = NULL)
 {
-  "Uses the internal mapping (or augments it if possible) and maps the input raw names to shorter output names. 
+  "Uses the internal mapping (or re-creates it if current one is incomplete) and maps the input raw names to shorter output names. 
     Returns a vector of the same length."
   #rf <<- raw_filenames
   #raw_filenames = rf
@@ -221,7 +221,9 @@ readMappingFile = function(.self, filename)
   "Reads a mapping table of full Raw file names to shortened names.
 
   The internal structure \\verb{raw_file_mapping} is created using this file.
-  If the file is missing, nothing is done.
+  If the file is missing, nothing is done and FALSE is returned.
+  If the file contains contradictory information (different set of $from files) compared to
+  the current mapping (if present), the internal mapping wins (filemapping is ignored) and FALSE is returned.
  
   The file must have two columns named: 'orig.Name' and 'new.Name' and use Tab as separator.
   This file can be used to manually substitute Raw file names within the report.
@@ -262,11 +264,12 @@ readMappingFile = function(.self, filename)
     dfs$from = factor(dfs$from, levels = unique(dfs$from), ordered = TRUE) ## keep the order
     ## set internal mapping
     if (nrow(.self$raw_file_mapping) > 0 &  ## was initialized before...
-        setequal(.self$raw_file_mapping$from, dfs$from)) ## .. and has different data
+        !setequal(.self$raw_file_mapping$from, dfs$from)) ## .. and has different data
     {
-      stop(paste0("Raw filename mapping in file '", filename, "' has different set of raw files than current data. Please remove '", 
-                  filename, "' or fix it",
-                  "\nold filenames in mapping:\n", paste(.self$raw_file_mapping$from, collapse="\n"), "\nnew filenames from data:\n", paste(dfs$from, collapse="\n")))
+      print(paste0("Raw filename mapping in file '", filename, "' has different set of raw files than current data. Mapping file will be ignored and overwritten!",
+                   "\nold filenames in mapping:\n  ", paste(dfs$from, collapse="\n  "), 
+                   "\nnew filenames from data:\n  ", paste(.self$raw_file_mapping$from, collapse="\n  ")))
+      return (FALSE)
     }
     .self$raw_file_mapping = dfs
     ## set who defined it

@@ -121,7 +121,7 @@ getSummary = function()
    similar to MaxQuants summary.txt."
   res = .self$fn_map$getRawfm()[ , c("from", "to")]
   colnames(res) = c("raw.file", "fc.raw.file")
-  
+
   ## read all custom entries
   mtd_custom_df = .self$sections$MTD[grep("^custom", .self$sections$MTD$key), ]
 
@@ -156,7 +156,7 @@ getEvidence = function()
   ## remove empty PepIDs 
   ## ... unidentfied MS2 scans (NA)      or with no ConsensusFeature group (-1), i.e. unassigned PepIDs
   res = res[!(is.na(res$opt.global.cf.id) | (res$opt.global.cf.id == -1)),]
-  stopifnot(min(res$opt.global.cf.id) > 0) ## would stop on NA as well
+  stopifnot(min(res$opt.global.cf.id) >= 0) ## would stop on NA as well
   
   ## augment with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
@@ -389,7 +389,11 @@ getMSMSScans = function(identified_only = FALSE)
   class(res) = "data.frame"
   
   ## order by file and specRef as RT proxy (do NOT use RT directly, since it might be NA or non-linearly transformed)
-  res = res[order(res$fc.raw.file, res$spectra.ref), ]
+  ## e.g. spectra.ref might be 'ms_run[1]:controllerType=0 controllerNumber=1 scan=13999'
+  ##      --> extract scan as numeric, since string compare is insufficient for numbers ("13999" > "140")
+  res$scan = as.numeric(gsub(".*scan=(\\d*)[^\\d]*", "\\1", res$spectra.ref))
+  stopifnot(all(!is.na(res$scan)))
+  res = res[order(res$fc.raw.file, res$scan), ]
   
   #stopifnot(!is.unsorted(res$spectra.ref))
   
