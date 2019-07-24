@@ -210,6 +210,7 @@ getEvidence = function()
   ## intensity from PEP to PSM: only labelfree ('opt.global.cf.id' links all PSMs belonging to a ConsensusFeature)
   ##
   df_pep = data.table::as.data.table(.self$sections$PEP)[!is.na(sequence), ]
+  data.table::setnames(df_pep, old = c("opt.global.modified.sequence"), new = "modified.sequence")
   ## add raw.file...
   df_pep = cbind(df_pep, .self$fn_map$specrefToRawfile(df_pep$spectra.ref))
   ## .. a unique index
@@ -261,17 +262,19 @@ getEvidence = function()
   ## --> find all subfeatures in a CF with abundance but missing PSM --> create as MBR-dummy-PSMs
 
   res_tf = df_pep[, {#print(idx)
-                     runs_with_MS2 = unique(res$ms_run_number[res$pep_idx == idx])
+                     idx_PSM = which(res$pep_idx == idx)
+                     runs_with_MS2 = unique(res$ms_run_number[idx_PSM]) ## existing PSMs for this PEP
                      runs_wo_MS2 = (1:N.studies)[-runs_with_MS2]
-                     df = .SD[rep(1, length(runs_wo_MS2)), c("charge", "opt.global.modified.sequence", "sequence", "raw.file", "fc.raw.file")]
+                     df = .SD[rep(1, length(runs_wo_MS2)), c("charge", "modified.sequence", "sequence")]
                      df$pep_idx = idx
                      df$ms_run_number = runs_wo_MS2 ## vector
-                     df$retention.time.calibration = m_pep_rt[runs_wo_MS2, idx]
-                                      df$intensity = m_pep_abd[runs_wo_MS2, idx]
+                     df$calibrated.retention.time = m_pep_rt[runs_wo_MS2, idx]
+                                     df$intensity = m_pep_abd[runs_wo_MS2, idx]
+                     df$protein.group.ids = res$protein.group.ids[idx_PSM[1]] ## use PGI from genuine PSMs
                      df ## return
-                     }, by = "idx"] ## one row at a time
-  print(Sys.time() - st)
-  head(res_tf)
+                     }, by = "idx"] ## one PEP row at a time
+  ## convert from "ms_run_number" to fc.raw.file
+  res_tf = cbind(res_tf, .self$fn_map$msrunToRawfile(paste0("ms_run[", res_tf$ms_run_number, "]")))
   res$hasMTD = FALSE
   res$type = "MULTI-MSMS"
   res_tf$hasMTD = TRUE

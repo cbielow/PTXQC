@@ -302,7 +302,7 @@ plot_CountData = function(data, y_max, thresh_line, title)
         ylab("count") +
         scale_x_discrete_reverse(data$fc.raw.file) +
         ylim(0, y_max) +
-        scale_fill_manual(values = c("green", "#BEAED4", "red")) +
+        scale_fill_manual(values = c("green", "#BEAED4", "blue")) +
         addGGtitle(title_main, title_sub) + 
         geom_abline(alpha = 0.5, intercept = thresh_line, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
         coord_flip()

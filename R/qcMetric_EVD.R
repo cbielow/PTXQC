@@ -189,7 +189,7 @@ qcMetric_EVD_PeptideInt =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "Peptide precursor intensity per Raw file from evidence.txt.
+      "Peptide precursor intensity per Raw file from evidence.txt WITHOUT match-between-runs evidence.
 Low peptide intensity usually goes hand in hand with low MS/MS identifcation rates and unfavourable signal/noise ratios,
 which makes signal detection harder. Also instrument acquisition time increases for trapping instruments.
 
@@ -383,19 +383,21 @@ MBR should be switched off for the Raw files which are affected (could be a few 
 
 Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or exceeding the target threshold gives a score of 100%%.
 ",
-    workerFcn = function(.self, df_evd, thresh_protCount)
+    workerFcn = function(.self, df_evd, df_evd_tf, thresh_protCount)
     {
       ## completeness check
-      stopifnot(c("fc.raw.file", "protein.group.ids", "hasMTD") %in% colnames(df_evd))
+      req_cols = c("fc.raw.file", "protein.group.ids", "hasMTD")
+      stopifnot(req_cols %in% colnames(df_evd))
+      stopifnot(req_cols %in% colnames(df_evd_tf))
       
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_protCount)
       
-      protC = getProteinCounts(df_evd)
+      protC = getProteinCounts(rbind(df_evd[,req_cols], df_evd_tf[, req_cols]))
       protC$block = factor(assignBlocks(protC$fc.raw.file, 30))
       
       max_prot = max(unlist(plyr::dlply(protC, "fc.raw.file", function(x) sum(x$counts))))
       ## average gain in percent
-      reportMTD = any(df_evd$hasMTD)
+      reportMTD = nrow(df_evd_tf) > 0
       gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(protC$MBRgain, na.rm = TRUE)), "")
       
       lpl = plyr::dlply(protC, "block", .fun = function(x)
@@ -453,14 +455,16 @@ MBR should be switched off for the Raw files which are affected (could be a few 
 
 Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or exceeding the target threshold gives a score of 100%%.
 ",
-    workerFcn = function(.self, df_evd, thresh_pepCount)
+    workerFcn = function(.self, df_evd, df_evd_tf, thresh_pepCount)
     {
       ## completeness check
-      stopifnot(c("fc.raw.file", "modified.sequence", "hasMTD") %in% colnames(df_evd))
+      req_cols = c("fc.raw.file", "modified.sequence", "hasMTD")
+      stopifnot(req_cols %in% colnames(df_evd))
+      stopifnot(req_cols %in% colnames(df_evd_tf))
       
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_pepCount)
       
-      pepC = getPeptideCounts(df_evd)
+      pepC = getPeptideCounts(rbind(df_evd[, req_cols], df_evd_tf[, req_cols]))
       pepC$block = factor(assignBlocks(pepC$fc.raw.file, 30))
       
       max_pep = max(unlist(plyr::dlply(pepC, "fc.raw.file", function(x) sum(x$counts))))

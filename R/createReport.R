@@ -418,7 +418,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## intensity of peptides
     ##
-    lst_qcMetrics[["qcMetric_EVD_PeptideInt"]]$setData(df_evd, param_EV_intThresh)  ## todo, add MBR evd
+    lst_qcMetrics[["qcMetric_EVD_PeptideInt"]]$setData(df_evd, param_EV_intThresh)
 
     ##
     ## MS2/MS3 labeled (TMT/ITRAQ) only: reporter intensity of peptides
@@ -432,9 +432,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## peptide & protein counts
     ##
-    lst_qcMetrics[["qcMetric_EVD_ProteinCount"]]$setData(df_evd, param_EV_protThresh) ## todo, add MBR evd
+    lst_qcMetrics[["qcMetric_EVD_ProteinCount"]]$setData(df_evd, df_evd_tf, param_EV_protThresh)
 
-    lst_qcMetrics[["qcMetric_EVD_PeptideCount"]]$setData(df_evd, param_EV_pepThresh)  ## todo, add MBR evd
+    lst_qcMetrics[["qcMetric_EVD_PeptideCount"]]$setData(df_evd, df_evd_tf, param_EV_pepThresh)
 
     ####
     #### peak length (not supported in MQ 1.0.13)

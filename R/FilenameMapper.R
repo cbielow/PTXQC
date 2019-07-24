@@ -42,7 +42,7 @@ specrefToRawfile = function(.self, specrefs)
 
 msrunToRawfile = function(.self, ms_runs)
 {
-  "Given a vector of ms_runs, return a data.frame of identical length with columns 'raw.file' and 'fc.raw.file'."
+  "Given a vector of ms_runs, c('ms_run[1]', ...), return a data.frame of identical length with columns 'raw.file' and 'fc.raw.file'."
   
   if (!"ms.run" %in% colnames(.self$raw_file_mapping)) stop("Mapping is missing 'ms.run' from mzTab!")
   

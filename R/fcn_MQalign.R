@@ -174,7 +174,7 @@ ScoreInAlignWindow = function(data, allowed.deltaRT = 1)
 #'
 #' Check how close transferred ID's after alignment are to their genuine IDs within one Raw file.
 #' 
-#' The input is a data frame containing feature evidence with corrected retention times,
+#' The input is a data.frame containing feature evidence with corrected retention times,
 #' e.g. a 'calibrated.retention.time' column.
 #'
 #' Note that this function must be given MS/MS identifications of type "MULTI-MSMS" and "MSMS-MATCH".
@@ -189,29 +189,29 @@ ScoreInAlignWindow = function(data, allowed.deltaRT = 1)
 #' The sequence which SHOULD be present is equal to the immediate upper row. This is what we use to guess the sequence.
 #' However, this relies on the data.frame not being subsetted before (we can sort using the 'id' column)!
 #' 
-#' @param data A data.frame with columns 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'raw.file'
+#' @param df_evd_all A data.frame with columns 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'raw.file'
 #' @return A data.frame containing the RT diff for each ID-group found in a Raw file (bg = genuine).
 #'
-idTransferCheck = function(data) {
-  colnames(data) = tolower(colnames(data))
+idTransferCheck = function(df_evd_all) {
+  colnames(df_evd_all) = tolower(colnames(df_evd_all))
   
-  if (!all(c('id', 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'fc.raw.file') %in% colnames(data)))
+  if (!all(c('id', 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'fc.raw.file') %in% colnames(df_evd_all)))
   {
     stop("idTransferCheck(): columns missing!")  
   }
   
-  if (!all(c("MULTI-MSMS", "MULTI-MATCH") %in% unique(data$type)))
+  if (!all(c("MULTI-MSMS", "MULTI-MATCH") %in% unique(df_evd_all$type)))
   {
     stop('idTransferCheck(): scan types missing! Required: "MULTI-MSMS" and "MULTI-MATCH".')  
   }
   
   
-  data$seq_charge = paste(factor(data$modified.sequence), data$charge, sep="_")
-  alignQ = plyr::ddply(data[,c("fc.raw.file", "type", "calibrated.retention.time", "seq_charge")],
+  df_evd_all$seq_charge = paste(factor(df_evd_all$modified.sequence), df_evd_all$charge, sep="_")
+  alignQ = plyr::ddply(df_evd_all[,c("fc.raw.file", "type", "calibrated.retention.time", "seq_charge")],
                        "fc.raw.file",
                        function(x) {
-    # unique(data$fc.raw.file)
-    # x = data[ data$fc.raw.file == "..3_P..14", ]
+    # unique(df_evd_all$fc.raw.file)
+    # x = df_evd_all[ df_evd_all$fc.raw.file == "file 01", ]
     
     ## genuine groups only (within this Raw file):
     x_genuine = x[x$type=="MULTI-MSMS",]
@@ -232,7 +232,7 @@ idTransferCheck = function(data) {
                                if (nrow(x2)==1) return(NULL) ## we do not want singlets
                                return (data.frame(rtdiff_mixed = diff(range(x2$calibrated.retention.time))))
                              })
-      ## rtdiff_mixed might be empty, if only singlets where transferred
+      ## rtdiff_mixed might be empty, if only singlets were transferred
       ## only merge if non-empty (otherwise the whole merge is empty)
       if (nrow(rt_diffs_mixed) > 0) {
         rt_diffs_genuine = merge(rt_diffs_genuine, rt_diffs_mixed, all = TRUE)
