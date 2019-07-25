@@ -159,7 +159,7 @@ plot_ContEVD = function(data, top5)
   if (length(top5) > 5) stop("Top5 protein list is longer than 5 (which is the maximum allowed).")
   
   intensity = NULL ## to make R CHECK happy...
-  data.sub = data[data$contaminant,]
+  data.sub = data[data$contaminant > 0,]
   ## rewrite prot names, and subsume 6th and below as 'other'
   data.sub$pname = as.character(data.sub$pname)
   data.sub[!(data.sub$pname %in% top5), "pname"] = 'other'

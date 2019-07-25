@@ -607,7 +607,7 @@ Heatmap score [EVD: MBR Align]: fraction of 'green' vs. 'green+red' peptides.
       } else {
         refRaw = findAlignReference(df_evd)
         col_fraction = c()
-        txt_subtitle = paste("alignment reference:", refRaw)
+        txt_subtitle = paste("alignment reference:", gsub("\\", "/", refRaw, fixed = TRUE)) ## subtitles in ggplot must not contain '\'
         evd_has_fractions = FALSE
       }
       
@@ -1073,7 +1073,7 @@ Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = samp
       df_evd$pname[df_evd$pname==""] = df_evd$proteins[df_evd$pname==""] ## a NOP if it already is 'proteins', but ok
       
       df_evd.totalInt = sum(as.numeric(df_evd$intensity), na.rm = TRUE)
-      df_evd.cont.only = df_evd[df_evd$contaminant,]
+      df_evd.cont.only = df_evd[df_evd$contaminant > 0,]
 
       cont.top = by(df_evd.cont.only, df_evd.cont.only$pname, function(x) sum(as.numeric(x$intensity), na.rm = TRUE) / df_evd.totalInt*100)
       cont.top.sort = sort(cont.top, decreasing = TRUE)

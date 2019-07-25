@@ -181,7 +181,8 @@ getEvidence = function()
                                             PSM.ID = "id", 
                       opt.global.modified.sequence = "modified.sequence",
                          opt.global.is.contaminant = "contaminant",
-                 opt.global.fragment.mass.error.da = "mass.deviations..da."
+                 opt.global.fragment.mass.error.da = "mass.deviations..da.",
+                           opt.global.target.decoy = "reverse"
           )
   data.table::setnames(res, old = names(name), new = unlist(name))
 
@@ -230,17 +231,6 @@ getEvidence = function()
   N.studies = length(col_RT_df_pep)
   stopifnot(N.studies == length(col_abd_df_pep))
 
-  if (0) { ## DEBUG
-    te = as.data.frame(df_pep[, ..col_abd_df_pep])
-    class(te[-1,])
-    te2 = te
-    te2[is.na(te) | !is.na(te)] = 1:length(unlist(te))
-    tail(te2)
-    te2[is.na(te)] = NA
-    df_pep[, col_abd_df_pep] = te2
-    df_pep[, ..col_abd_df_pep]
-  }
-  
   ## assign intensity to genuine PSMs
   res$intensity = NA_real_ ## unassigned PSMs have no MS1 intensity
   NA_duplicates = function(vec_abd, idx) {
@@ -280,22 +270,13 @@ getEvidence = function()
   res_tf$hasMTD = TRUE
   res_tf$type = "MULTI-MATCH"
 
-  # all_PEP = na.omit(unlist(df_pep[, ..col_abd_df_pep]))
-  # all_PSM = na.omit(c(res$intensity, res_tf$intensity))
-  # ia=which(duplicated(all_PEP))
-  # all_PEP[all_PEP[ia] == all_PEP]
-  # ib=which(duplicated(all_PSM))
-  # ib
-  # setdiff(all_PEP, all_PSM)
-  # which(all_PEP == 1305)
-  # setdiff(all_PSM, all_PEP)
-  # 
-  # df_pep[, sum(.SD[, ..col_abd_df_pep], na.rm = TRUE)]
-  # sum(res$intensity, na.rm = TRUE) + sum(res_tf$intensity, na.rm = TRUE)
-  
   ## check: summed intensities should be equal
   stopifnot(sum(df_pep[, ..col_abd_df_pep], na.rm = TRUE) == sum(res$intensity, na.rm = TRUE) + sum(res_tf$intensity, na.rm = TRUE))
 
+  # set reverse to TRUE/FALSE
+  res$reverse = (res$reverse == "decoy")
+  # set contaminant to TRUE/FALSE
+  res$contaminant = (res$contaminant > 0)
   
   ## remove the data.table info, since metrics will break due to different syntax
   class(res) = "data.frame"
@@ -375,14 +356,13 @@ getMSMSScans = function(identified_only = FALSE)
  
   # set reverse to TRUE/FALSE
   res$reverse = (res$reverse == "decoy")
+  # set contaminant to TRUE/FALSE
+  res$contaminant = (res$contaminant > 0)
   
-  # set identified to MaxQuant values (+/-)
+  # set $identified to MaxQuant values (+/-)
   stopifnot(unique(res$identified) %in% c(0,1)) ## make sure the column has the expected values (0/1)
   res$identified = c("-", "+")[(res$identified==1) + 1]
 
-  ## temp workaround
-  #res = res[!is.na(res$contaminant),]
-  
   RTUnitCorrection(res)
 
   ## remove the data.table info, since metrics will break due to different syntax
@@ -394,8 +374,6 @@ getMSMSScans = function(identified_only = FALSE)
   res$scan = as.numeric(gsub(".*scan=(\\d*)[^\\d]*", "\\1", res$spectra.ref))
   stopifnot(all(!is.na(res$scan)))
   res = res[order(res$fc.raw.file, res$scan), ]
-  
-  #stopifnot(!is.unsorted(res$spectra.ref))
   
   return ( res )
 },
