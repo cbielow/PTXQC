@@ -182,7 +182,7 @@ getEvidence = function()
                       opt.global.modified.sequence = "modified.sequence",
                          opt.global.is.contaminant = "contaminant",
                  opt.global.fragment.mass.error.da = "mass.deviations..da.",
-                           opt.global.target.decoy = "reverse"
+            opt.global.cv.MS.1002217.decoy.peptide = "reverse"
           )
   data.table::setnames(res, old = names(name), new = unlist(name))
 
@@ -286,6 +286,8 @@ getEvidence = function()
   ## just check if there are no invalid entries
   stopifnot(all(!is.na(res$contaminant)))
 
+  message("Evidence table generated: ", nrow(res), "x", ncol(res), "(genuine); ", nrow(res_tf), "x", ncol(res_tf), "(transferred)")
+  
   return (list("genuine" = res, "transferred" = res_tf))
 },
 
@@ -342,7 +344,7 @@ getMSMSScans = function(identified_only = FALSE)
               opt.global.modified.sequence = "modified.sequence",
               opt.global.is.contaminant = "contaminant",
               opt.global.missed.cleavages = "missed.cleavages",
-              opt.global.target.decoy = "reverse",
+              opt.global.cv.MS.1002217.decoy.peptide = "reverse",
               opt.global.activation.method = "fragmentation",
               opt.global.total.ion.count = "total.ion.current",
               opt.global.base.peak.intensity = "base.peak.intensity")
@@ -370,8 +372,9 @@ getMSMSScans = function(identified_only = FALSE)
   
   ## order by file and specRef as RT proxy (do NOT use RT directly, since it might be NA or non-linearly transformed)
   ## e.g. spectra.ref might be 'ms_run[1]:controllerType=0 controllerNumber=1 scan=13999'
+  ##                        or 'ms_run[2]:spectrum=33'
   ##      --> extract scan as numeric, since string compare is insufficient for numbers ("13999" > "140")
-  res$scan = as.numeric(gsub(".*scan=(\\d*)[^\\d]*", "\\1", res$spectra.ref))
+  res$scan = as.numeric(gsub(".*scan=(\\d*)[^\\d]*|.*spectrum=(\\d*)[^\\d]*", "\\1\\2", res$spectra.ref))
   stopifnot(all(!is.na(res$scan)))
   res = res[order(res$fc.raw.file, res$scan), ]
   

@@ -775,6 +775,16 @@ qcMetric_EVD_MBRaux =  setRefClass(
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
       "Auxililiary plots -- experimental -- without scores.
+  
+Return a tree plot with a possible alignment tree.
+This allows the user to judge which Raw files have similar corrected RT's (i.e. where aligned successfully).
+If there are clear sub-clusters, it might be worth introducing artifical fractions into MaxQuant,
+to avoid ID-transfer between these clusters (use the MBR-Align and MBR-ID-Transfer metrics to support the decision).
+ 
+If the input contains fractions, leaf nodes will be colored accordingly.
+Distinct sub-clusters should have their own color.
+If not, MaxQuant's fraction settings should be optimized.
+Note that introducing fractions in MaxQuant will naturally lead to a clustering here (it's somewhat circular).
 
 Heatmap score: none.
 ",
@@ -837,7 +847,7 @@ Consistent charge distribution is paramount for comparable 3D-peak intensities a
 
 Heatmap score [EVD: Charge]: Deviation of the charge 2 proportion from a representative Raw file ('qualMedianDist' function).
 ",
-    workerFcn = function(.self, df_evd, int_cols, MAP_pg_groups)
+    workerFcn = function(.self, df_evd)
     {
       ## completeness check
       stopifnot(c("hasMTD", "fc.raw.file", "charge") %in% colnames(df_evd))
