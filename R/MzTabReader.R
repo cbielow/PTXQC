@@ -154,7 +154,10 @@ getEvidence = function()
   res = .self$sections$PSM
   
   # remove empty PepIDs (with no ConsensusFeature group or unassigned PepIDs (-1); corresponding to unidentfied MS2 scans)
-  res = res[!is.na(res$opt.global.cf.id),]
+  if("opt.global.cf.id" %in% colnames(res)){
+    res = res[!is.na(res$opt.global.cf.id),]
+  }
+  
   
   
   ## augment with fc.raw.file
@@ -222,10 +225,13 @@ getEvidence = function()
               x$intensity = as.numeric(pep_intensity_df[pep_row, x$ms_run_number]) 
               return(x)}) 
   
-  res$intensity[duplicated(res[,c("opt.global.map.index","opt.global.cf.id")])] = NA
+  if (all(c("opt.global.map.index","opt.global.cf.id") %in% colnames(res))) {
+    res$intensity[duplicated(res[,c("opt.global.map.index","opt.global.cf.id")])] = NA
+  }
+  
 
   ## just check if there are no invalid entries
-  stopifnot(all(!is.na(res$contaminant)))
+  #stopifnot(all(!is.na(res$contaminant)))
   
   return ( res )
 },
@@ -274,23 +280,35 @@ getMSMSScans = function()
               opt.global.base.peak.intensity = "base.peak.intensity")
  
   data.table::setnames(res, old = names(name), new = unlist(name), skip_absent = TRUE)
+ 
+  if ("mass.deviations..ppm." %in% colnames(res)) {
+    res$mass.deviations..ppm. = gsub("\\[|\\]", "", res$mass.deviations..ppm.)
+    res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
+  }
+  if ("mass.deviations..da." %in% colnames(res)) {   
+    res$mass.deviations..da. = gsub("\\[|\\]", "",  res$mass.deviations..da.)
+    res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da.)
+  }
   
-  res$mass.deviations..ppm. = gsub("\\[|\\]", "", res$mass.deviations..ppm.)
-  res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
-  res$mass.deviations..da. = gsub("\\[|\\]", "",  res$mass.deviations..da.)
-  res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da.)
  
  #set reverse to needed values
-  res$reverse=(res$reverse=="decoy")
+  if ("reverse" %in% colnames(res)){
+    res$reverse=(res$reverse=="decoy")
+  }
+  
   
   #set identified to needed values
-  res$identified[which(res$identified==0)] = "-"
-  res$identified[which(res$identified==1)] = "+"
-
+  if("identified" %in% colnames(res)){
+    res$identified[which(res$identified==0)] = "-"
+    res$identified[which(res$identified==1)] = "+"
+  }
+ 
   ## temp workaround
-  res = res[!is.na(res$contaminant),]
-  res = res[order(res$fc.raw.file, res$retention.time), ]
-  res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
+    res = res[!is.na(res$contaminant),]
+    res = res[order(res$fc.raw.file, res$retention.time), ]
+    res = aggregate(res[, colnames(res)!="id"], list("id" = res[,"id"]), function(x) {if(length(unique(x)) > 1){ paste0(unique(x), collapse = ".")} else{return (x[1])}})
+  
+  
 
   return ( res )
 }

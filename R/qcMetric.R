@@ -83,18 +83,6 @@ qcMetric = setRefClass("qcMetric",
            .self$outData = list();
            return(.self)
        },
-       checkInput = function(required_columns, given_columns)
-       {
-         if (!all(required_columns %in% given_columns))
-         {
-           warning(paste0("Input check failed: columns '", 
-                          paste(setdiff(required_columns, given_columns), collapse="', '", sep=""),
-                          "' are not present in input data!"),
-                   immediate. = TRUE)
-           return (FALSE)
-         }
-         return (TRUE)
-       },
        setData = function(df, ...) { ## fill with MQ data and compute results
          cat("Starting to work on", gsub("~", " ", .self$qcName), "...\n")
          if (.self$orderNr < 0)
@@ -207,6 +195,19 @@ flattenList = function(x) {
     items = x[!idx_list]
     x = Reduce(append, list(r_list, items))
   }
+}
+
+checkInput = function(required_columns, given_columns)
+{
+  if (!all(required_columns %in% given_columns))
+  {
+    warning(paste0("Input check failed: columns '", 
+                   paste(setdiff(required_columns, given_columns), collapse="', '", sep=""),
+                   "' are not present in input data!"),
+            immediate. = TRUE)
+    return (FALSE)
+  }
+  return (TRUE)
 }
 
 qcMetric_AverageQualOverall = 
