@@ -1333,10 +1333,15 @@ qcMetric_EVD_UpSet =  setRefClass(
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
       "The metric shows an upSet plot based on the number of modified peptide sequences per Raw file, intersected or merged with other Raw files (see below for details).<br>
+
+If the number of Raw files is >=6, only the 'distinct' plot is generated (the other two are skipped for performance reasons).
+
+Definition: An 'active set' is the set of black dots in a column of the plot -- as opposed to the grey dots (you'll understand when you see it).
+
 <p>
-<b>distinct:</b> shows the number of sequences that are present in ALL active sets. For three Raw files and active sets A and B, this would mean all sequences which occur in A and B, but not in C.<br>
-<b>intersection:</b> shows the number of sequences that occurs in all active sets. <br>
-<b>union:</b> shows the number of sequences that occurs in total. For two files that are all sequences that occurs either in A or in B.<br>
+<b>distinct:</b> shows the number of sequences that are present in ALL active sets. For three Raw files and active sets A and B, this would mean all sequences which occur in A and B (intersect), but not in C (setdiff).<br>
+<b>intersection:</b> shows the number of sequences that occurs in all active sets (intersection).<br>
+<b>union:</b> shows the number of sequences that occurs in total. For two files that are all sequences that occurs either in A or in B (union).<br>
 <p>
 Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in common with all other files.
 ",
