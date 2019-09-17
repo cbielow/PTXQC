@@ -14,8 +14,6 @@
 #' @field qcName [placeholder] Name of the qcScore in the heatmap
 #' @field orderNr [placeholder] column index during heatmap generation and for the general order of plots
 #'
-#' @import methods
-#' 
 #' @exportClass qcMetric
 #' @export qcMetric
 #' 
@@ -154,17 +152,15 @@ qcMetric = setRefClass("qcMetric",
                              return(.self$title[[idx]])
                            }
                            else if ("title" %in% names(.self$plots[[idx]]$labels)){
-                             title = .self$plots[[idx]]$labels$title
+                             titles = .self$plots[[idx]]$labels$title
                              #title = 'atop("PG: PCA of 'reporter intensity'", scriptstyle("(excludes contaminants)"))'
-                             title
-                             regex = "atop\\(\"(.*)\", scriptstyle\\(\"(.*)\"\\)\\)"
-                             m = regexpr(regex, title, perl = TRUE)
+                             regex = 'atop\\("(.*)", scriptstyle\\("(.*)"\\)\\)'
+                             m = regexpr(regex, titles, perl = TRUE)
                              if (m == 1) { ## hit!
-                               text = substring(title, attr(m, "capture.start"), attr(m, "capture.start") + attr(m, "capture.length") - 1)
-                               title = paste0(text[1], subtitle_sep, text[2])
-                               title
+                               text = substring(titles, attr(m, "capture.start"), attr(m, "capture.start") + attr(m, "capture.length") - 1)
+                               return(paste0(text[1], subtitle_sep, text[2]))
                              }
-                             return (title)
+                             return (titles)
                            } else if (stopOnMissing) {
                              stop(c("getTitles() for ", .self$qcName, ": No title found in ggplot object at index ", idx, "!"))
                            } else return("")

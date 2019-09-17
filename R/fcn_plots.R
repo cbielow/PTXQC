@@ -159,7 +159,7 @@ plot_ContEVD = function(data, top5)
   if (length(top5) > 5) stop("Top5 protein list is longer than 5 (which is the maximum allowed).")
   
   intensity = NULL ## to make R CHECK happy...
-  data.sub = data[data$contaminant,]
+  data.sub = data[data$contaminant > 0,]
   ## rewrite prot names, and subsume 6th and below as 'other'
   data.sub$pname = as.character(data.sub$pname)
   data.sub[!(data.sub$pname %in% top5), "pname"] = 'other'
@@ -302,7 +302,7 @@ plot_CountData = function(data, y_max, thresh_line, title)
         ylab("count") +
         scale_x_discrete_reverse(data$fc.raw.file) +
         ylim(0, y_max) +
-        scale_fill_manual(values = c("green", "#BEAED4", "red")) +
+        scale_fill_manual(values = c("green", "#BEAED4", "blue")) +
         addGGtitle(title_main, title_sub) + 
         geom_abline(alpha = 0.5, intercept = thresh_line, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
         coord_flip()
@@ -814,10 +814,9 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
 }
 
 #' helper S3 class, enabling print(some-plot_Table-object)
-#' @importFrom grid grid.newpage grid.draw
 #' @param x Some Grid object to plot
-#' @param ... further arguments (not used, but required for consistency with other print methods)
-#' @return A function
+#' @param ... Further arguments (not used, but required for consistency with other print methods)
+#' @return NULL
 #' 
 #' @export
 #' 
@@ -1153,7 +1152,7 @@ plot_IonInjectionTimeOverRT = function(data, stats, extra_limit)
         geom_hline(yintercept = extra_limit, linetype = 'dashed') +
         guides(color=guide_legend(title="Raw file with\naverage inj. time")) +
         ggtitle("MSMSscans: Ion Injection Time over RT") +
-        pointsPutX(x_range=range(data$rRT), x_section=c(0.03,0.08), y=stats_sub$mean, col=stats_sub$fc.raw.file[,drop = TRUE])
+        pointsPutX(x_range = range(data$rRT), x_section = c(0.03, 0.08), y = stats_sub$mean, col = stats_sub$fc.raw.file[,drop = TRUE])
   
   #print(p)
   return(p)

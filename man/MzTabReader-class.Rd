@@ -21,9 +21,10 @@ and is automatically updated/queried when $readMzTab is called.
 \section{Methods}{
 
 \describe{
-\item{\code{getEvidence()}}{Basically the PEP table and additionally columns named 'raw.file' and 'fc.raw.file'.}
+\item{\code{getEvidence()}}{Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'.}
 
-\item{\code{getMSMSScans()}}{Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'.}
+\item{\code{getMSMSScans(identified_only = FALSE)}}{Basically the PSM table (partially renamed columns) and additionally two columns 'raw.file' and 'fc.raw.file'. 
+If identified_only is TRUE, only MS2 scans which were identified (i.e. a PSM) are returned -- this is equivalent to msms.txt in MaxQuant.}
 
 \item{\code{getParameters()}}{Converts internal mzTab metadata section to a two column key-value data.frame similar to MaxQuants parameters.txt.}
 
@@ -31,5 +32,7 @@ and is automatically updated/queried when $readMzTab is called.
 
 \item{\code{getSummary()}}{Converts internal mzTab metadata section to a two data.frame with columns 'fc.raw.file', 'ms.ms.identified....'
 similar to MaxQuants summary.txt.}
+
+\item{\code{RTUnitCorrection(dt)}}{Convert all RT columns from seconds (OpenMS default) to minutes (MaxQuant default)}
 }}
 

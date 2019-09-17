@@ -20,8 +20,8 @@ e.g. a 'calibrated.retention.time' column.
 Note that this function must be given MS/MS identifications of type "MULTI-MSMS" and "MSMS-MATCH".
 It will stop() otherwise.
  
-We compare for each peptide sequence (and charge) the RT difference within groups of genuine and mixed pairs.
-For every comparison made, we report the RT difference. If alignment worked perfectly, the differences are very small (<1 min),
+We compare for each peptide sequence (and charge) the RT difference within groups of either genuine as well as mixed pairs.
+For every comparison made, we report the RT span If alignment worked perfectly, the span are very small (<1 min),
 for the mixed group, i.e. the pairs are accidentally split 3D peaks. Alignment performance has no influence on the
 genuine-only groups.
 

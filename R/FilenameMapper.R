@@ -8,7 +8,6 @@
 #' @field mapping.creation how the current mapping was obtained (user or auto)
 #' @field external.mapping.file Filename of user-defined mapping file; only defined if readMappingFile() was called
 #'
-#' @import methods
 #' @import ggplot2
 #' 
 #' @exportClass FilenameMapper
@@ -33,62 +32,54 @@ initialize=function() {
  return(.self)
 },
 
-mapRunsToShort = function(.self, ms_runs)
+specrefToRawfile = function(.self, specrefs)
 {
-  "Given a vector of ms_runs, return a data.frame of identical length with columns 'raw.file' and 'fc.raw.file'."
+  "Return a DF with 'ms_run', 'raw.file' and 'fc.raw.file' given a vector of spectraReferences, e.g. 'ms_run[1]:...', '...'"
+  
+  res = data.frame(ms_run = sub("[.]*:.*", "\\1", specrefs))
+  return (cbind(res, .self$msrunToRawfile(res$ms_run)))
+},
+
+msrunToRawfile = function(.self, ms_runs)
+{
+  "Given a vector of ms_runs, c('ms_run[1]', ...), return a data.frame of identical length with columns 'raw.file' and 'fc.raw.file'."
+  
   if (!"ms.run" %in% colnames(.self$raw_file_mapping)) stop("Mapping is missing 'ms.run' from mzTab!")
   
-  res = .self$raw_file_mapping[ match(ms_runs, .self$raw_file_mapping$ms.run), c("from", "to")]
+  res = .self$getRawfm()[ match(ms_runs, .self$raw_file_mapping$ms.run), c("from", "to")]
   colnames(res) = c("raw.file", "fc.raw.file")
   return (res)
 },
 
-getShortNames = function(.self, raw.filenames, max_length = 10, ms_runs = NULL)
+getShortNames = function(.self, raw_filenames, max_length = 10, ms_runs = NULL)
 {
-  "Uses the internal mapping (or augments it if possible) and maps the input raw names to shorter output names. 
+  "Uses the internal mapping (or re-creates it if current one is incomplete) and maps the input raw names to shorter output names. 
     Returns a vector of the same length."
-  #rf <<- raw.filenames
-  #raw.filenames = rf
+  #rf <<- raw_filenames
+  #raw_filenames = rf
 
-  if (!is.null(ms_runs) && length(ms_runs) != length(raw.filenames)) stop("raw.filenames and ms_runs do not have the same length!")
+  if (!is.null(ms_runs) && length(ms_runs) != length(raw_filenames)) stop("raw_filenames and ms_runs do not have the same length!")
   
   cat(paste0("Adding fc.raw.file column ..."))
-  ## check if we already have a mapping
-  if (nrow(.self$raw_file_mapping) == 0)
-  {
-    rfm = .self$getShortNamesStatic(unique(raw.filenames), max_length)
+  ## if there is no mapping, or if its incomplete (outdated mapping file)
+  if (nrow(.self$raw_file_mapping) == 0 || any(is.na(match(raw_filenames, .self$raw_file_mapping$from))))
+  { ## --> redo
+    rfm = .self$getShortNamesStatic(unique(raw_filenames), max_length)
     if (!is.null(ms_runs)) {
-      rfm$ms.run = ms_runs[ match(rfm$from, raw.filenames)  ]
+      rfm$ms.run = ms_runs[ match(rfm$from, raw_filenames)  ]
     }
     .self$raw_file_mapping = rfm
     ## indicate to outside that a new table is ready
     .self$mapping.creation = .self$getMappingCreation()['auto']
   }
   ## do the mapping    
-  v.result = as.factor(.self$raw_file_mapping$to[match(raw.filenames, .self$raw_file_mapping$from)])
+  v.result = as.factor(.self$raw_file_mapping$to[match(raw_filenames, .self$raw_file_mapping$from)])
   
   ## check for NA's
   if (any(is.na(v.result)))
   { ## if mapping is incomplete
-    missing = unique(raw.filenames[is.na(v.result)])
-    if (.self$mapping.creation != .self$getMappingCreation()['user'])
-    {
-      stop("Hithero unknown Raw files: " %+% paste(missing, collapse=", ", sep="") %+% " occurred in file '" %+% file %+% "' which were not present in previous txt files.")
-    }
-    ## the user has re-run the pipeline with more Raw files,
-    ## but the old _filename_sort.txt file was used to read the (now incomplete mapping)
-    warning("Incomplete mapping file '", .self$external.mapping.file, "'.\nAugmenting shortened Raw files:\n  " %+% 
-              paste(missing, collapse="\n  ", sep="") %+% ".\nEdit the table if necessary and re-run PTXQC.")
-    ## augment
-    addon = .self$getShortNamesStatic(missing, max_length, nrow(.self$raw_file_mapping) + 1)
-    if (!is.null(ms_runs)) {
-      missing_msrun = ms_runs [ match( missing, raw.filenames ) ]
-      addon$ms.run = missing_msrun [ match( addon$from, missing) ]
-    }
-    .self$raw_file_mapping = rbind(.self$raw_file_mapping, addon)
-    ## redo mapping with full map
-    v.result = as.factor(.self$raw_file_mapping$to[match(raw.filenames, .self$raw_file_mapping$from)])
-    
+    missing = unique(raw_filenames[is.na(v.result)])
+    stop(paste0("Hithero unknown Raw files: ", paste(missing, collapse=", ", sep=""), " encountered in file '", file, "' which were not present in previous data files.\nPlease delete the file or fix it."))
   } 
   cat(paste0(" done\n"))
   return (v.result)
@@ -230,7 +221,9 @@ readMappingFile = function(.self, filename)
   "Reads a mapping table of full Raw file names to shortened names.
 
   The internal structure \\verb{raw_file_mapping} is created using this file.
-  If the file is missing, nothing is done.
+  If the file is missing, nothing is done and FALSE is returned.
+  If the file contains contradictory information (different set of $from files) compared to
+  the current mapping (if present), the internal mapping wins (filemapping is ignored) and FALSE is returned.
  
   The file must have two columns named: 'orig.Name' and 'new.Name' and use Tab as separator.
   This file can be used to manually substitute Raw file names within the report.
@@ -270,6 +263,14 @@ readMappingFile = function(.self, filename)
     dfs$to = factor(dfs$to, levels = unique(dfs$to), ordered = TRUE) ## keep the order
     dfs$from = factor(dfs$from, levels = unique(dfs$from), ordered = TRUE) ## keep the order
     ## set internal mapping
+    if (nrow(.self$raw_file_mapping) > 0 &  ## was initialized before...
+        !setequal(.self$raw_file_mapping$from, dfs$from)) ## .. and has different data
+    {
+      print(paste0("Raw filename mapping in file '", filename, "' has different set of raw files than current data. Mapping file will be ignored and overwritten!",
+                   "\nold filenames in mapping:\n  ", paste(dfs$from, collapse="\n  "), 
+                   "\nnew filenames from data:\n  ", paste(.self$raw_file_mapping$from, collapse="\n  ")))
+      return (FALSE)
+    }
     .self$raw_file_mapping = dfs
     ## set who defined it
     .self$mapping.creation = 'file (user-defined)'

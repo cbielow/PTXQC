@@ -122,7 +122,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
           head(cont_data.l)
           
           ## melt
-          cont_data = ldply(cont_data.l, function(l) { l$cont_data })
+          cont_data = plyr::ldply(cont_data.l, function(l) { l$cont_data })
           cont_data.long = reshape2::melt(cont_data, id.vars="fc.raw.file")
           
           # 
@@ -137,13 +137,13 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
           lpl = append(lpl, list(pl_cont))
         } else {
           ## plot User-Contaminants
-          lpl_i = byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120, 
-                          FUN = plot_ContUser, sort_indices = TRUE, 
+          lpl_i = byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120,
+                          FUN = plot_ContUser, sort_indices = TRUE,
                           name_contaminant = ca, extra_limit = ca_thresh, subtitle = paste("search realm:", search_realm))
           lpl = append(lpl, lpl_i)
           
           ## plot Andromeda score distribution of contaminant vs. sample
-          pl_andr = llply(cont_data.l, function(l)
+          pl_andr = plyr::llply(cont_data.l, function(l)
           {
             if (l$cont_data$above.thresh == FALSE ||
                 is.null(l$cont_scoreECDF))
@@ -154,7 +154,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
             #print(p)
             return(p)
           })
-          pl_andr_nonNull = compact(pl_andr) ## remove 'NULL' entries from plot list
+          pl_andr_nonNull = plyr::compact(pl_andr) ## remove 'NULL' entries from plot list
           lpl = append(lpl, pl_andr_nonNull)
           
           ## add heatmap column
@@ -173,8 +173,8 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
       
       return(list(plots = lpl, qcScores = local_qcScores))
     }, 
-    qcCat = "Prep", 
-    qcName = "EVD:Contaminant~(%s)", 
+    qcCat = "Prep",
+    qcName = "EVD:Contaminant~(%s)",
     orderNr = 0020
   )
     return(.self)
@@ -189,7 +189,7 @@ qcMetric_EVD_PeptideInt =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "Peptide precursor intensity per Raw file from evidence.txt.
+      "Peptide precursor intensity per Raw file from evidence.txt WITHOUT match-between-runs evidence.
 Low peptide intensity usually goes hand in hand with low MS/MS identifcation rates and unfavourable signal/noise ratios,
 which makes signal detection harder. Also instrument acquisition time increases for trapping instruments.
 
@@ -298,7 +298,7 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
                      value.name = "intensity",
                      variable.name = "channel")
       head(df_reps)
-      dt_reps = data.table(df_reps)
+      dt_reps = data.table::data.table(df_reps)
 
       ## do NOT remove -inf and NA's and 0's -- we need them to count labeling-efficiency (#entries with intensity > 0 vs. ALL)
 
@@ -383,19 +383,25 @@ MBR should be switched off for the Raw files which are affected (could be a few 
 
 Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or exceeding the target threshold gives a score of 100%%.
 ",
-    workerFcn = function(.self, df_evd, thresh_protCount)
+    workerFcn = function(.self, df_evd, df_evd_tf, thresh_protCount)
     {
       ## completeness check
+
       if(!checkInput(c("fc.raw.file", "protein.group.ids", "match.time.difference"), colnames(df_evd))) return()
+
+      req_cols = c("fc.raw.file", "protein.group.ids", "hasMTD")
+      stopifnot(req_cols %in% colnames(df_evd))
+      stopifnot(req_cols %in% colnames(df_evd_tf))
+
       
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_protCount)
       
-      protC = getProteinCounts(df_evd[, c("fc.raw.file", "protein.group.ids", "match.time.difference")])
+      protC = getProteinCounts(rbind(df_evd[,req_cols], df_evd_tf[, req_cols]))
       protC$block = factor(assignBlocks(protC$fc.raw.file, 30))
       
       max_prot = max(unlist(plyr::dlply(protC, "fc.raw.file", function(x) sum(x$counts))))
       ## average gain in percent
-      reportMTD = any(!is.na(df_evd$match.time.difference))
+      reportMTD = nrow(df_evd_tf) > 0
       gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(protC$MBRgain, na.rm = TRUE)), "")
       
       lpl = plyr::dlply(protC, "block", .fun = function(x)
@@ -453,19 +459,22 @@ MBR should be switched off for the Raw files which are affected (could be a few 
 
 Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or exceeding the target threshold gives a score of 100%%.
 ",
-    workerFcn = function(.self, df_evd, thresh_pepCount)
+    workerFcn = function(.self, df_evd, df_evd_tf, thresh_pepCount)
     {
       ## completeness check
-      if(!checkInput(c("fc.raw.file", "modified.sequence", "match.time.difference"), colnames(df_evd))) return()
-      
+
+      req_cols = c("fc.raw.file", "modified.sequence", "hasMTD")
+      if(!checkInput(req_cols, colnames(df_evd))) return()
+      if(!checkInput(req_cols, colnames(df_evd_tf))) return()
+
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_pepCount)
       
-      pepC = getPeptideCounts(df_evd[, c("fc.raw.file", "modified.sequence", "match.time.difference")])
+      pepC = getPeptideCounts(rbind(df_evd[, req_cols], df_evd_tf[, req_cols]))
       pepC$block = factor(assignBlocks(pepC$fc.raw.file, 30))
       
       max_pep = max(unlist(plyr::dlply(pepC, "fc.raw.file", function(x) sum(x$counts))))
       ## average gain in percent
-      reportMTD = any(!is.na(df_evd$match.time.difference))
+      reportMTD = any(df_evd$hasMTD)
       gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pepC$MBRgain, na.rm = TRUE)), "")
       
       lpl = plyr::dlply(pepC, "block", .fun = function(x)
@@ -603,7 +612,7 @@ Heatmap score [EVD: MBR Align]: fraction of 'green' vs. 'green+red' peptides.
       } else {
         refRaw = findAlignReference(df_evd)
         col_fraction = c()
-        txt_subtitle = paste("alignment reference:", refRaw)
+        txt_subtitle = paste("alignment reference:", gsub("\\", "/", refRaw, fixed = TRUE)) ## subtitles in ggplot must not contain '\'
         evd_has_fractions = FALSE
       }
       
@@ -708,20 +717,22 @@ This score is 'pessimistic' because if few ID's were transferred, but all of the
 the majority of peptides is still ok (because they are genuine). However, in this case MBR
 provides few (and wrong) additional information, and should be disabled.
 ",
-    workerFcn = function(.self, df_evd, avg_peak_width)
+    workerFcn = function(.self, df_evd, df_evd_tf, avg_peak_width)
     {
       ## completeness check
       #stopifnot(c("...") %in% colnames(df_evd))
-      
+
+      df_evd_all = merge(df_evd, df_evd_tf, all = TRUE)
+            
       ## increase of segmentation by MBR:
       ## three values returned: single peaks(%) in genuine, transferred and all(combined)
-      qMBR = peakSegmentation(df_evd)
+      qMBR = peakSegmentation(df_evd_all)
       head(qMBR)
       ## for groups: get their RT-spans
       ## ... genuine ID's only (as 'rtdiff_genuine') 
       ##  or genuine+transferred (as 'rtdiff_mixed'))
       ## Could be empty (i.e. no groups, just singlets) if data is really sparse ..
-      qMBRSeg_Dist = idTransferCheck(df_evd)
+      qMBRSeg_Dist = idTransferCheck(df_evd_all)
       #head(qMBRSeg_Dist)
       #head(qMBRSeg_Dist[qMBRSeg_Dist$fc.raw.file=="file 13",])
       
@@ -769,14 +780,25 @@ qcMetric_EVD_MBRaux =  setRefClass(
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
       "Auxililiary plots -- experimental -- without scores.
+  
+Return a tree plot with a possible alignment tree.
+This allows the user to judge which Raw files have similar corrected RT's (i.e. where aligned successfully).
+If there are clear sub-clusters, it might be worth introducing artifical fractions into MaxQuant,
+to avoid ID-transfer between these clusters (use the MBR-Align and MBR-ID-Transfer metrics to support the decision).
+ 
+If the input contains fractions, leaf nodes will be colored accordingly.
+Distinct sub-clusters should have their own color.
+If not, MaxQuant's fraction settings should be optimized.
+Note that introducing fractions in MaxQuant will naturally lead to a clustering here (it's somewhat circular).
 
 Heatmap score: none.
 ",
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
-      if(!checkInput(c("type", "match.time.difference", "calibrated.retention.time", "fc.raw.file", "modified.sequence", "charge"), colnames(df_evd))) return()
-      
+
+      if(!checkInput(c("type", "hasMTD", "calibrated.retention.time", "fc.raw.file", "modified.sequence", "charge"), colnames(df_evd))) return()
+    
       if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
         ## fractions: there must be more than one, otherwise MQ will treat the samples as unfractionated
         col_fraction = "fraction"
@@ -791,10 +813,10 @@ Heatmap score: none.
                         col_fraction = col_fraction)
       
       ## MBR: additional evidence by matching MS1 by AMT across files
-      if (any(!is.na(df_evd$match.time.difference))) {
+      if (any(df_evd$hasMTD)) {
         ## gain for each raw file: absolute gain, and percent gain
         mtr.df = plyr::ddply(df_evd, "fc.raw.file", function(x) {
-          match_count_abs = sum(!is.na(x$match.time.difference))
+          match_count_abs = sum(x$hasMTD)
           ## if only matched IDs are present, this would be 'Inf' -- we limit that to 1e4
           match_count_pc  = min(1e4, round(100*match_count_abs/(nrow(x)-match_count_abs))) ## newIDs / oldIDs
           return (data.frame(abs = match_count_abs, pc = match_count_pc))
@@ -831,7 +853,7 @@ Consistent charge distribution is paramount for comparable 3D-peak intensities a
 
 Heatmap score [EVD: Charge]: Deviation of the charge 2 proportion from a representative Raw file ('qualMedianDist' function).
 ",
-    workerFcn = function(.self, df_evd, int_cols, MAP_pg_groups)
+    workerFcn = function(.self, df_evd)
     {
       ## completeness check
       if(!checkInput(c("hasMTD", "fc.raw.file", "charge"), colnames(df_evd))) return()
@@ -1070,7 +1092,7 @@ Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = samp
       df_evd$pname[df_evd$pname==""] = df_evd$proteins[df_evd$pname==""] ## a NOP if it already is 'proteins', but ok
       
       df_evd.totalInt = sum(as.numeric(df_evd$intensity), na.rm = TRUE)
-      df_evd.cont.only = df_evd[df_evd$contaminant,]
+      df_evd.cont.only = df_evd[df_evd$contaminant > 0,]
 
       cont.top = by(df_evd.cont.only, df_evd.cont.only$pname, function(x) sum(as.numeric(x$intensity), na.rm = TRUE) / df_evd.totalInt*100)
       cont.top.sort = sort(cont.top, decreasing = TRUE)
@@ -1346,23 +1368,27 @@ Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in com
       
       lf = tapply(df_evd$modified.sequence, df_evd$fc.raw.file, function(x){return(list(unique(x)))})
       
-      lpl = list(UpSetR::upset(UpSetR::fromList(lf)), 
-                 UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, intersect))), 
-                 UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, union))))
-      title = list("EVD: UpSet distinct", 
-                   "EVD: UpSet intersect",
-                   "EVD: UpSet union")
+      lpl = list(UpSetR::upset(UpSetR::fromList(lf), nsets = min(30, length(lf)), keep.order = TRUE, mainbar.y.label = "distinct size"))
+      if (length(lf) < 6)
+      { ## performance for enumerating all supersets forbids doing it on larger sets until we make this code smarter...
+        lpl[[2]] = UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, intersect)), mainbar.y.label = "intersection size")
+        lpl[[3]] = UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, union)), mainbar.y.label = "union size")
+      }
+      titles = list("EVD: UpSet distinct", 
+                    "EVD: UpSet intersect",
+                    "EVD: UpSet union")[1:length(lpl)]
       
       score = sapply(1:length(names(lf)), function(x){
         union = unique(unlist(lf[-x]))
         inters = intersect(lf[[x]], union)
         score = length(inters)/length(union)
-        return(EVD_UpSet = score)
-        })
+        return(score)
+      })
       
-      qcScore = data.frame(fc.raw.file = names(lf), EVD_upSet = score)
+      qcScore = data.frame(fc.raw.file = names(lf), score = score)
+      colnames(qcScore)[2] = .self$qcName
       
-      return(list(plots = lpl, title = title, qcScores = qcScore))
+      return(list(plots = lpl, title = titles, qcScores = qcScore))
     }, 
     qcCat = "LC",
     qcName = "EVD:~UpSet", 

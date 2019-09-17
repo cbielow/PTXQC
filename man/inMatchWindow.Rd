@@ -7,7 +7,7 @@
 inMatchWindow(data, df.allowed.deltaRT)
 }
 \arguments{
-\item{data}{A data.frame with columns 'fc.raw.file' and !colname (param)}
+\item{data}{A data.frame with columns 'fc.raw.file', 'rtdiff_mixed', 'rtdiff_genuine'}
 
 \item{df.allowed.deltaRT}{The allowed matching difference for each Raw file (as data.frame(fc.rawfile, m))}
 }
