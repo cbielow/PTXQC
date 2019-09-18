@@ -63,8 +63,7 @@
     mzt = MzTabReader$new()
     mzt$readMzTab(mztab_file) ## creates an inital fc.raw.file mapping from MTD
     expr_fn_map = quote(mzt$fn_map)
-    ### Erinnerung
-    mzt$sections$PSM = mzt$sections$PSM[colnames(mzt$sections$PSM)!= "opt.global.cf.id"]
+    
   } else 
   {
     if (!any(file.info(txt_folder)$isdir, na.rm = TRUE))

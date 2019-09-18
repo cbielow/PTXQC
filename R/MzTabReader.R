@@ -157,9 +157,7 @@ getEvidence = function()
   if("opt.global.cf.id" %in% colnames(res)){
     res = res[!is.na(res$opt.global.cf.id),]
   }
-  
 
-  
   ## remove empty PepIDs 
   ## ... unidentfied MS2 scans (NA)      or with no ConsensusFeature group (-1), i.e. unassigned PepIDs
   res = res[!(is.na(res$opt.global.cf.id) | (res$opt.global.cf.id == -1)),]
@@ -191,13 +189,12 @@ getEvidence = function()
                  opt.global.fragment.mass.error.da = "mass.deviations..da.",
             opt.global.cv.MS.1002217.decoy.peptide = "reverse"
           )
-  data.table::setnames(res, old = names(name), new = unlist(name), skip_absent = TRUE)
-
+  #data.table::setnames(res, old = names(name), new = unlist(name), skip_absent = TRUE)
+ rename(res, name)
 
   ## optional in MzTab (depending on which FeatureFinder was used)
-  if("opt.global.FWHM" %in% colnames(res)) {
-    data.table::setnames(res, old = c("opt.global.FWHM"), new = c("retention.length"))
-  }
+  data.table::setnames(res, old = c("opt.global.FWHM"), new = c("retention.length"), skip_absent = TRUE)
+
 
   
   ## de-duplicate protein-accession entries
@@ -227,7 +224,9 @@ getEvidence = function()
   ## map from PSM -> PEP row
   ## ... do NOT use spectra.ref since this is ambiguous (IDMapper duplicates MS2 PepIDs to multiple features)
   res$pep_idx = match(res$opt.global.feature.id, df_pep$opt.global.feature.id, nomatch = NA_integer_)
-  stopifnot(all(!is.na(res$pep_idx)))
+
+  
+ # stopifnot(all(!is.na(res$pep_idx)))
   
   res$ms_run_number = as.numeric(gsub("^ms_run\\[(\\d*)\\].*", "\\1", res$ms_run))
   col_abd_df_pep = grepv( "^peptide.abundance.study.variable.", names(df_pep))
@@ -248,17 +247,17 @@ getEvidence = function()
     r[duplicated(idx)] = NA
     return(r)
   }
+  if (all(c("opt.global.cf.id") %in% colnames(res))) {
   res[,
       intensity := NA_duplicates(m_pep_abd[, .SD$pep_idx[1]], .SD$ms_run_number),
       by = "opt.global.cf.id"]
+  }
   summary(res$intensity)
 
 
   
+    #res$intensity[duplicated(res[,c("opt.global.map.index","opt.global.cf.id")])] = NA
 
-  if (all(c("opt.global.map.index","opt.global.cf.id") %in% colnames(res))) {
-    res$intensity[duplicated(res[,c("opt.global.map.index","opt.global.cf.id")])] = NA
-  }
   
 
   ## just check if there are no invalid entries
@@ -299,9 +298,6 @@ getEvidence = function()
   class(res_tf) = "data.frame"
   
 
-  ## just check if there are no invalid entries
-  stopifnot(all(!is.na(res$contaminant)))
-
   message("Evidence table generated: ", nrow(res), "x", ncol(res), "(genuine); ", nrow(res_tf), "x", ncol(res_tf), "(transferred)")
   
   return (list("genuine" = res, "transferred" = res_tf))
@@ -317,7 +313,7 @@ getMSMSScans = function(identified_only = FALSE)
 
   stopifnot(all((res$opt.global.identified == 1) == (!is.na(res$sequence))))
   if (identified_only) {
-    res = res[opt.global.identified == 1, ] # == NA sequence
+    res = res[!is.na(res$sequence), ] # == NA sequence
   }
   
   ## de-duplicate PSM.ID column: take first row for each PSM.ID 
@@ -365,17 +361,14 @@ getMSMSScans = function(identified_only = FALSE)
               opt.global.total.ion.count = "total.ion.current",
               opt.global.base.peak.intensity = "base.peak.intensity")
  
-  data.table::setnames(res, old = names(name), new = unlist(name), skip_absent = TRUE)
+  #data.table::setnames(res, old = names(name), new = unlist(name), skip_absent = TRUE)
+ rename(res, name)
  
   if ("mass.deviations..ppm." %in% colnames(res)) {
-    #res$mass.deviations..ppm. = gsub("\\[|\\]", "", res$mass.deviations..ppm.)
-    #res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm.)
     res$mass.deviations..ppm. = substr(res$mass.deviations..ppm., 2, nchar(res$mass.deviations..ppm.) - 2)
     res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm., fixed = TRUE)
   }
   if ("mass.deviations..da." %in% colnames(res)) {   
-    #res$mass.deviations..da. = gsub("\\[|\\]", "",  res$mass.deviations..da.)
-    #res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da.)
     res$mass.deviations..da. = substr(res$mass.deviations..da., 2, nchar(res$mass.deviations..da.) - 2)
     res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da., fixed = TRUE)
   }
@@ -387,7 +380,10 @@ getMSMSScans = function(identified_only = FALSE)
   }
   
  # set contaminant to TRUE/FALSE
-  res$contaminant = (res$contaminant > 0)
+  if ("contaminant" %in% colnames(res)){
+    res$contaminant = (res$contaminant > 0)
+  }
+ 
   
   #set identified to needed values
   if("identified" %in% colnames(res)){
@@ -421,6 +417,20 @@ RTUnitCorrection = function(dt)
   dt[, c(cn_rt) := lapply(.SD, function(x)  x / 60), .SDcols = cn_rt]
   #dt[, ..cn_rt]
   return(NULL)
+},
+
+rename = function(dt, namevec)
+{
+  data.table::setnames(dt, old = names(namevec), new = unlist(namevec), skip_absent = TRUE)
+  
+  bla = unlist(namevec) %in% colnames(dt)
+  if (!all(bla))
+  {
+    warning(paste0("Columns '", 
+                   paste(names(namevec)[!bla], "' after renaming: '", unlist(namevec)[!bla], collapse="', '", sep=""),
+                   "' are not present in input data!"),
+            immediate. = TRUE)
+  }
 }
 
 ) # methods

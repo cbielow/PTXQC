@@ -193,12 +193,12 @@ flattenList = function(x) {
   }
 }
 
-checkInput = function(required_columns, given_columns)
+checkInput = function(required_columns, given_df)
 {
-  if (!all(required_columns %in% given_columns))
+  if (!all(required_columns %in% colnames(given_df)))
   {
     warning(paste0("Input check failed: columns '", 
-                   paste(setdiff(required_columns, given_columns), collapse="', '", sep=""),
+                   paste(setdiff(required_columns, colnames(given_df)), collapse="', '", sep=""),
                    "' are not present in input data!"),
             immediate. = TRUE)
     return (FALSE)
