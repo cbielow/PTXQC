@@ -271,7 +271,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
     workerFcn = function(.self, df_pg, ratio_cols, thresh_LabelIncorp, GL_name_min_length)
     {
       ## completeness check
-      if (!checkInput(c(ratio_cols, "contaminant", "reverse")),df_pg)) return()
+      if (!checkInput(c(ratio_cols, "contaminant", "reverse"),df_pg)) return()
       
       ## remove reverse and contaminants (might skew the picture)
       idx_row = !df_pg$contaminant & !df_pg$reverse

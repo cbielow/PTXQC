@@ -406,13 +406,13 @@ RTUnitCorrection = function(dt)
   return(NULL)
 },
 
-renameColumns() = function(dt, namelist)
+renameColumns = function(dt, namelist)
 {
   "Renames all columns and throws a warning if a column does not exist in the data"
   
   data.table::setnames(dt, old = names(namelist), new = unlist(namelist), skip_absent = TRUE)
   
-  existName = unlist(namevec) %in% colnames(dt)
+  existName = unlist(namelist) %in% colnames(dt)
   if (!all(existName))
   {
     warning(paste0("Columns '", 
