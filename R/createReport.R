@@ -28,7 +28,7 @@
 #'          
 #' @export
 #'
-#createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
+createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
 {
   if (!exists("DEBUG_PTXQC")) DEBUG_PTXQC = FALSE ## debug only when defined externally
   time_start = Sys.time()
@@ -63,7 +63,6 @@
     mzt = MzTabReader$new()
     mzt$readMzTab(mztab_file) ## creates an inital fc.raw.file mapping from MTD
     expr_fn_map = quote(mzt$fn_map)
-    
   } else 
   {
     if (!any(file.info(txt_folder)$isdir, na.rm = TRUE))

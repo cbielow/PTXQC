@@ -18,7 +18,7 @@ Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the th
 
     workerFcn = function(.self, df_summary, id_rate_bad, id_rate_great)
     {
-      if(!checkInput(c("fc.raw.file", "ms.ms.identified...."), df_summary)) return()
+      if (!checkInput(c("fc.raw.file", "ms.ms.identified...."), df_summary)) return()
       
       dms = df_summary$"ms.ms.identified...."
       dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was acquired
@@ -88,7 +88,7 @@ Heatmap score [SM: TIC]: reaches 1 (=100%%) if the TIC is uniform (i.e. a flat l
     workerFcn = function(.self, d_smy)
     {
       ## completeness check
-      if(!checkInput(c("fc.raw.file", "TIC"), d_smy)) return()
+      if (!checkInput(c("fc.raw.file", "TIC"), d_smy)) return()
       
       df_long = plyr::ddply(d_smy, "fc.raw.file", function(x) {
         n = length(x$TIC[[1]])

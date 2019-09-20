@@ -19,7 +19,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
     workerFcn = function(.self, df_msms, fc_raw_files)
     {
       ## completeness check
-      if(!checkInput(c("fc.raw.file", "fragmentation", "reverse", "mass.deviations..da."), df_msms)) return ()
+      if (!checkInput(c("fc.raw.file", "fragmentation", "reverse", "mass.deviations..da."), df_msms)) return ()
       ## older MQ versions do not have 'mass.analyzer' or 'mass.deviations..ppm.'
       ## , so we use fragmentation instead (this is a little risky, since you could do CID fragmentation and forward to Orbi, but hey...)
       if (!("mass.analyzer" %in% colnames(df_msms))) df_msms$mass.analyzer = df_msms$fragmentation
@@ -142,8 +142,8 @@ current study. ",
     workerFcn = function(.self, df_msms, df_evd = NULL)
     {
       ## completeness check
-      if(!checkInput(c("fc.raw.file", "missed.cleavages", "contaminant", "id"), df_msms)) return()
-      #if (!is.null(df_evd)) stopifnot(checkInput(c("contaminant", "id"), df_evd))  ### ???
+      if (!checkInput(c("fc.raw.file", "missed.cleavages", "contaminant", "id"), df_msms)) return()
+      if (!is.null(df_evd)) if (!checkInput(c("contaminant", "id"), df_evd)) return() 
       
       max_mc = max(-Inf, df_msms$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
       if (!is.infinite(max_mc))

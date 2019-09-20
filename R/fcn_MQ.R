@@ -223,7 +223,7 @@ getFragmentErrors = function(x)
 fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2, low_id_rate = 1)
 {
   
-  if(!checkInput(c("fc.raw.file", "mass", "charge", "m.z", "mass.error..ppm.", "uncalibrated.mass.error..ppm.") ,df_evd)) return()
+  if (!checkInput(c("fc.raw.file", "mass", "charge", "m.z", "mass.error..ppm.", "uncalibrated.mass.error..ppm.") ,df_evd)) return()
   
   ## heuristic to determine if the instrument is completely out of calibration, 
   ## i.e. all ID's are false positives, since the Precursor mass is wrong

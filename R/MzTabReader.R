@@ -110,7 +110,8 @@ getParameters = function()
   res = res[-(grep("custom", res$key)),]
   res[is.na(res)] = "NULL" # temp workaround
   
-  data.table::setnames(res, old = "key", new = "parameter", skip_absent = TRUE) ## todo: remove at some point, since it forces us to use `::copy`
+  ## todo: remove at some point, since it forces us to use `::copy`
+  renameColumns(res, list(key = "parameter"))
 
   return (res)
 },
@@ -152,11 +153,6 @@ getEvidence = function()
   "Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'."
   
   res = data.table::as.data.table(.self$sections$PSM)
-  
-  # remove empty PepIDs (with no ConsensusFeature group or unassigned PepIDs (-1); corresponding to unidentfied MS2 scans)
-  if("opt.global.cf.id" %in% colnames(res)){
-    res = res[!is.na(res$opt.global.cf.id),]
-  }
 
   ## remove empty PepIDs 
   ## ... unidentfied MS2 scans (NA)      or with no ConsensusFeature group (-1), i.e. unassigned PepIDs
@@ -172,8 +168,9 @@ getEvidence = function()
   res$retention.time.calibration = NA
   if (all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    data.table::setnames(res, old = c("retention.time",     "opt.global.rt.raw", "opt.global.rt.align"), 
-                              new = c("retention.time.pep", "retention.time",    "calibrated.retention.time"))
+    renameColumns(res, list(retention.time = "retention.time.pep",
+                            opt.global.rt.raw = "retention.time",
+                            opt.global.rt.align = "calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
 
@@ -189,13 +186,14 @@ getEvidence = function()
                  opt.global.fragment.mass.error.da = "mass.deviations..da.",
             opt.global.cv.MS.1002217.decoy.peptide = "reverse"
           )
-  #data.table::setnames(res, old = names(name), new = unlist(name), skip_absent = TRUE)
- rename(res, name)
+
+  
+  renameColumns(res, name)
 
   ## optional in MzTab (depending on which FeatureFinder was used)
-  data.table::setnames(res, old = c("opt.global.FWHM"), new = c("retention.length"), skip_absent = TRUE)
-
-
+  if ("opt.global.FWHM" %in% colnames(res)){
+    renameColumns(res, list(opt.global.FWHM = "retention.length"))
+  }
   
   ## de-duplicate protein-accession entries
   accessions = (res[, .(accession=list(accession)), by=id])$accession
@@ -217,6 +215,7 @@ getEvidence = function()
   ##
   df_pep = data.table::as.data.table(.self$sections$PEP)[!is.na(sequence), ]
   data.table::setnames(df_pep, old = c("opt.global.modified.sequence"), new = "modified.sequence")
+  renameColumns(df_pep, list(opt.global.modified.sequence = "modified.sequence"))
   ## add raw.file...
   df_pep = cbind(df_pep, .self$fn_map$specrefToRawfile(df_pep$spectra.ref))
   ## .. a unique index
@@ -224,9 +223,6 @@ getEvidence = function()
   ## map from PSM -> PEP row
   ## ... do NOT use spectra.ref since this is ambiguous (IDMapper duplicates MS2 PepIDs to multiple features)
   res$pep_idx = match(res$opt.global.feature.id, df_pep$opt.global.feature.id, nomatch = NA_integer_)
-
-  
- # stopifnot(all(!is.na(res$pep_idx)))
   
   res$ms_run_number = as.numeric(gsub("^ms_run\\[(\\d*)\\].*", "\\1", res$ms_run))
   col_abd_df_pep = grepv( "^peptide.abundance.study.variable.", names(df_pep))
@@ -255,13 +251,6 @@ getEvidence = function()
   summary(res$intensity)
 
 
-  
-    #res$intensity[duplicated(res[,c("opt.global.map.index","opt.global.cf.id")])] = NA
-
-  
-
-  ## just check if there are no invalid entries
-  #stopifnot(all(!is.na(res$contaminant)))
   ##
   ## Infer MBR 
   ## --> find all subfeatures in a CF with abundance but missing PSM --> create as MBR-dummy-PSMs
@@ -330,19 +319,17 @@ getMSMSScans = function(identified_only = FALSE)
   ## ... but we only want each MS2 scan represented once here
   res = unique(res, by = c("fc.raw.file", "spectra.ref"))
   
-  if(all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
+  if (all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    data.table::setnames(res,
-             old = c("retention.time"    ,"opt.global.rt.raw","opt.global.rt.align"),
-             new = c("retention.time.pep","retention.time"   ,"calibrated.retention.time"))
+    renameColumns(res, list(retention.time = "retention.time.pep",
+                            opt.global.rt.raw = "retention.time",
+                            opt.global.rt.align = "calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else res$retention.time.calibration = NA
   
-  if("opt.global.ion.injection.time" %in% colnames(res))
-  {
-    data.table::setnames(res, old = "opt.global.ion.injection.time", new = "ion.injection.time")
-  }
+  renameColumns(res, list(opt.global.ion.injection.time = "ion.injection.time"))
+  
   
   name = list(opt.global.calibrated.mz.error.ppm = "mass.error..ppm",
               opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
@@ -362,7 +349,7 @@ getMSMSScans = function(identified_only = FALSE)
               opt.global.base.peak.intensity = "base.peak.intensity")
  
   #data.table::setnames(res, old = names(name), new = unlist(name), skip_absent = TRUE)
- rename(res, name)
+  renameColumns(res, name)
  
   if ("mass.deviations..ppm." %in% colnames(res)) {
     res$mass.deviations..ppm. = substr(res$mass.deviations..ppm., 2, nchar(res$mass.deviations..ppm.) - 2)
@@ -374,19 +361,19 @@ getMSMSScans = function(identified_only = FALSE)
   }
   
  
- #set reverse to needed values
+  #set reverse to needed values
   if ("reverse" %in% colnames(res)){
     res$reverse=(res$reverse=="decoy")
   }
   
- # set contaminant to TRUE/FALSE
+  #set contaminant to TRUE/FALSE
   if ("contaminant" %in% colnames(res)){
     res$contaminant = (res$contaminant > 0)
   }
  
   
   #set identified to needed values
-  if("identified" %in% colnames(res)){
+  if ("identified" %in% colnames(res)){
     stopifnot(unique(res$identified) %in% c(0,1)) ## make sure the column has the expected values (0/1)
     # set $identified to MaxQuant values (+/-)
     res$identified = c("-", "+")[(res$identified==1) + 1]
@@ -419,15 +406,17 @@ RTUnitCorrection = function(dt)
   return(NULL)
 },
 
-rename = function(dt, namevec)
+renameColumns() = function(dt, namelist)
 {
-  data.table::setnames(dt, old = names(namevec), new = unlist(namevec), skip_absent = TRUE)
+  "Renames all columns and throws a warning if a column does not exist in the data"
   
-  bla = unlist(namevec) %in% colnames(dt)
-  if (!all(bla))
+  data.table::setnames(dt, old = names(namelist), new = unlist(namelist), skip_absent = TRUE)
+  
+  existName = unlist(namevec) %in% colnames(dt)
+  if (!all(existName))
   {
     warning(paste0("Columns '", 
-                   paste(names(namevec)[!bla], "' after renaming: '", unlist(namevec)[!bla], collapse="', '", sep=""),
+                   paste(names(namelist)[!existName], "' after renaming: '", unlist(namelist)[!existName], collapse="', '", sep=""),
                    "' are not present in input data!"),
             immediate. = TRUE)
   }

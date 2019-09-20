@@ -186,7 +186,7 @@ qcMetric = setRefClass("qcMetric",
 flattenList = function(x) {
   repeat {
     idx_list = sapply(x, function(arg) {return(all(class(arg) == "list"))})
-    if(!any(idx_list)) return(x)
+    if (!any(idx_list)) return(x)
     r_list = Reduce(append, x[idx_list])
     items = x[!idx_list]
     x = Reduce(append, list(r_list, items))
