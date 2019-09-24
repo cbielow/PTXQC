@@ -1345,6 +1345,8 @@ qcMetric_EVD_UpSet =  setRefClass(
 
 If the number of Raw files is >=6, only the 'distinct' plot is generated (the other two are skipped for performance reasons).
 
+![](https://raw.githubusercontent.com/cbielow/PTXQC/mzTab_support/inst/reportTemplate/modes_UpSet.png 'Example plot showing how the set size is computed')
+    
 Definition: An 'active set' is the set of black dots in a column of the plot -- as opposed to the grey dots (you'll understand when you see it).
 
 <p>
