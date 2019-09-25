@@ -537,8 +537,8 @@ plot_MBRgain = function(data, title_sub = "")
 #' 
 plot_Charge = function(d_charge)
 {
-  p = ggplot(d_charge, aes_string(x = "Var1_center", y = "Var2_height")) +
-        geom_col(aes_string(width = "Margin_var1", fill = "Var2"), color = "black", position = position_stack(reverse = TRUE))  +
+  p = ggplot(d_charge, aes_string(x = "Var1_center", y = "Var2_height", width = "Margin_var1")) +
+        geom_col(aes_string(fill = "Var2"), color = "black", position = position_stack(reverse = TRUE))  +
         geom_text(aes_string(label = "Var1", x = "Var1_center", y = 1.05)) +
         xlab("Raw file") +
         ylab("fraction [%]") +

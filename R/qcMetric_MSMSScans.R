@@ -110,7 +110,7 @@ Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3
       plot_MSMSintensity = function(dd.all) {
         pl = ggplot(data = dd.all, aes(x = fc.raw.file)) + 
                 geom_boxplot(stat = "identity", aes(col = "TIC", ymin = min, lower = lower, middle = middle, upper = upper, ymax = max)) +
-                geom_boxplot(stat = "identity", aes(col = "Base\nPeak", ymin = min2, lower = lower2, middle = middle2, upper = upper2, ymax = max2, width = 0.3)) +
+                geom_boxplot(stat = "identity", aes(col = "Base\nPeak", ymin = min2, lower = lower2, middle = middle2, upper = upper2, ymax = max2), width = 0.3) +
                 scale_color_manual("MS/MS\nintensity", values = c("TIC" = "black", "Base\nPeak" = "blue")) +
                 ylim(0, NA) +
                 scale_x_discrete_reverse(dd.all$fc.raw.file) +
