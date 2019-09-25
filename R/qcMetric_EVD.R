@@ -1374,6 +1374,11 @@ Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in com
       }
       
       lf = tapply(df_evd$modified.sequence, df_evd$fc.raw.file, function(x){return(list(unique(x)))})
+      if (length(lf) <= 1)
+      {
+        lpl = list(ggText("UpSetR", "Only single Raw file detected. Cannot compute unions/intersections."))
+        return(list(plots = lpl, titles = list("EVD: UpSet")))
+      }
       
       lpl = list(UpSetR::upset(UpSetR::fromList(lf), nsets = min(30, length(lf)), keep.order = TRUE, mainbar.y.label = "distinct size"))
       if (length(lf) < 6)
