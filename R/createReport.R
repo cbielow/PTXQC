@@ -222,7 +222,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ######
   
   if (MZTAB_MODE) d_smy = mzt$getSummary()
-  else d_smy = mq$readMQ(txt_files$summary, type="sm", add_fs_col = add_fs_col)$raw
+  else d_smy = mq$readMQ(txt_files$summary, type="sm", add_fs_col = add_fs_col)
   #colnames(d_smy)
   #colnames(d_smy[[1]])
  

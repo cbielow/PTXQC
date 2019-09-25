@@ -60,11 +60,13 @@ read.MQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col =
 #' 
 MQDataReader = setRefClass("MQDataReader",
  fields = list(mq.data = "data.frame",
+               other = "list",
                fn_map = "FilenameMapper"
  ),
  methods = list(
    initialize = function() {
-     .self$data.frame = data.frame();
+     .self$mq.data = data.frame();
+     .self$other = list();
      .self$fn_map = FilenameMapper$new();
      return(.self)
    },
@@ -345,7 +347,7 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
 
   if (type=="sm") { ## post processing for summary
     ## .self$mq.data is basically "raw.files#, but with fc.raw.files augmented
-    .self$mq.data = list(raw = .self$mq.data, groups = groups, total = total)
+    .self$other = list(groups = groups, total = total)
   }
   
   return (.self$mq.data);
