@@ -947,7 +947,7 @@ Heatmap score [EVD: MS Cal Pre (%1.1f)]: the centeredness (function CenteredRef)
       
       .self$helpText = sprintf(.self$helpTextTemplate, tolerance_pc_ppm, tolerance_pc_ppm)
       
-      if (!checkInput(c("uncalibrated.mass.error..ppm.", "mass", "mass.error..ppm"), df_evd)) return()
+      if (!checkInput(c("uncalibrated.mass.error..ppm.", "mass", "mass.error..ppm."), df_evd)) return()
       
       fix_cal = fixCalibration(df_evd, df_idrate, tolerance_sd_PCoutOfCal)
       
@@ -1008,7 +1008,7 @@ Heatmap score [EVD: MS Cal-Post]: The variance and centeredness around zero of t
     {
       ## completeness check
       #stopifnot(c("...") %in% colnames(df_pg))
-      if (!checkInput(c("uncalibrated.mass.error..ppm.", "mass", "mass.error..ppm"), df_evd)) return()
+      if (!checkInput(c("uncalibrated.mass.error..ppm.", "mass", "mass.error..ppm."), df_evd)) return()
       
       fix_cal = fixCalibration(df_evd, df_idrate, tolerance_sd_PCoutOfCal)
       
