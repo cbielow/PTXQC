@@ -948,7 +948,7 @@ Heatmap score [EVD: MS Cal Pre (%1.1f)]: the centeredness (function CenteredRef)
       
       .self$helpText = sprintf(.self$helpTextTemplate, tolerance_pc_ppm, tolerance_pc_ppm)
       
-      if (!checkInput(c("uncalibrated.mass.error..ppm.", "mass", "mass.error..ppm"), df_evd)) return()
+      if (!checkInput(c("uncalibrated.mass.error..ppm.", "mass", "mass.error..ppm."), df_evd)) return()
       
       fix_cal = fixCalibration(df_evd, df_idrate, tolerance_sd_PCoutOfCal)
       
@@ -1009,7 +1009,7 @@ Heatmap score [EVD: MS Cal-Post]: The variance and centeredness around zero of t
     {
       ## completeness check
       #stopifnot(c("...") %in% colnames(df_pg))
-      if (!checkInput(c("uncalibrated.mass.error..ppm.", "mass", "mass.error..ppm"), df_evd)) return()
+      if (!checkInput(c("uncalibrated.mass.error..ppm.", "mass", "mass.error..ppm."), df_evd)) return()
       
       fix_cal = fixCalibration(df_evd, df_idrate, tolerance_sd_PCoutOfCal)
       
@@ -1343,10 +1343,17 @@ qcMetric_EVD_UpSet =  setRefClass(
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
       "The metric shows an upSet plot based on the number of modified peptide sequences per Raw file, intersected or merged with other Raw files (see below for details).<br>
+
+If the number of Raw files is >=6, only the 'distinct' plot is generated (the other two are skipped for performance reasons).
+
+![](https://raw.githubusercontent.com/cbielow/PTXQC/mzTab_support/inst/reportTemplate/modes_UpSet.png 'Example plot showing how the set size is computed')
+    
+Definition: An 'active set' is the set of black dots in a column of the plot -- as opposed to the grey dots (you'll understand when you see it).
+
 <p>
-<b>distinct:</b> shows the number of sequences that are present in ALL active sets. For three Raw files and active sets A and B, this would mean all sequences which occur in A and B, but not in C.<br>
-<b>intersection:</b> shows the number of sequences that occurs in all active sets. <br>
-<b>union:</b> shows the number of sequences that occurs in total. For two files that are all sequences that occurs either in A or in B.<br>
+<b>distinct:</b> shows the number of sequences that are present in ALL active sets. For three Raw files and active sets A and B, this would mean all sequences which occur in A and B (intersect), but not in C (setdiff).<br>
+<b>intersection:</b> shows the number of sequences that occurs in all active sets (intersection).<br>
+<b>union:</b> shows the number of sequences that occurs in total. For two files that are all sequences that occurs either in A or in B (union).<br>
 <p>
 Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in common with all other files.
 ",
@@ -1368,6 +1375,11 @@ Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in com
       }
       
       lf = tapply(df_evd$modified.sequence, df_evd$fc.raw.file, function(x){return(list(unique(x)))})
+      if (length(lf) <= 1)
+      {
+        lpl = list(ggText("UpSetR", "Only single Raw file detected. Cannot compute unions/intersections."))
+        return(list(plots = lpl, titles = list("EVD: UpSet")))
+      }
       
       lpl = list(UpSetR::upset(UpSetR::fromList(lf), nsets = min(30, length(lf)), keep.order = TRUE, mainbar.y.label = "distinct size"))
       if (length(lf) < 6)
