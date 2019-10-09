@@ -721,7 +721,8 @@ provides few (and wrong) additional information, and should be disabled.
     {
       ## completeness check
       #stopifnot(c("...") %in% colnames(df_evd))
-
+      if (!checkInput(c("modified.sequence"), df_evd)) return()
+      
       df_evd_all = merge(df_evd, df_evd_tf, all = TRUE)
             
       ## increase of segmentation by MBR:
@@ -1218,7 +1219,7 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
-      if (!checkInput(c("fc.raw.file", "modified.sequence", "intensity"), df_evd))
+      if (!checkInput(c("fc.raw.file", "modified.sequence", "intensity"), df_evd)) return()
       
       if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
         lpl = list(ggText("Missing Values Skipped", "Missing values calculation skipped. Fractionated data detected!"))

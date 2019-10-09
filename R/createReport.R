@@ -63,6 +63,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     mzt = MzTabReader$new()
     mzt$readMzTab(mztab_file) ## creates an inital fc.raw.file mapping from MTD
     expr_fn_map = quote(mzt$fn_map)
+    
   } else 
   {
     if (!any(file.info(txt_folder)$isdir, na.rm = TRUE))
@@ -469,7 +470,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         #debug (restore data): lst_qcMetrics[["qcMetric_EVD_RTPeakWidth"]]$setData(df_evd)
         avg_peak_width = lst_qcMetrics[["qcMetric_EVD_RTPeakWidth"]]$outData[["avg_peak_width"]]
         if (is.null(avg_peak_width)) {
-          stop("RT peak width module did not run, but is required for MBR metrics. Enable it and try again or switch off MBR metrics!")
+          ######erinnerung  stop
+          warning("RT peak width module did not run, but is required for MBR metrics. Enable it and try again or switch off MBR metrics!")
         } 
         lst_qcMetrics[["qcMetric_EVD_MBRIdTransfer"]]$setData(df_evd, df_evd_tf, avg_peak_width)
 
