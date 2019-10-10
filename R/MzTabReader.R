@@ -420,7 +420,7 @@ getMSMSScans = function(identified_only = FALSE)
   ##                        or 'ms_run[2]:spectrum=33'
   ##      --> extract scan as numeric, since string compare is insufficient for numbers ("13999" > "140")
   res$scan = as.numeric(gsub(".*scan=(\\d*)[^\\d]*|.*spectrum=(\\d*)[^\\d]*", "\\1\\2", res$spectra.ref))
-  #stopifnot(all(!is.na(res$scan))) Erinnerung
+  #stopifnot(all(!is.na(res$scan))) 
   res = res[order(res$fc.raw.file, res$scan), ]
   
   return ( res )
