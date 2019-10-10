@@ -112,7 +112,9 @@ getParameters = function()
   else {
     res = rbind(res, data.frame(key= "fasta file", value = "NULL"))
   }
-  #res = res[-(grep("custom", res$key)),] Erinnerung
+  if (any(grepl("custom", res$key))){
+    res = res[-(grep("custom", res$key)),] 
+  }
   res[is.na(res)] = "NULL" # temp workaround
   
   ## todo: remove at some point, since it forces us to use `::copy`
