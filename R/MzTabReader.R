@@ -170,7 +170,6 @@ getEvidence = function()
     res = res[!(is.na(res$opt.global.cf.id) | (res$opt.global.cf.id == -1)),]
     #stopifnot(min(res$opt.global.cf.id) >= 0) ## would stop on NA as well
   }
- 
   
   ## augment with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
@@ -202,6 +201,15 @@ getEvidence = function()
 
   
   renameColumns(res, name)
+  
+  if (!"modified.sequence" %in% colnames(res)){
+    res$modified.sequence = res$sequence
+    warning("modified.sequence is not present in input data, metrics use sequence instead", immediate. = TRUE)
+  }
+  
+  if(!"contaminant" %in% colnames(res)){
+    res$contaminant = FALSE
+  }
 
   ## optional in MzTab (depending on which FeatureFinder was used)
   if ("opt.global.FWHM" %in% colnames(res)){
@@ -218,20 +226,16 @@ getEvidence = function()
   
   ## annotate ms.ms.count for identical sequences per rawfile, but only the first member of the group; 
   ## all others get NA to prevent double counting
-  if ("modified.sequence" %in% colnames(res)){
     res[, ms.ms.count := c(.N, rep(NA, .N-1)), by = list(raw.file, modified.sequence, charge)]
-  }
-  else{
-    warning("Column ms.ms.count can not be created, because modified.sequence is not present in input data",
-            immediate. = TRUE)
-  }
+
   ## convert values from seconds to minutes for all RT columns
   RTUnitCorrection(res)
 
   ##
   ## intensity from PEP to PSM: only labelfree ('opt.global.cf.id' links all PSMs belonging to a ConsensusFeature)
   ##
-  if (all(c("modified.sequence","opt.global.feature.id") %in% colnames(res))){
+  df_pep = data.frame()
+  if (all(c("opt.global.feature.id") %in% colnames(res))){
     df_pep = data.table::as.data.table(.self$sections$PEP)[!is.na(sequence), ]
     data.table::setnames(df_pep, old = c("opt.global.modified.sequence"), new = "modified.sequence")
     renameColumns(df_pep, list(opt.global.modified.sequence = "modified.sequence"))
@@ -263,7 +267,7 @@ getEvidence = function()
     return(r)
   }
   
-  if (all(c("opt.global.cf.id", "modified.sequence") %in% colnames(res))) {
+  if (all(c("opt.global.cf.id") %in% colnames(res))) {
     ## assign intensity to genuine PSMs
     res$intensity = NA_real_ ## unassigned PSMs have no MS1 intensity
     res[,
@@ -279,8 +283,8 @@ getEvidence = function()
   ## Infer MBR 
   ## --> find all subfeatures in a CF with abundance but missing PSM --> create as MBR-dummy-PSMs
 
-    res_tf = data.frame()
-  if ("modified.sequence" %in% colnames(res)){
+  res_tf = data.frame()
+  if (!plyr::empty(df_pep)){
     res_tf = df_pep[, {#print(idx)
       idx_PSM = which(res$pep_idx == idx)
       runs_with_MS2 = unique(res$ms_run_number[idx_PSM]) ## existing PSMs for this PEP
@@ -295,8 +299,6 @@ getEvidence = function()
     }, by = "idx"] ## one PEP row at a time
     ## convert from "ms_run_number" to fc.raw.file
     res_tf = cbind(res_tf, .self$fn_map$msrunToRawfile(paste0("ms_run[", res_tf$ms_run_number, "]")))
-    res$hasMTD = FALSE
-    res$type = "MULTI-MSMS"
     res_tf$hasMTD = TRUE
     res_tf$type = "MULTI-MATCH"
     
@@ -305,6 +307,8 @@ getEvidence = function()
     
   }
   
+  res$hasMTD = FALSE
+  res$type = "MULTI-MSMS"
   
   
   # set reverse to TRUE/FALSE
@@ -318,6 +322,9 @@ getEvidence = function()
   
 
   message("Evidence table generated: ", nrow(res), "x", ncol(res), "(genuine); ", nrow(res_tf), "x", ncol(res_tf), "(transferred)")
+  
+  ## must at least have column names, but can have 0 rows
+  #stopifnot(ncol(res_tf) > 0)
   
   return (list("genuine" = res, "transferred" = res_tf))
 },
@@ -378,7 +385,6 @@ getMSMSScans = function(identified_only = FALSE)
               opt.global.total.ion.count = "total.ion.current",
               opt.global.base.peak.intensity = "base.peak.intensity")
  
-  #data.table::setnames(res, old = names(name), new = unlist(name), skip_absent = TRUE)
   renameColumns(res, name)
  
   if ("mass.deviations..ppm." %in% colnames(res)) {
@@ -390,17 +396,25 @@ getMSMSScans = function(identified_only = FALSE)
     res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da., fixed = TRUE)
   }
   
+  if (!"dp.modification" %in% colnames(res)) {
+    res$dp.modification = TRUE
+  }
  
+  if (!"missed.cleavages" %in% colnames(res)) {
+    res$missed.cleavages = 0
+  }
+  
   #set reverse to needed values
   if ("reverse" %in% colnames(res)){
     res$reverse=(res$reverse=="decoy")
   }
   
+  
   #set contaminant to TRUE/FALSE
-  if ("contaminant" %in% colnames(res)){
-    res$contaminant = (res$contaminant > 0)
+  if (!"contaminant" %in% colnames(res)){
+    res$contaminant = FALSE
   }
- 
+  res$contaminant = (res$contaminant > 0)
   
   #set identified to needed values
   if ("identified" %in% colnames(res)){

@@ -401,7 +401,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     if (!is.null(all_evd)) all_evd$hasMTD = (all_evd$type == "MULTI-MATCH")
     
     df_evd = all_evd[all_evd$type != "MULTI-MATCH", ]
-    df_evd_tf = all_evd[all_evd$type == "MULTI-MATCH", ]
+    df_evd_tf = all_evd[all_evd$type == "MULTI-MATCH", , drop=FALSE] ## keep columns, if empty
     
   }
 ## just a local scope to fold evidence metrics in the editor...
@@ -470,9 +470,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         #debug (restore data): lst_qcMetrics[["qcMetric_EVD_RTPeakWidth"]]$setData(df_evd)
         avg_peak_width = lst_qcMetrics[["qcMetric_EVD_RTPeakWidth"]]$outData[["avg_peak_width"]]
         if (is.null(avg_peak_width)) {
-          stop("RT peak width module did not run, but is required for MBR metrics. Enable it and try again or switch off MBR metrics!")
-        } 
-        lst_qcMetrics[["qcMetric_EVD_MBRIdTransfer"]]$setData(df_evd, df_evd_tf, avg_peak_width)
+          warning("RT peak width module did not run, but is required for MBR metrics. Enable it and try again or switch off MBR metrics!")
+        } else lst_qcMetrics[["qcMetric_EVD_MBRIdTransfer"]]$setData(df_evd, df_evd_tf, avg_peak_width)
 
         
         ##

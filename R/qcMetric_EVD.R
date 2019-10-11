@@ -43,7 +43,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
       #lst_contaminants = yaml_contaminants
       ## completeness check
       ## PG is either missing, or has the correct data
-      if (!is.null(df_pg)) stopifnot(c("id", "fasta.headers") %in% colnames(df_pg))
+      if (!is.null(df_pg) | !checkInput(c("id", "fasta.headers"), df_pg)) return()
       ## "score" might not be present (e.g. missing in MQ 1.0.13.13)
       if (!checkInput(c("protein.group.ids", "type", "intensity", "fc.raw.file"),df_evd)) return()
 
@@ -465,7 +465,7 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
 
       req_cols = c("fc.raw.file", "modified.sequence", "hasMTD")
       if (!checkInput(req_cols, df_evd)) return()
-      if (!checkInput(req_cols, df_evd_tf)) return()
+      if (!nrow(df_evd_tf)>0 & !checkInput(req_cols, df_evd_tf)) return()
 
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_pepCount)
       
