@@ -112,9 +112,9 @@ getParameters = function()
   else {
     res = rbind(res, data.frame(key= "fasta file", value = "NULL"))
   }
-  if (any(grepl("custom", res$key))){
-    res = res[-(grep("custom", res$key)),] 
-  }
+  
+  res = res[grep("^custom", res$key, invert = TRUE),]
+  
   res[is.na(res)] = "NULL" # temp workaround
   
   ## todo: remove at some point, since it forces us to use `::copy`
@@ -168,7 +168,7 @@ getEvidence = function()
   
   if (all(c("opt.global.cf.id") %in% colnames(res))) {
     res = res[!(is.na(res$opt.global.cf.id) | (res$opt.global.cf.id == -1)),]
-    #stopifnot(min(res$opt.global.cf.id) >= 0) ## would stop on NA as well
+    stopifnot(min(res$opt.global.cf.id) >= 0) ## would stop on NA as well
   }
   
   ## augment with fc.raw.file
@@ -191,7 +191,7 @@ getEvidence = function()
                                 exp.mass.to.charge = "m.z", 
                                    opt.global.mass = "mass", 
                              opt.global.identified = "identified",
-                        opt.global.ScanEventNumber = "scan.event.number",
+                        #opt.global.ScanEventNumber = "scan.event.number",
                                             PSM.ID = "id", 
                       opt.global.modified.sequence = "modified.sequence",
                          opt.global.is.contaminant = "contaminant",
@@ -201,6 +201,10 @@ getEvidence = function()
 
   
   renameColumns(res, name)
+  
+  scan_name = list("scan.event.number")
+  names(scan_name) = grepv("opt.global.ScanEventNumber|opt.global.cv.MS.1000776.scan.number.only.nativeID.format", colnames(res))
+  renameColumns(res, scan_name)
   
   if (!"modified.sequence" %in% colnames(res)){
     res$modified.sequence = res$sequence
@@ -375,7 +379,7 @@ getMSMSScans = function(identified_only = FALSE)
               opt.global.fragment.mass.error.da = "mass.deviations..da.", 
               opt.global.fragment.mass.error.ppm = "mass.deviations..ppm.",
               opt.global.identified = "identified",
-              opt.global.ScanEventNumber = "scan.event.number",
+              #opt.global.ScanEventNumber = "scan.event.number",
               PSM.ID = "id", 
               opt.global.modified.sequence = "modified.sequence",
               opt.global.is.contaminant = "contaminant",
@@ -386,6 +390,10 @@ getMSMSScans = function(identified_only = FALSE)
               opt.global.base.peak.intensity = "base.peak.intensity")
  
   renameColumns(res, name)
+  
+  scan_name = list("scan.event.number")
+  names(scan_name) = grepv("opt.global.ScanEventNumber|opt.global.cv.MS.1000776.scan.number.only.nativeID.format", colnames(res))
+  renameColumns(res, scan_name)
  
   if ("mass.deviations..ppm." %in% colnames(res)) {
     res$mass.deviations..ppm. = substr(res$mass.deviations..ppm., 2, nchar(res$mass.deviations..ppm.) - 2)
@@ -443,9 +451,12 @@ getMSMSScans = function(identified_only = FALSE)
 RTUnitCorrection = function(dt)
 {
   "Convert all RT columns from seconds (OpenMS default) to minutes (MaxQuant default)"
-  
+
   cn_rt = grepv("retention.time|retention.length", names(dt))
-  dt[, c(cn_rt) := lapply(.SD, function(x)  x / 60), .SDcols = cn_rt]
+  if (max(dt[, "retention.time"], na.rm = TRUE) > 300){
+    dt[, c(cn_rt) := lapply(.SD, function(x) x / 60 ), .SDcols = cn_rt]
+  }
+  
   #dt[, ..cn_rt]
   return(NULL)
 },
