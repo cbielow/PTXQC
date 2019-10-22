@@ -465,7 +465,7 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
 
       req_cols = c("fc.raw.file", "modified.sequence", "hasMTD")
       if (!checkInput(req_cols, df_evd)) return()
-      if (!nrow(df_evd_tf)>0 & !checkInput(req_cols, df_evd_tf)) return()
+      if (nrow(df_evd_tf)>0 & !checkInput(req_cols, df_evd_tf)) return()
 
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_pepCount)
       

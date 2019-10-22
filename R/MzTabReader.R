@@ -281,36 +281,6 @@ getEvidence = function()
   }
   
 
-
-
-  ##
-  ## Infer MBR 
-  ## --> find all subfeatures in a CF with abundance but missing PSM --> create as MBR-dummy-PSMs
-
-  res_tf = data.frame()
-  if (!plyr::empty(df_pep)){
-    res_tf = df_pep[, {#print(idx)
-      idx_PSM = which(res$pep_idx == idx)
-      runs_with_MS2 = unique(res$ms_run_number[idx_PSM]) ## existing PSMs for this PEP
-      runs_wo_MS2 = (1:N.studies)[-runs_with_MS2]
-      df = .SD[rep(1, length(runs_wo_MS2)), c("charge", "modified.sequence", "sequence")]
-      df$pep_idx = idx
-      df$ms_run_number = runs_wo_MS2 ## vector
-      df$calibrated.retention.time = m_pep_rt[runs_wo_MS2, idx]
-      df$intensity = m_pep_abd[runs_wo_MS2, idx]
-      df$protein.group.ids = res$protein.group.ids[idx_PSM[1]] ## use PGI from genuine PSMs
-      df ## return
-    }, by = "idx"] ## one PEP row at a time
-    ## convert from "ms_run_number" to fc.raw.file
-    res_tf = cbind(res_tf, .self$fn_map$msrunToRawfile(paste0("ms_run[", res_tf$ms_run_number, "]")))
-    res_tf$hasMTD = TRUE
-    res_tf$type = "MULTI-MATCH"
-    
-    ## check: summed intensities should be equal
-    stopifnot(sum(df_pep[, ..col_abd_df_pep], na.rm = TRUE) == sum(res$intensity, na.rm = TRUE) + sum(res_tf$intensity, na.rm = TRUE))
-    
-  }
-  
   res$hasMTD = FALSE
   res$type = "MULTI-MSMS"
   
@@ -322,8 +292,42 @@ getEvidence = function()
   
   ## remove the data.table info, since metrics will break due to different syntax
   class(res) = "data.frame"
-  class(res_tf) = "data.frame"
+
+
+  ##
+  ## Infer MBR 
+  ## --> find all subfeatures in a CF with abundance but missing PSM --> create as MBR-dummy-PSMs
+
+  res_tf = res[NULL,]
+  stopifnot(ncol(res_tf) > 0)
+  if (!plyr::empty(df_pep)){
+    res_tf_tmp = df_pep[, {#print(idx)
+      idx_PSM = which(res$pep_idx == idx)
+      runs_with_MS2 = unique(res$ms_run_number[idx_PSM]) ## existing PSMs for this PEP
+      runs_wo_MS2 = (1:N.studies)[-runs_with_MS2]
+      df = .SD[rep(1, length(runs_wo_MS2)), c("charge", "modified.sequence", "sequence")]
+      df$pep_idx = idx
+      df$ms_run_number = runs_wo_MS2 ## vector
+      df$calibrated.retention.time = m_pep_rt[runs_wo_MS2, idx]
+      df$intensity = m_pep_abd[runs_wo_MS2, idx]
+      df$protein.group.ids = res$protein.group.ids[idx_PSM[1]] ## use PGI from genuine PSMs
+      df ## return
+    }, by = "idx"] ## one PEP row at a time
+   
+    if(nrow(res_tf_tmp) > 0){
+      res_tf = res_tf_tmp
+      ## convert from "ms_run_number" to fc.raw.file
+      res_tf = cbind(res_tf, .self$fn_map$msrunToRawfile(paste0("ms_run[", res_tf$ms_run_number, "]")))
+      res_tf$hasMTD = TRUE
+      res_tf$type = "MULTI-MATCH"
+      
+      ## check: summed intensities should be equal
+      stopifnot(sum(df_pep[, ..col_abd_df_pep], na.rm = TRUE) == sum(res$intensity, na.rm = TRUE) + sum(res_tf$intensity, na.rm = TRUE))
+    }
+  }
   
+  ## remove the data.table info, since metrics will break due to different syntax
+  class(res_tf) = "data.frame"
 
   message("Evidence table generated: ", nrow(res), "x", ncol(res), "(genuine); ", nrow(res_tf), "x", ncol(res_tf), "(transferred)")
   
@@ -451,9 +455,10 @@ getMSMSScans = function(identified_only = FALSE)
 RTUnitCorrection = function(dt)
 {
   "Convert all RT columns from seconds (OpenMS default) to minutes (MaxQuant default)"
-
-  cn_rt = grepv("retention.time|retention.length", names(dt))
+  
+  #retention.time is mandatory for mzTab
   if (max(dt[, "retention.time"], na.rm = TRUE) > 300){
+    cn_rt = grepv("retention.time|retention.length", names(dt))
     dt[, c(cn_rt) := lapply(.SD, function(x) x / 60 ), .SDcols = cn_rt]
   }
   
