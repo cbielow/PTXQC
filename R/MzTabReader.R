@@ -180,31 +180,28 @@ getEvidence = function()
   res$retention.time.calibration = NA
   if (all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    renameColumns(res, list(retention.time = "retention.time.pep",
-                            opt.global.rt.raw = "retention.time",
+    renameColumns(res, list(     retention.time = "retention.time.pep",
+                              opt.global.rt.raw = "retention.time",
                             opt.global.rt.align = "calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
 
-  name = list(  opt.global.calibrated.mz.error.ppm = "mass.error..ppm.",
-              opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
-                                exp.mass.to.charge = "m.z", 
-                                   opt.global.mass = "mass", 
-                             opt.global.identified = "identified",
-                        #opt.global.ScanEventNumber = "scan.event.number",
-                                            PSM.ID = "id", 
-                      opt.global.modified.sequence = "modified.sequence",
-                         opt.global.is.contaminant = "contaminant",
-                 opt.global.fragment.mass.error.da = "mass.deviations..da.",
-            opt.global.cv.MS.1002217.decoy.peptide = "reverse"
+  name = list(         opt.global.calibrated.mz.error.ppm = "mass.error..ppm.",
+                     opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
+                                       exp.mass.to.charge = "m.z", 
+                                          opt.global.mass = "mass", 
+                                    opt.global.identified = "identified",
+                               opt.global.ScanEventNumber = "scan.event.number",
+opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
+                                                   PSM.ID = "id", 
+                             opt.global.modified.sequence = "modified.sequence",
+                                opt.global.is.contaminant = "contaminant",
+                        opt.global.fragment.mass.error.da = "mass.deviations..da.",
+                   opt.global.cv.MS.1002217.decoy.peptide = "reverse"
           )
 
   
   renameColumns(res, name)
-  
-  scan_name = list("scan.event.number")
-  names(scan_name) = grepv("opt.global.ScanEventNumber|opt.global.cv.MS.1000776.scan.number.only.nativeID.format", colnames(res))
-  renameColumns(res, scan_name)
   
   if (!"modified.sequence" %in% colnames(res)){
     res$modified.sequence = res$sequence
@@ -230,7 +227,7 @@ getEvidence = function()
   
   ## annotate ms.ms.count for identical sequences per rawfile, but only the first member of the group; 
   ## all others get NA to prevent double counting
-    res[, ms.ms.count := c(.N, rep(NA, .N-1)), by = list(raw.file, modified.sequence, charge)]
+  res[, ms.ms.count := c(.N, rep(NA, .N-1)), by = list(raw.file, modified.sequence, charge)]
 
   ## convert values from seconds to minutes for all RT columns
   RTUnitCorrection(res)
@@ -241,7 +238,6 @@ getEvidence = function()
   df_pep = data.frame()
   if (all(c("opt.global.feature.id") %in% colnames(res))){
     df_pep = data.table::as.data.table(.self$sections$PEP)[!is.na(sequence), ]
-    data.table::setnames(df_pep, old = c("opt.global.modified.sequence"), new = "modified.sequence")
     renameColumns(df_pep, list(opt.global.modified.sequence = "modified.sequence"))
     ## add raw.file...
     df_pep = cbind(df_pep, .self$fn_map$specrefToRawfile(df_pep$spectra.ref))
@@ -366,8 +362,8 @@ getMSMSScans = function(identified_only = FALSE)
   
   if (all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    renameColumns(res, list(retention.time = "retention.time.pep",
-                            opt.global.rt.raw = "retention.time",
+    renameColumns(res, list(     retention.time = "retention.time.pep",
+                              opt.global.rt.raw = "retention.time",
                             opt.global.rt.align = "calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
@@ -376,28 +372,25 @@ getMSMSScans = function(identified_only = FALSE)
   renameColumns(res, list(opt.global.ion.injection.time = "ion.injection.time"))
   
   
-  name = list(opt.global.calibrated.mz.error.ppm = "mass.error..ppm",
-              opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
-              exp.mass.to.charge = "m.z", 
-              opt.global.mass = "mass", 
-              opt.global.fragment.mass.error.da = "mass.deviations..da.", 
-              opt.global.fragment.mass.error.ppm = "mass.deviations..ppm.",
-              opt.global.identified = "identified",
-              #opt.global.ScanEventNumber = "scan.event.number",
-              PSM.ID = "id", 
-              opt.global.modified.sequence = "modified.sequence",
-              opt.global.is.contaminant = "contaminant",
-              opt.global.missed.cleavages = "missed.cleavages",
-              opt.global.cv.MS.1002217.decoy.peptide = "reverse",
-              opt.global.activation.method = "fragmentation",
-              opt.global.total.ion.count = "total.ion.current",
-              opt.global.base.peak.intensity = "base.peak.intensity")
+  name = list(         opt.global.calibrated.mz.error.ppm = "mass.error..ppm",
+                     opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
+                                       exp.mass.to.charge = "m.z", 
+                                          opt.global.mass = "mass", 
+                        opt.global.fragment.mass.error.da = "mass.deviations..da.", 
+                       opt.global.fragment.mass.error.ppm = "mass.deviations..ppm.",
+                                    opt.global.identified = "identified",
+                               opt.global.ScanEventNumber = "scan.event.number",
+opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
+                                                   PSM.ID = "id", 
+                             opt.global.modified.sequence = "modified.sequence",
+                                opt.global.is.contaminant = "contaminant",
+                              opt.global.missed.cleavages = "missed.cleavages",
+                   opt.global.cv.MS.1002217.decoy.peptide = "reverse",
+                             opt.global.activation.method = "fragmentation",
+                               opt.global.total.ion.count = "total.ion.current",
+                           opt.global.base.peak.intensity = "base.peak.intensity")
  
   renameColumns(res, name)
-  
-  scan_name = list("scan.event.number")
-  names(scan_name) = grepv("opt.global.ScanEventNumber|opt.global.cv.MS.1000776.scan.number.only.nativeID.format", colnames(res))
-  renameColumns(res, scan_name)
  
   if ("mass.deviations..ppm." %in% colnames(res)) {
     res$mass.deviations..ppm. = substr(res$mass.deviations..ppm., 2, nchar(res$mass.deviations..ppm.) - 2)
@@ -420,7 +413,6 @@ getMSMSScans = function(identified_only = FALSE)
   if ("reverse" %in% colnames(res)){
     res$reverse=(res$reverse=="decoy")
   }
-  
   
   #set contaminant to TRUE/FALSE
   if (!"contaminant" %in% colnames(res)){
@@ -456,7 +448,8 @@ RTUnitCorrection = function(dt)
 {
   "Convert all RT columns from seconds (OpenMS default) to minutes (MaxQuant default)"
   
-  #retention.time is mandatory for mzTab
+  # heuristic to detect presence of unit:seconds; if retention.time has is, we assume that all rt-columns are in seconds
+  # retention.time is mandatory for mzTab
   if (max(dt[, "retention.time"], na.rm = TRUE) > 300){
     cn_rt = grepv("retention.time|retention.length", names(dt))
     dt[, c(cn_rt) := lapply(.SD, function(x) x / 60 ), .SDcols = cn_rt]
@@ -472,7 +465,7 @@ renameColumns = function(dt, namelist)
   
   data.table::setnames(dt, old = names(namelist), new = unlist(namelist), skip_absent = TRUE)
   
-  existName = unlist(namelist) %in% colnames(dt)
+  existName = unique(unlist(namelist)) %in% colnames(dt)
   if (!all(existName))
   {
     warning(paste0("Columns '", 
