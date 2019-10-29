@@ -369,8 +369,6 @@ getMSMSScans = function(identified_only = FALSE)
   }
   else res$retention.time.calibration = NA
   
-  renameColumns(res, list(opt.global.ion.injection.time = "ion.injection.time"))
-  
   
   name = list(         opt.global.calibrated.mz.error.ppm = "mass.error..ppm",
                      opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
@@ -388,7 +386,8 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
                    opt.global.cv.MS.1002217.decoy.peptide = "reverse",
                              opt.global.activation.method = "fragmentation",
                                opt.global.total.ion.count = "total.ion.current",
-                           opt.global.base.peak.intensity = "base.peak.intensity")
+                           opt.global.base.peak.intensity = "base.peak.intensity",
+                            opt.global.ion.injection.time = "ion.injection.time")
  
   renameColumns(res, name)
  
@@ -403,10 +402,6 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
   
   if (!"dp.modification" %in% colnames(res)) {
     res$dp.modification = TRUE
-  }
- 
-  if (!"missed.cleavages" %in% colnames(res)) {
-    res$missed.cleavages = 0
   }
   
   #set reverse to needed values
@@ -437,8 +432,8 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
   ## e.g. spectra.ref might be 'ms_run[1]:controllerType=0 controllerNumber=1 scan=13999'
   ##                        or 'ms_run[2]:spectrum=33'
   ##      --> extract scan as numeric, since string compare is insufficient for numbers ("13999" > "140")
-  res$scan = as.numeric(gsub(".*scan=(\\d*)[^\\d]*|.*spectrum=(\\d*)[^\\d]*", "\\1\\2", res$spectra.ref))
-  #stopifnot(all(!is.na(res$scan))) 
+  res$scan = as.numeric(gsub(".*index=(\\d*)[^\\d]*|.*scan=(\\d*)[^\\d]*|.*spectrum=(\\d*)[^\\d]*", "\\1\\2", res$spectra.ref))
+  stopifnot(all(!is.na(res$scan))) 
   res = res[order(res$fc.raw.file, res$scan), ]
   
   return ( res )
@@ -465,7 +460,7 @@ renameColumns = function(dt, namelist)
   
   data.table::setnames(dt, old = names(namelist), new = unlist(namelist), skip_absent = TRUE)
   
-  existName = unique(unlist(namelist)) %in% colnames(dt)
+  existName = unlist(namelist) %in% colnames(dt)
   if (!all(existName))
   {
     warning(paste0("Columns '", 

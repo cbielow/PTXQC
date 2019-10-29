@@ -142,8 +142,18 @@ current study. ",
     workerFcn = function(.self, df_msms, df_evd = NULL)
     {
       ## completeness check
-      if (!checkInput(c("fc.raw.file", "missed.cleavages", "contaminant", "id"), df_msms)) return()
+      if (!(checkInput(c("fc.raw.file", "id"), df_msms) & (checkInput(c("missed.cleavages"), df_msms) | checkInput(c("sequence"), df_msms)))) return()
       if (!is.null(df_evd)) if (!checkInput(c("contaminant", "id"), df_evd)) return() 
+      
+      # if missed.cleavages is not given, it is assumed that trypsin was used for digestion 
+      if (!"missed.cleavages" %in% colnames(df_msms)) {
+        seqs = gsub('.{1}$', '', df_msms$sequence)
+        df_msms$missed.cleavages = nchar(seqs) - nchar(gsub("K|R", "", seqs))
+        msg_missed_clea = "(MCs computed assuming trypsin)"
+      }
+      else {
+        msg_missed_clea = ""
+      }
       
       max_mc = max(-Inf, df_msms$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
       if (!is.infinite(max_mc))
@@ -167,7 +177,7 @@ current study. ",
         })
         
         lpl =
-          byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, sort_indices = TRUE, title_sub = msg_cont_removed) 
+          byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, sort_indices = TRUE, title_sub = paste(msg_cont_removed, msg_missed_clea)) 
         
         ## QC measure for missed-cleavages variation
         qc_score = data.frame(fc.raw.file = st_bin$fc.raw.file, valMC = st_bin[, "0"])
