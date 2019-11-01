@@ -106,8 +106,15 @@ getParameters = function()
   
   # copy the whole MTD for now, since R likes shallow copies and we are about to rename columns by reference (see ?setnames)
   res = data.table::copy(.self$sections[["MTD"]])
-  res = rbind(res, data.frame(key= "fasta file", value = paste(basename(unique(.self$sections$PSM$database)), collapse=";")))
-  res = res[-(grep("custom", res$key)),]
+  if (!is.na(unique(.self$sections$PSM$database))) {
+    res = rbind(res, data.frame(key= "fasta file", value = paste(basename(unique(.self$sections$PSM$database)), collapse=";")))
+  }
+  else {
+    res = rbind(res, data.frame(key= "fasta file", value = "NULL"))
+  }
+  
+  res = res[grep("^custom", res$key, invert = TRUE),]
+  
   res[is.na(res)] = "NULL" # temp workaround
   
   ## todo: remove at some point, since it forces us to use `::copy`
@@ -125,6 +132,8 @@ getSummary = function()
 
   ## read all custom entries
   mtd_custom_df = .self$sections$MTD[grep("^custom", .self$sections$MTD$key), ]
+  
+  if (nrow(mtd_custom_df) == 0) return(NULL)
 
   ## ... and subselect the ms2-ID-Rate
   ms2_df = mtd_custom_df[grep("^\\[MS2 identification rate", mtd_custom_df$value), ] 
@@ -156,8 +165,11 @@ getEvidence = function()
 
   ## remove empty PepIDs 
   ## ... unidentfied MS2 scans (NA)      or with no ConsensusFeature group (-1), i.e. unassigned PepIDs
-  res = res[!(is.na(res$opt.global.cf.id) | (res$opt.global.cf.id == -1)),]
-  stopifnot(min(res$opt.global.cf.id) >= 0) ## would stop on NA as well
+  
+  if (all(c("opt.global.cf.id") %in% colnames(res))) {
+    res = res[!(is.na(res$opt.global.cf.id) | (res$opt.global.cf.id == -1)),]
+    stopifnot(min(res$opt.global.cf.id) >= 0) ## would stop on NA as well
+  }
   
   ## augment with fc.raw.file
   ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
@@ -168,27 +180,39 @@ getEvidence = function()
   res$retention.time.calibration = NA
   if (all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    renameColumns(res, list(retention.time = "retention.time.pep",
-                            opt.global.rt.raw = "retention.time",
+    renameColumns(res, list(     retention.time = "retention.time.pep",
+                              opt.global.rt.raw = "retention.time",
                             opt.global.rt.align = "calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
 
-  name = list(  opt.global.calibrated.mz.error.ppm = "mass.error..ppm.",
-              opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
-                                exp.mass.to.charge = "m.z", 
-                                   opt.global.mass = "mass", 
-                             opt.global.identified = "identified",
-                        opt.global.ScanEventNumber = "scan.event.number",
-                                            PSM.ID = "id", 
-                      opt.global.modified.sequence = "modified.sequence",
-                         opt.global.is.contaminant = "contaminant",
-                 opt.global.fragment.mass.error.da = "mass.deviations..da.",
-            opt.global.cv.MS.1002217.decoy.peptide = "reverse"
+  name = list(         opt.global.calibrated.mz.error.ppm = "mass.error..ppm.",
+                     opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
+                                       exp.mass.to.charge = "m.z", 
+                                          opt.global.mass = "mass", 
+                                    opt.global.identified = "identified",
+                               opt.global.ScanEventNumber = "scan.event.number",
+opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
+                                                   PSM.ID = "id", 
+                             opt.global.modified.sequence = "modified.sequence",
+                                opt.global.is.contaminant = "contaminant",
+                        opt.global.fragment.mass.error.da = "mass.deviations..da.",
+                   opt.global.cv.MS.1002217.decoy.peptide = "reverse"
           )
 
   
   renameColumns(res, name)
+  
+  if (!"modified.sequence" %in% colnames(res)){
+    res$modified.sequence = res$sequence
+    warning("modified.sequence is not present in input data, metrics use sequence instead", immediate. = TRUE)
+  }
+  
+  if(!"contaminant" %in% colnames(res)){
+    res$contaminant = 0
+  }
+  # set contaminant to TRUE/FALSE
+  res$contaminant = (res$contaminant > 0)
 
   ## optional in MzTab (depending on which FeatureFinder was used)
   if ("opt.global.FWHM" %in% colnames(res)){
@@ -206,36 +230,37 @@ getEvidence = function()
   ## annotate ms.ms.count for identical sequences per rawfile, but only the first member of the group; 
   ## all others get NA to prevent double counting
   res[, ms.ms.count := c(.N, rep(NA, .N-1)), by = list(raw.file, modified.sequence, charge)]
-  
+
   ## convert values from seconds to minutes for all RT columns
   RTUnitCorrection(res)
 
   ##
   ## intensity from PEP to PSM: only labelfree ('opt.global.cf.id' links all PSMs belonging to a ConsensusFeature)
   ##
-  df_pep = data.table::as.data.table(.self$sections$PEP)[!is.na(sequence), ]
-  data.table::setnames(df_pep, old = c("opt.global.modified.sequence"), new = "modified.sequence")
-  renameColumns(df_pep, list(opt.global.modified.sequence = "modified.sequence"))
-  ## add raw.file...
-  df_pep = cbind(df_pep, .self$fn_map$specrefToRawfile(df_pep$spectra.ref))
-  ## .. a unique index
-  df_pep$idx = 1:nrow(df_pep)
-  ## map from PSM -> PEP row
-  ## ... do NOT use spectra.ref since this is ambiguous (IDMapper duplicates MS2 PepIDs to multiple features)
-  res$pep_idx = match(res$opt.global.feature.id, df_pep$opt.global.feature.id, nomatch = NA_integer_)
-  
-  res$ms_run_number = as.numeric(gsub("^ms_run\\[(\\d*)\\].*", "\\1", res$ms_run))
-  col_abd_df_pep = grepv( "^peptide.abundance.study.variable.", names(df_pep))
-  col_RT_df_pep = grepv( "^opt.global.retention.time.study.variable", names(df_pep))
-  ## transposed matrix for all abundances (rows = study; cols = pep_idx)
-  ## .. this is a significant speedup compared to indexing into .SD[,] in subqueries, since that requires unlist()
-  m_pep_abd = t(df_pep[, ..col_abd_df_pep])
-  m_pep_rt = t(df_pep[, ..col_RT_df_pep])
-  N.studies = length(col_RT_df_pep)
-  stopifnot(N.studies == length(col_abd_df_pep))
+  df_pep = data.frame()
+  if (all(c("opt.global.feature.id") %in% colnames(res))){
+    df_pep = data.table::as.data.table(.self$sections$PEP)[!is.na(sequence), ]
+    renameColumns(df_pep, list(opt.global.modified.sequence = "modified.sequence"))
+    ## add raw.file...
+    df_pep = cbind(df_pep, .self$fn_map$specrefToRawfile(df_pep$spectra.ref))
+    ## .. a unique index
+    df_pep$idx = 1:nrow(df_pep)
+    ## map from PSM -> PEP row
+    ## ... do NOT use spectra.ref since this is ambiguous (IDMapper duplicates MS2 PepIDs to multiple features)
+    res$pep_idx = match(res$opt.global.feature.id, df_pep$opt.global.feature.id, nomatch = NA_integer_)
+    
+    res$ms_run_number = as.numeric(gsub("^ms_run\\[(\\d*)\\].*", "\\1", res$ms_run))
+    col_abd_df_pep = grepv( "^peptide.abundance.study.variable.", names(df_pep))
+    col_RT_df_pep = grepv( "^opt.global.retention.time.study.variable", names(df_pep))
+    ## transposed matrix for all abundances (rows = study; cols = pep_idx)
+    ## .. this is a significant speedup compared to indexing into .SD[,] in subqueries, since that requires unlist()
+    m_pep_abd = t(df_pep[, ..col_abd_df_pep])
+    m_pep_rt = t(df_pep[, ..col_RT_df_pep])
+    N.studies = length(col_RT_df_pep)
+    stopifnot(N.studies == length(col_abd_df_pep))
+  }
+ 
 
-  ## assign intensity to genuine PSMs
-  res$intensity = NA_real_ ## unassigned PSMs have no MS1 intensity
   NA_duplicates = function(vec_abd, idx) {
     ## replaces duplicate indices into the same ms_run intensities with NA
     ## (to avoid counting a feature more than once due to oversampled PSMs from one run assigned to a CF)
@@ -243,51 +268,68 @@ getEvidence = function()
     r[duplicated(idx)] = NA
     return(r)
   }
+  
   if (all(c("opt.global.cf.id") %in% colnames(res))) {
-  res[,
+    ## assign intensity to genuine PSMs
+    res$intensity = NA_real_ ## unassigned PSMs have no MS1 intensity
+    res[,
       intensity := NA_duplicates(m_pep_abd[, .SD$pep_idx[1]], .SD$ms_run_number),
       by = "opt.global.cf.id"]
+    summary(res$intensity)
   }
-  summary(res$intensity)
+  
+
+  res$hasMTD = FALSE
+  res$type = "MULTI-MSMS"
+
+  #set reverse to needed values
+  if ("reverse" %in% colnames(res)){
+    res$reverse=(res$reverse=="decoy")
+  }
+  
+  ## remove the data.table info, since metrics will break due to different syntax
+  class(res) = "data.frame"
 
 
   ##
   ## Infer MBR 
   ## --> find all subfeatures in a CF with abundance but missing PSM --> create as MBR-dummy-PSMs
 
-  res_tf = df_pep[, {#print(idx)
-                     idx_PSM = which(res$pep_idx == idx)
-                     runs_with_MS2 = unique(res$ms_run_number[idx_PSM]) ## existing PSMs for this PEP
-                     runs_wo_MS2 = (1:N.studies)[-runs_with_MS2]
-                     df = .SD[rep(1, length(runs_wo_MS2)), c("charge", "modified.sequence", "sequence")]
-                     df$pep_idx = idx
-                     df$ms_run_number = runs_wo_MS2 ## vector
-                     df$calibrated.retention.time = m_pep_rt[runs_wo_MS2, idx]
-                                     df$intensity = m_pep_abd[runs_wo_MS2, idx]
-                     df$protein.group.ids = res$protein.group.ids[idx_PSM[1]] ## use PGI from genuine PSMs
-                     df ## return
-                     }, by = "idx"] ## one PEP row at a time
-  ## convert from "ms_run_number" to fc.raw.file
-  res_tf = cbind(res_tf, .self$fn_map$msrunToRawfile(paste0("ms_run[", res_tf$ms_run_number, "]")))
-  res$hasMTD = FALSE
-  res$type = "MULTI-MSMS"
-  res_tf$hasMTD = TRUE
-  res_tf$type = "MULTI-MATCH"
-
-  ## check: summed intensities should be equal
-  stopifnot(sum(df_pep[, ..col_abd_df_pep], na.rm = TRUE) == sum(res$intensity, na.rm = TRUE) + sum(res_tf$intensity, na.rm = TRUE))
-
-  # set reverse to TRUE/FALSE
-  res$reverse = (res$reverse == "decoy")
-  # set contaminant to TRUE/FALSE
-  res$contaminant = (res$contaminant > 0)
+  res_tf = res[NULL,]
+  stopifnot(ncol(res_tf) > 0)
+  if (!plyr::empty(df_pep)){
+    res_tf_tmp = df_pep[, {#print(idx)
+      idx_PSM = which(res$pep_idx == idx)
+      runs_with_MS2 = unique(res$ms_run_number[idx_PSM]) ## existing PSMs for this PEP
+      runs_wo_MS2 = (1:N.studies)[-runs_with_MS2]
+      df = .SD[rep(1, length(runs_wo_MS2)), c("charge", "modified.sequence", "sequence")]
+      df$pep_idx = idx
+      df$ms_run_number = runs_wo_MS2 ## vector
+      df$calibrated.retention.time = m_pep_rt[runs_wo_MS2, idx]
+      df$intensity = m_pep_abd[runs_wo_MS2, idx]
+      df$protein.group.ids = res$protein.group.ids[idx_PSM[1]] ## use PGI from genuine PSMs
+      df ## return
+    }, by = "idx"] ## one PEP row at a time
+   
+    if(nrow(res_tf_tmp) > 0){
+      res_tf = res_tf_tmp
+      ## convert from "ms_run_number" to fc.raw.file
+      res_tf = cbind(res_tf, .self$fn_map$msrunToRawfile(paste0("ms_run[", res_tf$ms_run_number, "]")))
+      res_tf$hasMTD = TRUE
+      res_tf$type = "MULTI-MATCH"
+      
+      ## check: summed intensities should be equal
+      stopifnot(sum(df_pep[, ..col_abd_df_pep], na.rm = TRUE) == sum(res$intensity, na.rm = TRUE) + sum(res_tf$intensity, na.rm = TRUE))
+    }
+  }
   
   ## remove the data.table info, since metrics will break due to different syntax
-  class(res) = "data.frame"
   class(res_tf) = "data.frame"
-  
 
   message("Evidence table generated: ", nrow(res), "x", ncol(res), "(genuine); ", nrow(res_tf), "x", ncol(res_tf), "(transferred)")
+  
+  ## must at least have column names, but can have 0 rows
+  stopifnot(ncol(res_tf) > 0)
   
   return (list("genuine" = res, "transferred" = res_tf))
 },
@@ -321,34 +363,33 @@ getMSMSScans = function(identified_only = FALSE)
   
   if (all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    renameColumns(res, list(retention.time = "retention.time.pep",
-                            opt.global.rt.raw = "retention.time",
+    renameColumns(res, list(     retention.time = "retention.time.pep",
+                              opt.global.rt.raw = "retention.time",
                             opt.global.rt.align = "calibrated.retention.time"))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
   else res$retention.time.calibration = NA
   
-  renameColumns(res, list(opt.global.ion.injection.time = "ion.injection.time"))
   
-  
-  name = list(opt.global.calibrated.mz.error.ppm = "mass.error..ppm",
-              opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
-              exp.mass.to.charge = "m.z", 
-              opt.global.mass = "mass", 
-              opt.global.fragment.mass.error.da = "mass.deviations..da.", 
-              opt.global.fragment.mass.error.ppm = "mass.deviations..ppm.",
-              opt.global.identified = "identified",
-              opt.global.ScanEventNumber = "scan.event.number",
-              PSM.ID = "id", 
-              opt.global.modified.sequence = "modified.sequence",
-              opt.global.is.contaminant = "contaminant",
-              opt.global.missed.cleavages = "missed.cleavages",
-              opt.global.cv.MS.1002217.decoy.peptide = "reverse",
-              opt.global.activation.method = "fragmentation",
-              opt.global.total.ion.count = "total.ion.current",
-              opt.global.base.peak.intensity = "base.peak.intensity")
+  name = list(         opt.global.calibrated.mz.error.ppm = "mass.error..ppm",
+                     opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
+                                       exp.mass.to.charge = "m.z", 
+                                          opt.global.mass = "mass", 
+                        opt.global.fragment.mass.error.da = "mass.deviations..da.", 
+                       opt.global.fragment.mass.error.ppm = "mass.deviations..ppm.",
+                                    opt.global.identified = "identified",
+                               opt.global.ScanEventNumber = "scan.event.number",     #either...    
+opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",     #or...
+                                                   PSM.ID = "id", 
+                             opt.global.modified.sequence = "modified.sequence",
+                                opt.global.is.contaminant = "contaminant",
+                              opt.global.missed.cleavages = "missed.cleavages",
+                   opt.global.cv.MS.1002217.decoy.peptide = "reverse",
+                             opt.global.activation.method = "fragmentation",
+                               opt.global.total.ion.count = "total.ion.current",
+                           opt.global.base.peak.intensity = "base.peak.intensity",
+                            opt.global.ion.injection.time = "ion.injection.time")
  
-  #data.table::setnames(res, old = names(name), new = unlist(name), skip_absent = TRUE)
   renameColumns(res, name)
  
   if ("mass.deviations..ppm." %in% colnames(res)) {
@@ -360,17 +401,16 @@ getMSMSScans = function(identified_only = FALSE)
     res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da., fixed = TRUE)
   }
   
- 
   #set reverse to needed values
   if ("reverse" %in% colnames(res)){
     res$reverse=(res$reverse=="decoy")
   }
   
-  #set contaminant to TRUE/FALSE
-  if ("contaminant" %in% colnames(res)){
-    res$contaminant = (res$contaminant > 0)
+  if (!"contaminant" %in% colnames(res)){
+    res$contaminant = 0
   }
- 
+  #set contaminant to TRUE/FALSE
+  res$contaminant = (res$contaminant > 0)
   
   #set identified to needed values
   if ("identified" %in% colnames(res)){
@@ -389,8 +429,8 @@ getMSMSScans = function(identified_only = FALSE)
   ## e.g. spectra.ref might be 'ms_run[1]:controllerType=0 controllerNumber=1 scan=13999'
   ##                        or 'ms_run[2]:spectrum=33'
   ##      --> extract scan as numeric, since string compare is insufficient for numbers ("13999" > "140")
-  res$scan = as.numeric(gsub(".*scan=(\\d*)[^\\d]*|.*spectrum=(\\d*)[^\\d]*", "\\1\\2", res$spectra.ref))
-  stopifnot(all(!is.na(res$scan)))
+  res$scan = as.numeric(gsub(".*index=(\\d*)|.*scan=(\\d*)|.*spectrum=(\\d*)", "\\1\\2\\3", res$spectra.ref))
+  stopifnot(all(!is.na(res$scan))) 
   res = res[order(res$fc.raw.file, res$scan), ]
   
   return ( res )
@@ -400,8 +440,13 @@ RTUnitCorrection = function(dt)
 {
   "Convert all RT columns from seconds (OpenMS default) to minutes (MaxQuant default)"
   
-  cn_rt = grepv("retention.time|retention.length", names(dt))
-  dt[, c(cn_rt) := lapply(.SD, function(x)  x / 60), .SDcols = cn_rt]
+  # heuristic to detect presence of unit:seconds; if retention.time has is, we assume that all rt-columns are in seconds
+  # retention.time is mandatory for mzTab
+  if (max(dt[, "retention.time"], na.rm = TRUE) > 300){
+    cn_rt = grepv("retention.time|retention.length", names(dt))
+    dt[, c(cn_rt) := lapply(.SD, function(x) x / 60 ), .SDcols = cn_rt]
+  }
+  
   #dt[, ..cn_rt]
   return(NULL)
 },

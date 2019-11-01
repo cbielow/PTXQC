@@ -43,7 +43,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
       #lst_contaminants = yaml_contaminants
       ## completeness check
       ## PG is either missing, or has the correct data
-      if (!is.null(df_pg)) stopifnot(c("id", "fasta.headers") %in% colnames(df_pg))
+      if (!is.null(df_pg) | !checkInput(c("id", "fasta.headers"), df_pg)) return()
       ## "score" might not be present (e.g. missing in MQ 1.0.13.13)
       if (!checkInput(c("protein.group.ids", "type", "intensity", "fc.raw.file"),df_evd)) return()
 
@@ -387,13 +387,10 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
     {
       ## completeness check
 
-      if (!checkInput(c("fc.raw.file", "protein.group.ids", "match.time.difference"), df_evd)) return()
-
       req_cols = c("fc.raw.file", "protein.group.ids", "hasMTD")
-      stopifnot(req_cols %in% colnames(df_evd))
-      stopifnot(req_cols %in% colnames(df_evd_tf))
-
       
+      if (!checkInput(req_cols, df_evd)) return()
+
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_protCount)
       
       protC = getProteinCounts(rbind(df_evd[,req_cols], df_evd_tf[, req_cols]))
@@ -465,7 +462,7 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
 
       req_cols = c("fc.raw.file", "modified.sequence", "hasMTD")
       if (!checkInput(req_cols, df_evd)) return()
-      if (!checkInput(req_cols, df_evd_tf)) return()
+      if (nrow(df_evd_tf)>0 & !checkInput(req_cols, df_evd_tf)) return()
 
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_pepCount)
       
@@ -721,7 +718,8 @@ provides few (and wrong) additional information, and should be disabled.
     {
       ## completeness check
       #stopifnot(c("...") %in% colnames(df_evd))
-
+      if (!checkInput(c("modified.sequence"), df_evd)) return()
+      
       df_evd_all = merge(df_evd, df_evd_tf, all = TRUE)
             
       ## increase of segmentation by MBR:
@@ -1218,7 +1216,7 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
-      if (!checkInput(c("fc.raw.file", "modified.sequence", "intensity"), df_evd))
+      if (!checkInput(c("fc.raw.file", "modified.sequence", "intensity"), df_evd)) return()
       
       if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
         lpl = list(ggText("Missing Values Skipped", "Missing values calculation skipped. Fractionated data detected!"))

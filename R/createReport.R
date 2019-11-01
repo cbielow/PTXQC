@@ -63,6 +63,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     mzt = MzTabReader$new()
     mzt$readMzTab(mztab_file) ## creates an inital fc.raw.file mapping from MTD
     expr_fn_map = quote(mzt$fn_map)
+    
   } else 
   {
     if (!any(file.info(txt_folder)$isdir, na.rm = TRUE))
@@ -366,6 +367,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     all_evd = mzt$getEvidence()
     df_evd = all_evd$genuine
     df_evd_tf = all_evd$transferred
+    df_evd$hasMTD = FALSE
+    df_evd_tf$hasMTD = TRUE
   }
   else {
     all_evd = mq$readMQ(txt_files$evd, type="ev", filter="R",
@@ -400,7 +403,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     if (!is.null(all_evd)) all_evd$hasMTD = (all_evd$type == "MULTI-MATCH")
     
     df_evd = all_evd[all_evd$type != "MULTI-MATCH", ]
-    df_evd_tf = all_evd[all_evd$type == "MULTI-MATCH", ]
+    df_evd_tf = all_evd[all_evd$type == "MULTI-MATCH", , drop=FALSE] ## keep columns, if empty
     
   }
 ## just a local scope to fold evidence metrics in the editor...
@@ -457,9 +460,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     if (("retention.time.calibration" %in% colnames(df_evd)))
     {
       ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
-      MBR_HAS_DATA = (sum(df_evd$type == "MULTI-MATCH") > 0) || MZTAB_MODE
-
-      if (!(param_evd_mbr == FALSE) & MBR_HAS_DATA)
+      if (!(param_evd_mbr == FALSE) & nrow(df_evd_tf)>0)
       {
         lst_qcMetrics[["qcMetric_EVD_MBRAlign"]]$setData(df_evd, param_EV_MatchingTolerance, eval(expr_fn_map)$raw_file_mapping)
 
@@ -469,9 +470,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         #debug (restore data): lst_qcMetrics[["qcMetric_EVD_RTPeakWidth"]]$setData(df_evd)
         avg_peak_width = lst_qcMetrics[["qcMetric_EVD_RTPeakWidth"]]$outData[["avg_peak_width"]]
         if (is.null(avg_peak_width)) {
-          stop("RT peak width module did not run, but is required for MBR metrics. Enable it and try again or switch off MBR metrics!")
-        } 
-        lst_qcMetrics[["qcMetric_EVD_MBRIdTransfer"]]$setData(df_evd, df_evd_tf, avg_peak_width)
+          warning("RT peak width module did not run, but is required for MBR metrics. Enable it and try again or switch off MBR metrics!")
+        } else lst_qcMetrics[["qcMetric_EVD_MBRIdTransfer"]]$setData(df_evd, df_evd_tf, avg_peak_width)
 
         
         ##

@@ -195,10 +195,8 @@ ScoreInAlignWindow = function(data, allowed.deltaRT = 1)
 idTransferCheck = function(df_evd_all) {
   colnames(df_evd_all) = tolower(colnames(df_evd_all))
   
-  if (!all(c('id', 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'fc.raw.file') %in% colnames(df_evd_all)))
-  {
-    stop("idTransferCheck(): columns missing!")  
-  }
+  if (!checkInput(c('id', 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'fc.raw.file'), df_evd_all)) return()
+ 
   
   if (!all(c("MULTI-MSMS", "MULTI-MATCH") %in% unique(df_evd_all$type)))
   {
@@ -320,10 +318,7 @@ inMatchWindow = function(data, df.allowed.deltaRT)
 #'
 peakSegmentation = function(df_evd_all)
 {
-  if (!all(c("hasMTD", "fc.raw.file", "modified.sequence", "charge", 'type') %in% colnames(df_evd_all)))
-  {
-    stop("peakSegmentation(): columns missing!")  
-  }
+  if (!checkInput(c("hasMTD", "fc.raw.file", "modified.sequence", "charge", 'type'), df_evd_all)) return()
 
   if (!all(c("MULTI-MSMS", "MULTI-MATCH") %in% unique(df_evd_all$type)))
   {
