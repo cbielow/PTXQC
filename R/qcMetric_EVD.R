@@ -387,13 +387,10 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
     {
       ## completeness check
 
-      if (!checkInput(c("fc.raw.file", "protein.group.ids", "match.time.difference"), df_evd)) return()
-
       req_cols = c("fc.raw.file", "protein.group.ids", "hasMTD")
-      stopifnot(req_cols %in% colnames(df_evd))
-      stopifnot(req_cols %in% colnames(df_evd_tf))
-
       
+      if (!checkInput(req_cols, df_evd)) return()
+
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_protCount)
       
       protC = getProteinCounts(rbind(df_evd[,req_cols], df_evd_tf[, req_cols]))

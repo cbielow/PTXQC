@@ -209,8 +209,10 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
   }
   
   if(!"contaminant" %in% colnames(res)){
-    res$contaminant = FALSE
+    res$contaminant = 0
   }
+  # set contaminant to TRUE/FALSE
+  res$contaminant = (res$contaminant > 0)
 
   ## optional in MzTab (depending on which FeatureFinder was used)
   if ("opt.global.FWHM" %in% colnames(res)){
@@ -279,12 +281,11 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
 
   res$hasMTD = FALSE
   res$type = "MULTI-MSMS"
-  
-  
-  # set reverse to TRUE/FALSE
-  res$reverse = (res$reverse == "decoy")
-  # set contaminant to TRUE/FALSE
-  res$contaminant = (res$contaminant > 0)
+
+  #set reverse to needed values
+  if ("reverse" %in% colnames(res)){
+    res$reverse=(res$reverse=="decoy")
+  }
   
   ## remove the data.table info, since metrics will break due to different syntax
   class(res) = "data.frame"
@@ -328,7 +329,7 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
   message("Evidence table generated: ", nrow(res), "x", ncol(res), "(genuine); ", nrow(res_tf), "x", ncol(res_tf), "(transferred)")
   
   ## must at least have column names, but can have 0 rows
-  #stopifnot(ncol(res_tf) > 0)
+  stopifnot(ncol(res_tf) > 0)
   
   return (list("genuine" = res, "transferred" = res_tf))
 },
@@ -377,8 +378,8 @@ getMSMSScans = function(identified_only = FALSE)
                         opt.global.fragment.mass.error.da = "mass.deviations..da.", 
                        opt.global.fragment.mass.error.ppm = "mass.deviations..ppm.",
                                     opt.global.identified = "identified",
-                               opt.global.ScanEventNumber = "scan.event.number",
-opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
+                               opt.global.ScanEventNumber = "scan.event.number",     #either...    
+opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",     #or...
                                                    PSM.ID = "id", 
                              opt.global.modified.sequence = "modified.sequence",
                                 opt.global.is.contaminant = "contaminant",
@@ -400,19 +401,15 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
     res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da., fixed = TRUE)
   }
   
-  if (!"dp.modification" %in% colnames(res)) {
-    res$dp.modification = TRUE
-  }
-  
   #set reverse to needed values
   if ("reverse" %in% colnames(res)){
     res$reverse=(res$reverse=="decoy")
   }
   
-  #set contaminant to TRUE/FALSE
   if (!"contaminant" %in% colnames(res)){
-    res$contaminant = FALSE
+    res$contaminant = 0
   }
+  #set contaminant to TRUE/FALSE
   res$contaminant = (res$contaminant > 0)
   
   #set identified to needed values
@@ -432,7 +429,7 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
   ## e.g. spectra.ref might be 'ms_run[1]:controllerType=0 controllerNumber=1 scan=13999'
   ##                        or 'ms_run[2]:spectrum=33'
   ##      --> extract scan as numeric, since string compare is insufficient for numbers ("13999" > "140")
-  res$scan = as.numeric(gsub(".*index=(\\d*)[^\\d]*|.*scan=(\\d*)[^\\d]*|.*spectrum=(\\d*)[^\\d]*", "\\1\\2", res$spectra.ref))
+  res$scan = as.numeric(gsub(".*index=(\\d*)|.*scan=(\\d*)|.*spectrum=(\\d*)", "\\1\\2\\3", res$spectra.ref))
   stopifnot(all(!is.na(res$scan))) 
   res = res[order(res$fc.raw.file, res$scan), ]
   

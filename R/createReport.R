@@ -367,6 +367,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     all_evd = mzt$getEvidence()
     df_evd = all_evd$genuine
     df_evd_tf = all_evd$transferred
+    df_evd$hasMTD = FALSE
+    df_evd_tf$hasMTD = TRUE
   }
   else {
     all_evd = mq$readMQ(txt_files$evd, type="ev", filter="R",
