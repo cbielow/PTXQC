@@ -12,11 +12,11 @@ Description: Generates Proteomics (PTX) quality control (QC) reports for shotgun
 SystemRequirements: pandoc (http://pandoc.org) for building Vignettes and output reports as HTML 
 Depends:
     R (>= 3.0.0),
+    data.table,
     methods,
     stats,
     utils
 Imports:
-    data.table,
     ggplot2 (>= 2.2),
     ggdendro,
     graphics,
