@@ -279,7 +279,7 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
   }
   
 
-  res$hasMTD = FALSE
+  res$is.transferred = FALSE
   res$type = "MULTI-MSMS"
 
   #set reverse to needed values
@@ -315,7 +315,7 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
       res_tf = res_tf_tmp
       ## convert from "ms_run_number" to fc.raw.file
       res_tf = cbind(res_tf, .self$fn_map$msrunToRawfile(paste0("ms_run[", res_tf$ms_run_number, "]")))
-      res_tf$hasMTD = TRUE
+      res_tf$is.transferred = TRUE
       res_tf$type = "MULTI-MATCH"
       
       ## check: summed intensities should be equal

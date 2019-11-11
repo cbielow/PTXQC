@@ -367,8 +367,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     all_evd = mzt$getEvidence()
     df_evd = all_evd$genuine
     df_evd_tf = all_evd$transferred
-    df_evd$hasMTD = FALSE
-    df_evd_tf$hasMTD = TRUE
+
   }
   else {
     all_evd = mq$readMQ(txt_files$evd, type="ev", filter="R",
@@ -400,7 +399,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## MQ1.4 MTD is either: NA or a number
     ##
-    if (!is.null(all_evd)) all_evd$hasMTD = (all_evd$type == "MULTI-MATCH")
+    if (!is.null(all_evd)) all_evd$is.transferred = (all_evd$type == "MULTI-MATCH")
     
     df_evd = all_evd[all_evd$type != "MULTI-MATCH", ]
     df_evd_tf = all_evd[all_evd$type == "MULTI-MATCH", , drop=FALSE] ## keep columns, if empty

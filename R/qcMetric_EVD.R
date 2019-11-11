@@ -174,7 +174,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
       return(list(plots = lpl, qcScores = local_qcScores))
     }, 
     qcCat = "Prep",
-    qcName = "EVD:Contaminant~(%s)",
+    qcName = "EVD:User~Contaminant~(%s)",
     orderNr = 0020
   )
     return(.self)
@@ -234,7 +234,7 @@ Heatmap score [EVD: Pep Intensity (>%1.1f)]:
       return(list(plots = lpl, qcScores = qcScore))
     }, 
     qcCat = "prep", 
-    qcName = "EVD:~Pep~Intensity~(\">%1.1f\")", 
+    qcName = "EVD:~Peptide~Intensity~(\">%1.1f\")", 
     orderNr = 0030
   )
     return(.self)
@@ -387,7 +387,7 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
     {
       ## completeness check
 
-      req_cols = c("fc.raw.file", "protein.group.ids", "hasMTD")
+      req_cols = c("fc.raw.file", "protein.group.ids", "is.transferred")
       
       if (!checkInput(req_cols, df_evd)) return()
 
@@ -426,7 +426,7 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
       return(list(plots = lpl, qcScores = qcScore))
     }, 
     qcCat = 'general', 
-    qcName = "EVD:~Prot~Count~(\">%1.0f\")", 
+    qcName = "EVD:~Protein~Count~(\">%1.0f\")", 
     orderNr = 0450
   )
     return(.self)
@@ -460,7 +460,7 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
     {
       ## completeness check
 
-      req_cols = c("fc.raw.file", "modified.sequence", "hasMTD")
+      req_cols = c("fc.raw.file", "modified.sequence", "is.transferred")
       if (!checkInput(req_cols, df_evd)) return()
       if (nrow(df_evd_tf)>0 & !checkInput(req_cols, df_evd_tf)) return()
 
@@ -471,7 +471,7 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
       
       max_pep = max(unlist(plyr::dlply(pepC, "fc.raw.file", function(x) sum(x$counts))))
       ## average gain in percent
-      reportMTD = any(df_evd$hasMTD)
+      reportMTD = any(df_evd$is.transferred)
       gain_text = ifelse(reportMTD, sprintf("MBR gain: +%.0f%%", mean(pepC$MBRgain, na.rm = TRUE)), "")
       
       lpl = plyr::dlply(pepC, "block", .fun = function(x)
@@ -499,7 +499,7 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
       return(list(plots = lpl, qcScores = qcScore))
     }, 
     qcCat = 'general', 
-    qcName = "EVD:~Pep~Count~(\">%1.0f\")", 
+    qcName = "EVD:~Peptide~Count~(\">%1.0f\")", 
     orderNr = 0400
   )
     return(.self)
@@ -795,7 +795,7 @@ Heatmap score: none.
     {
       ## completeness check
 
-      if (!checkInput(c("type", "hasMTD", "calibrated.retention.time", "fc.raw.file", "modified.sequence", "charge"), df_evd)) return()
+      if (!checkInput(c("type", "is.transferred", "calibrated.retention.time", "fc.raw.file", "modified.sequence", "charge"), df_evd)) return()
     
       if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
         ## fractions: there must be more than one, otherwise MQ will treat the samples as unfractionated
@@ -811,10 +811,10 @@ Heatmap score: none.
                         col_fraction = col_fraction)
       
       ## MBR: additional evidence by matching MS1 by AMT across files
-      if (any(df_evd$hasMTD)) {
+      if (any(df_evd$is.transferred)) {
         ## gain for each raw file: absolute gain, and percent gain
         mtr.df = plyr::ddply(df_evd, "fc.raw.file", function(x) {
-          match_count_abs = sum(x$hasMTD)
+          match_count_abs = sum(x$is.transferred)
           ## if only matched IDs are present, this would be 'Inf' -- we limit that to 1e4
           match_count_pc  = min(1e4, round(100*match_count_abs/(nrow(x)-match_count_abs))) ## newIDs / oldIDs
           return (data.frame(abs = match_count_abs, pc = match_count_pc))
@@ -854,14 +854,14 @@ Heatmap score [EVD: Charge]: Deviation of the charge 2 proportion from a represe
     workerFcn = function(.self, df_evd)
     {
       ## completeness check
-      if (!checkInput(c("hasMTD", "fc.raw.file", "charge"), df_evd)) return()
+      if (!checkInput(c("is.transferred", "fc.raw.file", "charge"), df_evd)) return()
       
-      d_charge = mosaicize(df_evd[!df_evd$hasMTD, c("fc.raw.file", "charge")])
+      d_charge = mosaicize(df_evd[!df_evd$is.transferred, c("fc.raw.file", "charge")])
       lpl =
         byXflex(d_charge, d_charge$Var1, 30, plot_Charge, sort_indices = TRUE)
       
       ## QC measure for charge centeredness
-      qc_charge = plyr::ddply(df_evd[!df_evd$hasMTD, c("charge",  "fc.raw.file")], "fc.raw.file", function(x) data.frame(c = (sum(x$charge==2)/nrow(x))))
+      qc_charge = plyr::ddply(df_evd[!df_evd$is.transferred, c("charge",  "fc.raw.file")], "fc.raw.file", function(x) data.frame(c = (sum(x$charge==2)/nrow(x))))
       qc_charge[, .self$qcName] = qualMedianDist(qc_charge$c)
       
       return(list(plots = lpl, qcScores = qc_charge[, c("fc.raw.file", .self$qcName)]))

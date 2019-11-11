@@ -979,7 +979,7 @@ getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
 #' Extract the number of protein groups observed per Raw file
 #' from an evidence table.
 #'
-#' Required columns are "protein.group.ids", "fc.raw.file" and "hasMTD".
+#' Required columns are "protein.group.ids", "fc.raw.file" and "is.transferred".
 #' 
 #' If match-between-runs was enabled during the MaxQuant run,
 #' the data.frame returned will contain separate values for 'transferred' evidence
@@ -991,18 +991,18 @@ getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
 #'
 getProteinCounts = function(df_evd) {
     
-  required_cols = c("protein.group.ids", "fc.raw.file", "hasMTD")
+  required_cols = c("protein.group.ids", "fc.raw.file", "is.transferred")
   if (!all(required_cols %in% colnames(df_evd))) {
     stop("getProteinCounts(): Missing columns!")
   }
 
   ## report Match-between-runs data only if if it was enabled
-  reportMTD = any(df_evd$hasMTD)
+  reportMTD = any(df_evd$is.transferred)
   
   prot_counts = plyr::ddply(df_evd, "fc.raw.file", .fun = function(x, reportMTD)
   {
     ## proteins
-    x$group_mtdinfo = paste(x$protein.group.ids, x$hasMTD, sep="_")
+    x$group_mtdinfo = paste(x$protein.group.ids, x$is.transferred, sep="_")
     # remove duplicates (since strsplit below is expensive) -- has no effect on double counting of PROTEINS(!), since it honors MTD
     xpro = x[!duplicated(x$group_mtdinfo),]
     # split groups
@@ -1010,9 +1010,9 @@ getProteinCounts = function(df_evd) {
       return (strsplit(x, split=";", fixed=TRUE))
     })
     # get number of unique proteins
-    pg_set_genuineUnique = unique(unlist(p_groups[!xpro$hasMTD]))
+    pg_set_genuineUnique = unique(unlist(p_groups[!xpro$is.transferred]))
     # MBR will contribute peptides of already known proteins
-    pg_set_allMBRunique = unique(unlist(p_groups[xpro$hasMTD]))
+    pg_set_allMBRunique = unique(unlist(p_groups[xpro$is.transferred]))
     pg_count_GenAndMBR = length(intersect(pg_set_allMBRunique, pg_set_genuineUnique))
     # ... and peptides of proteins which are new in this Raw file (few)
     pg_count_newMBR = length(pg_set_allMBRunique) - pg_count_GenAndMBR
@@ -1043,7 +1043,7 @@ getProteinCounts = function(df_evd) {
 #' Extract the number of peptides observed per Raw file
 #' from an evidence table.
 #'
-#' Required columns are "fc.raw.file", "modified.sequence" and "hasMTD".
+#' Required columns are "fc.raw.file", "modified.sequence" and "is.transferred".
 #' 
 #' If match-between-runs was enabled during the MaxQuant run,
 #' the data.frame returned will contain separate values for 'transferred' evidence
@@ -1055,20 +1055,20 @@ getProteinCounts = function(df_evd) {
 #'
 getPeptideCounts = function(df_evd) {
   
-  required_cols = c("fc.raw.file", "modified.sequence", "hasMTD")
+  required_cols = c("fc.raw.file", "modified.sequence", "is.transferred")
   if (!all(required_cols %in% colnames(df_evd))) {
     stop("getPeptideCounts(): Missing columns!")
   }
   
   ## report Match-between-runs data only if if it was enabled
-  reportMTD = any(df_evd$hasMTD)
+  reportMTD = any(df_evd$is.transferred)
   
   pep_counts = plyr::ddply(df_evd, "fc.raw.file", .fun = function(x, reportMTD)
   {
     x <<- x
-    #pep_count_genuineAll = sum(!x$hasMTD) # (we count double sequences... could be charge +2, +3,... or oversampling)
-    pep_set_genuineUnique = unique(x$modified.sequence[!x$hasMTD]) ## unique sequences (discarding PTM's)
-    pep_set_allMBRunique = unique(x$modified.sequence[x$hasMTD])
+    #pep_count_genuineAll = sum(!x$is.transferred) # (we count double sequences... could be charge +2, +3,... or oversampling)
+    pep_set_genuineUnique = unique(x$modified.sequence[!x$is.transferred]) ## unique sequences (discarding PTM's)
+    pep_set_allMBRunique = unique(x$modified.sequence[x$is.transferred])
     pep_count_GenAndMBR = length(intersect(pep_set_genuineUnique, pep_set_allMBRunique)) ## redundant, i.e. both Genuine and MBR
     pep_count_newMBR = length(pep_set_allMBRunique) - pep_count_GenAndMBR ## new MBR peptides
     pep_count_onlyGenuine = length(pep_set_genuineUnique) - pep_count_GenAndMBR ## genuine-only peptides

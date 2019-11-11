@@ -197,7 +197,7 @@ current study. ",
       return(list(plots = lpl, qcScores = qc_score))
     }, 
     qcCat = "Prep", 
-    qcName = "MSMS:~%s", 
+    qcName = "MSMS:~Missed~Cleavages~%s", 
     orderNr = 0040
   )
     return(.self)
