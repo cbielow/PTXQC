@@ -220,7 +220,7 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
   }
   
   ## de-duplicate protein-accession entries
-  accessions = (res[, .(accession=list(accession)), by=id])$accession
+  accessions = res[, .(l_accession=list(accession)), by=id]$l_accession
   res = unique(res, by = "id")
   res$proteins = unlist(lapply(accessions, paste, collapse=";"))
   

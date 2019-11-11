@@ -1,8 +1,8 @@
 Package: PTXQC
 Type: Package
 Title: Quality Report Generation for MaxQuant Results
-Version: 0.92.6
-Date: 2019-04-16
+Version: 0.92.7
+Date: 2019-11-05
 Author: Chris Bielow <chris.bielow@bsc.fu-berlin.de>
 Maintainer: Chris Bielow <chris.bielow@bsc.fu-berlin.de>
 Description: Generates Proteomics (PTX) quality control (QC) reports for shotgun LC-MS data analyzed with the 
@@ -12,11 +12,11 @@ Description: Generates Proteomics (PTX) quality control (QC) reports for shotgun
 SystemRequirements: pandoc (http://pandoc.org) for building Vignettes and output reports as HTML 
 Depends:
     R (>= 3.0.0),
+    data.table,
     methods,
     stats,
     utils
 Imports:
-    data.table,
     ggplot2 (>= 2.2),
     ggdendro,
     graphics,
