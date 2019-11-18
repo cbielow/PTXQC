@@ -90,7 +90,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       return(list(plots = lpl))
     }, 
     qcCat = "prep", 
-    qcName = "PG:~raw~intensity", 
+    qcName = "PG:~Raw~intensity", 
     orderNr = 0032
   )
     return(.self)

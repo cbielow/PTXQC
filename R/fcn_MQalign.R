@@ -304,7 +304,7 @@ inMatchWindow = function(data, df.allowed.deltaRT)
 #' and thus the intensity is random.
 #' To find by how much these peak pairs differ in RT, use idTransferCheck() and inMatchWindow().
 #' 
-#' Required columns are 'hasMTD', 'fc.raw.file', 'modified.sequence', 'charge', 'type'.
+#' Required columns are 'is.transferred', 'fc.raw.file', 'modified.sequence', 'charge', 'type'.
 #'
 #' Note that this function must be given MS/MS identifications of type "MULTI-MSMS" and "MSMS-MATCH".
 #' It will stop() otherwise.
@@ -318,7 +318,7 @@ inMatchWindow = function(data, df.allowed.deltaRT)
 #'
 peakSegmentation = function(df_evd_all)
 {
-  if (!checkInput(c("hasMTD", "fc.raw.file", "modified.sequence", "charge", 'type'), df_evd_all)) return()
+  if (!checkInput(c("is.transferred", "fc.raw.file", "modified.sequence", "charge", 'type'), df_evd_all)) return()
 
   if (!all(c("MULTI-MSMS", "MULTI-MATCH") %in% unique(df_evd_all$type)))
   {
@@ -330,10 +330,10 @@ peakSegmentation = function(df_evd_all)
   ## just keep "MULTI-MATCH" and "MULTI-MSMS", to keep results comparable to idTransferCheck()
   df_evd_all = df_evd_all[df_evd_all$type %in% c("MULTI-MSMS", "MULTI-MATCH"), ]
 
-  cols = c("hasMTD", "fc.raw.file", "modified.sequence", "charge")
+  cols = c("is.transferred", "fc.raw.file", "modified.sequence", "charge")
   countSeqs = plyr::ddply(df_evd_all[, cols], cols[-1], function(x)
   {
-    return(data.frame(nNative = sum(!x$hasMTD), nMatched = sum(x$hasMTD)))#, ratio = ratio))
+    return(data.frame(nNative = sum(!x$is.transferred), nMatched = sum(x$is.transferred)))#, ratio = ratio))
   })
   
   mbr_score = plyr::ddply(countSeqs, "fc.raw.file", function(countSeqs_sub)

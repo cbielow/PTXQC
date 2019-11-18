@@ -191,8 +191,8 @@ current study. ",
                               valMCVar = HEATMAP_NA_VALUE)
       }## end enyzme check
       
-      colnames(qc_score)[colnames(qc_score) == "valMC"] = sprintf(.self$qcName, "MC")
-      colnames(qc_score)[colnames(qc_score) == "valMCVar"] = sprintf(.self$qcName, "MC~Var")
+      colnames(qc_score)[colnames(qc_score) == "valMC"] = sprintf(.self$qcName, "Missed~Cleavages")
+      colnames(qc_score)[colnames(qc_score) == "valMCVar"] = sprintf(.self$qcName, "Missed~Cleavages~Var")
 
       return(list(plots = lpl, qcScores = qc_score))
     }, 
