@@ -942,7 +942,7 @@ getAbundanceClass = function(x) {
 #' 
 #' @export
 #' 
-getReportFilenames = function(folder, report_name_has_folder = TRUE, mzTab_filename = "")
+getReportFilenames = function(folder, report_name_has_folder = TRUE, mzTab_filename = NULL)
 {
   ## package version: added to output filename
   pv = try(utils::packageVersion("PTXQC"))
@@ -962,7 +962,7 @@ getReportFilenames = function(folder, report_name_has_folder = TRUE, mzTab_filen
   ## complete path + report_vXY
   report_file_simple = paste0(folder, .Platform$file.sep, "report_", report_version)
   ## .. + myMzTab [optional]
-  if (nchar(mzTab_filename) > 0) {
+  if (!is.null(mzTab_filename) && nchar(mzTab_filename) > 0) {
     report_file_simple = paste0(report_file_simple, "_", gsub("\\.mzTab$", "", basename(mzTab_filename), ignore.case = TRUE))
   }
   
