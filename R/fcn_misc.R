@@ -920,19 +920,29 @@ getAbundanceClass = function(x) {
 #' 
 #' Assembles a list of output file names, which will be created during reporting.
 #' 
-#' @param txt_folder Directory where the MaxQuant output resides
+#' You can combine @p report_name_has_folder and @p mzTab_filename to obtain filenames which are even more
+#' robust to moving around (since they contain infixes of the mzTab filename and the folder),
+#' e.g. @em report_HEK293-study_myProjects.html, where the input 
+#'      was mzTab_filename='HEK293-study.mzTab' and folder='c:/somePath/myProjects/'.
+#' 
+#' @param folder Directory where the MaxQuant output (txt folder) or the mzTab file resides
 #' @param report_name_has_folder Boolean: Should the report files (html, pdf) contain the name
 #'        of the deepest(=last) subdirectory in 'txt_folder' which is not 'txt'?
 #'        Useful for discerning different reports in a PDF viewer.
 #'        E.g. when flag is FALSE: 'report_v0.91.0.html'; and 'report_v0.91.0_bloodStudy.html' when flag is TRUE (and the
 #'        txt folder is '.../bloodStudy/txt/' or '...bloodStudy/', i.e. './txt/' will be skipped over)
+#' @param mzTab_filename If input is an mzTab, specify its name, so that the filenames can use its basename as infix
+#'        E.g. when mzTab_filename = 'HEK293-study.mzTab' then the output will be
+#'             report_HEK293-study.html.
+#'        This allows to get reports on multiple mzTabs in the same folder without overwriting report results.
+#'        
 #' @return List of output file names (just names, no file is created) 
 #'         with list entries: 
 #'         yaml_file, heatmap_values_file, R_plots_file, filename_sorting, stats_file, log_file, report_file_prefix, report_file_PDF, report_file_HTML
 #' 
 #' @export
 #' 
-getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
+getReportFilenames = function(folder, report_name_has_folder = TRUE, mzTab_filename = "")
 {
   ## package version: added to output filename
   pv = try(utils::packageVersion("PTXQC"))
@@ -941,7 +951,7 @@ getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
   
   ## amend report filename with a foldername where it resides, to ease discerning different reports in a PDF viewer
   extra_folderRef = ""
-  folders = rev(unlist(strsplit(normalizePath(txt_folder, winslash = .Platform$file.sep), split=.Platform$file.sep)))
+  folders = rev(unlist(strsplit(normalizePath(folder, winslash = .Platform$file.sep), split=.Platform$file.sep)))
   while (length(folders)){
     if (!grepl(":", folders[1]) & folders[1]!="txt") {
       extra_folderRef = paste0("_", folders[1])
@@ -949,7 +959,13 @@ getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
     } else folders = folders[-1]
   }
   
-  report_file_simple = paste0(txt_folder, .Platform$file.sep, "report_", report_version)
+  ## complete path + report_vXY
+  report_file_simple = paste0(folder, .Platform$file.sep, "report_", report_version)
+  ## .. + myMzTab [optional]
+  if (nchar(mzTab_filename) > 0) {
+    report_file_simple = paste0(report_file_simple, "_", gsub("\\.mzTab$", "", basename(mzTab_filename), ignore.case = TRUE))
+  }
+  
   yaml_file = paste0(report_file_simple, ".yaml")
   heatmap_values_file = paste0(report_file_simple, "_heatmap.txt")
   R_plots_file = paste0(report_file_simple, "_plots.Rdata")
@@ -957,9 +973,11 @@ getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
   stats_file = paste0(report_file_simple, "_stats.txt")
   log_file = paste0(report_file_simple, ".log")
   
-  report_file_extended = paste0(report_file_simple, extra_folderRef)
-  
-  report_file_prefix = ifelse(report_name_has_folder, report_file_extended, report_file_simple)
+  ## include folder-name at the end
+  if (report_name_has_folder)
+    report_file_prefix = paste0(report_file_simple, extra_folderRef)
+  else
+    report_file_prefix = report_file_simple
   
   fh = list(yaml_file = yaml_file,
             heatmap_values_file = heatmap_values_file, 
