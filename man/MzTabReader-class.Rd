@@ -33,6 +33,8 @@ If identified_only is TRUE, only MS2 scans which were identified (i.e. a PSM) ar
 \item{\code{getSummary()}}{Converts internal mzTab metadata section to a two data.frame with columns 'fc.raw.file', 'ms.ms.identified....'
 similar to MaxQuants summary.txt.}
 
+\item{\code{renameColumns(dt, namelist)}}{Renames all columns and throws a warning if a column does not exist in the data}
+
 \item{\code{RTUnitCorrection(dt)}}{Convert all RT columns from seconds (OpenMS default) to minutes (MaxQuant default)}
 }}
 

@@ -14,7 +14,7 @@ getProteinCounts(df_evd)
 Data.frame with columns 'fc.raw.file', 'counts', 'category', 'MBRgain'
 }
 \description{
-Required columns are "protein.group.ids", "fc.raw.file" and "hasMTD".
+Required columns are "protein.group.ids", "fc.raw.file" and "is.transferred".
 }
 \details{
 If match-between-runs was enabled during the MaxQuant run,

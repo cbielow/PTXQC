@@ -4,16 +4,16 @@
 \alias{idTransferCheck}
 \title{Check how close transferred ID's after alignment are to their genuine IDs within one Raw file.}
 \usage{
-idTransferCheck(data)
+idTransferCheck(df_evd_all)
 }
 \arguments{
-\item{data}{A data.frame with columns 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'raw.file'}
+\item{df_evd_all}{A data.frame with columns 'type', 'calibrated.retention.time', 'modified.sequence', 'charge', 'raw.file'}
 }
 \value{
 A data.frame containing the RT diff for each ID-group found in a Raw file (bg = genuine).
 }
 \description{
-The input is a data frame containing feature evidence with corrected retention times,
+The input is a data.frame containing feature evidence with corrected retention times,
 e.g. a 'calibrated.retention.time' column.
 }
 \details{
