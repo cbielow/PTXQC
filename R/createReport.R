@@ -461,7 +461,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
       ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
       if (!(param_evd_mbr == FALSE) & nrow(df_evd_tf)>0)
       {
-        lst_qcMetrics[["qcMetric_EVD_MBRAlign"]]$setData(df_evd, param_EV_MatchingTolerance, eval(expr_fn_map)$raw_file_mapping)
+        lst_qcMetrics[["qcMetric_EVD_MBRAlign"]]$setData(df_evd, 
+                                                         tolerance_matching = param_EV_MatchingTolerance, 
+                                                         raw_file_mapping = eval(expr_fn_map)$raw_file_mapping)
 
         ### 
         ###     MBR: ID transfer
