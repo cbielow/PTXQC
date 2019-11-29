@@ -5,10 +5,10 @@
 \title{Determine fraction of evidence which causes segmentation, i.e. sibling peaks at different RTs
 confirmed either by genuine or transferred MS/MS.}
 \usage{
-peakSegmentation(d_evd)
+peakSegmentation(df_evd_all)
 }
 \arguments{
-\item{d_evd}{A data.frame of evidences containing the above columns}
+\item{df_evd_all}{A data.frame of evidences containing the above columns}
 }
 \value{
 A data.frame with one row per Raw file and 
@@ -31,7 +31,7 @@ In most cases, the RT is too far off to be a split peak. It's rather a lucky hit
 and thus the intensity is random.
 To find by how much these peak pairs differ in RT, use idTransferCheck() and inMatchWindow().
 
-Required columns are 'hasMTD', 'fc.raw.file', 'modified.sequence', 'charge', 'type'.
+Required columns are 'is.transferred', 'fc.raw.file', 'modified.sequence', 'charge', 'type'.
 
 Note that this function must be given MS/MS identifications of type "MULTI-MSMS" and "MSMS-MATCH".
 It will stop() otherwise.

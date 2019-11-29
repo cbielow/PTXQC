@@ -1,4 +1,3 @@
-
 #####################################################################
 
 qcMetric_EVD_UserContaminant =  setRefClass(
@@ -597,7 +596,7 @@ Heatmap score [EVD: MBR Align]: fraction of 'green' vs. 'green+red' peptides.
     workerFcn = function(.self, df_evd, tolerance_matching, raw_file_mapping)
     {
       ## completeness check
-      if (!checkInput(c("type", "calibrated.retention.time", "id", "raw.file", "modified.sequence", "charge"), df_evd)) return()
+      if (!checkInput(c("type", "calibrated.retention.time", "retention.time.calibration", "id", "raw.file", "modified.sequence", "charge"), df_evd)) return()
       
       ## find reference
       if (('fraction' %in% colnames(df_evd)) && (length(unique(df_evd$fraction)) > 1)) {
@@ -633,6 +632,12 @@ Heatmap score [EVD: MBR Align]: fraction of 'green' vs. 'green+red' peptides.
         ## augment more columns
         d_alignQ$retention.time.calibration = df_evd$retention.time.calibration[match(d_alignQ$id, df_evd$id)]
         
+        if (diff(range(na.omit(d_alignQ$retention.time.calibration))) < 1e-5)
+        {
+          txt_subtitle = paste0(txt_subtitle, " || WARNING: MaxQuant did not correct RTs in any way!");
+          warning("EVD MBRAlign: MaxQuant did not correct RTs in any way, despite MBR=on")
+        }
+        
         if (nrow(d_alignQ)==0)
         { ## very unusual case: reference contains no evidence -- e.g. pull-down experiment
           lpl[[1]] = ggText("EVD: RT Distance of peptides from reference after alignment", "Alignment cannot be verfied -- no data.")
@@ -667,7 +672,7 @@ Heatmap score [EVD: MBR Align]: fraction of 'green' vs. 'green+red' peptides.
           evd_RT_t$RTdiff_in = c("green", "red")[(abs(evd_RT_t$rtdiff) > tolerance_matching)+1]
           
           ## plot alignment result
-          y_lim = quantile(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), probs = c(0.01,0.99), na.rm = TRUE) * 1.1
+          y_lim = quantile(c(evd_RT_t$rtdiff, evd_RT_t$retention.time.calibration), probs = c(0.01, 0.99), na.rm = TRUE) * 1.1
           lpl =
             byX(evd_RT_t, evd_RT_t$fc.raw.file, 3*3, plot_MBRAlign, sort_indices = FALSE, 
                 y_lim = y_lim, title_sub = txt_subtitle, match_tol = tolerance_matching)

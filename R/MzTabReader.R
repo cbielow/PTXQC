@@ -180,9 +180,10 @@ getEvidence = function()
   res$retention.time.calibration = NA
   if (all(c("opt.global.rt.align", "opt.global.rt.raw") %in% colnames(res))) 
   {
-    renameColumns(res, list(     retention.time = "retention.time.pep",
-                              opt.global.rt.raw = "retention.time",
-                            opt.global.rt.align = "calibrated.retention.time"))
+    renameColumns(res, list(               retention.time = "retention.time.pep",
+                                        opt.global.rt.raw = "retention.time",
+                                      opt.global.rt.align = "calibrated.retention.time"
+                            ))
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
 
@@ -455,14 +456,16 @@ renameColumns = function(dt, namelist)
 {
   "Renames all columns and throws a warning if a column does not exist in the data"
   
-  data.table::setnames(dt, old = names(namelist), new = unlist(namelist), skip_absent = TRUE)
+  from = names(namelist)
+  to = unlist(namelist)
+  data.table::setnames(dt, old = from, new = to, skip_absent = TRUE)
   
-  existName = unlist(namelist) %in% colnames(dt)
+  existName = to %in% colnames(dt)
   if (!all(existName))
   {
-    warning(paste0("Columns '", 
-                   paste(names(namelist)[!existName], "' after renaming: '", unlist(namelist)[!existName], collapse="', '", sep=""),
-                   "' are not present in input data!"),
+    warning(paste0("Columns\n '", 
+                   paste(from[!existName], "' after renaming: '", to[!existName], collapse="',\n '", sep=""),
+                   "'\n are not present in input data!"),
             immediate. = TRUE)
   }
 }

@@ -14,7 +14,7 @@ getPeptideCounts(df_evd)
 Data.frame with columns 'fc.raw.file', 'counts', 'category', 'MBRgain'
 }
 \description{
-Required columns are "fc.raw.file", "modified.sequence" and "hasMTD".
+Required columns are "fc.raw.file", "modified.sequence" and "is.transferred".
 }
 \details{
 If match-between-runs was enabled during the MaxQuant run,
