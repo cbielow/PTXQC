@@ -280,7 +280,8 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
       ## check if reporter.intensity.0... is present
       cols_reporter = grepv("^reporter.intensity.corrected.[0-9]", colnames(df_evd));
       cols_reporter.nc = grepv("^reporter.intensity.[0-9]", colnames(df_evd));
-      stopifnot(length(cols_reporter) > 1 && length(cols_reporter.nc) > 1)
+      if(length(cols_reporter) <= 1 || length(cols_reporter.nc) <= 1) {warning("Two reporter.intensity and two reporter.intensity.corrected columns are needed for metric ReporterIntensity.")
+        return()}
       ## check if correction was done at all
       if (all(df_evd[1:1000, cols_reporter] == df_evd[1:1000, cols_reporter.nc], na.rm = TRUE))
       {

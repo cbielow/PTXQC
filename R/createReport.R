@@ -428,10 +428,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## MS2/MS3 labeled (TMT/ITRAQ) only: reporter intensity of peptides
     ##
-    if (length(grep("^reporter.intensity.", colnames(df_evd))) > 0)
-    {
-      lst_qcMetrics[["qcMetric_EVD_ReporterInt"]]$setData(df_evd)
-    }
+    lst_qcMetrics[["qcMetric_EVD_ReporterInt"]]$setData(df_evd)
+    
     
     
     ##
