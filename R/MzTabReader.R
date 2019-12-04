@@ -443,7 +443,8 @@ RTUnitCorrection = function(dt)
   
   # heuristic to detect presence of unit:seconds; if retention.time has is, we assume that all rt-columns are in seconds
   # retention.time is mandatory for mzTab
-  if (max(dt[, "retention.time"], na.rm = TRUE) > 300){
+  if (max(dt[, "retention.time"], na.rm = TRUE) > 300)
+  {
     cn_rt = grepv("retention.time|retention.length", names(dt))
     dt[, c(cn_rt) := lapply(.SD, function(x) x / 60 ), .SDcols = cn_rt]
   }
@@ -464,7 +465,7 @@ renameColumns = function(dt, namelist)
   if (!all(existName))
   {
     warning(paste0("Columns\n '", 
-                   paste(from[!existName], "' after renaming: '", to[!existName], collapse="',\n '", sep=""),
+                   paste(from[!existName], "' (mzTab name) --> '", to[!existName], collapse="' (internal name),\n '", sep=""),
                    "'\n are not present in input data!"),
             immediate. = TRUE)
   }
