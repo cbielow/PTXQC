@@ -157,19 +157,20 @@ boxplotCompare = function(data,
 #' 
 #' @export
 #' 
-getFragmentErrors = function(x)
+getFragmentErrors = function(x, recurse = 0)
 {
   ## require only one mass analyzer type:
   stopifnot(length(unique(x$mass.analyzer))==1)
   stopifnot(all(c("mass.analyzer", "mass.deviations..da.") %in% colnames(x)))
   
   convert_Da2PPM = FALSE
-  if (grepl("ITMS|TOF|CID", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x)))
+  ## note: the "^" is important to avoid matching to " ITMS" -- see fallback below
+  if (grepl("^ITMS|^TOF|^CID", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x)))
   {
     ms2_unit = "[Da]"; ms2_col = "mass.deviations..da."
-  } else if (grepl("FTMS|HCD", x$mass.analyzer[1]) & ("mass.deviations..ppm." %in% colnames(x))) {
+  } else if (grepl("^FTMS|^HCD|^HCID", x$mass.analyzer[1]) & ("mass.deviations..ppm." %in% colnames(x))) {
     ms2_unit = "[ppm]"; ms2_col = "mass.deviations..ppm."
-  } else if (grepl("FTMS|HCD", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x))) {
+  } else if (grepl("^FTMS|^HCD|^HCID", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x))) {
     ## we know its high resolution, but this MQ version only gave us Dalton mass deviations
     ## --> convert back to ppm
     ms2_unit = "[ppm]"; ms2_col = "mass.deviations..da."
@@ -195,13 +196,17 @@ getFragmentErrors = function(x)
     err = err / as.numeric(mass) * 1e6
   }
   
-  if ((ms2_unit == "[ppm]") & (median(abs(err)) > 10)) {
-    cat(paste0("MS/MS fragment error seems rather large ", median(abs(err)), ". Reporting in [Da]...\n"))
-    # heuristic: ppm errors seem to be way to big. Use 'Da' instead.
+  abs_error95 = quantile(abs(err), probs = 0.95)
+  ## if dimension (Da vs ppm) seem weird, try switching to the other -- but avoid infinite recursion
+  if (recurse == 0 & (ms2_unit == "[ppm]") & (abs_error95 > 200)) {
+    warning(paste0("MS/MS fragment error seems rather large ", abs_error95, ". Reporting in [Da]...\n"))
     x$mass.analyzer = "ITMS"
-    return (getFragmentErrors(x))
+    return (getFragmentErrors(x, recurse = 1))
+  } else if (recurse == 0 & (ms2_unit == "[Da]") & (abs_error95 < 0.2)) {
+    warning(paste0("MS/MS fragment error seems rather small ", abs_error95, ". Reporting in [ppm]...\n"))
+    x$mass.analyzer = paste0(" ", x$mass.analyzer); ## just something which the regex above does not recognize and fallback to ppm
+    return (getFragmentErrors(x, recurse = 1))
   }
-  
   return(data.frame(msErr = err, unit = ms2_unit))
 }
 
