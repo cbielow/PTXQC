@@ -394,11 +394,11 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
   renameColumns(res, name)
  
   if ("mass.deviations..ppm." %in% colnames(res)) {
-    res$mass.deviations..ppm. = substr(res$mass.deviations..ppm., 2, nchar(res$mass.deviations..ppm.) - 2)
+    res$mass.deviations..ppm. = substr(res$mass.deviations..ppm., 2, nchar(res$mass.deviations..ppm.) - 1)
     res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm., fixed = TRUE)
   }
   if ("mass.deviations..da." %in% colnames(res)) {   
-    res$mass.deviations..da. = substr(res$mass.deviations..da., 2, nchar(res$mass.deviations..da.) - 2)
+    res$mass.deviations..da. = substr(res$mass.deviations..da., 2, nchar(res$mass.deviations..da.) - 1)
     res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da., fixed = TRUE)
   }
   
