@@ -193,7 +193,6 @@ getEvidence = function()
                                           opt.global.mass = "mass", 
                                     opt.global.identified = "identified",
                                opt.global.ScanEventNumber = "scan.event.number",
-opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
                                                    PSM.ID = "id", 
                              opt.global.modified.sequence = "modified.sequence",
                                 opt.global.is.contaminant = "contaminant",
@@ -379,8 +378,7 @@ getMSMSScans = function(identified_only = FALSE)
                         opt.global.fragment.mass.error.da = "mass.deviations..da.", 
                        opt.global.fragment.mass.error.ppm = "mass.deviations..ppm.",
                                     opt.global.identified = "identified",
-                               opt.global.ScanEventNumber = "scan.event.number",     #either...    
-opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",     #or...
+                               opt.global.ScanEventNumber = "scan.event.number",
                                                    PSM.ID = "id", 
                              opt.global.modified.sequence = "modified.sequence",
                                 opt.global.is.contaminant = "contaminant",
