@@ -57,7 +57,6 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
             df.ms = rbind(df.ms, df.ms_r)
           }
         }
-        
         return (df.ms)
       })
 

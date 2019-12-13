@@ -193,7 +193,6 @@ getEvidence = function()
                                           opt.global.mass = "mass", 
                                     opt.global.identified = "identified",
                                opt.global.ScanEventNumber = "scan.event.number",
-opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
                                                    PSM.ID = "id", 
                              opt.global.modified.sequence = "modified.sequence",
                                 opt.global.is.contaminant = "contaminant",
@@ -381,8 +380,7 @@ getMSMSScans = function(identified_only = FALSE)
                         opt.global.fragment.mass.error.da = "mass.deviations..da.", 
                        opt.global.fragment.mass.error.ppm = "mass.deviations..ppm.",
                                     opt.global.identified = "identified",
-                               opt.global.ScanEventNumber = "scan.event.number",     #either...    
-opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",     #or...
+                               opt.global.ScanEventNumber = "scan.event.number",
                                                    PSM.ID = "id", 
                              opt.global.modified.sequence = "modified.sequence",
                                 opt.global.is.contaminant = "contaminant",
@@ -396,11 +394,11 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
   renameColumns(res, name)
  
   if ("mass.deviations..ppm." %in% colnames(res)) {
-    res$mass.deviations..ppm. = substr(res$mass.deviations..ppm., 2, nchar(res$mass.deviations..ppm.) - 2)
+    res$mass.deviations..ppm. = substr(res$mass.deviations..ppm., 2, nchar(res$mass.deviations..ppm.) - 1)
     res$mass.deviations..ppm. = gsub(",", ";", res$mass.deviations..ppm., fixed = TRUE)
   }
   if ("mass.deviations..da." %in% colnames(res)) {   
-    res$mass.deviations..da. = substr(res$mass.deviations..da., 2, nchar(res$mass.deviations..da.) - 2)
+    res$mass.deviations..da. = substr(res$mass.deviations..da., 2, nchar(res$mass.deviations..da.) - 1)
     res$mass.deviations..da. =  gsub(",", ";", res$mass.deviations..da., fixed = TRUE)
   }
   
@@ -445,7 +443,8 @@ RTUnitCorrection = function(dt)
   
   # heuristic to detect presence of unit:seconds; if retention.time has is, we assume that all rt-columns are in seconds
   # retention.time is mandatory for mzTab
-  if (max(dt[, "retention.time"], na.rm = TRUE) > 300){
+  if (max(dt[, "retention.time"], na.rm = TRUE) > 300)
+  {
     cn_rt = grepv("retention.time|retention.length", names(dt))
     dt[, c(cn_rt) := lapply(.SD, function(x) x / 60 ), .SDcols = cn_rt]
   }
@@ -466,7 +465,7 @@ renameColumns = function(dt, namelist)
   if (!all(existName))
   {
     warning(paste0("Columns\n '", 
-                   paste(from[!existName], "' after renaming: '", to[!existName], collapse="',\n '", sep=""),
+                   paste(from[!existName], "' (mzTab name) --> '", to[!existName], collapse="' (internal name),\n '", sep=""),
                    "'\n are not present in input data!"),
             immediate. = TRUE)
   }
