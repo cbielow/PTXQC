@@ -320,7 +320,9 @@ opt.global.cv.MS.1000776.scan.number.only.nativeID.format = "scan.event.number",
       res_tf$type = "MULTI-MATCH"
       
       ## check: summed intensities should be equal
-      stopifnot(sum(df_pep[, ..col_abd_df_pep], na.rm = TRUE) == sum(res$intensity, na.rm = TRUE) + sum(res_tf$intensity, na.rm = TRUE))
+      if("intensity" %in% colnames(res) && "intensity" %in% colnames(res_tf)){
+        stopifnot(sum(df_pep[, ..col_abd_df_pep], na.rm = TRUE) == sum(res$intensity, na.rm = TRUE) + sum(res_tf$intensity, na.rm = TRUE))
+      }
     }
   }
   
