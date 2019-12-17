@@ -214,7 +214,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN high]: rewards if TopN was reached on 
       ## (e.g. when MS3 events are recorded between MS2 events, there are gaps in the numbering)
       ## we close the gaps by requiring consecutive scan event numbers in MS2
       scan.events = df_msmsScans[, c("scan.event.number", "fc.raw.file")]
-      while (TRUE) { ## should be at most max(scan.even.number) iterations
+      while (TRUE) { ## should be at most max(scan.event.number) iterations
         se_pos = 1 + which(diff(scan.events$scan.event.number) > 1) ## position of gaps>1
         if (length(se_pos) == 0) break;
         scan.events$scan.event.number[se_pos] = scan.events$scan.event.number[se_pos] - 1
