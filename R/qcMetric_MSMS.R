@@ -141,8 +141,9 @@ current study. ",
     workerFcn = function(.self, df_msms, df_evd = NULL)
     {
       ## completeness check
-      if (!(checkInput(c("fc.raw.file", "id"), df_msms) & (checkInput(c("missed.cleavages"), df_msms) | checkInput(c("sequence"), df_msms)))) return()
-      if (!is.null(df_evd)) if (!checkInput(c("contaminant", "id"), df_evd)) return() 
+      if (!checkInput(c("fc.raw.file"), df_msms)) return()
+      if (!checkInput(c("missed.cleavages"), df_msms) && !checkInput(c("sequence"), df_msms)) return()
+      if (!is.null(df_evd) && !checkInput(c("contaminant", "id"), df_evd)) return() 
       
       # if missed.cleavages is not given, it is assumed that trypsin was used for digestion 
       if (!"missed.cleavages" %in% colnames(df_msms)) {
@@ -158,14 +159,15 @@ current study. ",
       if (!is.infinite(max_mc))
       { ## MC's require an enzyme to be set
         ## remove contaminants
-        msg_cont_removed = "(includes contaminants -- no evidence.txt read)"
+        msg_cont_removed = "(excludes contaminants)"
         if ("contaminant" %in% colnames(df_msms)) { # for MzTab
           df_msms = df_msms[!df_msms$contaminant,]
         }
         else if (!is.null(df_evd)) {
-          msg_cont_removed = "(excludes contaminants)"
+          if (!checkInput(c("evidence.id"), df_msms)) return()
           df_msms = df_msms[!df_evd$contaminant[match(df_msms$evidence.id, df_evd$id)], ]
         }
+        else msg_cont_removed = "(includes contaminants -- no evidence.txt read)"
         
         st_bin = plyr::ddply(df_msms[, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
           t = table(x$missed.cleavages)/nrow(x)

@@ -781,7 +781,6 @@ plotTable = function(data, title = "", footer = "", col_names = colnames(data), 
   ## replace column names
   table = gtable::gtable_add_grob(table, colhead, t = 1, l = 1:ncol(data))
 
-  #table = tableGrob(data, rows = NULL, cols = c("Raw file", "% identified"))
   if (nchar(title[1]) > 0)
   {
     gtitle = grid::textGrob(title, gp = grid::gpar(fontsize = 14))
@@ -851,7 +850,7 @@ print.PTXQC_table = function(x, ...) {
 #'                                                       rnorm(n[3], 3, 0.7),
 #'                                                       rnorm(n[4], 4.5, 0.8)))
 #'   stats = data.frame(fc.raw.file = letters[4:1],
-#'                      sd = c(2.4, 0.5, 0.7, 0.8),
+#'                      sd_uncal = c(2.4, 0.5, 0.7, 0.8),
 #'                      outOfCal = c(TRUE, FALSE, FALSE, FALSE))           
 #'   plot_UncalibratedMSErr(data, MQBug_raw_files = letters[1],
 #'                          stats, y_lim = c(-20,20), 15, "subtitle")
@@ -866,7 +865,7 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
   showColLegend = ifelse(length(setdiff(data$col, "default")) > 0, "legend", "none")
   
   ## amend SD to fc.raw.file
-  stats$fcr_new_lvl = paste0(stats$fc.raw.file, " (sd = ", stats$sd, "ppm)")
+  stats$fcr_new_lvl = paste0(stats$fc.raw.file, " (sd = ", stats$sd_uncal, "ppm)")
   ## i.e. change name without underlying value
   levels(data$fc.raw.file) = stats$fcr_new_lvl[ match(levels(data$fc.raw.file), stats$fc.raw.file) ]
 

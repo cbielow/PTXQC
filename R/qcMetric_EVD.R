@@ -951,10 +951,16 @@ Heatmap score [EVD: MS Cal Pre (%1.1f)]: the centeredness (function CenteredRef)
       
       .self$helpText = sprintf(.self$helpTextTemplate, tolerance_pc_ppm, tolerance_pc_ppm)
       
-      if (!checkInput(c("uncalibrated.mass.error..ppm.", "mass", "mass.error..ppm."), df_evd)) return()
+      if (!checkInput(c("fc.raw.file", "uncalibrated.mass.error..ppm."), df_evd)) return()
+      
+      ## for some mzTab (not recalibrated) 'mass.error..ppm.' is not there... but we only need a dummy
+      if (!("mass.error..ppm." %in% colnames(df_evd))) df_evd$mass.error..ppm. = 0
       
       fix_cal = fixCalibration(df_evd, df_idrate, tolerance_sd_PCoutOfCal)
-      
+      if (is.null(fix_cal)) {
+        warning("Internal error. Data missing. Skipping metric!", immediate. = TRUE)
+        return()
+      }
       ## some outliers can have ~5000ppm, blowing up the plot margins
       ## --> remove outliers 
       ylim_g = range(boxplot.stats(fix_cal$df_evd$uncalibrated.mass.error..ppm.)$stats[c(1, 5)], c(-tolerance_pc_ppm, tolerance_pc_ppm) * 1.05)

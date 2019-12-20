@@ -1245,4 +1245,15 @@ getMetricsObjects = function(DEBUG_PTXQC = FALSE)
   return(lst_qcMetrics)
 }
 
+#'
+#' Make a color (given as name or in RGB) darker by factor x = [0 = black, 1=unchanged]
+#' @param color A color as understood by col2rgb
+#' @param factor Between 0 (make black) and 1 (leave color as is)
+#' @return darkened color
+#' 
+darken = function(color, factor=0.8){
+  dark_col = grDevices::rgb(t(grDevices::col2rgb(color) * factor), maxColorValue=255)
+  return(dark_col)
+}
+
 

@@ -172,7 +172,7 @@ getEvidence = function()
   }
   
   ## augment with fc.raw.file
-  ## The `spectra_ref` looks like ´ms_run[x]:index=y|ms_run´
+  ## The 'spectra_ref' looks like 'ms_run[x]:index=y|ms_run'
   res = cbind(res, .self$fn_map$specrefToRawfile(res$spectra.ref))
   stopifnot(all(!is.na(res$fc.raw.file))) # Spectra-Ref in PSM table not set for all entries
   

@@ -4,14 +4,15 @@
 \name{PTXQC}
 \alias{PTXQC}
 \alias{PTXQC-package}
-\title{PTXQC: A package for computating Quality Control (QC) metrics for Proteomics (PTX)}
+\title{PTXQC: A package for computing Quality Control (QC) metrics for Proteomics (PTX)}
 \description{
-PTXQC: A package for computating Quality Control (QC) metrics for Proteomics (PTX)
+PTXQC: A package for computing Quality Control (QC) metrics for Proteomics (PTX)
 }
 \section{Input}{
 
 Valid input data are either the files from MaxQuant's .txt folder (all versions from MaxQuant >= 1.0 upwards are supported)
-or a single mzTab file. Currently, only OpenMS' mzTab from the QualityControl TOPP tool (from OpenMS 2.5 onwards) is supported.
+or a single mzTab file. All mzTab files will work, but most metrics can be obtained from OpenMS' mzTab as produced
+by the QualityControl TOPP tool (from OpenMS 2.5 onwards).
 }
 
 \section{Important functions}{

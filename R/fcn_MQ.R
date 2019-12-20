@@ -83,6 +83,9 @@ boxplotCompare = function(data,
            "sample (medium)" = "blue", 
            "sample (heavy)" = "green",
            "contaminant" = "yellow")
+  dark_cols = darken(cols)
+  names(dark_cols) = names(cols)
+  ## assign categories to channels
   cat_names = names(cols)
   cat = factor(cat_names, levels=cat_names)
   data$cat = cat[1]
@@ -92,7 +95,6 @@ boxplotCompare = function(data,
     data$cat[grepl("^M", data$group) | grepl("^intensity\\.m\\.", data$group)] = cat[3]
     data$cat[grepl("^H", data$group) | grepl("^intensity\\.h\\.", data$group)] = cat[4]
   }
-
   data$cat[data$contaminant] = cat[5]
   
   ## compute global y-limits (so we can fix it across plots)
@@ -105,16 +107,16 @@ boxplotCompare = function(data,
   
   fcn_boxplot_internal = function(data, abline = NA) 
   {
-    pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat")) + ## do not use col="cat", since this will dodge bars and loose scaling
+    pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat", col = "cat")) +
       geom_boxplot(varwidth = TRUE) +
       xlab("") + 
       ylab(ylab) +
       ylim(ylims) +
       scale_alpha(guide = FALSE) +
       scale_fill_manual(values = cols, name = "Category") + 
-      scale_color_manual(values = cols, name = "Category") + 
-      theme(axis.text.x = element_text(angle=90, vjust = 0.5)) +
-      theme(legend.position=ifelse(length(cols)==1, "none", "right")) +
+      scale_color_manual(values = dark_cols, name = "Category") + 
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+      theme(legend.position = ifelse(length(cols)==1, "none", "right")) +
       addGGtitle(mainlab, sublab) + 
       scale_x_discrete_reverse(unique(data$group))
     
@@ -153,6 +155,7 @@ boxplotCompare = function(data,
 #' If ppm mass deviations are not available, errors in Da will be converted to ppm using the corresponding mass values.
 #' 
 #' @param x Data frame in long format with numerical expression data
+#' @param recurse Internal usage only. Leave at 0 when calling.
 #' @return  Data frame with mass errors ('msErr') and their 'unit' (Da or ppm) or NULL (if no fragments were given)
 #' 
 #' @export
@@ -228,7 +231,7 @@ getFragmentErrors = function(x, recurse = 0)
 fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2, low_id_rate = 1)
 {
   
-  if (!checkInput(c("fc.raw.file", "mass", "charge", "m.z", "mass.error..ppm.", "uncalibrated.mass.error..ppm.") ,df_evd)) return()
+  if (!checkInput(c("fc.raw.file", "mass.error..ppm.", "uncalibrated.mass.error..ppm."), df_evd)) return(NULL)
   
   ## heuristic to determine if the instrument is completely out of calibration, 
   ## i.e. all ID's are false positives, since the Precursor mass is wrong
@@ -238,7 +241,8 @@ fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2,
   ## -- uninformative for detection is the distribution (it's still Gaussian for a strange reason)
   MS1_decal_smr = plyr::ddply(df_evd, "fc.raw.file", function(x) 
     data.frame(n = nrow(x), 
-               sd = round(sd(x$mass.error..ppm., na.rm = TRUE), 1), 
+               sd = round(sd(x$mass.error..ppm., na.rm = TRUE), 1),
+               sd_uncal = round(sd(x$uncalibrated.mass.error..ppm., na.rm = TRUE), 1), 
                range = diff(quantile(x$mass.error..ppm., c(0.01, 0.99), na.rm = TRUE)),
                decal = (median(abs(x$uncalibrated.mass.error..ppm.), na.rm = TRUE) > 1e3),
                hasMassErrorBug = FALSE,
@@ -257,6 +261,7 @@ fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2,
   ## check each raw file individually (usually its just a few who are affected)
   if (any(MS1_decal_smr$decal, na.rm = TRUE))
   {
+    if (!checkInput(c("mass", "charge", "m.z"), df_evd)) return(NULL)
     recal_message = "MQ bug: data rescued"
     recal_message_post = 'MQ bug: data cannot be rescued'
     

@@ -564,7 +564,10 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   else df_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c(numeric = "Missed\\.cleavages",
                                                                                     "^Raw.file$",
                                                                                     "^mass.deviations",
-                                                                                    "^masses$", "^mass.analyzer$", "fragmentation", "reverse",
+                                                                                    "^masses$",
+                                                                                    "^mass.analyzer$",
+                                                                                    "fragmentation",
+                                                                                    "reverse",
                                                                                     numeric = "^evidence.id$"
                                                                                   ), check_invalid_lines = FALSE)
   
