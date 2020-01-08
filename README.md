@@ -4,18 +4,15 @@ PTXQC
 [![Build Status](https://travis-ci.org/cbielow/PTXQC.svg?branch=master)](https://travis-ci.org/cbielow/PTXQC) 
 [![Project Stats](https://www.openhub.net/p/PTXQC/widgets/project_thin_badge.gif)](https://www.openhub.net/p/PTXQC)
 
-**This package allows users of MaxQuant to generate quality control reports in Html/PDF format.**
+**This package allows users of MaxQuant (from .txt files) and mzTabs (from OpenMS) to generate quality control reports in Html/PDF format.**
 
 ### Latest changes / Change log
 
+  - v1.0.0   - Jan 2020: support for mzTab, more metrics (UpSetR) and fixes
   - v0.92.06 - Apr 2019: Bug Fixes
   - v0.92.05 - Mar 2019: Raw name simplification fix
   - v0.92.04 - Feb 2019: More robust package vignette builds
   - v0.92.03 - Feb 2018: Full List of Metrics added as vignette
-  - v0.92.02 - Jan 2018: plots and metrics of reporter intensity (iTRAQ, TMT, ...) for labeled MSn experiments 
-  - v0.92.01 - Oct 2017: fix issue #41 (partial data error)
-  - v0.92.00 - Oct 2017: cleaner R interface; log file for drag'n'drop; fix boxPlots issue (usually for large experiments only);
-  - v0.90.00 - Aug 2017: Tables are shown in Html format
 
 See [NEWS][News_File] file for a version history.
 
@@ -42,11 +39,12 @@ DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
     - Match-between-runs performance
   - easy usage ([Windows OS only] `drag'n'drop` your `txt output folder` onto a `batch file`)
     - 10 min [Installation](#installation)
-  - Html/PDF report will be generated within your MaxQuant-txt folder
+  - Html/PDF report will be generated within your MaxQuant-txt folder or next to the mzTab file
   - optional configuration file *in YAML format* for generation of shorter/customized reports
 
 ### Target audience
   - MaxQuant users (no knowledge of R required)
+  - OpenMS users (or any other software which can write an mzTab)
   - bioinformaticians (who want to contribute or customize)
 
 

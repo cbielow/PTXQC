@@ -1,8 +1,8 @@
 Package: PTXQC
 Type: Package
 Title: Quality Report Generation for MaxQuant and mzTab Results
-Version: 1.00.0
-Date: 2019-12-17
+Version: 1.0.0
+Date: 2020-01-08
 Author: Chris Bielow <chris.bielow@bsc.fu-berlin.de>
 Maintainer: Chris Bielow <chris.bielow@bsc.fu-berlin.de>
 Description: Generates Proteomics (PTX) quality control (QC) reports for shotgun LC-MS data analyzed with the 
@@ -29,6 +29,7 @@ Imports:
     reshape2,
     rmarkdown,
     seqinr,
+    UpSetR,
     yaml
 Suggests:
     testthat

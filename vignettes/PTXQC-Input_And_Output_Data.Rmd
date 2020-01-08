@@ -13,27 +13,36 @@ vignette: >
 
 # Input/Output data for PTXQC
 
-PTXQC generates quality control reports for [MaxQuant] results.
+PTXQC generates quality control reports for [MaxQuant] txt data, and [OpenMS] mzTab data.
 
 ## Input
 
-When a full report is generated, PTXQC requires the following **input files**:
+When a full report is generated, PTXQC requires the following **input files**.
   
+MaxQuant:  
+
   - parameters.txt
   - summary.txt
   - proteinGroups.txt
   - evidence.txt
   - msms.txt
   - msmsScans.txt
-
+  
 These files can be found in the `<baseDir>/combined/txt` folder after MaxQuant analysis successfully finished.
 Here, `<baseDir>` is your main MaxQuant project folder containing your Raw files.
+  
+OpenMS:
+
+  - an .mzTab file from the QualityControl TOPP tool (see [OpenMSdoc] --> TOPP documentation --> QualityControl)
+  
+  Note: PTX-QC will compute all metrics for which input data is present. MzTab files from other software packages (even mzTab from MaxQuant) will be missing some data and thus only produce a small subset of metrics. 
+
 
 If you are not interested in the full report, PTXQC can be configured to look only at some of these files by editing the YAML file. See the [PTX-CustomizeReport][Ref_VignCust] vignette
 ```{r, eval=FALSE}
 vignette("PTXQC-CustomizeReport", package = "PTXQC")
 ```
-for details. Alternatively, you can rename any .txt file if you want PTXQC to ignore it.
+for details. Alternatively (for .txt input), you can rename any .txt file you want PTXQC to ignore.
 
 ## Output
 
@@ -47,11 +56,13 @@ Further output files (with the same prefix name as the Html/PDF report), include
   - `report_vXXX_filename_sort.txt` (customize the order and naming of Raw files in the report)
   - `report_v0XXX.yaml` (the configuration file)
   
-The YAML configuration file is created the first time you run PTXQC on a txt-folder. Customize it as you see fit.
+The YAML configuration file is created the first time you run PTXQC on a txt-folder or mzTab file. Customize it as you see fit.
 
 Read more about `report_vXXX_filename_sort.txt` and `report_vXXX.yaml` in the [PTX-CustomizeReport][Ref_VignCust] vignette.
   
 
   [MaxQuant]: https://maxquant.org
+  [OpenMS]: https://www.openms.de
+  [OpenMSdoc]: https://abibuilder.informatik.uni-tuebingen.de/archive/openms/Documentation/nightly/html/index.html
   [Ref_VignCust]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-CustomizeReport.Rmd
 
