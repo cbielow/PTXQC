@@ -11,12 +11,9 @@ Description: Generates Proteomics (PTX) quality control (QC) reports for shotgun
              Published in J. Proteome Res., Proteomics Quality Control: Quality Control Software for MaxQuant Results (2015) 'doi:10.1021/acs.jproteome.5b00780'.
 SystemRequirements: pandoc (http://pandoc.org) for building Vignettes and output reports as HTML 
 Depends:
-    R (>= 3.0.0),
-    data.table,
-    methods,
-    stats,
-    utils
+    R (>= 3.3.0)
 Imports:
+    data.table,
     ggplot2 (>= 2.2),
     ggdendro,
     grid,
@@ -24,11 +21,14 @@ Imports:
     gtable,
     kableExtra,
     knitr (>= 1.10),
+    methods,
     plyr,
     RColorBrewer,
     reshape2,
     rmarkdown,
     seqinr,
+    stats,
+    utils,
     UpSetR,
     yaml
 Suggests:

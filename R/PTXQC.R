@@ -24,8 +24,23 @@
 #' @docType package
 #' @name PTXQC
 #' 
+#' @import data.table
+#' @import ggplot2
+#' @import ggdendro
+#' @import grid
+#' @import grDevices
+#' @import gtable
+#' @import kableExtra
+#' @import knitr
 #' @import methods
-#' @import utils
+#' @import plyr
+#' @import RColorBrewer
+#' @rawNamespace import(reshape2, except = c(dcast, melt))
+#' @import rmarkdown
+#' @importFrom seqinr circle
 #' @import stats
+#' @import utils
+#' @import UpSetR
+#' @import yaml
 #' 
 NULL

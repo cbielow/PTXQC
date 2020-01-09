@@ -4,9 +4,9 @@ PTXQC
 [![Build Status](https://travis-ci.org/cbielow/PTXQC.svg?branch=master)](https://travis-ci.org/cbielow/PTXQC) 
 [![Project Stats](https://www.openhub.net/p/PTXQC/widgets/project_thin_badge.gif)](https://www.openhub.net/p/PTXQC)
 
-**This package allows users of MaxQuant (from .txt files) and mzTabs (from OpenMS) to generate quality control reports in Html/PDF format.**
+**This package allows users of MaxQuant (from .txt files) and OpenMS (from mzTab files) to generate quality control reports in Html/PDF format.**
 
-### Latest changes / Change log
+### Latest changes / ChangeLog
 
   - v1.0.0   - Jan 2020: support for mzTab, more metrics (UpSetR) and fixes
   - v0.92.06 - Apr 2019: Bug Fixes
@@ -58,13 +58,13 @@ you can browse the vignettes using either of these commands within R:
     browseVignettes(package = 'PTXQC')
   
 If you do not want to wait that long, you can look at the 
-[latest online vignette at CRAN](https://cran.r-project.org/web/packages/PTXQC/vignettes/)
+[latest online vignette at CRAN](https://cran.r-project.org/package=PTXQC)
 
 You will find documentation on
   - Full List of Quality Metrics with help text
   - Input and Output
   - Report customization
-  - (for MaxQuant users) Usage of Drag'n'drop
+  - (for MaxQuant/OpenMS users) Usage of Drag'n'drop
   - (for R users) Code examples in R
 
 The 'List of Metrics' vignette contains a full description for each metric (as seen in the Help section of a Html report).
@@ -99,8 +99,8 @@ or
     if (!require(devtools, quietly = TRUE)) install.packages("devtools")
     library("devtools")             ## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.
     
-	## use build_vignettes = FALSE if you did not install pandoc or if you encounter errors when building vignettes (e.g. PRIDE ftp unavailable)!
-	install_github("cbielow/PTXQC", build_vignettes = TRUE, dependencies = TRUE)
+    ## use build_vignettes = FALSE if you did not install pandoc or if you encounter errors when building vignettes (e.g. PRIDE ftp unavailable)!
+    install_github("cbielow/PTXQC", build_vignettes = TRUE, dependencies = TRUE)
 
 To get started, see the help and/or vignettes:
 
