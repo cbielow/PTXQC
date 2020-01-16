@@ -19,7 +19,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
     workerFcn = function(.self, df_msms, fc_raw_files)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "fragmentation", "reverse", "mass.deviations..da."), colnames(df_msms)))
+      if (!checkInput(c("fc.raw.file", "fragmentation", "reverse", "mass.deviations..da."), df_msms)) return ()
       ## older MQ versions do not have 'mass.analyzer' or 'mass.deviations..ppm.'
       ## , so we use fragmentation instead (this is a little risky, since you could do CID fragmentation and forward to Orbi, but hey...)
       if (!("mass.analyzer" %in% colnames(df_msms))) df_msms$mass.analyzer = df_msms$fragmentation
@@ -31,7 +31,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
         return (sort(sample.int(x, size = max)))
       }
       
-      ms2_decal = ddply(df_msms, c("fc.raw.file", "mass.analyzer"), .fun = function(x) {
+      ms2_decal = plyr::ddply(df_msms, c("fc.raw.file", "mass.analyzer"), .fun = function(x) {
         df.ms = NULL
         ##
         ##  Forwards
@@ -57,7 +57,6 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
             df.ms = rbind(df.ms, df.ms_r)
           }
         }
-        
         return (df.ms)
       })
 
@@ -67,7 +66,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
       #ms2_decal$msErr = round(ms2_decal$msErr, digits=ceiling(-log10(ms2_binwidth)+1))
       
       ## separate plots for each mass analyzer, since we want to keep 'fixed' scales for all raw.files (comparability)
-      lpl = dlply(ms2_decal, "mass.analyzer", function(ms2_decal) {
+      lpl = plyr::dlply(ms2_decal, "mass.analyzer", function(ms2_decal) {
         ## create filename inside, since we need to retain the factor levels (i.e. ordering)
         ## and this only works if raw file + massanalyzer is unique
         ms2_decal$new_filename = paste(ms2_decal$fc.raw.file, paste(ms2_decal$mass.analyzer, ms2_decal$unit), sep="\n")
@@ -86,7 +85,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
       qcScore = list()
       for (analyzer in unique(ms2_decal$mass.analyzer)) {
         qc_name = sprintf(.self$qcName, analyzer)
-        qc_MS2_decal = ddply(ms2_decal[ms2_decal$mass.analyzer==analyzer, ], "fc.raw.file", 
+        qc_MS2_decal = plyr::ddply(ms2_decal[ms2_decal$mass.analyzer==analyzer, ], "fc.raw.file", 
                              function(x)
                              {
                                xx = na.omit(x$msErr);
@@ -124,8 +123,8 @@ general, increased MC counts also increase the number of peptide signals, thus c
 space and potentially provoking overlapping peptide signals, biasing peptide quantification.
 Thus, low MC counts should be favored. Interestingly, it has been shown recently that 
 incorporation of peptides with missed cleavages does not negatively influence protein quantification (see 
-[http://pubs.acs.org/doi/abs/10.1021/pr500294d](Chiva, C., Ortega, M., and Sabido, E. Influence of the Digestion Technique, Protease, and Missed 
-Cleavage Peptides in Protein Quantitation. J. Proteome Res. 2014, 13, 3979-86) ). 
+[Chiva, C., Ortega, M., and Sabido, E. Influence of the Digestion Technique, Protease, and Missed 
+Cleavage Peptides in Protein Quantitation. J. Proteome Res. 2014, 13, 3979-86](http://pubs.acs.org/doi/abs/10.1021/pr500294d) ). 
 However this is true only if all samples show the same degree of digestion. High missed cleavage values 
 can indicate for example, either a) failed digestion, b) a high (post-digestion) protein contamination, or 
 c) a sample with high amounts of unspecifically degraded peptides which are not digested by trypsin. 
@@ -142,28 +141,44 @@ current study. ",
     workerFcn = function(.self, df_msms, df_evd = NULL)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "missed.cleavages"), colnames(df_msms)))
-      if (!is.null(df_evd)) stopifnot(.self$checkInput(c("contaminant", "id"), colnames(df_evd)))
+      if (!checkInput(c("fc.raw.file"), df_msms)) return()
+      if (!checkInput(c("missed.cleavages"), df_msms) && !checkInput(c("sequence"), df_msms)) return()
+      if (!is.null(df_evd) && !checkInput(c("contaminant", "id"), df_evd)) return() 
+      
+      # if missed.cleavages is not given, it is assumed that trypsin was used for digestion 
+      if (!"missed.cleavages" %in% colnames(df_msms)) {
+        seqs = gsub('.{1}$', '', df_msms$sequence)
+        df_msms$missed.cleavages = nchar(seqs) - nchar(gsub("K|R", "", seqs))
+        msg_missed_clea = "(MCs computed assuming trypsin)"
+      }
+      else {
+        msg_missed_clea = ""
+      }
       
       max_mc = max(-Inf, df_msms$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
       if (!is.infinite(max_mc))
       { ## MC's require an enzyme to be set
         ## remove contaminants
-        msg_cont_removed = "(includes contaminants -- no evidence.txt read)"
-        if (!is.null(df_evd)) {
-          msg_cont_removed = "(excludes contaminants)"
+        msg_cont_removed = "(excludes contaminants)"
+        if ("contaminant" %in% colnames(df_msms)) { # for MzTab
+          df_msms = df_msms[!df_msms$contaminant,]
+        }
+        else if (!is.null(df_evd)) {
+          if (!checkInput(c("evidence.id"), df_msms)) return()
           df_msms = df_msms[!df_evd$contaminant[match(df_msms$evidence.id, df_evd$id)], ]
         }
+        else msg_cont_removed = "(includes contaminants -- no evidence.txt read)"
         
-        st_bin = ddply(df_msms[, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
+        st_bin = plyr::ddply(df_msms[, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
           t = table(x$missed.cleavages)/nrow(x)
           r = rep(0, max_mc + 1)
           names(r) = as.character(0:max_mc)
           r[names(t)] = t
           return (r)
         })
+        
         lpl =
-          byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, title_sub = msg_cont_removed, sort_indices = TRUE)
+          byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, sort_indices = TRUE, title_sub = paste(msg_cont_removed, msg_missed_clea)) 
         
         ## QC measure for missed-cleavages variation
         qc_score = data.frame(fc.raw.file = st_bin$fc.raw.file, valMC = st_bin[, "0"])
@@ -177,8 +192,8 @@ current study. ",
                               valMCVar = HEATMAP_NA_VALUE)
       }## end enyzme check
       
-      colnames(qc_score)[colnames(qc_score) == "valMC"] = sprintf(.self$qcName, "MC")
-      colnames(qc_score)[colnames(qc_score) == "valMCVar"] = sprintf(.self$qcName, "MC~Var")
+      colnames(qc_score)[colnames(qc_score) == "valMC"] = sprintf(.self$qcName, "Missed~Cleavages")
+      colnames(qc_score)[colnames(qc_score) == "valMCVar"] = sprintf(.self$qcName, "Missed~Cleavages~Var")
 
       return(list(plots = lpl, qcScores = qc_score))
     }, 

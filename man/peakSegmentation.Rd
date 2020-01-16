@@ -5,20 +5,20 @@
 \title{Determine fraction of evidence which causes segmentation, i.e. sibling peaks at different RTs
 confirmed either by genuine or transferred MS/MS.}
 \usage{
-peakSegmentation(d_evd)
+peakSegmentation(df_evd_all)
 }
 \arguments{
-\item{d_evd}{A data.frame of evidences containing the above columns}
+\item{df_evd_all}{A data.frame of evidences containing the above columns}
 }
 \value{
 A data.frame with one row per Raw file and 
         three columns: 
           1) % of native single peaks (ignoring transferred IDs)
-          2) % of single peaks (group of size=1) using only groups which have at at one transferred evidence
+          2) % of single peaks (group of size=1) using only groups which have one transferred evidence
           3) % of single peaks using all groups
 }
 \description{
-Sometimes, MQ split a feature into 2 or more if the chromatograpic conditions are not optimal and there
+Sometimes, MQ splits a feature into 2 or more if the chromatograpic conditions are not optimal and there
 is a drop in RT intensity.
 If both features contain successful MS/MS scans, we will find the same peptide twice (with slightly different RT)
 in the same charge state. This constitutes a natively split peak and is rare (95% of all genuine peaks are unique).
@@ -31,7 +31,7 @@ In most cases, the RT is too far off to be a split peak. It's rather a lucky hit
 and thus the intensity is random.
 To find by how much these peak pairs differ in RT, use idTransferCheck() and inMatchWindow().
 
-Required columns are 'match.time.difference', 'fc.raw.file', 'modified.sequence', 'charge', 'type'.
+Required columns are 'is.transferred', 'fc.raw.file', 'modified.sequence', 'charge', 'type'.
 
 Note that this function must be given MS/MS identifications of type "MULTI-MSMS" and "MSMS-MATCH".
 It will stop() otherwise.

@@ -4,10 +4,12 @@
 \alias{getFragmentErrors}
 \title{Extract fragment mass deviation errors from a data.frame from msms.txt}
 \usage{
-getFragmentErrors(x)
+getFragmentErrors(x, recurse = 0)
 }
 \arguments{
 \item{x}{Data frame in long format with numerical expression data}
+
+\item{recurse}{Internal usage only. Leave at 0 when calling.}
 }
 \value{
 Data frame with mass errors ('msErr') and their 'unit' (Da or ppm) or NULL (if no fragments were given)

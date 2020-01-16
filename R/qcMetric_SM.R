@@ -13,10 +13,12 @@ The thresholds for the bins are
 %s
 
 
-Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the threshold for 'great' is reached or exceeded. ",
+Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the threshold for 'great' is reached or exceeded. 
+",
+
     workerFcn = function(.self, df_summary, id_rate_bad, id_rate_great)
     {
-      stopifnot(.self$checkInput(c("fc.raw.file", "ms.ms.identified...."), colnames(df_summary)))
+      if (!checkInput(c("fc.raw.file", "ms.ms.identified...."), df_summary)) return()
       
       dms = df_summary$"ms.ms.identified...."
       dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was acquired
@@ -68,6 +70,48 @@ Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the th
     qcCat = "MS", 
     qcName = "SM:~MS^2~ID~rate (\">%1.0f\")", 
     orderNr = 300
+  )
+    return(.self)
+  })
+)
+
+
+qcMetric_SM_TIC =  setRefClass(
+  "qcMetric_SM_TIC",
+  contains = "qcMetric",
+  methods = list(initialize=function() {  callSuper(
+    helpTextTemplate = 
+      "Total Ion Count: Returns the summed intensity of all MS1 signals (regardless of identification state).
+
+Heatmap score [SM: TIC]: reaches 1 (=100%%) if the TIC is uniform (i.e. a flat line)
+",
+    workerFcn = function(.self, d_smy)
+    {
+      ## completeness check
+      if (!checkInput(c("fc.raw.file", "TIC"), d_smy)) return()
+      
+      df_long = plyr::ddply(d_smy, "fc.raw.file", function(x) {
+        n = length(x$TIC[[1]])
+        df = data.frame(RT = x$TIC[[1]][seq(1,n,2)], intensity = x$TIC[[1]][seq(2,n,2)])
+        df$RT = round(df$RT / 60) ## seconds to minutes
+        df2 = data.frame(RT = df$RT[!duplicated(df$RT)], intensity = tapply(df$intensity, df$RT, FUN = mean))
+        return(df2)
+      })
+      
+      head(df_long)
+      
+      lpl =
+        byXflex(df_long, df_long$fc.raw.file, 6, plot_TIC, x_lim = range(df_long$RT), y_lim = range(df_long$intensity), sort_indices = FALSE)
+      
+      ## QC measure for smoothness of TopN over RT
+      qc_TIC = plyr::ddply(df_long, "fc.raw.file", function(x) data.frame(val = qualUniform(x$intensity)))
+      colnames(qc_TIC)[colnames(qc_TIC) == "val"] = .self$qcName
+      
+      return(list(plots = lpl, qcScores = qc_TIC))
+    }, 
+    qcCat = "LC", 
+    qcName = "SM:~TIC", 
+    orderNr = 0025
   )
     return(.self)
   })

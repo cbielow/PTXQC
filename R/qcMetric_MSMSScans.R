@@ -4,8 +4,6 @@
 #'
 #' Metric for msmsscans.txt, showing TopN over RT.
 #'
-#' @importFrom data.table as.data.table setkey
-#'
 qcMetric_MSMSScans_TopNoverRT =  setRefClass(
   "qcMetric_MSMSScans_TopNoverRT",
   contains = "qcMetric",
@@ -20,10 +18,10 @@ Heatmap score [MS<sup>2</sup> Scans: TopN over RT]: Rewards uniform (function Un
     workerFcn = function(.self, df_msmsScans)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "retention.time", "scan.event.number", "rRT"), colnames(df_msmsScans)))
+      if (!checkInput(c("fc.raw.file", "retention.time", "scan.event.number", "rRT"), df_msmsScans)) return()
       
-      dd = as.data.table(df_msmsScans[, c("fc.raw.file", "retention.time", "scan.event.number", "rRT")])
-      setkey(dd, fc.raw.file, retention.time) ## sort by RT
+      dd = data.table::as.data.table(df_msmsScans[, c("fc.raw.file", "retention.time", "scan.event.number", "rRT")])
+      data.table::setkey(dd, fc.raw.file, retention.time) ## sort by RT
       ## find the highest scan event (SE) after an MS1 scan
       DF_max = dd[, {
           idx = which(getMaxima(scan.event.number, thresh_rel = 0.0))
@@ -40,7 +38,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN over RT]: Rewards uniform (function Un
         byXflex(DFmse, DFmse$fc.raw.file, 6, plot_TopNoverRT, sort_indices = FALSE)
       
       ## QC measure for smoothness of TopN over RT
-      qc_TopNRT = ddply(DFmse, "fc.raw.file", function(x) data.frame(val = qualUniform(x$topN)))
+      qc_TopNRT = plyr::ddply(DFmse, "fc.raw.file", function(x) data.frame(val = qualUniform(x$topN)))
       colnames(qc_TopNRT)[colnames(qc_TopNRT) == "val"] = .self$qcName
       
       return(list(plots = lpl, qcScores = qc_TopNRT))
@@ -81,10 +79,10 @@ Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3
     workerFcn = function(.self, d_msmsScan, score_min_factor = 3, score_max_factor = 10)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "total.ion.current", "base.peak.intensity"), colnames(d_msmsScan)))
+      if (!checkInput(c("fc.raw.file", "total.ion.current", "base.peak.intensity"), d_msmsScan)) return ()
       
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
-      dd = as.data.table(d_msmsScan[, c("fc.raw.file", "total.ion.current", "base.peak.intensity")])
+      dd = data.table::as.data.table(d_msmsScan[, c("fc.raw.file", "total.ion.current", "base.peak.intensity")])
       dd$log.total.ion.current = log10(dd$total.ion.current)
       dd$log.base.peak.intensity = log10(dd$base.peak.intensity)
       log.dd.tic = dd[,list(mean=mean(log.total.ion.current),
@@ -112,7 +110,7 @@ Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3
       plot_MSMSintensity = function(dd.all) {
         pl = ggplot(data = dd.all, aes(x = fc.raw.file)) + 
                 geom_boxplot(stat = "identity", aes(col = "TIC", ymin = min, lower = lower, middle = middle, upper = upper, ymax = max)) +
-                geom_boxplot(stat = "identity", aes(col = "Base\nPeak", ymin = min2, lower = lower2, middle = middle2, upper = upper2, ymax = max2, width = 0.3)) +
+                geom_boxplot(stat = "identity", aes(col = "Base\nPeak", ymin = min2, lower = lower2, middle = middle2, upper = upper2, ymax = max2), width = 0.3) +
                 scale_color_manual("MS/MS\nintensity", values = c("TIC" = "black", "Base\nPeak" = "blue")) +
                 ylim(0, NA) +
                 scale_x_discrete_reverse(dd.all$fc.raw.file) +
@@ -126,7 +124,7 @@ Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3
       
       
       ## QC measure for intensity ratio below expected threshold (3x-10x by default)
-      qc_MSMSint = ddply(dd.ratio, "fc.raw.file", 
+      qc_MSMSint = plyr::ddply(dd.ratio, "fc.raw.file", 
                      function(x) data.frame(val = qualLinThresh(pmax(0, x$ratio - score_min_factor), t = score_max_factor - score_min_factor)))
       colnames(qc_MSMSint)[colnames(qc_MSMSint) == "val"] = .self$qcName
       
@@ -154,11 +152,15 @@ Heatmap score [MS<sup>2</sup> Scans: Ion Inj Time]: Linear score as fraction of 
 ",
     workerFcn = function(.self, df_msmsScans, threshold_iit)
     {
-      ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "ion.injection.time", "rRT"), colnames(df_msmsScans)))
+      ## completeness check (mzTab might not have IIJ)
+      if ( any(!("ion.injection.time" %in% colnames(df_msmsScans)), all(is.na(df_msmsScans$ion.injection.time)) ) ) {
+        return(NULL)
+      } 
+      
+      if (!checkInput(c("fc.raw.file", "ion.injection.time", "rRT"), df_msmsScans)) return ()
       
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
-      dd = as.data.table(df_msmsScans[, c("fc.raw.file", "ion.injection.time", "rRT")])
+      dd = data.table::as.data.table(df_msmsScans[, c("fc.raw.file", "ion.injection.time", "rRT")])
 
       ## average injection time over RT
       DFmIIT = dd[, list(medIIT = median(ion.injection.time)), by=c("fc.raw.file", "rRT")]
@@ -177,7 +179,7 @@ Heatmap score [MS<sup>2</sup> Scans: Ion Inj Time]: Linear score as fraction of 
                               list(belowThresh_IIT = sum(ion.injection.time < threshold_iit, na.rm = TRUE) / .N),
                               by = "fc.raw.file"]
       
-      qc_IIT = ddply(DFmIIT_belowThresh, "fc.raw.file", 
+      qc_IIT = plyr::ddply(DFmIIT_belowThresh, "fc.raw.file", 
                      function(x) data.frame(val = qualLinThresh(x$belowThresh_IIT, t = 1)))
       colnames(qc_IIT)[colnames(qc_IIT) == "val"] = .self$qcName
       
@@ -206,22 +208,22 @@ Heatmap score [MS<sup>2</sup> Scans: TopN high]: rewards if TopN was reached on 
     workerFcn = function(.self, df_msmsScans)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "scan.event.number"), colnames(df_msmsScans)))
+      if (!checkInput(c("fc.raw.file", "scan.event.number"), df_msmsScans)) return ()
       
       ## check if scan.event.number requires fixing
       ## (e.g. when MS3 events are recorded between MS2 events, there are gaps in the numbering)
       ## we close the gaps by requiring consecutive scan event numbers in MS2
       scan.events = df_msmsScans[, c("scan.event.number", "fc.raw.file")]
-      while (TRUE) { ## should be at most max(scan.even.number) iterations
+      while (TRUE) { ## should be at most max(scan.event.number) iterations
         se_pos = 1 + which(diff(scan.events$scan.event.number) > 1) ## position of gaps>1
         if (length(se_pos) == 0) break;
         scan.events$scan.event.number[se_pos] = scan.events$scan.event.number[se_pos] - 1
       }
 
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
-      DFc = as.data.table(scan.events)[, list(n=.N), by=c("scan.event.number", "fc.raw.file")]
+      DFc = data.table::as.data.table(scan.events)[, list(n=.N), by=c("scan.event.number", "fc.raw.file")]
 
-      dfc.ratio = ddply(DFc, "fc.raw.file", function(x, maxn)
+      dfc.ratio = plyr::ddply(DFc, "fc.raw.file", function(x, maxn)
       {
         ## sort x by scan event
         event_count = x$n
@@ -256,7 +258,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN high]: rewards if TopN was reached on 
       
       ## QC measure for always reaching the maximum TopN
       maxTopN = max(dfc.ratio$scan.event.number)
-      qc_TopN = ddply(dfc.ratio, "fc.raw.file", function(x) data.frame(val = qualHighest(x$n, maxTopN)))
+      qc_TopN = plyr::ddply(dfc.ratio, "fc.raw.file", function(x) data.frame(val = qualHighest(x$n, maxTopN)))
       colnames(qc_TopN)[colnames(qc_TopN) == "val"] = .self$qcName
       
       return(list(plots = lpl, qcScores = qc_TopN))
@@ -288,10 +290,10 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
     workerFcn = function(.self, df_msmsScans)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "scan.event.number", "identified"), colnames(df_msmsScans)))
+      if (!checkInput(c("fc.raw.file", "scan.event.number", "identified"), df_msmsScans)) return()
       
       ## use data.table for aggregation, its MUCH faster than ddply() and uses almost no extra memory
-      DF = as.data.table(df_msmsScans[, c("fc.raw.file", "scan.event.number", "identified")])[, list(n=.N), by=c("fc.raw.file", "scan.event.number", "identified")]
+      DF = data.table::as.data.table(df_msmsScans[, c("fc.raw.file", "scan.event.number", "identified")])[, list(n=.N), by=c("fc.raw.file", "scan.event.number", "identified")]
       
       # try KS on underlying data instead of using qualUniform()
       #   DF2= ddply(df_msmsScans, "fc.raw.file", function(rf){
@@ -304,12 +306,13 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
       #     kk$statistic  # = 'D' ,,  p.value is much smaller (~0)
       #   })
       #   --> fail, 'D' and p-values are too low
-      df.ratio = ddply(DF, c("scan.event.number", "fc.raw.file"), function(x)
+      df.ratio = plyr::ddply(DF, c("scan.event.number", "fc.raw.file"), function(x)
       {
         xp = xm = 0
         if ("+" %in% x$identified) xp = x$n[x$identified=="+"]
         if ("-" %in% x$identified) xm = x$n[x$identified=="-"]
         ratio = xp * 100 / sum(xp, xm)
+        
         return (data.frame(ratio = ratio, count = sum(x$n)))
       })
       head(df.ratio)
@@ -318,7 +321,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
       
       ## QC measure for constantly identifiying peptides, irrespective of scan event number
       ## -- we weight scan events by their number of occurence
-      qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame(val = qualUniform(x$ratio, x$count)))
+      qc_TopN_ID = plyr::ddply(df.ratio, "fc.raw.file", function(x) data.frame(val = qualUniform(x$ratio, x$count)))
       colnames(qc_TopN_ID)[colnames(qc_TopN_ID) == "val"] = .self$qcName
       
       return(list(plots = lpl, qcScores = qc_TopN_ID))
@@ -356,12 +359,12 @@ Heatmap score [MS<sup>2</sup> Scans: DepPep]: No score.
     workerFcn = function(.self, d_msmsScan)
     {
       ## completeness check
-      stopifnot(.self$checkInput(c("fc.raw.file", "dp.modification", "dp.aa", "identified"), colnames(d_msmsScan)))
+      if (!checkInput(c("fc.raw.file", "dp.modification", "dp.aa", "identified"), d_msmsScan)) return()
       stopifnot(unique(d_msmsScan$identified) %in% c("-","+"))
 
       ## modified subset
       d_msmsScan$hasDP = (d_msmsScan$dp.modification != "") & (tolower(d_msmsScan$dp.modification) != "unmodified")
-      d_dp = as.data.table(d_msmsScan[d_msmsScan$hasDP,])
+      d_dp = data.table::as.data.table(d_msmsScan[d_msmsScan$hasDP,])
       
       ## pick global top-5 modifications
       d_dp.mods.top = sort(table(d_dp$dp.modification), decreasing = TRUE)[1:5]
@@ -385,11 +388,11 @@ Heatmap score [MS<sup>2</sup> Scans: DepPep]: No score.
       d_dp.mods = d_dp[, list(n=.N), by=c("fc.raw.file", "dp.modification")]
       tail(d_dp.mods)
       ## sort mods by # of occurences
-      d_dp.mods.sort = ddply(d_dp.mods, "dp.modification", function(x) sum(x$n))
+      d_dp.mods.sort = plyr::ddply(d_dp.mods, "dp.modification", function(x) sum(x$n))
       d_dp.mods.sort.name = d_dp.mods.sort$dp.modification[order(d_dp.mods.sort$V1)]
       d_dp.mods$dp.modification = factor(d_dp.mods$dp.modification, levels = d_dp.mods.sort.name)
 
-      d_noDP_id = as.data.table(d_msmsScan[d_msmsScan$identified=="+" & !d_msmsScan$hasDP,])[, list(n=.N), by=c("fc.raw.file")]
+      d_noDP_id = data.table::as.data.table(d_msmsScan[d_msmsScan$identified=="+" & !d_msmsScan$hasDP,])[, list(n=.N), by=c("fc.raw.file")]
       
       d_dp.mods$n_noDP = d_noDP_id$n[match(d_dp.mods$fc.raw.file, d_noDP_id$fc.raw.file)]
       d_dp.mods$n_percent = d_dp.mods$n / d_dp.mods$n_noDP * 100

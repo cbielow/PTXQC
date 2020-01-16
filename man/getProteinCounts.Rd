@@ -5,16 +5,16 @@
 \title{Extract the number of protein groups observed per Raw file
 from an evidence table.}
 \usage{
-getProteinCounts(d_evidence)
+getProteinCounts(df_evd)
 }
 \arguments{
-\item{d_evidence}{Data.frame of evidence.txt as read by MQDataReader}
+\item{df_evd}{Data.frame of evidence.txt as read by MQDataReader}
 }
 \value{
 Data.frame with columns 'fc.raw.file', 'counts', 'category', 'MBRgain'
 }
 \description{
-Required columns are "protein.group.ids", "fc.raw.file" and "match.time.difference".
+Required columns are "protein.group.ids", "fc.raw.file" and "is.transferred".
 }
 \details{
 If match-between-runs was enabled during the MaxQuant run,

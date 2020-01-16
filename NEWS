@@ -7,6 +7,13 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.0.0 -- 2020/01/08
+  - [FEATURE] support for mzTab input data (e.g. from OpenMS 2.5 'QualityControl' tool)
+  - [FEATURE] new metric: UpSetR plots (shows common sets of peptides across Raw files)
+  - [FEATURE] new metric: Total Ion Count (TIC) plots (for OpenMS' mzTab input only; not supported for MaxQuant)
+  - [FIX] issue #55 (MS2 Calibration metric crash when no evidence is given)
+  - [FIX] issue #56 package data.table not properly imported
+
 [CRAN] v0.92.6 -- 2019/03/14
   - [FIX] issue #51 (crash on MSMSScans)
   - [FIX] issue #54 (timsTOF data fix)

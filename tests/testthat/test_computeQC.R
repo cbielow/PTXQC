@@ -5,7 +5,7 @@ library(PTXQC)
 ##    Error in Scales$new : could not find function "loadMethod"
 require(methods)
 
-context("fcn_computeQC.R")
+context("createReport.R")
 
 test_that("createReport", {
   ## this is a rather lengthy function, and its hard to test in all its granularity (hence we test
@@ -38,7 +38,7 @@ test_that("createReport", {
   txt_folder = file.path(tempdir(), "txt")
   yaml_obj = list() ## no special config...
   
-  r = createReport(txt_folder, yaml_obj)
+  r = createReport(txt_folder, NULL, yaml_obj)
   expect_equal(c("yaml_file", "heatmap_values_file", "R_plots_file", "filename_sorting", "stats_file",         
                  "log_file", "report_file_prefix", "report_file_PDF", "report_file_HTML"), names(r))
   rep_files = c(r[["report_file_PDF"]], r[["report_file_HTML"]])

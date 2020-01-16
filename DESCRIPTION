@@ -1,37 +1,36 @@
 Package: PTXQC
 Type: Package
-Title: Quality Report Generation for MaxQuant Results
-Version: 0.92.6
-Date: 2019-04-16
+Title: Quality Report Generation for MaxQuant and mzTab Results
+Version: 1.0.0
+Date: 2020-01-08
 Author: Chris Bielow <chris.bielow@bsc.fu-berlin.de>
 Maintainer: Chris Bielow <chris.bielow@bsc.fu-berlin.de>
 Description: Generates Proteomics (PTX) quality control (QC) reports for shotgun LC-MS data analyzed with the 
-             MaxQuant software suite.
+             MaxQuant software suite (from .txt files) or mzTab files (ideally from OpenMS 'QualityControl' tool).
              Reports are customizable (target thresholds, subsetting) and available in HTML or PDF format.
-             Published in J. Proteome Res., Proteomics Quality Control: Quality Control Software for MaxQuant Results (2015) 'doi:10.1021/acs.jproteome.5b00780'.
+             Published in J. Proteome Res., Proteomics Quality Control: Quality Control Software for MaxQuant Results (2015)
+             <doi:10.1021/acs.jproteome.5b00780>.
 SystemRequirements: pandoc (http://pandoc.org) for building Vignettes and output reports as HTML 
 Depends:
-    R (>= 3.0.0)
+    R (>= 3.3.0)
 Imports:
     data.table,
     ggplot2 (>= 2.2),
     ggdendro,
-    graphics,
     grid,
-    gridExtra,
     grDevices,
     gtable,
     kableExtra,
     knitr (>= 1.10),
     methods,
     plyr,
-    proto,
     RColorBrewer,
     reshape2,
     rmarkdown,
     seqinr,
     stats,
     utils,
+    UpSetR,
     yaml
 Suggests:
     testthat

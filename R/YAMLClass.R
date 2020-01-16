@@ -13,8 +13,6 @@
 #' 
 #' @field yamlObj A Yaml object as created by \code{\link[yaml]{yaml.load}}
 #'
-#' @importFrom yaml as.yaml
-#' 
 #' @exportClass YAMLClass
 #' @export YAMLClass
 #' 
@@ -42,9 +40,10 @@ YAMLClass = setRefClass(
       return(.self)
     },
 
-    getYAML = function(param_name, default)
+    getYAML = function(param_name, default, min = NA, max = NA)
     {
-      "Query this YAML object for a certain parameter and return its value. If it does not exist it is created with a default value."
+      "Query this YAML object for a certain parameter and return its value. If it does not exist it is created with a default value.
+       An optional min/max range can be specified and will be enforced if the value is known (default will be used upon violation)."
       cat(paste0("YAML: ", param_name, " def: ", paste(default, sep="", collapse=",")))
       pval = eval(parse(text=paste0(".self$yamlObj$", param_name))) 
       if (is.null(pval))
@@ -54,6 +53,14 @@ YAMLClass = setRefClass(
         cat("\n")
         return (default)
       } else {
+        if (!is.na(min))
+        { # check range
+          if (!is.numeric(pval) || pval < min || max < pval)
+          {
+            cat(paste0("YAML value for '", param_name, "' is invalid ('", pval, "'). Using default of ", default, "."))
+            pval = .self$setYAML(param_name, default)
+          }
+        }
         cat(paste0(" || new val: ", paste(pval, sep="", collapse=","), "\n"))
         return (pval)
       }
@@ -126,7 +133,7 @@ YAMLClass = setRefClass(
 #
 #
 "
-      cat(paste0(yaml.user.warning, as.yaml(.self$yamlObj)), file=filename)
+      cat(paste0(yaml.user.warning, yaml::as.yaml(.self$yamlObj)), file=filename)
       
       return (TRUE);
     }

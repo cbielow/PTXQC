@@ -870,12 +870,11 @@ thinOut = function(data, filterColname, binsize)
 #' @param batchColname Name of the split column as string
 #' @param binCount Number of bins in the 'filterColname' dimension.
 #' @return Data.frame with reduced rows, but identical input columns
-#'
-#' @importFrom plyr ddply
+#' 
 thinOutBatch = function(data, filterColname, batchColname, binCount = 1000)
 {
   binsize = (max(data[, filterColname], na.rm=TRUE) - min(data[, filterColname], na.rm=TRUE)) / binCount
-  r = ddply(data, batchColname, thinOut, filterColname, binsize)
+  r = plyr::ddply(data, batchColname, thinOut, filterColname, binsize)
   return (r)  
 }
 
@@ -921,30 +920,38 @@ getAbundanceClass = function(x) {
 #' 
 #' Assembles a list of output file names, which will be created during reporting.
 #' 
-#' @param txt_folder Directory where the MaxQuant output resides
+#' You can combine @p report_name_has_folder and @p mzTab_filename to obtain filenames which are even more
+#' robust to moving around (since they contain infixes of the mzTab filename and the folder),
+#' e.g. @em report_HEK293-study_myProjects.html, where the input 
+#'      was mzTab_filename='HEK293-study.mzTab' and folder='c:/somePath/myProjects/'.
+#' 
+#' @param folder Directory where the MaxQuant output (txt folder) or the mzTab file resides
 #' @param report_name_has_folder Boolean: Should the report files (html, pdf) contain the name
 #'        of the deepest(=last) subdirectory in 'txt_folder' which is not 'txt'?
 #'        Useful for discerning different reports in a PDF viewer.
 #'        E.g. when flag is FALSE: 'report_v0.91.0.html'; and 'report_v0.91.0_bloodStudy.html' when flag is TRUE (and the
 #'        txt folder is '.../bloodStudy/txt/' or '...bloodStudy/', i.e. './txt/' will be skipped over)
+#' @param mzTab_filename If input is an mzTab, specify its name, so that the filenames can use its basename as infix
+#'        E.g. when mzTab_filename = 'HEK293-study.mzTab' then the output will be
+#'             report_HEK293-study.html.
+#'        This allows to get reports on multiple mzTabs in the same folder without overwriting report results.
+#'        
 #' @return List of output file names (just names, no file is created) 
 #'         with list entries: 
 #'         yaml_file, heatmap_values_file, R_plots_file, filename_sorting, stats_file, log_file, report_file_prefix, report_file_PDF, report_file_HTML
 #' 
-#' @import utils
-#' 
 #' @export
 #' 
-getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
+getReportFilenames = function(folder, report_name_has_folder = TRUE, mzTab_filename = NULL)
 {
   ## package version: added to output filename
-  pv = try(packageVersion("PTXQC"))
+  pv = try(utils::packageVersion("PTXQC"))
   if (inherits(pv, "try-error")) pv = "_unknown"
   report_version = paste0("v", pv)  
   
   ## amend report filename with a foldername where it resides, to ease discerning different reports in a PDF viewer
   extra_folderRef = ""
-  folders = rev(unlist(strsplit(normalizePath(txt_folder, winslash = .Platform$file.sep), split=.Platform$file.sep)))
+  folders = rev(unlist(strsplit(normalizePath(folder, winslash = .Platform$file.sep), split=.Platform$file.sep)))
   while (length(folders)){
     if (!grepl(":", folders[1]) & folders[1]!="txt") {
       extra_folderRef = paste0("_", folders[1])
@@ -952,7 +959,13 @@ getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
     } else folders = folders[-1]
   }
   
-  report_file_simple = paste0(txt_folder, .Platform$file.sep, "report_", report_version)
+  ## complete path + report_vXY
+  report_file_simple = paste0(folder, .Platform$file.sep, "report_", report_version)
+  ## .. + myMzTab [optional]
+  if (!is.null(mzTab_filename) && nchar(mzTab_filename) > 0) {
+    report_file_simple = paste0(report_file_simple, "_", gsub("\\.mzTab$", "", basename(mzTab_filename), ignore.case = TRUE))
+  }
+  
   yaml_file = paste0(report_file_simple, ".yaml")
   heatmap_values_file = paste0(report_file_simple, "_heatmap.txt")
   R_plots_file = paste0(report_file_simple, "_plots.Rdata")
@@ -960,9 +973,11 @@ getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
   stats_file = paste0(report_file_simple, "_stats.txt")
   log_file = paste0(report_file_simple, ".log")
   
-  report_file_extended = paste0(report_file_simple, extra_folderRef)
-  
-  report_file_prefix = ifelse(report_name_has_folder, report_file_extended, report_file_simple)
+  ## include folder-name at the end
+  if (report_name_has_folder)
+    report_file_prefix = paste0(report_file_simple, extra_folderRef)
+  else
+    report_file_prefix = report_file_simple
   
   fh = list(yaml_file = yaml_file,
             heatmap_values_file = heatmap_values_file, 
@@ -982,40 +997,30 @@ getReportFilenames = function(txt_folder, report_name_has_folder = TRUE)
 #' Extract the number of protein groups observed per Raw file
 #' from an evidence table.
 #'
-#' Required columns are "protein.group.ids", "fc.raw.file" and "match.time.difference".
+#' Required columns are "protein.group.ids", "fc.raw.file" and "is.transferred".
 #' 
 #' If match-between-runs was enabled during the MaxQuant run,
 #' the data.frame returned will contain separate values for 'transferred' evidence
 #' plus an 'MBRgain' column, which will give the extra MBR evidence in percent.
 #' 
-#' @param d_evidence Data.frame of evidence.txt as read by MQDataReader
+#' @param df_evd Data.frame of evidence.txt as read by MQDataReader
 #' @return Data.frame with columns 'fc.raw.file', 'counts', 'category', 'MBRgain'
 #'
 #'
-getProteinCounts = function(d_evidence) {
+getProteinCounts = function(df_evd) {
     
-  required_cols = c("protein.group.ids", "fc.raw.file", "match.time.difference")
-  if (!all(required_cols %in% colnames(d_evidence))) {
+  required_cols = c("protein.group.ids", "fc.raw.file", "is.transferred")
+  if (!all(required_cols %in% colnames(df_evd))) {
     stop("getProteinCounts(): Missing columns!")
   }
-  
-  
-  ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
-  #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
-  #head(dsub[is.na(dsub[,2]),])
-  #sum(0==(dsub[,1]) & is.na(dsub[,2]))
-  ##
-  ## MQ1.4 MTD is either: NA or a number
-  ##
-  d_evidence$hasMTD = !is.na(d_evidence$match.time.difference)
-  
+
   ## report Match-between-runs data only if if it was enabled
-  reportMTD = any(d_evidence$hasMTD)
+  reportMTD = any(df_evd$is.transferred)
   
-  prot_counts = ddply(d_evidence, "fc.raw.file", .fun = function(x, reportMTD)
+  prot_counts = plyr::ddply(df_evd, "fc.raw.file", .fun = function(x, reportMTD)
   {
     ## proteins
-    x$group_mtdinfo = paste(x$protein.group.ids, x$hasMTD, sep="_")
+    x$group_mtdinfo = paste(x$protein.group.ids, x$is.transferred, sep="_")
     # remove duplicates (since strsplit below is expensive) -- has no effect on double counting of PROTEINS(!), since it honors MTD
     xpro = x[!duplicated(x$group_mtdinfo),]
     # split groups
@@ -1023,9 +1028,9 @@ getProteinCounts = function(d_evidence) {
       return (strsplit(x, split=";", fixed=TRUE))
     })
     # get number of unique proteins
-    pg_set_genuineUnique = unique(unlist(p_groups[!xpro$hasMTD]))
+    pg_set_genuineUnique = unique(unlist(p_groups[!xpro$is.transferred]))
     # MBR will contribute peptides of already known proteins
-    pg_set_allMBRunique = unique(unlist(p_groups[xpro$hasMTD]))
+    pg_set_allMBRunique = unique(unlist(p_groups[xpro$is.transferred]))
     pg_count_GenAndMBR = length(intersect(pg_set_allMBRunique, pg_set_genuineUnique))
     # ... and peptides of proteins which are new in this Raw file (few)
     pg_count_newMBR = length(pg_set_allMBRunique) - pg_count_GenAndMBR
@@ -1056,41 +1061,32 @@ getProteinCounts = function(d_evidence) {
 #' Extract the number of peptides observed per Raw file
 #' from an evidence table.
 #'
-#' Required columns are "fc.raw.file", "modified.sequence" and "match.time.difference".
+#' Required columns are "fc.raw.file", "modified.sequence" and "is.transferred".
 #' 
 #' If match-between-runs was enabled during the MaxQuant run,
 #' the data.frame returned will contain separate values for 'transferred' evidence
 #' plus an 'MBRgain' column, which will give the extra MBR evidence in percent.
 #' 
-#' @param d_evidence Data.frame of evidence.txt as read by MQDataReader
+#' @param df_evd Data.frame of evidence.txt as read by MQDataReader
 #' @return Data.frame with columns 'fc.raw.file', 'counts', 'category', 'MBRgain'
 #'
 #'
-getPeptideCounts = function(d_evidence) {
+getPeptideCounts = function(df_evd) {
   
-  required_cols = c("fc.raw.file", "modified.sequence", "match.time.difference")
-  if (!all(required_cols %in% colnames(d_evidence))) {
+  required_cols = c("fc.raw.file", "modified.sequence", "is.transferred")
+  if (!all(required_cols %in% colnames(df_evd))) {
     stop("getPeptideCounts(): Missing columns!")
   }
   
-  
-  ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
-  #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
-  #head(dsub[is.na(dsub[,2]),])
-  #sum(0==(dsub[,1]) & is.na(dsub[,2]))
-  ##
-  ## MQ1.4 MTD is either: NA or a number
-  ##
-  d_evidence$hasMTD = !is.na(d_evidence$match.time.difference)
-  
   ## report Match-between-runs data only if if it was enabled
-  reportMTD = any(d_evidence$hasMTD)
+  reportMTD = any(df_evd$is.transferred)
   
-  pep_counts = ddply(d_evidence, "fc.raw.file", .fun = function(x, reportMTD)
+  pep_counts = plyr::ddply(df_evd, "fc.raw.file", .fun = function(x, reportMTD)
   {
-    #pep_count_genuineAll = sum(!x$hasMTD) # (we count double sequences... could be charge +2, +3,... or oversampling)
-    pep_set_genuineUnique = unique(x$modified.sequence[!x$hasMTD]) ## unique sequences (discarding PTM's)
-    pep_set_allMBRunique = unique(x$modified.sequence[x$hasMTD])
+    x <<- x
+    #pep_count_genuineAll = sum(!x$is.transferred) # (we count double sequences... could be charge +2, +3,... or oversampling)
+    pep_set_genuineUnique = unique(x$modified.sequence[!x$is.transferred]) ## unique sequences (discarding PTM's)
+    pep_set_allMBRunique = unique(x$modified.sequence[x$is.transferred])
     pep_count_GenAndMBR = length(intersect(pep_set_genuineUnique, pep_set_allMBRunique)) ## redundant, i.e. both Genuine and MBR
     pep_count_newMBR = length(pep_set_allMBRunique) - pep_count_GenAndMBR ## new MBR peptides
     pep_count_onlyGenuine = length(pep_set_genuineUnique) - pep_count_GenAndMBR ## genuine-only peptides
@@ -1204,8 +1200,6 @@ getECDF = function(samples, y_eval = (1:100)/100)
 #' @param RT_bin_width Bin size in minutes
 #' @return Data.frame with columns 'bin', 'RT', 'peakWidth'
 #' 
-#' @importFrom plyr ddply
-#' 
 #' @export
 #' 
 #' @examples
@@ -1221,7 +1215,7 @@ peakWidthOverTime = function(data, RT_bin_width = 2)
   brs = seq(from = r[1], to = r[2] + RT_bin_width, by = RT_bin_width)
   data$bin = findInterval(data$retention.time, brs, all.inside = TRUE) ## faster than cut(..., labels = FALSE)
   #data$bin = cut(data$retention.time, breaks = brs, include.lowest = TRUE, labels = FALSE)
-  retLStats = ddply(data, "bin", .fun = function(xb) {
+  retLStats = plyr::ddply(data, "bin", .fun = function(xb) {
     data.frame(RT = brs[xb$bin[1]], peakWidth = median(xb$retention.length, na.rm = TRUE))
   })
   return(retLStats)
@@ -1249,6 +1243,17 @@ getMetricsObjects = function(DEBUG_PTXQC = FALSE)
     return(NULL)
   })
   return(lst_qcMetrics)
+}
+
+#'
+#' Make a color (given as name or in RGB) darker by factor x = [0 = black, 1=unchanged]
+#' @param color A color as understood by col2rgb
+#' @param factor Between 0 (make black) and 1 (leave color as is)
+#' @return darkened color
+#' 
+darken = function(color, factor=0.8){
+  dark_col = grDevices::rgb(t(grDevices::col2rgb(color) * factor), maxColorValue=255)
+  return(dark_col)
 }
 
 

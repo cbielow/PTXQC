@@ -24,9 +24,6 @@
 #' @return List of ggplot objects
 #' 
 #' @import ggplot2
-#' @importFrom plyr ddply
-#' @importFrom grDevices boxplot.stats
-#' 
 #' @export
 #' 
 boxplotCompare = function(data, 
@@ -64,7 +61,7 @@ boxplotCompare = function(data,
   if (!("factor" %in% class(data$group))) data$group = factor(data$group)
   
   ## actual number of entries in each column (e.g. LFQ often has 0)
-  ncol.stat = ddply(data, "group", function(x){
+  ncol.stat = plyr::ddply(data, "group", function(x){
     notNA = sum(!is.infinite(x$value) & !is.na(x$value));
     data.frame(n = nrow(x), notNA = notNA, newname = paste0(x$group[1], " (n=", notNA, ")"))})
   head(ncol.stat)
@@ -86,6 +83,9 @@ boxplotCompare = function(data,
            "sample (medium)" = "blue", 
            "sample (heavy)" = "green",
            "contaminant" = "yellow")
+  dark_cols = darken(cols)
+  names(dark_cols) = names(cols)
+  ## assign categories to channels
   cat_names = names(cols)
   cat = factor(cat_names, levels=cat_names)
   data$cat = cat[1]
@@ -98,7 +98,7 @@ boxplotCompare = function(data,
   data$cat[data$contaminant] = cat[5]
   
   ## compute global y-limits (so we can fix it across plots)
-  ylims = boxplot.stats(data$value)$stats[c(1, 5)]
+  ylims = grDevices::boxplot.stats(data$value)$stats[c(1, 5)]
   ## make sure to inlude abline (if existing)
   if (!is.na(abline))
   {
@@ -107,17 +107,16 @@ boxplotCompare = function(data,
   
   fcn_boxplot_internal = function(data, abline = NA) 
   {
-    #require(ggplot2)
-    pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat")) + ## do not use col="cat", since this will dodge bars and loose scaling
+    pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat", col = "cat")) +
       geom_boxplot(varwidth = TRUE) +
       xlab("") + 
       ylab(ylab) +
       ylim(ylims) +
       scale_alpha(guide = FALSE) +
-      scale_fill_manual(values=cols, name = "Category") + 
-      scale_color_manual(values=cols, name = "Category") + 
-      theme(axis.text.x = element_text(angle=90, vjust = 0.5)) +
-      theme(legend.position=ifelse(length(cols)==1, "none", "right")) +
+      scale_fill_manual(values = cols, name = "Category") + 
+      scale_color_manual(values = dark_cols, name = "Category") + 
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+      theme(legend.position = ifelse(length(cols)==1, "none", "right")) +
       addGGtitle(mainlab, sublab) + 
       scale_x_discrete_reverse(unique(data$group))
     
@@ -156,23 +155,25 @@ boxplotCompare = function(data,
 #' If ppm mass deviations are not available, errors in Da will be converted to ppm using the corresponding mass values.
 #' 
 #' @param x Data frame in long format with numerical expression data
+#' @param recurse Internal usage only. Leave at 0 when calling.
 #' @return  Data frame with mass errors ('msErr') and their 'unit' (Da or ppm) or NULL (if no fragments were given)
 #' 
 #' @export
 #' 
-getFragmentErrors = function(x)
+getFragmentErrors = function(x, recurse = 0)
 {
   ## require only one mass analyzer type:
   stopifnot(length(unique(x$mass.analyzer))==1)
   stopifnot(all(c("mass.analyzer", "mass.deviations..da.") %in% colnames(x)))
   
   convert_Da2PPM = FALSE
-  if (grepl("ITMS|TOF|CID", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x)))
+  ## note: the "^" is important to avoid matching to " ITMS" -- see fallback below
+  if (grepl("^ITMS|^TOF|^CID", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x)))
   {
     ms2_unit = "[Da]"; ms2_col = "mass.deviations..da."
-  } else if (grepl("FTMS|HCD", x$mass.analyzer[1]) & ("mass.deviations..ppm." %in% colnames(x))) {
+  } else if (grepl("^FTMS|^HCD|^HCID", x$mass.analyzer[1]) & ("mass.deviations..ppm." %in% colnames(x))) {
     ms2_unit = "[ppm]"; ms2_col = "mass.deviations..ppm."
-  } else if (grepl("FTMS|HCD", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x))) {
+  } else if (grepl("^FTMS|^HCD|^HCID", x$mass.analyzer[1]) & ("mass.deviations..da." %in% colnames(x))) {
     ## we know its high resolution, but this MQ version only gave us Dalton mass deviations
     ## --> convert back to ppm
     ms2_unit = "[ppm]"; ms2_col = "mass.deviations..da."
@@ -198,13 +199,17 @@ getFragmentErrors = function(x)
     err = err / as.numeric(mass) * 1e6
   }
   
-  if ((ms2_unit == "[ppm]") & (median(abs(err)) > 10)) {
-    cat(paste0("MS/MS fragment error seems rather large ", median(abs(err)), ". Reporting in [Da]...\n"))
-    # heuristic: ppm errors seem to be way to big. Use 'Da' instead.
+  abs_error95 = quantile(abs(err), probs = 0.95)
+  ## if dimension (Da vs ppm) seem weird, try switching to the other -- but avoid infinite recursion
+  if (recurse == 0 & (ms2_unit == "[ppm]") & (abs_error95 > 200)) {
+    warning(paste0("MS/MS fragment error seems rather large ", abs_error95, ". Reporting in [Da]...\n"))
     x$mass.analyzer = "ITMS"
-    return (getFragmentErrors(x))
+    return (getFragmentErrors(x, recurse = 1))
+  } else if (recurse == 0 & (ms2_unit == "[Da]") & (abs_error95 < 0.2)) {
+    warning(paste0("MS/MS fragment error seems rather small ", abs_error95, ". Reporting in [ppm]...\n"))
+    x$mass.analyzer = paste0(" ", x$mass.analyzer); ## just something which the regex above does not recognize and fallback to ppm
+    return (getFragmentErrors(x, recurse = 1))
   }
-  
   return(data.frame(msErr = err, unit = ms2_unit))
 }
 
@@ -226,7 +231,7 @@ getFragmentErrors = function(x)
 fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2, low_id_rate = 1)
 {
   
-  stopifnot(c("fc.raw.file", "mass", "charge", "m.z", "mass.error..ppm.", "uncalibrated.mass.error..ppm.") %in% colnames(df_evd))
+  if (!checkInput(c("fc.raw.file", "mass.error..ppm.", "uncalibrated.mass.error..ppm."), df_evd)) return(NULL)
   
   ## heuristic to determine if the instrument is completely out of calibration, 
   ## i.e. all ID's are false positives, since the Precursor mass is wrong
@@ -234,9 +239,10 @@ fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2,
   ## then ID's are supposedly random
   ## -- alt: we use the 1%-to-99% quantile range: if > 10ppm
   ## -- uninformative for detection is the distribution (it's still Gaussian for a strange reason)
-  MS1_decal_smr = ddply(df_evd, "fc.raw.file", function(x) 
+  MS1_decal_smr = plyr::ddply(df_evd, "fc.raw.file", function(x) 
     data.frame(n = nrow(x), 
-               sd = round(sd(x$mass.error..ppm., na.rm = TRUE), 1), 
+               sd = round(sd(x$mass.error..ppm., na.rm = TRUE), 1),
+               sd_uncal = round(sd(x$uncalibrated.mass.error..ppm., na.rm = TRUE), 1), 
                range = diff(quantile(x$mass.error..ppm., c(0.01, 0.99), na.rm = TRUE)),
                decal = (median(abs(x$uncalibrated.mass.error..ppm.), na.rm = TRUE) > 1e3),
                hasMassErrorBug = FALSE,
@@ -255,6 +261,7 @@ fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2,
   ## check each raw file individually (usually its just a few who are affected)
   if (any(MS1_decal_smr$decal, na.rm = TRUE))
   {
+    if (!checkInput(c("mass", "charge", "m.z"), df_evd)) return(NULL)
     recal_message = "MQ bug: data rescued"
     recal_message_post = 'MQ bug: data cannot be rescued'
     
@@ -266,7 +273,7 @@ fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2,
     df_evd$uncalibrated.mass.error..ppm.2 = df_evd$mass.error..ppm.2 + df_evd$uncalibrated...calibrated.m.z..ppm.
     
     ## check if fix worked
-    de_cal2 = ddply(df_evd, "fc.raw.file", .fun = function(x)  data.frame(q = (median(abs(x$uncalibrated.mass.error..ppm.2), na.rm = TRUE) > 1e3)))
+    de_cal2 = plyr::ddply(df_evd, "fc.raw.file", .fun = function(x)  data.frame(q = (median(abs(x$uncalibrated.mass.error..ppm.2), na.rm = TRUE) > 1e3)))
     if (any(de_cal2$q, na.rm = TRUE))
     { ## fix did not work
       MS1_decal_smr$hasMassErrorBug_unfixable[ MS1_decal_smr$fc.raw.file %in% de_cal2$fc.raw.file[de_cal2$q] ] = TRUE

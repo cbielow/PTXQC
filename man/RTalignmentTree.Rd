@@ -4,10 +4,10 @@
 \alias{RTalignmentTree}
 \title{Return a tree plot with a possible alignment tree.}
 \usage{
-RTalignmentTree(d_evd, col_fraction = c())
+RTalignmentTree(df_evd, col_fraction = c())
 }
 \arguments{
-\item{d_evd}{Evidence table containing calibrated retention times and sequence information.}
+\item{df_evd}{Evidence table containing calibrated retention times and sequence information.}
 
 \item{col_fraction}{Empty vector or 1-values vector giving the name of the fraction column (if existing)}
 }

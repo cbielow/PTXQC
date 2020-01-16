@@ -14,8 +14,6 @@
 #' @field qcName [placeholder] Name of the qcScore in the heatmap
 #' @field orderNr [placeholder] column index during heatmap generation and for the general order of plots
 #'
-#' @import methods
-#' 
 #' @exportClass qcMetric
 #' @export qcMetric
 #' 
@@ -56,6 +54,7 @@ qcMetric = setRefClass("qcMetric",
                  workerFcn = "function",  ## returns list(plots =, [qcScores=])
                  plots = "list",
                  htmlTable = "character",
+                 title = "list",
                  ## the following members are related to the heatmap only
                  qcScores = "data.frame", ## with columns "raw.file", "score"
                  qcCat = "character", ## one of "prep", "LC", "MS" or empty (e.g. for PG)
@@ -75,37 +74,32 @@ qcMetric = setRefClass("qcMetric",
            .self$plots = list();  ## obtained from worker
            .self$htmlTable = NA_character_;  ## obtained from worker
            .self$qcScores = data.frame();  ## obtained from worker
+           .self$title = list();
            .self$qcCat = qcCat;
            .self$qcName = qcName;
            .self$orderNr = orderNr;
            .self$outData = list();
            return(.self)
        },
-       checkInput = function(required_columns, given_columns)
-       {
-         if (!all(required_columns %in% given_columns))
-         {
-           warning(paste0("Input check failed: columns '", 
-                          paste(setdiff(required_columns, given_columns), collapse="', '", sep=""),
-                          "' are not present in input data!"),
-                   immediate. = TRUE)
-           return (FALSE)
-         }
-         return (TRUE)
-       },
-       setData = function(...) { ## fill with MQ data and compute results
+       setData = function(df, ...) { ## fill with MQ data and compute results
          cat("Starting to work on", gsub("~", " ", .self$qcName), "...\n")
          if (.self$orderNr < 0)
          {
            cat("  Metric disabled. Skipping...\n")
-           return(NULL)
+           return (NULL)
+         }
+         
+         if (is.null(df))
+         {
+           cat("  No data available. Skipping...\n")
+           return (NULL)
          }
          
          ## GC stats
          mem_before = gc(verbose = FALSE, reset = TRUE) ## resetting Max to see how much this metric uses
          t_before = proc.time()
          
-         r = workerFcn(.self, ...)
+         r = workerFcn(.self, df, ...)
          
          ## clean memory to get a clean picture of each metrics memory footprint
          ## to enable the user to skip expensive metrics
@@ -132,6 +126,8 @@ qcMetric = setRefClass("qcMetric",
          
          if ("htmlTable" %in% names(r)) .self$htmlTable = r[["htmlTable"]];
          if ("qcScores" %in% names(r)) .self$qcScores = r[["qcScores"]];
+         if ("title" %in% names(r)) .self$title = r[["title"]]
+         
          
          cat("...", gsub("~", " ", .self$qcName), " done\n")
          return(NULL)
@@ -152,18 +148,19 @@ qcMetric = setRefClass("qcMetric",
        getTitles = function(stopOnMissing = TRUE, subtitle_sep = " - ") {
          labels = sapply(1:length(.self$plots), 
                          function(idx) {
-                           if ("title" %in% names(.self$plots[[idx]]$labels)){
-                             title = .self$plots[[idx]]$labels$title
+                           if (length(.self$title) != 0){
+                             return(.self$title[[idx]])
+                           }
+                           else if ("title" %in% names(.self$plots[[idx]]$labels)){
+                             titles = .self$plots[[idx]]$labels$title
                              #title = 'atop("PG: PCA of 'reporter intensity'", scriptstyle("(excludes contaminants)"))'
-                             title
-                             regex = "atop\\(\"(.*)\", scriptstyle\\(\"(.*)\"\\)\\)"
-                             m = regexpr(regex, title, perl = TRUE)
+                             regex = 'atop\\("(.*)", scriptstyle\\("(.*)"\\)\\)'
+                             m = regexpr(regex, titles, perl = TRUE)
                              if (m == 1) { ## hit!
-                               text = substring(title, attr(m, "capture.start"), attr(m, "capture.start") + attr(m, "capture.length") - 1)
-                               title = paste0(text[1], subtitle_sep, text[2])
-                               title
+                               text = substring(titles, attr(m, "capture.start"), attr(m, "capture.start") + attr(m, "capture.length") - 1)
+                               return(paste0(text[1], subtitle_sep, text[2]))
                              }
-                             return (title)
+                             return (titles)
                            } else if (stopOnMissing) {
                              stop(c("getTitles() for ", .self$qcName, ": No title found in ggplot object at index ", idx, "!"))
                            } else return("")
@@ -189,11 +186,24 @@ qcMetric = setRefClass("qcMetric",
 flattenList = function(x) {
   repeat {
     idx_list = sapply(x, function(arg) {return(all(class(arg) == "list"))})
-    if(!any(idx_list)) return(x)
+    if (!any(idx_list)) return(x)
     r_list = Reduce(append, x[idx_list])
     items = x[!idx_list]
     x = Reduce(append, list(r_list, items))
   }
+}
+
+checkInput = function(required_columns, given_df)
+{
+  if (!all(required_columns %in% colnames(given_df)))
+  {
+    warning(paste0("Input check failed: columns '", 
+                   paste(setdiff(required_columns, colnames(given_df)), collapse="', '", sep=""),
+                   "' are not present in input data!"),
+            immediate. = TRUE)
+    return (FALSE)
+  }
+  return (TRUE)
 }
 
 qcMetric_AverageQualOverall = 
@@ -205,9 +215,9 @@ qcMetric_AverageQualOverall =
                     helpTextTemplate = "Internal metric to compute the average quality across all other metrics",
                     workerFcn = function(.self, df.QCM)
                     {
-                      if (empty(df.QCM)) stop("AverageQual_qc::workerFcn(): input empty!")
+                      if (plyr::empty(df.QCM)) stop("AverageQual_qc::workerFcn(): input empty!")
                       lpl = list() ## empty...
-                      qcScore = ddply(df.QCM, "fc.raw.file", function(df.row) {
+                      qcScore = plyr::ddply(df.QCM, "fc.raw.file", function(df.row) {
                         df.row.raw = unlist(df.row[,!grepl("fc.raw.file", colnames(df.row))])
                         df.row.raw[is.infinite(df.row.raw)] = NA  ## mask explicitly missing values, since it will bias the mean otherwise
                         return (data.frame(val = mean(df.row.raw, na.rm = TRUE)))

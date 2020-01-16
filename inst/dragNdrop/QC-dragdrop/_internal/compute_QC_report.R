@@ -46,7 +46,7 @@ use_extended_reportname = yc$getYAML("PTXQC$ReportFilename$extended", TRUE)
 rprt_fns = getReportFilenames(PATH_TO_TXT, use_extended_reportname)
 
 sink(rprt_fns$log_file, split = TRUE) ## log output to file
-output_files = try(createReport(PATH_TO_TXT, YAML_CONFIG, rprt_fns))
+output_files = try(createReport(PATH_TO_TXT, NULL, YAML_CONFIG, rprt_fns))
 sink() ## undo sink()
 
 

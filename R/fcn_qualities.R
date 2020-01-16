@@ -254,8 +254,6 @@ qualHighest = function(x, N)
 #' @param x List of vectors, where each vector holds a distribution
 #' @return A data.frame with ks-test values of the "reference" to all other distributions (see Details)
 #'
-#' @import stats
-#'
 #' @export
 #'
 qualBestKS = function(x) {
@@ -274,7 +272,7 @@ qualBestKS = function(x) {
     {
       if (j>length(x)) next;
       rr[i,j] = 1 - suppressWarnings(  ## brags about '-value will be approximate in the presence of ties'
-                      ks.test(x[[i]], x[[j]])$statistic
+                      stats::ks.test(x[[i]], x[[j]])$statistic
                     )    
     }
   }
