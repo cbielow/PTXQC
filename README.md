@@ -130,22 +130,31 @@ You should include
 
 Please be as precise as possible when providing the bug report - just imagine what kind of information you would like to have in order
 to track down the issue.
-In certain situations, the whole txt-folder or a single MaxQuant file might be helpful to solve the problem.
+In certain situations, the whole txt-folder or a single MaxQuant/mzTab file might be helpful to solve the problem.
 
-If you want to see a new metric, or have ideas how to improve the existing ones, just open an issue ticket and leave a description.
-  
+### Contributing - Get Involved!
+
+We welcome input from our user base!
+There are many ways to get involved, _you do not need to be a developer_!
+  - suggest a new metric (and why you think it's useful) by opening [a new ticket][issuetracker] here on GitHub.
+  - suggest changes to existing metrics (improvements or bugfixes), see above.
+  - suggest improvements to our documentation (e.g. [additional vignettes][Ref_Vign])
+  - write code (in R) and submit a [Pull Request (PR)][PullRequest].
+
+
 ### Misc
 
 Use [PTXQC v0.69.3][JPR_PTXQC] if you want the version which was used in the paper, i.e.
 use `install_github(..., ref="v0.69.3")` when following the [Installation](#installation) procedure.
 
-The input data is available in the ['inst/examples' subfolder][2].
+The input data used in the original publication is available in the ['inst/examples' subfolder][2].
 
 We recommend to use the most recent PTXQC for the best user experience.
   
   [1]: https://github.com/cbielow/PTXQC/tree/master/inst/dragNdrop
   [2]: https://github.com/cbielow/PTXQC/tree/master/inst/examples
   [issuetracker]: https://github.com/cbielow/PTXQC/issues
+  [PullRequest]: https://github.com/cbielow/PTXQC/pulls
   [JPR_PTXQC]: https://github.com/cbielow/PTXQC/releases/tag/v0.69.3
   [Ref_VignFAQ]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-FAQ.Rmd
   [Ref_Vign]: https://github.com/cbielow/PTXQC/tree/master/vignettes
