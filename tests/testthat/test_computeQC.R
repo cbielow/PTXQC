@@ -43,8 +43,14 @@ test_that("createReport", {
                  "log_file", "report_file_prefix", "report_file_PDF", "report_file_HTML"), names(r))
   rep_files = c(r[["report_file_PDF"]], r[["report_file_HTML"]])
   
-  expect_equal(all(file.exists(rep_files)), TRUE)
-  expect_equal(all(file.info(rep_files)$size > 100*1024), TRUE) ## ~119kb PDF & HTML
+  print(list.files(path = txt_folder))
+  
+  for (f in rep_files)
+  {
+    cat("Checking file ", f, "\n")
+    expect_equal(file.exists(f), TRUE)
+    expect_equal(file.info(f)$size > 100*1024, TRUE) ## ~119kb PDF & HTML
+  }
   
   expect_equal(file.exists(r[["heatmap_values_file"]]), TRUE)
   d_heatmap = read.delim(r[["heatmap_values_file"]])
