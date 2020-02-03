@@ -1,9 +1,14 @@
 Package: PTXQC
 Type: Package
 Title: Quality Report Generation for MaxQuant and mzTab Results
-Version: 1.0.1
-Date: 2020-02-02
-Author: Chris Bielow <chris.bielow@bsc.fu-berlin.de>
+Version: 1.0.2
+Date: 2020-02-03
+Author: Chris Bielow [aut, cre],
+  Juliane Schmachtenberg [ctb],
+  Swenja Wagner [ctb],
+  Patricia Scheil [ctb],
+  Tom Waschischek [ctb],
+  Guido Mastrobuoni [dtc, rev]
 Maintainer: Chris Bielow <chris.bielow@bsc.fu-berlin.de>
 Description: Generates Proteomics (PTX) quality control (QC) reports for shotgun LC-MS data analyzed with the 
              MaxQuant software suite (from .txt files) or mzTab files (ideally from OpenMS 'QualityControl' tool).
