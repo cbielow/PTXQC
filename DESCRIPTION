@@ -35,7 +35,7 @@ Imports:
 Suggests:
     testthat
 VignetteBuilder: knitr
-License: GPL-2
+License: file LICENSE
 Roxygen: list(wrap = FALSE)
 RoxygenNote: 6.1.1
 URL: https://github.com/cbielow/PTXQC
