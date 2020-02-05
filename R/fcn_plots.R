@@ -392,9 +392,9 @@ plot_MBRAlign = function(data, y_lim, title_sub, match_tol)
         ## PTXQC correction
         geom_point(aes_string(x = "calibrated.retention.time", y = "rtdiff", color = "RTdiff_in"), alpha = 0.5) + 
         scale_alpha(name = 'Alignment function', 
-                    labels = list(expression("MaxQuant" ~ Delta*"RT")),
+                    labels = list("delta RT"),
                     range = c(1,1)) + 
-        scale_colour_manual(name = expression(bold("ID pairs ("*Delta*"RT to Ref)")), 
+        scale_colour_manual(name = "ID pairs (delta RT to Ref)", 
                             values = c("green" = "green", "red" = "red"),
                             labels=c("green" = paste0("good (<", match_tol, "min)"), 
                                      "red" = paste0("bad (>", match_tol, "min)"))) +
@@ -402,7 +402,7 @@ plot_MBRAlign = function(data, y_lim, title_sub, match_tol)
                alpha = guide_legend(order = 1)) +   ## alpha-legend on top, color below
         ylim(y_lim) +
         xlab("corrected RT [min]") +
-        ylab(expression(Delta*"RT [min]")) +
+        ylab("delta RT [min]") +
         facet_wrap(~ fc.raw.file_ext) +
         addGGtitle("EVD: MBR - alignment", title_sub)  
   #print(p)
@@ -872,7 +872,7 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
   p = ggplot(data, col=data$col) +
         geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth = TRUE, outlier.shape = NA) +
         scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide = showColLegend) +
-        ylab(expression(Delta~"mass [ppm]")) +
+        ylab("delta mass [ppm]") +
         xlab("") +
         ylim(y_lim) +
         scale_x_discrete_reverse(data$fc.raw.file) +
@@ -932,7 +932,7 @@ plot_CalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit
   p = ggplot(data, col=data$col) +
     geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm.", col="col"), varwidth = TRUE, outlier.shape = NA) +
     scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide = showColLegend) +
-    ylab(expression(Delta~"mass [ppm]")) +
+    ylab("delta mass [ppm]") +
     xlab("") +
     ylim(y_lim) +
     scale_x_discrete_reverse(data$fc.raw.file) +

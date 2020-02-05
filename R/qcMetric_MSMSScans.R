@@ -108,6 +108,9 @@ Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3
       
       
       plot_MSMSintensity = function(dd.all) {
+        ## plotly currently does not support stat='identity' and computing from Raw data will show
+        ## a ton of outliers in plotly (SLOW!) with no method to remove them
+        ## So, we mark this metric as non_plotlyable = TRUE for the moment
         pl = ggplot(data = dd.all, aes(x = fc.raw.file)) + 
                 geom_boxplot(stat = "identity", aes(col = "TIC", ymin = min, lower = lower, middle = middle, upper = upper, ymax = max)) +
                 geom_boxplot(stat = "identity", aes(col = "Base\nPeak", ymin = min2, lower = lower2, middle = middle2, upper = upper2, ymax = max2), width = 0.3) +
@@ -118,6 +121,8 @@ Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3
                 xlab("") +
                 ylab(expression('intensity (' * log[10] * ')')) +
                 coord_flip()
+        pl$non_plotlyable = TRUE
+        return (pl)
       }
       
       lpl = byXflex(dd.all, dd.all$fc.raw.file, 12, plot_MSMSintensity, sort_indices = FALSE)

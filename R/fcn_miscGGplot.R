@@ -122,8 +122,6 @@ ggAxisLabels = function(x, n = 20)
 
 #' Add title and subtitle to a ggplot
 #' 
-#' Found in http://www.antoni.fr/blog/?p=39 .. whewww... modified a little
-#' 
 #' Usage: 
 #'   ggplot(...) + geom_X(...) + addGGtitle(...)
 #'   
@@ -136,9 +134,9 @@ ggAxisLabels = function(x, n = 20)
 #' 
 addGGtitle = function(main, sub = NULL){
   if (is.null(sub) || sub=="") {
-    pl = ggtitle(main)
+    pl = ggtitle(label = main)
   } else {
-    pl = ggtitle(eval(parse(text=paste("expression(atop(\"",main, "\",", " scriptstyle(\"", sub , "\")))", sep=""))))
+    pl = ggtitle(label = main, subtitle = sub)
   }
   return (pl)
 }
