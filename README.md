@@ -8,7 +8,8 @@ PTXQC
 
 ### Latest changes / ChangeLog
 
-  - v1.0.0   - Jan 2020: support for mzTab, more metrics (UpSetR) and fixes
+  - v1.00.02 - Feb 2020: minor fixes for CRAN tests and license
+  - v1.00.00 - Jan 2020: support for mzTab, more metrics (UpSetR) and fixes
   - v0.92.06 - Apr 2019: Bug Fixes
   - v0.92.05 - Mar 2019: Raw name simplification fix
   - v0.92.04 - Feb 2019: More robust package vignette builds

@@ -7,6 +7,9 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.0.2 -- 2020/02/11
+  - minor fixes for CRAN compatibility
+
 [CRAN] v1.0.0 -- 2020/01/08
   - [FEATURE] support for mzTab input data (e.g. from OpenMS 2.5 'QualityControl' tool)
   - [FEATURE] new metric: UpSetR plots (shows common sets of peptides across Raw files)
