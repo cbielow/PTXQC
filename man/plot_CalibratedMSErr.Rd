@@ -4,8 +4,14 @@
 \alias{plot_CalibratedMSErr}
 \title{Plot bargraph of uncalibrated mass errors for each Raw file.}
 \usage{
-plot_CalibratedMSErr(data, MQBug_raw_files, stats, y_lim,
-  extra_limit = NA, title_sub = "")
+plot_CalibratedMSErr(
+  data,
+  MQBug_raw_files,
+  stats,
+  y_lim,
+  extra_limit = NA,
+  title_sub = ""
+)
 }
 \arguments{
 \item{data}{A data.frame with columns 'fc.raw.file', 'mass.error..ppm.'}

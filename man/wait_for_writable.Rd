@@ -4,9 +4,13 @@
 \alias{wait_for_writable}
 \title{Check if a file is writable and blocks an interactive session, waiting for user input.}
 \usage{
-wait_for_writable(filename, prompt_text = paste0("The file '", filename,
-  "' is not writable. Please close all applications using this file. Press '",
-  abort_answer, "' to abort!"), abort_answer = "n")
+wait_for_writable(
+  filename,
+  prompt_text = paste0("The file '", filename,
+    "' is not writable. Please close all applications using this file. Press '",
+    abort_answer, "' to abort!"),
+  abort_answer = "n"
+)
 }
 \arguments{
 \item{filename}{The file to test for writable}

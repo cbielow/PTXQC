@@ -17,6 +17,6 @@ paste with newline as separator
 }
 \examples{
   pasten("newline","separated")
-  ## --> "newline\\nseparated"
+  ## --> "newline\nseparated"
   
 }

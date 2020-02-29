@@ -4,9 +4,17 @@
 \alias{boxplotCompare}
 \title{Boxplots - one for each condition (=column) in a data frame.}
 \usage{
-boxplotCompare(data, log2 = TRUE, ylab = "intensity", mainlab = ylab,
-  sublab = "", boxes_per_page = 30, abline = NA, coord_flip = TRUE,
-  names = NA)
+boxplotCompare(
+  data,
+  log2 = TRUE,
+  ylab = "intensity",
+  mainlab = ylab,
+  sublab = "",
+  boxes_per_page = 30,
+  abline = NA,
+  coord_flip = TRUE,
+  names = NA
+)
 }
 \arguments{
 \item{data}{Data frame in long format with numerical expression data}

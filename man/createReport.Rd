@@ -4,8 +4,12 @@
 \alias{createReport}
 \title{Create a quality control report (in PDF format).}
 \usage{
-createReport(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
-  report_filenames = NULL)
+createReport(
+  txt_folder = NULL,
+  mztab_file = NULL,
+  yaml_obj = list(),
+  report_filenames = NULL
+)
 }
 \arguments{
 \item{txt_folder}{Path to txt output folder of MaxQuant (e.g. "c:/data/Hek293/txt")}

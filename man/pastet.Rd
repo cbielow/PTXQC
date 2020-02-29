@@ -17,6 +17,6 @@ paste with tab as separator
 }
 \examples{
   pastet("tab","separated")
-  ## --> "tab\\tseparated"
+  ## --> "tab\tseparated"
   
 }

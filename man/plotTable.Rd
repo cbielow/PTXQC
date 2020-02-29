@@ -4,8 +4,15 @@
 \alias{plotTable}
 \title{Plot a table with row names and title}
 \usage{
-plotTable(data, title = "", footer = "", col_names = colnames(data),
-  fill = c("grey90", "grey70"), col = "black", just = "centre")
+plotTable(
+  data,
+  title = "",
+  footer = "",
+  col_names = colnames(data),
+  fill = c("grey90", "grey70"),
+  col = "black",
+  just = "centre"
+)
 }
 \arguments{
 \item{data}{A data.frame with columns as described above}

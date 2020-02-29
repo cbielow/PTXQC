@@ -5,8 +5,12 @@
 \title{Detect (and fix) MaxQuant mass recalibration columns, since they
 sometimes report wrong values.}
 \usage{
-fixCalibration(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2,
-  low_id_rate = 1)
+fixCalibration(
+  df_evd,
+  df_idrate = NULL,
+  tolerance_sd_PCoutOfCal = 2,
+  low_id_rate = 1
+)
 }
 \arguments{
 \item{df_evd}{Evidence data.frame with columns ()}

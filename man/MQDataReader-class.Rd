@@ -78,7 +78,7 @@ identically named across MQ versions:
 
 We also correct 'reporter.intensity.*' naming issues to MQ 1.6 convention, when 'reporter.intensity.not.corrected' is present.
 MQ 1.5 uses: reporter.intensity.X and reporter.intensity.not.corrected.X
-MQ 1.6 uses: reporter.intensity.X and reporter.intensity.corrected.X
+MQ 1.6 uses: reporter.intensity.X and reporter.intensity.corrected.X       
 
 Note: you must find a regex which matches both versions, or explicitly add both terms if you are requesting only a subset
       of columns!
@@ -92,7 +92,8 @@ Example of usage:
 If the file is empty, this function shows a warning and returns NULL.
 If the file is present but cannot be read, the program will stop.
 
-Wrapper to read a MQ txt file (e.g. proteinGroups.txt).
+
+ Wrapper to read a MQ txt file (e.g. proteinGroups.txt).
 }
 \section{Methods}{
 

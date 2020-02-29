@@ -4,8 +4,14 @@
 \alias{plot_UncalibratedMSErr}
 \title{A boxplot of uncalibrated mass errors for each Raw file.}
 \usage{
-plot_UncalibratedMSErr(data, MQBug_raw_files, stats, y_lim, extra_limit,
-  title_sub)
+plot_UncalibratedMSErr(
+  data,
+  MQBug_raw_files,
+  stats,
+  y_lim,
+  extra_limit,
+  title_sub
+)
 }
 \arguments{
 \item{data}{A data.frame with columns 'fc.raw.file', 'uncalibrated.mass.error..ppm.'}

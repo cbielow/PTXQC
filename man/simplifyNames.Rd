@@ -4,8 +4,12 @@
 \alias{simplifyNames}
 \title{Removes common substrings (infixes) in a set of strings.}
 \usage{
-simplifyNames(strings, infix_iterations = 2, min_LCS_length = 7,
-  min_out_length = 7)
+simplifyNames(
+  strings,
+  infix_iterations = 2,
+  min_LCS_length = 7,
+  min_out_length = 7
+)
 }
 \arguments{
 \item{strings}{A vector of strings which are to be shortened}

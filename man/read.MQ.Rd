@@ -5,8 +5,15 @@
 \title{Convenience wrapper for MQDataReader when only a single MQ file should be read
 and file mapping need not be stored.}
 \usage{
-read.MQ(file, filter = "", type = "pg", col_subset = NA,
-  add_fs_col = 10, LFQ_action = FALSE, ...)
+read.MQ(
+  file,
+  filter = "",
+  type = "pg",
+  col_subset = NA,
+  add_fs_col = 10,
+  LFQ_action = FALSE,
+  ...
+)
 }
 \arguments{
 \item{file}{see \code{MQDataReader::readMQ()}}

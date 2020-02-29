@@ -15,9 +15,6 @@ addGGtitle(main, sub = NULL)
 A ggplot object
 }
 \description{
-Found in http://www.antoni.fr/blog/?p=39 .. whewww... modified a little
-}
-\details{
 Usage: 
   ggplot(...) + geom_X(...) + addGGtitle(...)
 }

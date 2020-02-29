@@ -4,8 +4,11 @@
 \alias{getReportFilenames}
 \title{Assembles a list of output file names, which will be created during reporting.}
 \usage{
-getReportFilenames(folder, report_name_has_folder = TRUE,
-  mzTab_filename = NULL)
+getReportFilenames(
+  folder,
+  report_name_has_folder = TRUE,
+  mzTab_filename = NULL
+)
 }
 \arguments{
 \item{folder}{Directory where the MaxQuant output (txt folder) or the mzTab file resides}

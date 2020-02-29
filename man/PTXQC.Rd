@@ -3,7 +3,6 @@
 \docType{package}
 \name{PTXQC}
 \alias{PTXQC}
-\alias{PTXQC-package}
 \title{PTXQC: A package for computing Quality Control (QC) metrics for Proteomics (PTX)}
 \description{
 PTXQC: A package for computing Quality Control (QC) metrics for Proteomics (PTX)
