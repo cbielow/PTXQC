@@ -1384,13 +1384,16 @@ Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in com
       }
       
       lf = tapply(df_evd$modified.sequence, df_evd$fc.raw.file, function(x){return(list(unique(x)))})
+      # get rid of rawfiles without any PepIDs
+      lf = Filter(function(l) length(l)>0 && any(!is.na(l)), lf)
       if (length(lf) <= 1)
       {
         lpl = list(ggText("UpSetR", "Only single Raw file detected. Cannot compute unions/intersections."))
         return(list(plots = lpl, titles = list("EVD: UpSet")))
       }
       
-      lpl = list(UpSetR::upset(UpSetR::fromList(lf), nsets = min(30, length(lf)), keep.order = TRUE, mainbar.y.label = "distinct size"))
+      
+      lpl = list(UpSetR::upset(UpSetR::fromList(lf), nsets = min(20, length(lf)), keep.order = TRUE, mainbar.y.label = "distinct size"))
       if (length(lf) < 6)
       { ## performance for enumerating all supersets forbids doing it on larger sets until we make this code smarter...
         lpl[[2]] = UpSetR::upset(UpSetR::fromExpression(getOutputWithMod(lf, intersect)), mainbar.y.label = "intersection size")
