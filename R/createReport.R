@@ -711,7 +711,12 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
       out_template = file.path(out_dir, basename(html_template))
       ## Rmarkdown: convert to Markdown, and then to HTML (or PDF) ...
       ## Intermediates_dir is required if inputdir!=outputdir, since Shiny server might not allow write-access to input file directory
+      enable_ploty = FALSE
       rmarkdown::render(out_template, output_file = rprt_fns$report_file_HTML) #, intermediates_dir = dirname(rprt_fns$report_file_HTML))
+      ## use plotly -- side by side for now
+      enable_ploty = TRUE
+      rmarkdown::render(out_template, output_file = paste0(rprt_fns$report_file_prefix, "_interactive.html")) #, intermediates_dir = dirname(rprt_fns$report_file_HTML))
+      
     } else {
       warning("The 'Pandoc' converter is not installed on your system or you do not have read-access to it!\n",
               "Pandoc is required for HTML reports.\n",
