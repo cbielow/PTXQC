@@ -72,42 +72,95 @@ if(!is.null(pl_nameMapping) && (!any(is.na(pl_nameMapping)))) {
 
 ## Metrics
 ```{r metrics, echo=FALSE, results="asis"}
-  #for (qcm in lst_qcMetrics_ord[1:3])
+
+# Search for a suitable ggplot object which can be successfully converted to plotly
+# returns empty list if no ggplot object found; the plotly object otherwise
+findFirstPlotly = function(lst_qcMetrics_ord)
+{
+  pl_first = list()
   for (qcm in lst_qcMetrics_ord)
   {
-    if (length(qcm$plots) == 0) next; # skip empty metrics
-    #debug: 
-    #cat(c("processing ", qcm$qcName))
-    v_titles = qcm$getTitles(subtitle_sep = "\n<b>")
-    plots = qcm$getPlots(withTitle = FALSE)
-    if (length(v_titles) != length(plots)) {
-      ## this is weird...
-      stop("Number of titles is unequal to number of plots ...")
-    }
-    last_title = ""
-    for (i in 1:length(v_titles))
+    for (pl in qcm$plots)
     {
-      if (last_title != v_titles[i]) {  ## print only new titles
-        cat(paste0("\n\n### ", gsub("\n", "\n<br>", v_titles[i]), "</b>\n\n"))
+      if (any("ggplot" %in% class(pl)))
+      {
+        try({ pl_first = plotly::ggplotly(pl) })
       }
-      if (i == 1) { ## print helpText only once
-        cat(paste0('\n
-<div>
-  <div class="helpSymbol">&darr; Show Help</div>
-  <div class="helpText">', qcm$helpText, "</div>
-</div>"))
+      if (length(pl_first) > 0) {
+        return (pl_first)
       }
-      if (!is.na(qcm$htmlTable))
-      { ## if there is an HTML table, prefer it over the plots
-        cat(qcm$htmlTable)
-        break;
-      }
-      print(plots[[i]])
-      cat("\n<br>\n")
-      last_title = v_titles[i]
     }
-    cat('\n<p style="text-align: right">[back to top](#Overview)</p>\n\n')
   }
+  return (pl_first)
+}
+
+pl_first = list()
+if (enable_ploty)
+{
+  pl_first = findFirstPlotly(lst_qcMetrics_ord)  
+}
+## plot the first plotly object invisibly to include all the javascript libs etc...
+## this MUST happen at this level (not within a scoped block etc) -- otherwise plotly code breaks
+cat('<div style="display:none">')
+##htmltools::tagList(pl_first)
+cat('</div>')
+
+plot_nr = 1
+
+#for (qcm in lst_qcMetrics_ord[1:3])
+for (qcm in lst_qcMetrics_ord)
+{
+  if (length(qcm$plots) == 0) next; # skip empty metrics
+  #debug: 
+  #cat(c("processing ", qcm$qcName))
+  v_titles = qcm$getTitles(subtitle_sep = "\n<b>")
+  plots = qcm$getPlots(withTitle = FALSE)
+  if (length(v_titles) != length(plots)) {
+    ## this is weird...
+    stop("Number of titles is unequal to number of plots ...")
+  }
+  last_title = ""
+  for (i in 1:length(v_titles))
+  {
+    if (last_title != v_titles[i]) {  ## print only new titles
+      cat(paste0("\n\n### ", gsub("\n", "\n<br>", v_titles[i]), "</b>\n\n"))
+    }
+    if (i == 1) { ## print helpText only once
+      cat(paste0('\n
+<div>
+<div class="helpSymbol">&darr; Show Help</div>
+<div class="helpText">', qcm$helpText, "</div>
+</div>"))
+    }
+    if (!is.na(qcm$htmlTable))
+    { ## if there is an HTML table, prefer it over the plots
+      cat(qcm$htmlTable)
+      break;
+    }
+    
+    pl = NA
+    if (enable_ploty && any("ggplot" %in% class(plots[[i]]) && !("non_plotlyable" %in% names(plots[[i]]))))
+    { ## try to convert to plotly
+      try({ pl = plotly::ggplotly(plots[[i]]) })
+    }
+    if (!all(is.na(pl))) {
+      #print(htmltools::tagList(list(pl))) ## adds javascript sources etc...
+      html_file = paste0("p", plot_nr, ".html")
+      dir.create('plots', showWarnings = FALSE)
+      withr::with_dir('plots', saveWidget(pl, file = html_file, selfcontained = F, libdir = "lib"))
+      cat(paste0('<iframe src="plots/', html_file, '" style="border: 0" width="910px" height="500px"></iframe>'))
+      plot_nr = plot_nr + 1
+    } else {
+      ## static plots desired or not a ggplot object or error -- so just plot it non-interactive
+      print(plots[[i]])
+    } 
+    
+    
+    cat("\n<br>\n")
+    last_title = v_titles[i]
+  }
+  cat('\n<p style="text-align: right">[back to top](#Overview)</p>\n\n')
+}
 ```
 
 
