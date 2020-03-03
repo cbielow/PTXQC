@@ -278,7 +278,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     
     clusterCols$raw.intensity = colsW ## cluster using intensity
     
-    lst_qcMetrics[["qcMetric_PG_RawInt"]]$setData(df_pg, colsW, MAP_pg_groups, param_PG_intThresh)
+    lst_qcMetrics[["qcMetric_PG_RawInt"]]$setData(df_pg, int_cols = colsW, MAP_pg_groups = MAP_pg_groups, thresh_intensity = param_PG_intThresh)
   
     ##
     ## LFQ boxplots

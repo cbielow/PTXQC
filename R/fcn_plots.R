@@ -846,7 +846,7 @@ print.PTXQC_table = function(x, ...) {
 #'   n = c(150, 1000, 1000, 1000)
 #'   data = data.frame(fc.raw.file = repEach(letters[4:1], n),
 #'                     uncalibrated.mass.error..ppm. = c(rnorm(n[1], 13, 2.4),
-#'                                                       rnorm(n[2], 4, 0.5),
+#'                                                       rnorm(n[2], 1, 0.5),
 #'                                                       rnorm(n[3], 3, 0.7),
 #'                                                       rnorm(n[4], 4.5, 0.8)))
 #'   stats = data.frame(fc.raw.file = letters[4:1],
@@ -857,25 +857,30 @@ print.PTXQC_table = function(x, ...) {
 #' 
 plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit, title_sub)
 {
+  
   data$col = "default"
-  if (length(MQBug_raw_files) > 0) data$col = c("default", "MQ bug")[(data$fc.raw.file %in% MQBug_raw_files) + 1]
+  if (length(MQBug_raw_files) > 0)
+  {
+    data$col[data$fc.raw.file %in% MQBug_raw_files] = "MQ bug"
+  }
   ## add 'out-of-calibration' Raw files:
-  data$col[data$fc.fc.raw.file %in% stats$fc.fc.raw.file[stats$outOfCal]] = "out-of-search-tol"
+  data$col[data$fc.raw.file %in% stats$fc.raw.file[stats$outOfCal]] = "out-of-search-tol"
   ## only show legend if special things happen  
   showColLegend = ifelse(length(setdiff(data$col, "default")) > 0, "legend", "none")
   
   ## amend SD to fc.raw.file
   stats$fcr_new_lvl = paste0(stats$fc.raw.file, " (sd = ", stats$sd_uncal, "ppm)")
-  ## i.e. change name without underlying value
-  levels(data$fc.raw.file) = stats$fcr_new_lvl[ match(levels(data$fc.raw.file), stats$fc.raw.file) ]
+  
+  ## use augmented name
+  data$fc.raw.file_ext = factor(stats$fcr_new_lvl[ match(data$fc.raw.file, stats$fc.raw.file) ])
 
   p = ggplot(data, col=data$col) +
-        geom_boxplot(aes_string(x = "fc.raw.file", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth = TRUE, outlier.shape = NA) +
-        scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide = showColLegend) +
+        geom_boxplot(aes_string(x = "fc.raw.file_ext", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth = TRUE, outlier.shape = NA) +
+        scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="orange"), guide = showColLegend) +
         ylab(expression(Delta~"mass [ppm]")) +
         xlab("") +
         ylim(y_lim) +
-        scale_x_discrete_reverse(data$fc.raw.file) +
+        scale_x_discrete_reverse(data$fc.raw.file_ext) +
         geom_hline(yintercept = c(-extra_limit, extra_limit), 
                    colour="red",
                    linetype = "longdash") +  ## == vline for coord_flip

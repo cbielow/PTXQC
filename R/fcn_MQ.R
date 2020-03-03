@@ -61,15 +61,17 @@ boxplotCompare = function(data,
   if (!("factor" %in% class(data$group))) data$group = factor(data$group)
   
   ## actual number of entries in each column (e.g. LFQ often has 0)
-  ncol.stat = plyr::ddply(data, "group", function(x){
-    notNA = sum(!is.infinite(x$value) & !is.na(x$value));
-    data.frame(n = nrow(x), notNA = notNA, newname = paste0(x$group[1], " (n=", notNA, ")"))})
+  ncol.stat = plyr::ddply(data, "group", function(x)
+    {
+      notNA = sum(!is.infinite(x$value) & !is.na(x$value));
+      data.frame(n = nrow(x), notNA = notNA, newname = paste0(x$group[1], " (n=", notNA, ")"))
+    })
   head(ncol.stat)
   ## rename (augment with '#n')
   data$group2 = ncol.stat$newname[match(data$group, ncol.stat$group)]
 
   ## check (ddply makes  ncol.stat$newname a factor with matching levels)
-  stopifnot(class(data$group2) == "factor")
+  #stopifnot(class(data$group2) == "factor")
   #stopifnot(all(as.numeric(data$group) == as.numeric(data$group2))) ## as.numeric() is meaningless on factors with different levels
   data$group = data$group2
   
@@ -118,7 +120,7 @@ boxplotCompare = function(data,
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
       theme(legend.position = ifelse(length(cols)==1, "none", "right")) +
       addGGtitle(mainlab, sublab) + 
-      scale_x_discrete_reverse(unique(data$group))
+      scale_x_discrete_reverse(factor(unique(data$group)))
     
     if (!is.na(abline))
     {

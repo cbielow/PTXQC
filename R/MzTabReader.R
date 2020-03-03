@@ -89,8 +89,8 @@ readMzTab = function(.self, file) {
   ## create Raw filename mapping internally
   mtd = res[["MTD"]]
   idx_run = grep("^ms_run\\[\\d*\\]-location", mtd$key, value = FALSE)
-  ms_runs = gsub("[.]*-location", "\\1", mtd$key[idx_run])
   raw_filenames = mtd$value[idx_run]
+  ms_runs = gsub("([.]*)-location", "\\1", mtd$key[idx_run])
   .self$fn_map$getShortNames(raw_filenames, ms_runs = ms_runs)
   
   

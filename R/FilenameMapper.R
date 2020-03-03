@@ -110,10 +110,11 @@ getShortNamesStatic = function(raw.files, max_len, fallbackStartNr = 1)
   ## check if shorter filenames are still unique (they should be.. if not we have a problem!!)
   if (length(rf_name) != length(unique(rf_name_s)))
   {
-    cat("Original names:\n")
+    cat("\nOriginal names:\n")
     cat(rf_name)
-    cat("Short names:\n")
+    cat("\nShort names:\n")
     cat(rf_name_s)
+    cat("\n")
     stop("While loading MQ data: shortened raw filenames are not unique! This should not happen. Please contact the developers and provide the above names!")
   }
   df.mapping = data.frame(from = rf_name, to = rf_name_s, stringsAsFactors = FALSE)

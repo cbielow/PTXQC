@@ -37,7 +37,7 @@ if PTXQC detected a too narrow search window.
   n = c(150, 1000, 1000, 1000)
   data = data.frame(fc.raw.file = repEach(letters[4:1], n),
                     uncalibrated.mass.error..ppm. = c(rnorm(n[1], 13, 2.4),
-                                                      rnorm(n[2], 4, 0.5),
+                                                      rnorm(n[2], 1, 0.5),
                                                       rnorm(n[3], 3, 0.7),
                                                       rnorm(n[4], 4.5, 0.8)))
   stats = data.frame(fc.raw.file = letters[4:1],
