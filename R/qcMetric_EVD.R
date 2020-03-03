@@ -1351,13 +1351,12 @@ qcMetric_EVD_UpSet =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "The metric shows an upSet plot based on the number of modified peptide sequences per Raw file, intersected or merged with other Raw files (see below for details).<br>
+      'The metric shows an upSet plot based on the number of modified peptide sequences per Raw file, intersected or merged with other Raw files (see below for details).<br>
 
-If the number of Raw files is >=6, only the 'distinct' plot is generated (the other two are skipped for performance reasons).
+If the number of Raw files is >=6, only the `distinct` plot is generated (the other two are skipped for performance reasons).
+<a href="https://raw.githubusercontent.com/cbielow/PTXQC/master/inst/reportTemplate/modes_UpSet.png" target="_blank" rel="noopener"><span>See here for an example plot showing how the set size is computed</span> </a>.
 
-![](https://raw.githubusercontent.com/cbielow/PTXQC/mzTab_support/inst/reportTemplate/modes_UpSet.png 'Example plot showing how the set size is computed')
-    
-Definition: An 'active set' is the set of black dots in a column of the plot -- as opposed to the grey dots (you'll understand when you see it).
+Definition: An `active set` is the set of black dots in a column of the plot -- as opposed to the grey dots (you will understand when you see it).
 
 <p>
 <b>distinct:</b> shows the number of sequences that are present in ALL active sets. For three Raw files and active sets A and B, this would mean all sequences which occur in A and B (intersect), but not in C (setdiff).<br>
@@ -1365,7 +1364,7 @@ Definition: An 'active set' is the set of black dots in a column of the plot -- 
 <b>union:</b> shows the number of sequences that occurs in total. For two files that are all sequences that occurs either in A or in B (union).<br>
 <p>
 Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in common with all other files.
-",
+',
     workerFcn = function(.self, df_evd)
     {
       if (!checkInput(c("modified.sequence", "fc.raw.file"), df_evd)) return()
