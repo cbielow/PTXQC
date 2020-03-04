@@ -207,6 +207,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   
   ## write out the final YAML file (so users can disable metrics, if they fail)
   yc$writeYAML(rprt_fns$yaml_file)
+  ## write shortnames and sorting of filenames
+  eval(expr_fn_map)$writeMappingFile(rprt_fns$filename_sorting)
   
   
   ######
@@ -766,7 +768,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   #save(file = rprt_fns$R_plots_file, list = "GPL")
   #cat(" done\n")
   
-  ## write shortnames and sorting of filenames
+  ## write shortnames and sorting of filenames (again)
   eval(expr_fn_map)$writeMappingFile(rprt_fns$filename_sorting)
   
   cat(paste("Report file created at\n\n    ", rprt_fns$report_file_prefix, ".*\n\n", sep=""))
