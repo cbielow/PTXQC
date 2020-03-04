@@ -88,9 +88,10 @@ readMzTab = function(.self, file) {
   
   ## create Raw filename mapping internally
   mtd = res[["MTD"]]
-  idx_run = grep("^ms_run\\[\\d*\\]-location", mtd$key, value = FALSE)
+  ## in addition to the correct 'ms_run[xx]-location' we also accept 'ms_run[xx]_location' (ProteomeDiscoverer2.2)
+  idx_run = grep("^ms_run\\[\\d*\\][_-]location", mtd$key, value = FALSE)
   raw_filenames = mtd$value[idx_run]
-  ms_runs = gsub("([.]*)-location", "\\1", mtd$key[idx_run])
+  ms_runs = gsub("([.]*)[_-]location", "\\1", mtd$key[idx_run])
   .self$fn_map$getShortNames(raw_filenames, ms_runs = ms_runs)
   
   
