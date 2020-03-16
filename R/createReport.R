@@ -104,7 +104,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ## will be ignored and the newly written yaml.config will contain the values from mqpar.xml.
   param_useMQPAR = yc$getYAML("PTXQC$UseLocalMQPar", TRUE)
   
-  add_fs_col = yc$getYAML("PTXQC$NameLengthMax_num", 10)
+  add_fs_col = yc$getYAML("PTXQC$NameLengthMax_num", 14)
   
   id_rate_bad = yc$getYAML("File$Summary$IDRate$Thresh_bad_num", 20, 0, 100)
   id_rate_great = yc$getYAML("File$Summary$IDRate$Thresh_great_num", 35, 0, 100)

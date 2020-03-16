@@ -188,22 +188,19 @@ getEvidence = function()
     res$retention.time.calibration = res$calibrated.retention.time - res$retention.time 
   }
 
-  name = list(         opt.global.calibrated.mz.error.ppm = "mass.error..ppm.",
-                     opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
-                                       exp.mass.to.charge = "m.z", 
-                                          opt.global.mass = "mass", 
-                                    opt.global.identified = "identified",
-                               opt.global.ScanEventNumber = "scan.event.number",
-                                                   PSM.ID = "id", 
-                             opt.global.modified.sequence = "modified.sequence",
-                                opt.global.is.contaminant = "contaminant",
-                        opt.global.fragment.mass.error.da = "mass.deviations..da.",
-                   opt.global.cv.MS.1002217.decoy.peptide = "reverse"
-          )
+  renameColumns(res, list(         opt.global.calibrated.mz.error.ppm = "mass.error..ppm.",
+                                 opt.global.uncalibrated.mz.error.ppm = "uncalibrated.mass.error..ppm.", 
+                                                   exp.mass.to.charge = "m.z", 
+                                                      opt.global.mass = "mass", 
+                                                opt.global.identified = "identified",
+                                           opt.global.ScanEventNumber = "scan.event.number",
+                                                               PSM.ID = "id", 
+                                         opt.global.modified.sequence = "modified.sequence",
+                                            opt.global.is.contaminant = "contaminant",
+                                    opt.global.fragment.mass.error.da = "mass.deviations..da.",
+                               opt.global.cv.MS.1002217.decoy.peptide = "reverse"
+          ))
 
-  
-  renameColumns(res, name)
-  
   if (!"modified.sequence" %in% colnames(res)){
     res$modified.sequence = res$sequence
     warning("modified.sequence is not present in input data, metrics use sequence instead", immediate. = TRUE)
@@ -221,9 +218,9 @@ getEvidence = function()
   }
   
   ## de-duplicate protein-accession entries
-  accessions = res[, .(l_accession=list(accession)), by=id]$l_accession
+  accessions = res[, .(l_accession = list(accession)), by = id]$l_accession
   res = unique(res, by = "id")
-  res$proteins = unlist(lapply(accessions, paste, collapse=";"))
+  res$proteins = unlist(lapply(accessions, paste, collapse = ";"))
   
   ## todo: these are protein names not IDs, but the code does not care (its not very clean though)
   res$protein.group.ids = res$proteins 
@@ -239,7 +236,7 @@ getEvidence = function()
   ## intensity from PEP to PSM: only labelfree ('opt.global.cf.id' links all PSMs belonging to a ConsensusFeature)
   ##
   df_pep = data.frame()
-  if (all(c("opt.global.feature.id") %in% colnames(res))){
+  if ("opt.global.cf.id" %in% colnames(res)){
     df_pep = data.table::as.data.table(.self$sections$PEP)[!is.na(sequence), ]
     renameColumns(df_pep, list(opt.global.modified.sequence = "modified.sequence"))
     ## add raw.file...
@@ -248,7 +245,12 @@ getEvidence = function()
     df_pep$idx = 1:nrow(df_pep)
     ## map from PSM -> PEP row
     ## ... do NOT use spectra.ref since this is ambiguous (IDMapper duplicates MS2 PepIDs to multiple features)
-    res$pep_idx = match(res$opt.global.feature.id, df_pep$opt.global.feature.id, nomatch = NA_integer_)
+    if (!("opt.global.cf.id" %in% colnames(df_pep)))
+    {
+      stop("Please re-run the TOPP QualityControl tool to generate an updated version of OpenMS mzTab. Your mzTab is missing some information.")
+    } 
+    #old: res$pep_idx = match(res$opt.global.feature.id, df_pep$opt.global.feature.id, nomatch = NA_integer_)
+    res$pep_idx = match(res$opt.global.cf.id, df_pep$opt.global.cf.id, nomatch = NA_integer_)
     
     res$ms_run_number = as.numeric(gsub("^ms_run\\[(\\d*)\\].*", "\\1", res$ms_run))
     col_abd_df_pep = grepv( "^peptide.abundance.study.variable.", names(df_pep))
@@ -274,7 +276,8 @@ getEvidence = function()
     ## assign intensity to genuine PSMs
     res$intensity = NA_real_ ## unassigned PSMs have no MS1 intensity
     res[,
-      intensity := NA_duplicates(m_pep_abd[, .SD$pep_idx[1]], .SD$ms_run_number),
+      intensity := NA_duplicates(m_pep_abd[, .SD$pep_idx[1]],
+                                 .SD$ms_run_number),
       by = "opt.global.cf.id"]
     summary(res$intensity)
   }
@@ -295,13 +298,19 @@ getEvidence = function()
   ##
   ## Infer MBR 
   ## --> find all subfeatures in a CF with abundance but missing PSM --> create as MBR-dummy-PSMs
-
+  ##
+  ## : df_pep: the PEP table (with some extras)
+  ## : res:    the PSM table (with some extras)
+  ##     res$pep_idx: row in df_pep (consensusFeature) to which this PSM was assigned
   res_tf = res[NULL,]
   stopifnot(ncol(res_tf) > 0)
-  if (!plyr::empty(df_pep)){
+  if (!plyr::empty(df_pep))
+  {
+    ## iterate though all consensusFeatures .. find subfeatures with intensity but missing PSM
     res_tf_tmp = df_pep[, {#print(idx)
+      #idx = 44
       idx_PSM = which(res$pep_idx == idx)
-      runs_with_MS2 = unique(res$ms_run_number[idx_PSM]) ## existing PSMs for this PEP
+      runs_with_MS2 = unique(res$ms_run_number[idx_PSM]) ## all existing PSMs for this PEP (=consensusFeature)
       runs_wo_MS2 = (1:N.studies)[-runs_with_MS2]
       df = .SD[rep(1, length(runs_wo_MS2)), c("charge", "modified.sequence", "sequence")]
       df$pep_idx = idx
@@ -309,6 +318,8 @@ getEvidence = function()
       df$calibrated.retention.time = m_pep_rt[runs_wo_MS2, idx]
       df$intensity = m_pep_abd[runs_wo_MS2, idx]
       df$protein.group.ids = res$protein.group.ids[idx_PSM[1]] ## use PGI from genuine PSMs
+      ## remove all inferred PSMs which do not have an intensity(= MS1 feature)
+      df = df[!is.na(df$intensity),]
       df ## return
     }, by = "idx"] ## one PEP row at a time
    
