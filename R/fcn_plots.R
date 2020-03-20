@@ -872,7 +872,7 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
   stats$fcr_new_lvl = paste0(stats$fc.raw.file, " (sd = ", stats$sd_uncal, "ppm)")
   
   ## use augmented name
-  data$fc.raw.file_ext = factor(stats$fcr_new_lvl[ match(data$fc.raw.file, stats$fc.raw.file) ])
+  data$fc.raw.file_ext = stats$fcr_new_lvl[ match(data$fc.raw.file, stats$fc.raw.file) ]
 
   p = ggplot(data, col=data$col) +
         geom_boxplot(aes_string(x = "fc.raw.file_ext", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth = TRUE, outlier.shape = NA) +
@@ -919,7 +919,7 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
 #'                      sd = c(2.4, 0.5, 0.7, 0.8),
 #'                      outOfCal = c(TRUE, FALSE, FALSE, FALSE))           
 #'   plot_CalibratedMSErr(data, MQBug_raw_files = letters[1], stats, y_lim = c(-20,20), 15, "subtitle")
-#' 
+#'
 plot_CalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit = NA, title_sub = "")
 {
   data$col = "default"
@@ -934,9 +934,9 @@ plot_CalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit
   showColLegend = ifelse(length(setdiff(data$col, "default")) > 0, "legend", "none")
   
   ## plot
-  p = ggplot(data, col=data$col) +
+  p = ggplot(data, col = data$col) +
     geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm.", col="col"), varwidth = TRUE, outlier.shape = NA) +
-    scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="red"), guide = showColLegend) +
+    scale_colour_manual("", values = c("default"="black", "MQ bug"="red", "out-of-search-tol"="orange"), guide = showColLegend) +
     ylab(expression(Delta~"mass [ppm]")) +
     xlab("") +
     ylim(y_lim) +

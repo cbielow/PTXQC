@@ -65,8 +65,7 @@ printWithFooter = function(gg_obj, bottom_left = NULL, bottom_right = NULL)
 #' 
 scale_x_discrete_reverse = function(values, ...)
 {
-  if (!("factor" %in% class(values))) stop("Cannot use scale_x_discrete_reverse() on non-factor()")
-  values = droplevels(values)
+  if ("factor" %in% class(values)) values = droplevels(values)
   return (scale_x_discrete(limits = rev(levels(values)), ... ))
 }
 
@@ -81,8 +80,7 @@ scale_x_discrete_reverse = function(values, ...)
 #'
 scale_y_discrete_reverse = function(values, ...)
 {
-  if (!("factor" %in% class(values))) stop("Cannot use scale_y_discrete_reverse() on non-factor()")
-  values = droplevels(values)
+  if ("factor" %in% class(values)) values = droplevels(values)
   return (scale_y_discrete(limits = rev(levels(values)), ... ))
 }
 
