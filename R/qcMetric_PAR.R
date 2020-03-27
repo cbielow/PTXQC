@@ -32,19 +32,7 @@ track database completeness and database version information (if given in the fi
         }
         return (s)
       })
-      ## break long values into multiple lines (to preserve table width)
-      d_par$value = sapply(d_par$value, function (s) 
-      {
-        allowed_len = nchar("Use least modified peptide"); ## this is a typical entry -- everything which is longer gets split
-        r = paste(sapply(unlist(strsplit(s, line_break, fixed = TRUE)), function(s1) {
-          if (nchar(s1) > allowed_len) {
-            s_beg = seq(1, nchar(s1) - 1, allowed_len)
-            s1 = paste(unlist(substring(s1, s_beg, s_beg + allowed_len)), collapse = line_break)
-          }
-          return(s1)
-        }), collapse = line_break)
-        return (r)
-      })
+      
       
       ## sort by name
       d_par = d_par[order(d_par$parameter), ]
@@ -58,11 +46,29 @@ track database completeness and database version information (if given in the fi
       parC = c("parameter", "value")
       d_par2 = cbind(d_par[d_par$page==0, parC], d_par[d_par$page==1, parC])
       
+      
+      ## HTML: alternative table
+      ## (do this before line breaks, since Html can handle larger strings)      
+      tbl_f = getHTMLTable(d_par2, header = fasta_files, font_size = 12)
+
+      ## break long values into multiple lines (to preserve PDF table width)
+      splitMaxLen = function(s) {
+        allowed_len = nchar("Use least modified peptide"); ## this is a typical entry -- everything which is longer gets split
+        r = paste(sapply(unlist(strsplit(s, line_break, fixed = TRUE)), function(s1) {
+          if (nchar(s1) > allowed_len) {
+            s_beg = seq(from = 1, to = nchar(s1) - 1, by = allowed_len)
+            s1 = paste(unlist(substring(s1, s_beg, s_beg + allowed_len - 1)), collapse = line_break)
+          }
+          return(s1)
+        }), collapse = line_break)
+        return (r)
+      }
+      d_par2[ , 2] = sapply(d_par2[ , 2], splitMaxLen)
+      d_par2[ , 4] = sapply(d_par2[ , 4], splitMaxLen)
+      
       plot_title = "PAR: parameters"
       ## PDF: split table onto multiple pages if necessary...
       par_pl = byXflex(d_par2, 1:nrow(d_par2), 25, plotTable, sort_indices = TRUE, title = plot_title, footer = fasta_files)
-      ## HTML: alternative table
-      tbl_f = getHTMLTable(d_par2, header = fasta_files, font_size = 12)
       
       return(list(plots = par_pl, htmlTable = tbl_f))
     }, 
