@@ -8,6 +8,7 @@ PTXQC
 
 ### Latest changes / ChangeLog
 
+  - v1.00.04 - Mar 2020: mzTab support for iTRAQ/TMT; minor fixes
   - v1.00.03 - Mar 2020: mzTab fixes and compatibility with upcoming R 4.0.0
   - v1.00.02 - Feb 2020: minor fixes for CRAN tests and license
   - v1.00.00 - Jan 2020: support for mzTab, more metrics (UpSetR) and fixes

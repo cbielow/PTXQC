@@ -218,9 +218,9 @@ Heatmap score [EVD: Pep Intensity (>%1.1f)]:
       int_dev.s = pastet("INT RSD [%]", round(int_dev_pep, 3))
       lpl = boxplotCompare(data = df_evd[, c("fc.raw.file", "intensity", "contaminant")],
                            log2 = TRUE, 
-                           mainlab="EVD: peptide intensity distribution",
+                           mainlab = "EVD: peptide intensity distribution",
                            ylab = expression(log[2]*" intensity"),
-                           sublab=paste0("RSD ", round(int_dev_pep, 1),"% (expected < 5%)\n"),
+                           sublab = paste0("RSD ", round(int_dev_pep, 1),"% (expected < 5%)\n"),
                            abline = thresh_intensity)
       #for (pl in lpl) print(pl)
       

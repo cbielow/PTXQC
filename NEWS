@@ -7,7 +7,11 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
-[CRAN] v1.0.3 -- 2020/03/16
+[CRAN] v1.0.4 -- 2020/03/27
+  - [FIX] issue #78 duplicate characters in Parameters table
+  - [FEATURE] support for labeled data from mzTab (requires OpenMS develop (pre 2.6))
+
+v1.0.3 -- 2020/03/16
   - [FIX] issue #54 create Html report without internet connection
   - [FIX] mzTab input: fix equal number of peptides/proteins for all Raw files (excessive transferred IDs estimate)
   - minor fixes for compatibility with R 4.0.0 (develop)
