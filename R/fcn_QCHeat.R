@@ -41,7 +41,7 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
     } 
     ## check if fc.raw.filenames are known (e.g. when column was named fc.raw.file but values are from raw.file)
     if (!(all(qcm_sc$fc.raw.file %in% raw_file_mapping$to))) {
-      stop("Internal error in getQCHeatMap(): 'fc.raw.file' column has invalid entries for '", grepv("^X", colnames(qcm_sc)), "'!")
+      stop("Internal error in getQCHeatMap(): 'fc.raw.file' column has invalid entries for metric '", qcm$qcName, "' with fc.raw.file names: [", paste(qcm_sc$fc.raw.file, collapse=","),"]!")
     }
     return(qcm_sc)
   })

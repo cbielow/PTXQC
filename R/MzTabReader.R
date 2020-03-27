@@ -141,8 +141,8 @@ getSummary = function()
   res$ms.ms.identified.... = unlist(lapply(gsub(".*, ?(\\d*\\.\\d*)\\]", "\\1", ms2_df$value), as.numeric))
 
   ## read TIC
-  tic_df = mtd_custom_df[grep("total ion current", mtd_custom_df$value),] 
-  res$TIC = lapply(strsplit(sub(".* \\[(.*)\\]]", "\\1", tic_df$value), ","), as.numeric)
+  tic_df = mtd_custom_df[grep("total ion current", mtd_custom_df$value),]
+  if (nrow(tic_df) > 0) res$TIC = lapply(strsplit(sub(".* \\[(.*)\\]]", "\\1", tic_df$value), ","), as.numeric)
 
   return (res)
 },
@@ -304,7 +304,9 @@ getEvidence = function()
   ##     res$pep_idx: row in df_pep (consensusFeature) to which this PSM was assigned
   res_tf = res[NULL,]
   stopifnot(ncol(res_tf) > 0)
-  if (!plyr::empty(df_pep))
+  ## skip if MS2 isotope labeling detected
+  quant_methods = grep("quantification_method", mzt$sections$MTD$key)
+  if (!any(grepl("PRIDE_0000317", .self$sections$MTD$value[quant_methods])) & (!plyr::empty(df_pep)))
   {
     ## iterate though all consensusFeatures .. find subfeatures with intensity but missing PSM
     res_tf_tmp = df_pep[, {#print(idx)
