@@ -305,7 +305,7 @@ getEvidence = function()
   res_tf = res[NULL,]
   stopifnot(ncol(res_tf) > 0)
   ## skip if MS2 isotope labeling detected
-  quant_methods = grep("quantification_method", mzt$sections$MTD$key)
+  quant_methods = grep("quantification_method", .self$sections$MTD$key)
   if (!any(grepl("PRIDE_0000317", .self$sections$MTD$value[quant_methods])) & (!plyr::empty(df_pep)))
   {
     ## iterate though all consensusFeatures .. find subfeatures with intensity but missing PSM
