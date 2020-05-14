@@ -25,8 +25,8 @@ track database completeness and database version information (if given in the fi
       rownames(d_par) = d_par$parameter
       
       ## trim long param names (the user should know what they mean)
+      allowed_len = nchar("Min. score for unmodified .."); 
       d_par$parameter = sapply(d_par$parameter, function (s) {
-        allowed_len = nchar("Min. score for unmodified .."); 
         if (nchar(s) > allowed_len) {
           s = paste(substring(s, 1, allowed_len), "..", collapse = "", sep="")
         }
@@ -36,16 +36,25 @@ track database completeness and database version information (if given in the fi
       
       ## sort by name
       d_par = d_par[order(d_par$parameter), ]
+      ## merge parameter names which have identical values (could be many for mzTab)
+      d_par_uniq = as.data.table(d_par)[,{df = .SD[1,]
+                                          u = unique(.SD$parameter)
+                                          if (length(unique) > 1)
+                                          {
+                                            df$parameter = paste0(.SD$parameter[1], "..", .SD$parameter[.N])
+                                          }
+                                          df # return
+                                         }, by = "value"]
       
       ## two column layout
-      if (nrow(d_par) %% 2 != 0) d_par = rbind(d_par, "") ## make even number of rows
-      mid = nrow(d_par) / 2
-      d_par$page = 1
-      d_par$page[1:mid] = 0
+      if (nrow(d_par_uniq) %% 2 != 0) d_par_uniq = rbind(d_par_uniq, "", fill = TRUE) ## make even number of rows
+      mid = nrow(d_par_uniq) / 2
+      d_par_uniq$page = 1
+      d_par_uniq$page[1:mid] = 0
       
       parC = c("parameter", "value")
-      d_par2 = cbind(d_par[d_par$page==0, parC], d_par[d_par$page==1, parC])
-      
+      class(d_par_uniq) = "data.frame"
+      d_par2 = cbind(d_par_uniq[d_par_uniq$page==0, parC], d_par_uniq[d_par_uniq$page==1, parC])
       
       ## HTML: alternative table
       ## (do this before line breaks, since Html can handle larger strings)      
@@ -55,7 +64,7 @@ track database completeness and database version information (if given in the fi
       splitMaxLen = function(s) {
         allowed_len = nchar("Use least modified peptide"); ## this is a typical entry -- everything which is longer gets split
         r = paste(sapply(unlist(strsplit(s, line_break, fixed = TRUE)), function(s1) {
-          if (nchar(s1) > allowed_len) {
+          if (!is.na(s1) && nchar(s1) > allowed_len) {
             s_beg = seq(from = 1, to = nchar(s1) - 1, by = allowed_len)
             s1 = paste(unlist(substring(s1, s_beg, s_beg + allowed_len - 1)), collapse = line_break)
           }
