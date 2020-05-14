@@ -196,6 +196,7 @@ getEvidence = function()
                                            opt.global.ScanEventNumber = "scan.event.number",
                                                                PSM.ID = "id", 
                                          opt.global.modified.sequence = "modified.sequence",
+                        opt.global.cv.MS.1000889.peptidoform.sequence = "modified.sequence",
                                             opt.global.is.contaminant = "contaminant",
                                     opt.global.fragment.mass.error.da = "mass.deviations..da.",
                                opt.global.cv.MS.1002217.decoy.peptide = "reverse"
@@ -238,7 +239,8 @@ getEvidence = function()
   df_pep = data.frame()
   if ("opt.global.cf.id" %in% colnames(res)){
     df_pep = data.table::as.data.table(.self$sections$PEP)[!is.na(sequence), ]
-    renameColumns(df_pep, list(opt.global.modified.sequence = "modified.sequence"))
+    renameColumns(df_pep, list(opt.global.modified.sequence = "modified.sequence", 
+                               opt.global.cv.MS.1000889.peptidoform.sequence = "modified.sequence"))
     ## add raw.file...
     df_pep = cbind(df_pep, .self$fn_map$specrefToRawfile(df_pep$spectra.ref))
     ## .. a unique index
@@ -397,6 +399,7 @@ getMSMSScans = function(identified_only = FALSE)
                                opt.global.ScanEventNumber = "scan.event.number",
                                                    PSM.ID = "id", 
                              opt.global.modified.sequence = "modified.sequence",
+            opt.global.cv.MS.1000889.peptidoform.sequence = "modified.sequence",
                                 opt.global.is.contaminant = "contaminant",
                               opt.global.missed.cleavages = "missed.cleavages",
                    opt.global.cv.MS.1002217.decoy.peptide = "reverse",
