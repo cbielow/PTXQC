@@ -7,6 +7,10 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.0.5 -- 2020/06/08
+  - [FIX] issue #81 MzTabReader broken
+  - [FEATURE] remove redundant parameters (#78)
+
 [CRAN] v1.0.4 -- 2020/03/27
   - [FIX] issue #78 duplicate characters in Parameters table
   - [FEATURE] support for labeled data from mzTab (requires OpenMS develop (pre 2.6))

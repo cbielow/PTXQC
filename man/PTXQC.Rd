@@ -5,7 +5,7 @@
 \alias{PTXQC}
 \title{PTXQC: A package for computing Quality Control (QC) metrics for Proteomics (PTX)}
 \description{
-PTXQC: A package for computing Quality Control (QC) metrics for Proteomics (PTX)
+The following sections describe the main components:
 }
 \section{Input}{
 

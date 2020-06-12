@@ -1,5 +1,6 @@
 #' PTXQC: A package for computing Quality Control (QC) metrics for Proteomics (PTX)
 #'
+#' The following sections describe the main components:
 #' 
 #' @section Input:
 #' Valid input data are either the files from MaxQuant's .txt folder (all versions from MaxQuant >= 1.0 upwards are supported)
