@@ -79,7 +79,12 @@ track database completeness and database version information (if given in the fi
       ## PDF: split table onto multiple pages if necessary...
       par_pl = byXflex(d_par2, 1:nrow(d_par2), 25, plotTable, sort_indices = TRUE, title = plot_title, footer = fasta_files)
       
-      return(list(plots = par_pl, htmlTable = tbl_f))
+      mzQCdata_ <- list(d_par2)
+      qcCv <- list("parameters (name and value)")
+      quality <- list("runQuality")
+      input <- list("parameters.txt")
+      
+      return(list(plots = par_pl, htmlTable = tbl_f, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
     }, 
     qcCat = NA_character_, 
     qcName = "PAR:~MQ~Parameters", 

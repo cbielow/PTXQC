@@ -55,6 +55,10 @@ qcMetric = setRefClass("qcMetric",
                  plots = "list",
                  htmlTable = "character",
                  title = "list",
+                 mzQCdata = "list", ##store the required data
+                 qcCV = "list", ##cv_terms: ID/ name
+                 quality_type = "list", ##runQuality or setQuality
+                 input_file = "list",
                  ## the following members are related to the heatmap only
                  qcScores = "data.frame", ## with columns "raw.file", "score"
                  qcCat = "character", ## one of "prep", "LC", "MS" or empty (e.g. for PG)
@@ -75,6 +79,10 @@ qcMetric = setRefClass("qcMetric",
            .self$htmlTable = NA_character_;  ## obtained from worker
            .self$qcScores = data.frame();  ## obtained from worker
            .self$title = list();
+           .self$mzQCdata = list();
+           .self$qcCV = list();
+           .self$quality_type = list();
+           .self$input_file = list();
            .self$qcCat = qcCat;
            .self$qcName = qcName;
            .self$orderNr = orderNr;
@@ -125,6 +133,10 @@ qcMetric = setRefClass("qcMetric",
          #.self$plots = r[["plots"]]
          
          if ("htmlTable" %in% names(r)) .self$htmlTable = r[["htmlTable"]];
+         if ("mzQCdata" %in% names(r)) .self$mzQCdata = r[["mzQCdata"]];
+         if("qcCV" %in% names(r)) .self$qcCV =  r[["qcCV"]];
+         if("quality_type" %in% names(r)) .self$quality_type =  r[["quality_type"]];
+         if("input_file" %in% names(r)) .self$input_file =  r[["input_file"]];
          if ("qcScores" %in% names(r)) .self$qcScores = r[["qcScores"]];
          if ("title" %in% names(r)) .self$title = r[["title"]]
          

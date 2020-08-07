@@ -78,6 +78,11 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
       ## currently lpl is a list of lists() -- flatten
       lpl = Reduce(append, lpl)
 
+      mzQCdata_ <- list(ms2_decal)
+      qcCv <- list("decalibration metric in MS2")
+      quality <- list("runQuality")
+      input <- list("msms.txt")
+      
       ##
       ## QC measure for centered-ness of MS2-calibration
       ##
@@ -101,7 +106,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
       }
       qcScore_all = Reduce(function(x,y) merge(x,y,all=TRUE), qcScore)
       
-      return(list(plots = lpl, qcScores = qcScore_all))
+      return(list(plots = lpl, qcScores = qcScore_all, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
     }, 
     qcCat = "MS", 
     qcName = "MSMS:~MS^2~Cal~(%s)", 
@@ -180,6 +185,15 @@ current study. ",
         lpl =
           byXflex(st_bin, st_bin$fc.raw.file, 25, plot_MissedCleavages, sort_indices = TRUE, title_sub = paste(msg_cont_removed, msg_missed_clea)) 
         
+        mzQCdata_ <- list(st_bin)
+        qcCv <- list("missed cleavages frequence")
+        if(! is.null(df_evd)) {
+          quality <- list("setQuality")
+          input <- list(paste("msms.txt", "evidence.txt", sep=","))
+        }else {
+          quality <- list("runQuality")
+          input <- list("msms.txt")
+        }
         ## QC measure for missed-cleavages variation
         qc_score = data.frame(fc.raw.file = st_bin$fc.raw.file, valMC = st_bin[, "0"])
         qc_score$valMCVar = qualMedianDist(qc_score$valMC)
@@ -187,6 +201,13 @@ current study. ",
       } else {
         lpl = list(ggText("MSMS: Missed cleavages per Raw file",
                           "No enzyme was specified.\nDigestion efficiency cannot be scored."))
+        
+        mzQCdata_ <- list(ggText("MSMS: Missed cleavages per Raw file",
+                                 "No enzyme was specified.\nDigestion efficiency cannot be scored."))
+        qcCv <- list("error info of Missed cleavages")
+        quality <- NA_character_
+        input <- NA
+        
         qc_score = data.frame(fc.raw.file = unique(df_msms$fc.raw.file),
                               valMC = HEATMAP_NA_VALUE,
                               valMCVar = HEATMAP_NA_VALUE)
@@ -195,7 +216,7 @@ current study. ",
       colnames(qc_score)[colnames(qc_score) == "valMC"] = sprintf(.self$qcName, "Missed~Cleavages")
       colnames(qc_score)[colnames(qc_score) == "valMCVar"] = sprintf(.self$qcName, "Missed~Cleavages~Var")
 
-      return(list(plots = lpl, qcScores = qc_score))
+      return(list(plots = lpl, qcScores = qc_score, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
     }, 
     qcCat = "Prep", 
     qcName = "MSMS:~%s", 

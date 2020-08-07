@@ -36,7 +36,12 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       
       pg_plots_cont = byXflex(df.con_stats, 1:nrow(df.con_stats), 90, plot_ContsPG, sort_indices = FALSE)
       
-      return(list(plots = pg_plots_cont))
+      mzQCdata_ <- list(df.con_stats)
+      qcCv <- list("abundance type of protein contamination")
+      quality <- list("runQuality")
+      input <- list("proteinGroups.txt")
+      
+      return(list(plots = pg_plots_cont, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
     }, 
     qcCat = "Prep", 
     qcName = "PG:~Contaminants", 
@@ -86,8 +91,14 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
                                            "RSD ", round(int_dev, 1),"% [high RSD --> few peptides])"),
                            abline = thresh_intensity,
                            names = MAP_pg_groups)
+      mzQCdata_ <- list( reshape2::melt(df_pg[, c(int_cols, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
+                         int_dev_no0, int_dev)
+      qcCv <- list("intensity distribution of the contaminants","relative standard deviation of mean of intensity without zero", 
+                   "relative standard deviation of mean of intensity")
+      quality <- list("runQuality", "runQuality", "runQuality")
+      input <- list("proteinGroups.txt", "proteinGroups.txt", "proteinGroups.txt")
       
-      return(list(plots = lpl))
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
     }, 
     qcCat = "prep", 
     qcName = "PG:~Raw~intensity", 
@@ -137,7 +148,14 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
                            abline = thresh_intensity,
                            names = MAP_pg_groups)
       
-      return(list(plots = lpl))
+      mzQCdata_ <- list(reshape2::melt(df_pg[, c(int_cols, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
+                        int_dev_no0, int_dev)
+      qcCv <- list("LFQ intensity distribution of contaminants","relative standard deviation of mean of LFQ intensity without zero", 
+                   "relative standard deviation of mean of LFQ intensity")
+      quality <- list("runQuality", "runQuality", "runQuality")
+      input <- list("proteinGroups.txt", "proteinGroups.txt", "proteinGroups.txt")
+      
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
     }, 
     qcCat = "prep",
     qcName = "PG:~LFQ~intensity", 
@@ -187,8 +205,15 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
                                               "RSD ", round(reprt_dev, 1),"% [high RSD --> few peptides])"),
                               abline = thresh_intensity,
                               names = MAP_pg_groups)
+      mzQCdata_ <- list(reshape2::melt(df_pg[, c(int_cols, "contaminant"), drop = FALSE], id.vars=c("contaminant"))[,c(2,3,1)],
+                        reprt_dev_no0, reprt_dev)
+      qcCv <- list("reporter intensity distribution of contaminants","relative standard deviation of mean of ITRAQ/TMT reporter intensity without zero",
+                   "relative standard deviation of mean of ITRAQ/TMT reporter intensity")
+      quality <- list("runQuality", "runQuality", "runQuality")
+      input <- list("proteinGroups.txt","proteinGroups.txt","proteinGroups.txt")
       
-      return(list(plots = lpl))
+      
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
     }, 
     qcCat = "prep", 
     qcName = "PG:~Reporter~intensity", 
@@ -239,10 +264,16 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
                         gg_layer = addGGtitle(paste0("PG: PCA of '", sub(".", " ", cond, fixed = TRUE), "'"), "(excludes contaminants)")
                        )[["plots"]])
         #print(pl)
-        if (!inherits(pl, "try-error")) lpl = append(lpl, pl);
+        if (!inherits(pl, "try-error")) {
+          lpl = append(lpl, pl);
+          mzQCdata_ <- list(data)
+          qcCv <- list("PCA intensity data")
+          quality <- list("runQuality")
+          input <- list("proteinGroups.txt")
+        }
       }
       
-      return(list(plots = lpl))
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
     }, 
     qcCat = "General", 
     qcName = "PG:~Principal~Component", 
@@ -361,7 +392,12 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       lpl = 
         byXflex(ratio.densities, ratio.densities$col, 5, plot_RatiosPG, sort_indices = FALSE, d_range = range(d_sub, na.rm=TRUE), main_title, main_col, legend_title)
       
-      return(list(plots = lpl))
+      mzQCdata_ <- list(ratio.densities, d_sub)
+      qcCv <- list("density ratio", "log2 ratio")
+      quality <- list("runQuality", "runQuality")
+      input <- list("proteinGroups.txt","proteinGroups.txt" )
+      
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
     },
     qcCat = "prep", 
     qcName = "PG:~Ratio", 

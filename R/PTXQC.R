@@ -26,6 +26,8 @@
 #' 
 #' @import data.table
 #' @import ggplot2
+#' @import stringr
+#' @import readr
 #' @import ggdendro
 #' @import grid
 #' @import grDevices

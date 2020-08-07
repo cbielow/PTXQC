@@ -972,6 +972,7 @@ getReportFilenames = function(folder, report_name_has_folder = TRUE, mzTab_filen
   filename_sorting = paste0(report_file_simple, "_filename_sort.txt")
   stats_file = paste0(report_file_simple, "_stats.txt")
   log_file = paste0(report_file_simple, ".log")
+  metrics_file = paste0(report_file_simple, "_metrics.json")
   
   ## include folder-name at the end
   if (report_name_has_folder)
@@ -985,6 +986,7 @@ getReportFilenames = function(folder, report_name_has_folder = TRUE, mzTab_filen
             filename_sorting = filename_sorting,
             stats_file = stats_file,
             log_file = log_file,
+            metrics_file = metrics_file,
             report_file_prefix = report_file_prefix,
             report_file_PDF = paste0(report_file_prefix, ".pdf"),
             report_file_HTML = paste0(report_file_prefix, ".html")

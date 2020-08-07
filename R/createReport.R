@@ -79,6 +79,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     txt_files$msms = "msms.txt"
     txt_files$msmsScan = "msmsScans.txt"
     txt_files$mqpar = "mqpar.xml"
+    txt_files$cv = "qc_cv.obo"
     txt_files = lapply(txt_files, function(file) file.path(txt_folder, file))
     
     ## prepare for readMQ()
@@ -767,6 +768,50 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   #cat("Dumping plot objects as Rdata file ...")
   #save(file = rprt_fns$R_plots_file, list = "GPL")
   #cat(" done\n")
+  
+  ##save required data of each metric in JSON-format
+  cat("Creating metric json file ...", '\n')
+  ##load the cv Term
+  cv <- read_cvTerm(txt_files$cv)
+  ##copy cv Term table
+  metric_info <- data.frame(matrix(unlist(cv), ncol = 4))
+  colnames(metric_info) <- c("cvRef", " accession", "name", "unit")
+  metric_info$value <- NA
+  metric_info$quality_type <- NA ##runQuality or setQuality
+  metric_info$input_file <- NA
+  ##Read the value stored in each class
+  metrics_file = rprt_fns$metrics_file
+  metric_info = readvalue(qcMetric = lst_qcMetrics, data = metric_info)
+  
+  inputfiles_info <- data.frame(location = c(txt_files$param, txt_files$summary, txt_files$groups, txt_files$evd,
+                                             txt_files$msms, txt_files$msmsScan, txt_files$mqpar,"Raw file: Ecoli"),
+                                name = c("parameters.txt", "summary.txt", "proteinGroups.txt", "evidence.txt",
+                                         "msms.txt", "msmsScans.txt", "mqpar.xml", "Raw file: Ecoli"),
+                                fileformat = c(rep(rjson::toJSON(list(accssion = "", name = "txt format"), indent = 3),6),
+                                               rjson::toJSON(list(accession = "MS:1002600", name = "mztab"), indent = 3),
+                                               rjson::toJSON(list(accession = "", name = "raw file"), indent = 3)),
+                                analysisSoftware = c(rep("PTXQC",6),"TOPP software" , "PTXQC"))
+  analysisSoftware <- data.frame(name = c("PTXQC", "TOPP software"),
+                                 version = c(as.character(packageVersion("PTXQC")), "2.4"),
+                                 uri = c("github.com/cbielow/PTXQC", "openms.de"))
+  
+  version <- "0.1.1"
+  creationDate <- as.character(Sys.time(), format="%Y-%m-%dT%H:%M:%S" )
+  runQuality = metric_info[which(metric_info$quality_type == "runQuality"), ]
+  setQuality = metric_info[which(metric_info$quality_type == "setQuality"), ]
+  controlledVocabularies <- list(list(name = "Quality control metrics generating software",
+                                      uri = "github.com/HUPO-PSI/mzQC/blob/bulk-cvterms/cv/qc-cv.obo",
+                                      version = "0.1.2" ),
+                                 list(name = "Proteomics Standards Initiative Mass Spectrometry Ontology",
+                                      uri = "raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo",
+                                      version = "4.1.41"))
+  ## create output file
+  createmzQC(version = version, creationDate = creationDate, runQualities = runQuality, setQualities = setQuality,
+             controlledVocabularies = controlledVocabularies, file = metrics_file, data_input = inputfiles_info,
+             data_analysis = analysisSoftware)
+  
+  cat("done",'\n')
+  cat(paste("Report file created at\n\n    ", rprt_fns$metrics_file, ".*\n\n", sep=""))
   
   ## write shortnames and sorting of filenames (again)
   eval(expr_fn_map)$writeMappingFile(rprt_fns$filename_sorting)
