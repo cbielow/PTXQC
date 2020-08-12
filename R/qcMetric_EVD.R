@@ -135,11 +135,10 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
                            "red")
           lpl = append(lpl, list(pl_cont))
           
-          mzQCdata_ <- list(pl_cont)
+          mzQCdata_ <- NA
           qcCv <- list("error info of contaminant")
-          quality <- NA_character_
-          input <- NA
-          
+          raw_ <- NA
+
         } else {
           ## plot User-Contaminants
           lpl_i = byXflex(data = cont_data.long, indices = cont_data.long$fc.raw.file, subset_size = 120,
@@ -164,8 +163,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
           
           mzQCdata_ <- list(cont_data.long, cont_data.l)
           qcCv <- list("contaminants data","unique peptides of contaminants")
-          quality <- list("setQuality", "setQuality")
-          input <- list(rep(paste0("evidence.txt","proteinGroups.txt", sep = ","),2))
+          raw_ <- list("df_evd","df_evd")
           
           ## add heatmap column
           cname = sprintf(.self$qcName, ca)
@@ -181,7 +179,7 @@ Heatmap score [EVD: Contaminant <name>]: boolean score, i.e. 0% (fail) if the in
         }
       } ## contaminant loop
       
-      return(list(plots = lpl, qcScores = local_qcScores, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = local_qcScores, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "Prep",
     qcName = "EVD:User~Contaminant~(%s)",
@@ -238,16 +236,15 @@ Heatmap score [EVD: Pep Intensity (>%1.1f)]:
       
       mzQCdata_ <- list(df_evd, int_dev_pep)
       qcCv <- list("table","peptide relative standard deviation")
-      quality <- list("runQuality", "runQuality")
-      input <- list(paste("evidence.txt","Raw file: Ecoli",seq=","), "evidence.txt")
-      
+      raw_ <- list("df_evd","df_evd")
+
       ## QC measure for peptide intensity
       qc_pepint = medians_pep
       cname = sprintf(.self$qcName, thresh_intensity)
       qc_pepint[,cname] = qualLinThresh(2^qc_pepint$med, 2^thresh_intensity) ## use non-log space 
       qcScore = qc_pepint[, c("fc.raw.file", cname)]
       
-      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "prep", 
     qcName = "EVD:~Peptide~Intensity~(\">%1.1f\")", 
@@ -362,16 +359,16 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
       
       mzQCdata_ <- list(ylims, channel_count)
       qcCv <- list("labeling efficiency in percentage","Channel counts")
-      quality <- list("runQuality", "runQuality")
-      input <- list("evidence.txt", "evidence.txt")
-      
+      raw_ <- list("df_evd","df_evd")
+
+
       # heatmap scoring
       ## .. take min score over all channels
       qcScore = ylims[, list(score_min = min(labEff_PC)), by=c("fc.raw.file")]
       colnames(qcScore) = c("fc.raw.file", .self$qcName)
   
       
-      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "prep", 
     qcName = "EVD:~Reporter~intensity", 
@@ -436,9 +433,9 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
       
       mzQCdata_ <- list(protC, max_prot)
       qcCv <- list("number of protein groups", "maximum sum of counts")
-      quality <- list("runQuality", "runQuality")
-      input <- list("evidence.txt", "evidence.txt")
-      
+      raw_ <- list("df_evd", "df_evd")
+
+
       ## QC measure for protein ID performance
       qc_protc = plyr::ddply(protC, "fc.raw.file", function(x){
         if (nrow(x) == 3 && length(grep("^genuine", x$category))!= 2){
@@ -451,7 +448,7 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
       qc_protc[,cname] = qualLinThresh(qc_protc$genuineAll, thresh_protCount)
       qcScore = qc_protc[, c("fc.raw.file", cname)]
       
-      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = 'general', 
     qcName = "EVD:~Protein~Count~(\">%1.0f\")", 
@@ -513,9 +510,9 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
       })
       mzQCdata_ <- list(pepC, max_pep)
       qcCv <- list("peptide counts", "maximum peptide counts")
-      quality <- list("runQuality", "runQuality")
-      input <- list("evidence.txt", "evidence.txt")
-      
+      raw_ <- list("df_evd", "df_evd")
+
+
       ## QC measure for peptide ID performance
       qc_pepc = plyr::ddply(pepC, "fc.raw.file", function(x){
         if (nrow(x) == 3 && length(grep("^genuine", x$category))!= 2){
@@ -528,7 +525,7 @@ Heatmap score [EVD: Pep Count (>%1.0f)]: Linear scoring from zero. Reaching or e
       qc_pepc[,cname] = qualLinThresh(qc_pepc$genuineAll, thresh_pepCount)
       qcScore = qc_pepc[, c("fc.raw.file", cname)]
       
-      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = 'general', 
     qcName = "EVD:~Peptide~Count~(\">%1.0f\")", 
@@ -588,8 +585,8 @@ Heatmap score [EVD: RT Peak Width]: Scored using BestKS function, i.e. the D sta
       
       mzQCdata_ <- list(df_evd.m.d, df_evd.xlim,df_evd.ylim)
       qcCv <- list("peptide peak width distribution","RT acquisition range","Peak width quantiles")
-      quality <- list("runQuality", "runQuality", "runQuality")
-      input <- list("evidence.txt", "evidence.txt", "evidence.txt")
+      raw_ <- list("df_evd", "df_evd", "df_evd")
+
       
       ## QC measure for reproducibility of peak shape
       ##.. create a list of distributions
@@ -597,7 +594,7 @@ Heatmap score [EVD: RT Peak Width]: Scored using BestKS function, i.e. the D sta
       qc_evd_PeakShape = qualBestKS(l_dists)
       colnames(qc_evd_PeakShape) = c("fc.raw.file", .self$qcName)
       
-      return(list(plots = lpl, qcScores = qc_evd_PeakShape, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qc_evd_PeakShape, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "LC", 
     qcName = "EVD:~RT~Peak~Width", 
@@ -716,14 +713,13 @@ Heatmap score [EVD: MBR Align]: fraction of 'green' vs. 'green+red' peptides.
           
           mzQCdata_ <- list(evd_RT_t, y_lim)
           qcCv <- list("RT distance of peptides","RT distance of peptides quantiles")
-          quality <- list("runQuality", "runQuality")
-          input <- list("evidence.txt", "evidence.txt")
-          
+          raw_ <- list("df_evd","df_evd")
+
         } ## no data
       } ## ambigous reference file
       
       
-      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "LC", 
     qcName = "EVD:~MBR~Align", 
@@ -797,9 +793,8 @@ provides few (and wrong) additional information, and should be disabled.
       
       mzQCdata_ <-list(scoreMBRMatch)
       qcCv <- list("fraction of ID pair")
-      quality <- list("runQuality")
-      input <- list("evidence.txt")
-      
+      raw_ <- list("df_evd")
+
       ##
       ##  Quality
       ##
@@ -812,7 +807,7 @@ provides few (and wrong) additional information, and should be disabled.
       qualMBR.m[is.na(qualMBR.m[, cname]), cname] = HEATMAP_NA_VALUE
       qcScore = qualMBR.m[, c("fc.raw.file", cname)]
       
-      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "LC", 
     qcName = "EVD:~MBR~ID-Transfer", 
@@ -876,15 +871,14 @@ Heatmap score: none.
           plot_MBRgain(data = mtr.df, title_sub = "")
         mzQCdata_ <- list(df_evd, col_fraction, mtr.df)
         qcCv <- list("table","fraction","absolute gain and percent gain")
-        quality <- list("runQuality","runQuality", "runQuality")
-        input <- list("evidence.txt", "evidence.txt", "evidence.txt")
+        raw_ <- list("df_evd","df_evd","df_evd")
+
       }
       mzQCdata_ <- list(df_evd, col_fraction)
       qcCv <- list("table","fraction")
-      quality <- list("runQuality", "runQuality")
-      input <- list("evidence.txt", "evidence.txt")
+      raw_ <- list("df_evd","df_evd")
       
-      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "LC", 
     qcName = "EVD:~MBR~auxilliary", 
@@ -923,14 +917,13 @@ Heatmap score [EVD: Charge]: Deviation of the charge 2 proportion from a represe
       
       mzQCdata_ <- list(d_charge)
       qcCv <- list("Charge distribution")
-      quality <- list("runQuality")
-      input <- list("evidence.txt")
+      raw_ <- list("df_evd")
       
       ## QC measure for charge centeredness
       qc_charge = plyr::ddply(df_evd[!df_evd$is.transferred, c("charge",  "fc.raw.file")], "fc.raw.file", function(x) data.frame(c = (sum(x$charge==2)/nrow(x))))
       qc_charge[, .self$qcName] = qualMedianDist(qc_charge$c)
       
-      return(list(plots = lpl, qcScores = qc_charge[, c("fc.raw.file", .self$qcName)], mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qc_charge[, c("fc.raw.file", .self$qcName)], mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "prep", 
     qcName = "EVD:~Charge", 
@@ -973,15 +966,14 @@ Heatmap score [EVD: ID rate over RT]: Scored using 'Uniform' scoring function, i
       
       mzQCdata_ <- list(df_idRT)
       qcCv <- list("ID rate over RT")
-      quality <- list("runQuality")
-      input <- list("evidence.txt")
+      raw_ <- list("df_evd")
       
       ## QC measure for uniform-ness
       qcScore = plyr::ddply(df_evd[, c("retention.time",  "fc.raw.file")], "fc.raw.file", 
                       function(x) data.frame(metric = qualUniform(na.omit(x$retention.time))))
       colnames(qcScore)[colnames(qcScore)=="metric"] = .self$qcName
       
-      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "LC", 
     qcName = "EVD:~ID~rate~over~RT", 
@@ -1040,8 +1032,7 @@ Heatmap score [EVD: MS Cal Pre (%1.1f)]: the centeredness (function CenteredRef)
       
       mzQCdata_ <- list(fix_cal, ylim_g)
       qcCv <- list("pre calibration", "pre calibration range") 
-      quality <- list("runQuality", "runQuality")
-      input <- list("evidence.txt","evidence.txt")
+      raw_ <- list("df_evd","df_evd")
       
       ## scores
       qc_MS1deCal = plyr::ddply(fix_cal$df_evd, "fc.raw.file", 
@@ -1061,7 +1052,7 @@ Heatmap score [EVD: MS Cal Pre (%1.1f)]: the centeredness (function CenteredRef)
       colnames(qc_MS1deCal) = c("fc.raw.file", cname)
       
       
-      return(list(plots = lpl, qcScores = qc_MS1deCal, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qc_MS1deCal, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "MS", 
     qcName = "EVD:~MS~Cal-Pre~(%1.1f)", 
@@ -1104,8 +1095,7 @@ Heatmap score [EVD: MS Cal-Post]: The variance and centeredness around zero of t
       
       mzQCdata_ <- list(fix_cal,ylim_g)
       qcCv <- list("post calibration", " post calibration range")
-      quality <- list("runQuality", "runQuality")
-      input <- list("evidence.txt","evidence.txt")
+      raw_ <- list("df_evd","df_evd")
       
       ## QC measure for post-calibration ppm error
       ## .. assume 0 centered and StdDev of observed data
@@ -1120,7 +1110,7 @@ Heatmap score [EVD: MS Cal-Post]: The variance and centeredness around zero of t
       qc_MS1Cal$val[qc_MS1Cal$fc.raw.file %in% fix_cal$stats$fc.raw.file[ fix_cal$stats$hasMassErrorBug ]] = HEATMAP_NA_VALUE
       colnames(qc_MS1Cal)[colnames(qc_MS1Cal) == "val"] = .self$qcName
       
-      return(list(plots = lpl, qcScores = qc_MS1Cal, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qc_MS1Cal, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "MS", 
     qcName = "EVD:~MS~Cal-Post", 
@@ -1190,12 +1180,9 @@ Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = samp
         lpl[["noCont"]] = ggText("EVD: Top5 Contaminant per Raw file",
                                  "No contaminants found in any sample.\n\nIncorporating contaminants during search is highly recommended!",
                                  "red")
-        mzQCdata_ <- list(ggText("EVD: Top5 Contaminant per Raw file",
-                                 "No contaminants found in any sample.\n\nIncorporating contaminants during search is highly recommended!",
-                                 "red"))
+        mzQCdata_ <- NA
         qcCv <- list("error info of Top5 contaminant")
-        quality <- NA_character_
-        input <- NA
+        raw_ <- NA
       } else {
         lpl =
           byXflex(df_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], df_evd$fc.raw.file, 40, sort_indices = TRUE, 
@@ -1203,8 +1190,8 @@ Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = samp
         
         mzQCdata_ <- list( cont.top5.names)
         qcCv <- list("top5 contaminants name")
-        quality <- list("runQuality")
-        input <- list("evidence.txt")
+        raw_ <- list("df_evd")
+
       }
       
       ## QC measure for contamination
@@ -1219,7 +1206,7 @@ Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = samp
       )
       colnames(qc_cont)[colnames(qc_cont) == "val"] = .self$qcName
       
-      return(list(plots = lpl, qcScores = qc_cont, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qc_cont, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "Prep", 
     qcName = "EVD:~Contaminants", 
@@ -1270,8 +1257,7 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
       
       mzQCdata_ <- list(d_dups)
       qcCv <- list("relative counts")
-      quality <- list("runQuality")
-      input <- list("evidence.txt")
+      raw_ <- list("df_evd")
       
       ## QC measure for how many peaks were fragmented only once
       qc_evd_twin = d_dups[d_dups$n==1,]
@@ -1279,7 +1265,7 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
       qc_evd_twin[, cname] = qualLinThresh(qc_evd_twin$fraction/100)
       
       return(list(plots = lpl, qcScores = qc_evd_twin[, c("fc.raw.file", cname)], mzQCdata = mzQCdata_, 
-                  qcCV = qcCv, quality_type = quality, input_file = input))
+                  qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "MS", 
     qcName = "EVD:~MS^2~Oversampling", 
@@ -1421,15 +1407,14 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
       lpl = append(lpl, lpl_dens)
       mzQCdata_ <- list(pep_set, tbl_smry)
       qcCv <- list("percent identified","relative peptide frequence")
-      quality <- list("runQuality", "runQuality")
-      input <- list("evidence.txt","evidence.txt")
+      raw_ <- list("df_evd", "df_evd")
       
       ## QC measure for fraction of missing values
       cname = .self$qcName
       pep_set[, cname] = qualLinThresh(pep_set$idFraction, 100) ## a no-op, just for clarity
       qcScore = pep_set[, c("fc.raw.file", cname)]
       
-      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "prep", 
     qcName = "EVD:~Pep~Missing~Values", 
@@ -1496,8 +1481,7 @@ Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in com
       
       mzQCdata_ <- list(lf)
       qcCv <- list("number of modified peptide sequences in each Raw file")
-      quality <- list("runQuality")
-      input <- list("evidence.txt")
+      raw_ <- list("df_evd", "df_evd")
       
       titles = list("EVD: UpSet distinct", 
                     "EVD: UpSet intersect",
@@ -1513,7 +1497,7 @@ Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in com
       qcScore = data.frame(fc.raw.file = names(lf), score = score)
       colnames(qcScore)[2] = .self$qcName
       
-      return(list(plots = lpl, title = titles, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, title = titles, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "LC",
     qcName = "EVD:~UpSet", 

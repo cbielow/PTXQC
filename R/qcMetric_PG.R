@@ -38,10 +38,9 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       
       mzQCdata_ <- list(df.con_stats)
       qcCv <- list("abundance type of protein contamination")
-      quality <- list("runQuality")
-      input <- list("proteinGroups.txt")
+      raw_ <- list("df_pg")
       
-      return(list(plots = pg_plots_cont, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = pg_plots_cont, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "Prep", 
     qcName = "PG:~Contaminants", 
@@ -95,10 +94,9 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
                          int_dev_no0, int_dev)
       qcCv <- list("intensity distribution of the contaminants","relative standard deviation of mean of intensity without zero", 
                    "relative standard deviation of mean of intensity")
-      quality <- list("runQuality", "runQuality", "runQuality")
-      input <- list("proteinGroups.txt", "proteinGroups.txt", "proteinGroups.txt")
+      raw_ <- list("df_pg", "df_pg","df_pg")
       
-      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "prep", 
     qcName = "PG:~Raw~intensity", 
@@ -152,10 +150,9 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
                         int_dev_no0, int_dev)
       qcCv <- list("LFQ intensity distribution of contaminants","relative standard deviation of mean of LFQ intensity without zero", 
                    "relative standard deviation of mean of LFQ intensity")
-      quality <- list("runQuality", "runQuality", "runQuality")
-      input <- list("proteinGroups.txt", "proteinGroups.txt", "proteinGroups.txt")
+      raw_ <- list("df_pg", "df_pg","df_pg")
       
-      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "prep",
     qcName = "PG:~LFQ~intensity", 
@@ -209,11 +206,10 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
                         reprt_dev_no0, reprt_dev)
       qcCv <- list("reporter intensity distribution of contaminants","relative standard deviation of mean of ITRAQ/TMT reporter intensity without zero",
                    "relative standard deviation of mean of ITRAQ/TMT reporter intensity")
-      quality <- list("runQuality", "runQuality", "runQuality")
-      input <- list("proteinGroups.txt","proteinGroups.txt","proteinGroups.txt")
+      raw_ <- list("df_pg", "df_pg","df_pg")
       
       
-      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "prep", 
     qcName = "PG:~Reporter~intensity", 
@@ -268,12 +264,11 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
           lpl = append(lpl, pl);
           mzQCdata_ <- list(data)
           qcCv <- list("PCA intensity data")
-          quality <- list("runQuality")
-          input <- list("proteinGroups.txt")
+          raw_ <- list("df_pg")
         }
       }
       
-      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "General", 
     qcName = "PG:~Principal~Component", 
@@ -394,10 +389,9 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
       
       mzQCdata_ <- list(ratio.densities, d_sub)
       qcCv <- list("density ratio", "log2 ratio")
-      quality <- list("runQuality", "runQuality")
-      input <- list("proteinGroups.txt","proteinGroups.txt" )
+      raw_ <- list("df_pg","df_pg")
       
-      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     },
     qcCat = "prep", 
     qcName = "PG:~Ratio", 

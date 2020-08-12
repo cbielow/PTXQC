@@ -52,13 +52,11 @@ Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the th
         lpl[["bad_id_table"]] =  p_tbl
         mzQCdata_ <- list(df_summary, sm_badID, bad_id_count)
         qcCv <- list("identification rate", "bad identification", "number of bad identification ")
-        quality <- list("runQuality", "runQuality", "runQuality")
-        input <- list("summary.txt","summary.txt","summary.txt")
+        raw_ <- list("df_summary", "df_summary", "df_summary")
       }else{
         mzQCdata_ <- list(df_summary)
         qcCv <- list("identification rate")
-        quality <- list("runQuality")
-        input <- list("summary.txt")
+        raw_ <- list("df_summary")
         
       }
       
@@ -75,7 +73,7 @@ Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the th
       qc_sm_id[, cname] = qualLinThresh(qc_sm_id$ms.ms.identified.... , id_rate_great)
       qcScore = qc_sm_id[,c("fc.raw.file", cname)]
       
-      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qcScore, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "MS", 
     qcName = "SM:~MS^2~ID~rate (\">%1.0f\")", 
@@ -115,14 +113,13 @@ Heatmap score [SM: TIC]: reaches 1 (=100%%) if the TIC is uniform (i.e. a flat l
       
       mzQCdata_ <- list(df_long)
       qcCv <- list("MS1 Total ion current chromatogram")
-      quality <- list("runQuality")
-      input <- list("summary.txt")
+      raw_ <- list("df_summary")
       
       ## QC measure for smoothness of TopN over RT
       qc_TIC = plyr::ddply(df_long, "fc.raw.file", function(x) data.frame(val = qualUniform(x$intensity)))
       colnames(qc_TIC)[colnames(qc_TIC) == "val"] = .self$qcName
       
-      return(list(plots = lpl, qcScores = qc_TIC, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality, input_file = input))
+      return(list(plots = lpl, qcScores = qc_TIC, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
     }, 
     qcCat = "LC", 
     qcName = "SM:~TIC", 

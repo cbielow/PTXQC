@@ -79,8 +79,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     txt_files$msms = "msms.txt"
     txt_files$msmsScan = "msmsScans.txt"
     txt_files$mqpar = "mqpar.xml"
-    txt_files$cv = "qc_cv.obo"
     txt_files = lapply(txt_files, function(file) file.path(txt_folder, file))
+    cv_obo_file = "qc_cv.obo"
     
     ## prepare for readMQ()
     mq = MQDataReader$new()
@@ -216,8 +216,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ######  parameters.txt ...
   ######
   
-  if (MZTAB_MODE) d_parAll = mzt$getParameters()
-  else d_parAll = mq$readMQ(txt_files$param, type="par")
+  if (MZTAB_MODE) {d_parAll = mzt$getParameters()
+  }else {d_parAll = mq$readMQ(txt_files$param, type="par")}
+
 
   lst_qcMetrics[["qcMetric_PAR"]]$setData(d_parAll)
   
@@ -225,8 +226,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ######  summary.txt ...
   ######
   
-  if (MZTAB_MODE) d_smy = mzt$getSummary()
-  else d_smy = mq$readMQ(txt_files$summary, type="sm", add_fs_col = add_fs_col)
+  if (MZTAB_MODE) {d_smy = mzt$getSummary()
+  }else {d_smy = mq$readMQ(txt_files$summary, type="sm", add_fs_col = add_fs_col)}
   #colnames(d_smy)
   #colnames(d_smy[[1]])
  
@@ -240,8 +241,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ######  proteinGroups.txt ...
   ######
     
-  if (MZTAB_MODE) df_pg = mzt$getProteins()
-  else df_pg = mq$readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")
+  if (MZTAB_MODE) {df_pg = mzt$getProteins()
+  }else {df_pg = mq$readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")}
   
   ## just a scope
   {  
@@ -371,8 +372,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     df_evd = all_evd$genuine
     df_evd_tf = all_evd$transferred
 
-  }
-  else {
+  }else {
     all_evd = mq$readMQ(txt_files$evd, type="ev", filter="R",
                        col_subset=c("proteins",
                                     numeric = "Retention.Length",
@@ -411,7 +411,6 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
 ## just a local scope to fold evidence metrics in the editor...
   {
     
-   
     ### warn of special contaminants!
     if (class(yaml_contaminants) == "list")  ## SC are requested
     {
@@ -555,7 +554,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     lst_qcMetrics[["qcMetric_EVD_MissingValues"]]$setData(df_evd)
 
     ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
-    if (!DEBUG_PTXQC) df_evd = df_evd[, c("id", "contaminant")]
+    if (!DEBUG_PTXQC) df_evd = df_evd[, c("id", "contaminant","fc.raw.file")]
 }
 
 
@@ -563,8 +562,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
 ######  msms.txt ...
 ######
 
-  if (MZTAB_MODE) df_msms = mzt$getMSMSScans(identified_only = TRUE)
-  else df_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c(numeric = "Missed\\.cleavages",
+  if (MZTAB_MODE) {df_msms = mzt$getMSMSScans(identified_only = TRUE)
+  }else {df_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c(numeric = "Missed\\.cleavages",
                                                                                     "^Raw.file$",
                                                                                     "^mass.deviations",
                                                                                     "^masses$",
@@ -572,7 +571,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
                                                                                     "fragmentation",
                                                                                     "reverse",
                                                                                     numeric = "^evidence.id$"
-                                                                                  ), check_invalid_lines = FALSE)
+                                                                                  ), check_invalid_lines = FALSE)}
   
   ## just a scope
   {
@@ -581,7 +580,6 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     #df_msms_s = mq$readMQ(txt_files$msms, type="msms", filter = "", nrows=10)
     #colnames(df_msms_s)
     #head(df_msms)
-    
     ##
     ##  MS2 fragment decalibration
     ##
@@ -597,17 +595,15 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     }
   
   }
-  ## save RAM: msms.txt is not required any longer
-  if (!DEBUG_PTXQC) rm(df_msms)
-  if (!DEBUG_PTXQC) rm(df_evd)
+
   
 
 
 ######
 ######  msmsScans.txt ...
 ######
-  if (MZTAB_MODE) df_msmsScans = mzt$getMSMSScans(identified_only = FALSE)
-  else df_msmsScans = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", 
+  if (MZTAB_MODE) {df_msmsScans = mzt$getMSMSScans(identified_only = FALSE)
+  }else {df_msmsScans = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", 
                                col_subset = c(numeric = "^ion.injection.time", 
                                               numeric = "^retention.time$", 
                                               "^Identified", 
@@ -617,7 +613,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
                                               "^Raw.file",
                                               "^dp.aa$",
                                               "^dp.modification$"),
-                               check_invalid_lines = FALSE)
+                               check_invalid_lines = FALSE)}
   
   # just a scope  
   {
@@ -665,9 +661,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     
     
   }
-  ## save RAM: msmsScans.txt is not required any longer
-  if (!DEBUG_PTXQC) rm(df_msmsScans)
-    
+
     
   #####################################################################
   ## list of qcMetric objects
@@ -772,28 +766,20 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ##save required data of each metric in JSON-format
   cat("Creating metric json file ...", '\n')
   ##load the cv Term
-  cv <- read_cvTerm(txt_files$cv)
+  metric_info <- read_cvTerm(cv_obo_file)
   ##copy cv Term table
-  metric_info <- data.frame(matrix(unlist(cv), ncol = 4))
+  metric_info <- data.frame(matrix(unlist(metric_info), ncol = 4))
   colnames(metric_info) <- c("cvRef", " accession", "name", "unit")
-  metric_info$value <- NA
-  metric_info$quality_type <- NA ##runQuality or setQuality
-  metric_info$input_file <- NA
   ##Read the value stored in each class
   metrics_file = rprt_fns$metrics_file
-  metric_info = readvalue(qcMetric = lst_qcMetrics, data = metric_info)
+  metric_info = readvalue(qcMetric = lst_qcMetrics, qc_cv = metric_info, df_evd, df_msms, df_msmsScans, d_parAll, df_pg, d_smy)
   
-  inputfiles_info <- data.frame(location = c(txt_files$param, txt_files$summary, txt_files$groups, txt_files$evd,
-                                             txt_files$msms, txt_files$msmsScan, txt_files$mqpar,"Raw file: Ecoli"),
-                                name = c("parameters.txt", "summary.txt", "proteinGroups.txt", "evidence.txt",
-                                         "msms.txt", "msmsScans.txt", "mqpar.xml", "Raw file: Ecoli"),
-                                fileformat = c(rep(rjson::toJSON(list(accssion = "", name = "txt format"), indent = 3),6),
-                                               rjson::toJSON(list(accession = "MS:1002600", name = "mztab"), indent = 3),
-                                               rjson::toJSON(list(accession = "", name = "raw file"), indent = 3)),
-                                analysisSoftware = c(rep("PTXQC",6),"TOPP software" , "PTXQC"))
-  analysisSoftware <- data.frame(name = c("PTXQC", "TOPP software"),
-                                 version = c(as.character(packageVersion("PTXQC")), "2.4"),
-                                 uri = c("github.com/cbielow/PTXQC", "openms.de"))
+  inputfiles_info <- list(location = "Raw file: ..Ecoli",
+                                name = "Raw file: Ecoli",
+                                fileformat = rjson::toJSON(list(accession = "", name = "raw file"), indent = 3))
+  analysisSoftware <- list(name = "PTXQC",
+                           version = as.character(packageVersion("PTXQC")),
+                           uri = "github.com/cbielow/PTXQC")
   
   version <- "0.1.1"
   creationDate <- as.character(Sys.time(), format="%Y-%m-%dT%H:%M:%S" )
@@ -801,17 +787,14 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   setQuality = metric_info[which(metric_info$quality_type == "setQuality"), ]
   controlledVocabularies <- list(list(name = "Quality control metrics generating software",
                                       uri = "github.com/HUPO-PSI/mzQC/blob/bulk-cvterms/cv/qc-cv.obo",
-                                      version = "0.1.2" ),
-                                 list(name = "Proteomics Standards Initiative Mass Spectrometry Ontology",
-                                      uri = "raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo",
-                                      version = "4.1.41"))
+                                      version = "0.1.2" ))
   ## create output file
   createmzQC(version = version, creationDate = creationDate, runQualities = runQuality, setQualities = setQuality,
              controlledVocabularies = controlledVocabularies, file = metrics_file, data_input = inputfiles_info,
              data_analysis = analysisSoftware)
   
   cat("done",'\n')
-  cat(paste("Report file created at\n\n    ", rprt_fns$metrics_file, ".*\n\n", sep=""))
+  cat(paste("mzQC file created at\n\n    ", rprt_fns$metrics_file, ".*\n\n", sep=""))
   
   ## write shortnames and sorting of filenames (again)
   eval(expr_fn_map)$writeMappingFile(rprt_fns$filename_sorting)
