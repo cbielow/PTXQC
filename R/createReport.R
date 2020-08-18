@@ -80,7 +80,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     txt_files$msmsScan = "msmsScans.txt"
     txt_files$mqpar = "mqpar.xml"
     txt_files = lapply(txt_files, function(file) file.path(txt_folder, file))
-    cv_obo_file = "qc_cv.obo"
+    cv_obo_file = file.path(txt_folder,"qc_cv.obo")
     
     ## prepare for readMQ()
     mq = MQDataReader$new()
