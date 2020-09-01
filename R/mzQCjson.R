@@ -61,10 +61,10 @@ read_cvTerm <- function(file){
 #' 
 #' 
 #' 
-readvalue <-  function(qcMetric, qc_cv, df_evd, df_msms, df_msmsScans, d_parAll, df_pg, d_smy){
+readValue <-  function(qcMetric, qc_cv){
   qc_cv$value <- NA
   qc_cv$quality_type <- NA
-  qc_cv$is_raw <- FALSE
+  qc_cv$rawfile <- NA
   
   new_metric_index = length(qc_cv$name) + 1
   for(klass in qcMetric){
@@ -76,15 +76,15 @@ readvalue <-  function(qcMetric, qc_cv, df_evd, df_msms, df_msmsScans, d_parAll,
       if(metric_name %in% qc_cv$name) {
         locate = which(qc_cv$name == metric_name)
         qc_cv$value[locate] = rjson::toJSON(klass$mzQCdata[index])
-        qc_cv$quality_type[locate] = get_raw(klass$raw, df_evd, df_msms, df_msmsScans, d_parAll, df_pg, d_smy)[1]
-        qc_cv$is_raw[locate] = get_raw(klass$raw, df_evd, df_msms, df_msmsScans, d_parAll, df_pg, d_smy)[2]
+        qc_cv$quality_type[locate] = klass$quality_type[index]
+        qc_cv$rawfile[locate] = klass$raw[index]
       }else{
         warning("There is no this metric in cv Term of mzQC, please write to the mailing list psidev-qc-dev@lists.sourceforge.net to update mzQC-metrics list.")
         name = metric_name
         value =  rjson::toJSON(klass$mzQCdata[index])
-        quality_type = get_raw(klass$raw, df_evd, df_msms, df_msmsScans, d_parAll, df_pg, d_smy)[1]
-        is_raw = get_raw(klass$raw, df_evd, df_msms, df_msmsScans, d_parAll, df_pg, d_smy)[2]
-        qc_cv[new_metric_index, ] <- c(NA, NA, metric_name, NA, value, quality_type, is_raw)
+        quality_type = klass$quality_type[index]
+        rawfile = klass$raw[index]
+        qc_cv[new_metric_index, ] <- c(NA, NA, metric_name, NA, value, quality_type, rawfile)
         new_metric_index = new_metric_index + 1
       }
       index = index + 1
@@ -94,73 +94,70 @@ readvalue <-  function(qcMetric, qc_cv, df_evd, df_msms, df_msmsScans, d_parAll,
   
   ##delete the row where the value of data is NA 
   qc_cv <- qc_cv[! is.na(qc_cv$value), ]
+  qc_cv$quality_type <- unlist(qc_cv$quality_type)
+  qc_cv$rawfile <- unlist(qc_cv$rawfile)
  
   return(qc_cv)
 }
 
 #'
-#' Reads a string and converts it to data with the same name before getting the data it needs
+#' Extract raw file information from the source data
 #' 
 #' 
 #' 
-#' @param raw A String(e.g: "df_evd")
-#' @param df_evd data from evidence.txt
-#' @param df_msms data from msms.txt
-#' @param df_msmsScans data from msmsScans.txt
-#' @param d_parAll data from parameters.txt
-#' @param df_pg data from proteinGroups.txt
-#' @param d_smy data from summary.txt
-#' @return a character
+#' @param input_rawData A list containing all the source data
+#' @param rawData_name A list containing the names of all the source data
+#' @return a data.frame
 #' 
 #' 
 #' 
-#'
-get_raw <- function(raw, df_evd, df_msms, df_msmsScans, d_parAll, df_pg, d_smy){
-  if(raw == "df_evd") return(get_input(df_evd))
-  if(raw == "df_msms") return(get_input(df_msms))
-  if(raw == "df_msmsScans") return(get_input(df_msmsScans))
-  if(raw == "df_mqpar") return(get_input(d_parAll))
-  if(raw == "df_pg") return(get_input(df_pg))
-  if(raw == "df_summary") return(get_input(d_smy))
+#' 
+get_inputInfo <- function(input_rawData, rawData_name){
+  inputfile_info <- list()
+  for (index in 1:length(input_rawData)) {
+    inputfile_info[[index]] <- list(rawData = "", fc.raw.file = list(), raw.file = list())
+    inputfile_info[[index]]$rawData = rawData_name[index]
+    x <- input_rawData[index][[1]]
+    if("fc.raw.file" %in% colnames(x)) {
+      inputfile_info[[index]]$fc.raw.file = list(name = stringr::str_sub(x$fc.raw.file,0, stringr::str_locate(x$fc.raw.file, "_0")[1]-1)[1],
+                                             location = stringr::str_sub(x$fc.raw.file,0, stringr::str_locate(x$fc.raw.file, "_0")[1]-1)[1],
+                                             fileformat = list(accession = "", name = "raw file"))
+    }
+    if("raw.file" %in% colnames(x)){
+      inputfile_info[[index]]$raw.file = list(name = stringr::str_sub(x$raw.file,0, stringr::str_locate(x$raw.file, "_0")[1]-1)[1],
+                                          location = stringr::str_sub(x$raw.file,0, stringr::str_locate(x$raw.file, "_0")[1]-1)[1],
+                                          fileformat = list(accession = "", name = "raw file"))
+    }
+    if(rawData_name[index] == "d_parAll") inputfile_info[[index]]$raw.file = list(name = "parameter.txt",
+                                                                                  location = "parameter.txt",
+                                                                                  fileformat = list(accession = "", name = "raw file"))
+    if(rawData_name[index] == "df_pg") inputfile_info[[index]][c("fc.raw.file", "raw.file")] = inputfile_info[[1]][c("fc.raw.file", "raw.file")]
+  }
+  return(inputfile_info)
 }
 
-#'
-#' Check the RAW File information in a data
-#' 
-#' 
-#' 
-#' @param input_data A data.frame 
-#' @return a character contains type of quality(run-/setQuality) and is_raw(is_raw checks whether the data contains a RAW file)
-#' 
-#' 
-#' 
-#'
-get_input <- function(input_data){
-  is_raw <- FALSE
-  if("fc.raw.file" %in% colnames(input_data)) {
-    fc <- unique(as.list(input_data$fc.raw.file))
-    if(length(fc) > 1){
-      quality_type <- "setQuality"
-      is_raw <- TRUE
-    }else{
-      quality_type <- "runQuality"
-      is_raw <- TRUE
-    }
-  }else if("raw.file" %in% colnames(input_data)){
-    raw <- unique(as.list(input_data$raw.file))
-    if(length(raw) > 1){
-      quality_type <- "setQuality"
-      is_raw <- TRUE
 
-    }else{
-      quality_type <- "runQuality"
-      is_raw <- TRUE
-    }
-  }else{
-    quality_type <- "runQuality"
-  }
-  return(c(quality_type, is_raw))
-  
+#'
+#' By searching the name of raw file, it is to extract the information we needed from the table that generated by function get_inputInfo()
+#' 
+#' 
+#' 
+#' @param inputfiles_info  return value of function named get-infileInfo()
+#' @param inputfile_name name of a single source data
+#' @param rawData_name A list containing the names of all the source data
+#' @return a list
+#' 
+#' 
+#' 
+#' 
+get_inputfiles <- function(inputfiles_info, inputfile_name, rawData_name){
+  inputfiles <- inputfiles_info[[which(inputfile_name == rawData_name)]][c("fc.raw.file","raw.file")]
+  inputfiles <- lapply(inputfiles, function(x){
+    if(length(x) == 0) return(NA)
+    else return(x)
+  })
+  inputfiles <- inputfiles[ ! is.na(inputfiles)]
+  return(inputfiles)
 }
 
 
@@ -194,22 +191,22 @@ transform_data <-function(data){
 #' @param data_input File based on which QC metrics were generated
 #'                   use analysisSofteware to connect data_input and data_analysis
 #' @param data_analysis Software tools used to generate the QC metrics
+#' @param is_run Determine whether it is runQualities
 #' @return a list
 #' 
 #' @export
 #' 
 #' 
 #' 
-getQualities <- function(Qualities, data_input, data_analysis){
+getQualities <- function(Qualities, data_input, data_analysis,rawData_name){
   if(length(Qualities[ , 1]) != 0 ){
-    if(TRUE %in% Qualities$is_raw){
-      metaData <- list(inputFiles = list(inputFile = data_input), analysisSoftware = data_analysis)
-      Qualities <- Qualities[! is.na(Qualities$value), ]
-      Qualities <- list(metaData = metaData, qualityMetrics = list(qualityMetric = transform_data(data = Qualities[ ,c("cvRef"," accession", "name", "unit", "value")])))
-    }else{
-      Qualities <- Qualities[! is.na(Qualities$value), ]
-      Qualities <- list(metaData = list(), qualityMetrics = list(qualityMetric = transform_data(data = Qualities[ ,c("cvRef"," accession", "name", "unit", "value")])))
-    }
+    
+    Qualities <- Qualities[! is.na(Qualities$value), ]
+    Qualities <- lapply(transform_data(data = Qualities), function(x){
+      Quality <- list(metadata = list(inputFiles = get_inputfiles(data_input, x$raw, rawData_name), analysisSoftware = data_analysis),
+                      qualityMetrics = list(qualityMetric = x[ ,c("cvRef"," accession", "name", "unit", "value")]))
+      return(Quality)
+    })
   }else{
     Qualities <- list()
   }
@@ -238,11 +235,11 @@ getQualities <- function(Qualities, data_input, data_analysis){
 #' 
 #' 
 createmzQC <- function(version, creationDate, runQualities, setQualities, controlledVocabularies, file, data_input, 
-                       data_analysis){
+                       data_analysis,rawData_name){
 
   mzQC <- list(version = version, creationDate =creationDate, 
-               runQualities = getQualities(runQualities,data_input,data_analysis),
-               setQualities = getQualities(setQualities,data_input,data_analysis), 
+               runQualities = getQualities(runQualities,data_input,data_analysis,rawData_name),
+               setQualities = getQualities(setQualities,data_input,data_analysis,rawData_name), 
                controlledVocabularies = controlledVocabularies)
     
   cat(rjson::toJSON((list(mzQC = mzQC)), indent = 3), file = file)

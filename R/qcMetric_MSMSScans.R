@@ -39,13 +39,14 @@ Heatmap score [MS<sup>2</sup> Scans: TopN over RT]: Rewards uniform (function Un
       
       mzQCdata_ <- list(DFmse)
       qcCv <- list("Median of scan events(SE)")
+      quality_type_ <- list("setQuality")
       raw_ <- list("df_msmsScans")
       
       ## QC measure for smoothness of TopN over RT
       qc_TopNRT = plyr::ddply(DFmse, "fc.raw.file", function(x) data.frame(val = qualUniform(x$topN)))
       colnames(qc_TopNRT)[colnames(qc_TopNRT) == "val"] = .self$qcName
       
-      return(list(plots = lpl, qcScores = qc_TopNRT, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
+      return(list(plots = lpl, qcScores = qc_TopNRT, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality_type_, raw = raw_))
     }, 
     qcCat = "LC", 
     qcName = "MS^2*Scans:~TopN~over~RT", 
@@ -128,6 +129,7 @@ Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3
       
       mzQCdata_ <- list(dd.all)
       qcCv <- list("log TIC time and peak intensity in MS2- min, Q1, Q2, Q3, max")
+      quality_type_ <- list("setQuality")
       raw_ <- list("df_msmsScans")
       
       ## QC measure for intensity ratio below expected threshold (3x-10x by default)
@@ -135,7 +137,7 @@ Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3
                      function(x) data.frame(val = qualLinThresh(pmax(0, x$ratio - score_min_factor), t = score_max_factor - score_min_factor)))
       colnames(qc_MSMSint)[colnames(qc_MSMSint) == "val"] = .self$qcName
       
-      return(list(plots = lpl, qcScores = qc_MSMSint, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
+      return(list(plots = lpl, qcScores = qc_MSMSint, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality_type_, raw = raw_))
     }, 
     qcCat = "MS", 
     qcName = "MS^2*Scans:~Intensity", 
@@ -182,6 +184,7 @@ Heatmap score [MS<sup>2</sup> Scans: Ion Inj Time]: Linear score as fraction of 
       
       mzQCdata_ <- list( DFmIIT, DFmIITglob)
       qcCv <- list("Average ion injection time over RT", "Average ion injection time over all")
+      quality_type_ <- list("setQuality", "setQuality")
       raw_ <- list("df_msmsScans", "df_msmsScans")
       
       ## QC measure for injection times below expected threshold
@@ -193,7 +196,7 @@ Heatmap score [MS<sup>2</sup> Scans: Ion Inj Time]: Linear score as fraction of 
                      function(x) data.frame(val = qualLinThresh(x$belowThresh_IIT, t = 1)))
       colnames(qc_IIT)[colnames(qc_IIT) == "val"] = .self$qcName
       
-      return(list(plots = lpl, qcScores = qc_IIT, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
+      return(list(plots = lpl, qcScores = qc_IIT, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality_type_, raw = raw_))
     }, 
     qcCat = "MS", 
     qcName = "MS^2*Scans:~Ion~Inj~Time", 
@@ -268,6 +271,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN high]: rewards if TopN was reached on 
       
       mzQCdata_ <- list(dfc.ratio)
       qcCv <- list("Scan event distance distribution")
+      quality_type_ <- list("setQuality")
       raw_ <- list("df_msmsScans")
       
       ## QC measure for always reaching the maximum TopN
@@ -275,7 +279,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN high]: rewards if TopN was reached on 
       qc_TopN = plyr::ddply(dfc.ratio, "fc.raw.file", function(x) data.frame(val = qualHighest(x$n, maxTopN)))
       colnames(qc_TopN)[colnames(qc_TopN) == "val"] = .self$qcName
       
-      return(list(plots = lpl, qcScores = qc_TopN, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
+      return(list(plots = lpl, qcScores = qc_TopN, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality_type_, raw = raw_))
     }, 
     qcCat = "MS", 
     qcName = "MS^2*Scans:~TopN~high", 
@@ -335,6 +339,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
       
       mzQCdata_ <- list(df.ratio)
       qcCv <- list("identification rates")
+      quality_type_ <- list("setQuality")
       raw_ <- list("df_msmsScans")
       
       ## QC measure for constantly identifiying peptides, irrespective of scan event number
@@ -342,7 +347,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
       qc_TopN_ID = plyr::ddply(df.ratio, "fc.raw.file", function(x) data.frame(val = qualUniform(x$ratio, x$count)))
       colnames(qc_TopN_ID)[colnames(qc_TopN_ID) == "val"] = .self$qcName
       
-      return(list(plots = lpl, qcScores = qc_TopN_ID, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
+      return(list(plots = lpl, qcScores = qc_TopN_ID, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality_type_, raw = raw_))
     }, 
     qcCat = "MS", 
     qcName = "MS^2*Scans:~TopN~ID~over~N", 
@@ -434,13 +439,14 @@ Heatmap score [MS<sup>2</sup> Scans: DepPep]: No score.
 
       mzQCdata_ <- list(d_dp.mods)
       qcCv <- list("dependent peptides by modification type")
+      quality_type_ <- list("setQuality")
       raw_ <- list("df_msmsScans")
       
       ## QC measure: NA
       #qc_TopN_ID = ddply(df.ratio, "fc.raw.file", function(x) data.frame(val = qualUniform(x$ratio, x$count)))
       #colnames(qc_TopN_ID)[colnames(qc_TopN_ID) == "val"] = .self$qcName
       
-      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
+      return(list(plots = lpl, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality_type_, raw = raw_))
     }, 
     qcCat = "MS", 
     qcName = "MS^2*Scans:~Dependent Peps", 

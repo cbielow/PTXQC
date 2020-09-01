@@ -554,7 +554,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     lst_qcMetrics[["qcMetric_EVD_MissingValues"]]$setData(df_evd)
 
     ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
-    if (!DEBUG_PTXQC) df_evd = df_evd[, c("id", "contaminant","fc.raw.file")]
+    if (!DEBUG_PTXQC) df_evd = df_evd[, c("id", "contaminant", "fc.raw.file", "proteins", "raw.file")]
 }
 
 
@@ -772,16 +772,17 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   colnames(metric_info) <- c("cvRef", " accession", "name", "unit")
   ##Read the value stored in each class
   metrics_file = rprt_fns$metrics_file
-  metric_info = readvalue(qcMetric = lst_qcMetrics, qc_cv = metric_info, df_evd, df_msms, df_msmsScans, d_parAll, df_pg, d_smy)
+  metric_info = readValue(qcMetric = lst_qcMetrics, qc_cv = metric_info)
   
-  inputfiles_info <- list(location = "Raw file: ..Ecoli",
-                                name = "Raw file: Ecoli",
-                                fileformat = rjson::toJSON(list(accession = "", name = "raw file"), indent = 3))
+  input_rawData <- list(df_evd, df_msms, df_msmsScans, d_parAll, df_pg, d_smy)
+  rawData_name <- c("df_evd", "df_msms", "df_msmsScans", "d_parAll", "df_pg", "d_smy")
+  inputfiles_info <- get_inputInfo(input_rawData , rawData_name)
+  
   analysisSoftware <- list(name = "PTXQC",
                            version = as.character(packageVersion("PTXQC")),
                            uri = "github.com/cbielow/PTXQC")
   
-  version <- "0.1.1"
+  mzQC_version <- "0.1.1"
   creationDate <- as.character(Sys.time(), format="%Y-%m-%dT%H:%M:%S" )
   runQuality = metric_info[which(metric_info$quality_type == "runQuality"), ]
   setQuality = metric_info[which(metric_info$quality_type == "setQuality"), ]
@@ -789,9 +790,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
                                       uri = "github.com/HUPO-PSI/mzQC/blob/bulk-cvterms/cv/qc-cv.obo",
                                       version = "0.1.2" ))
   ## create output file
-  createmzQC(version = version, creationDate = creationDate, runQualities = runQuality, setQualities = setQuality,
+  createmzQC(version = mzQC_version, creationDate = creationDate, runQualities = runQuality, setQualities = setQuality,
              controlledVocabularies = controlledVocabularies, file = metrics_file, data_input = inputfiles_info,
-             data_analysis = analysisSoftware)
+             data_analysis = analysisSoftware, rawData_name = rawData_name)
   
   cat("done",'\n')
   cat(paste("mzQC file created at\n\n    ", rprt_fns$metrics_file, ".*\n\n", sep=""))

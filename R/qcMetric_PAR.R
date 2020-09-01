@@ -81,9 +81,10 @@ track database completeness and database version information (if given in the fi
       
       mzQCdata_ <- list(d_par2)
       qcCv <- list("parameters (name and value)")
-      raw_ <- list("df_mqpar")
+      quality_type_ <- list("runQuality")
+      raw_ <- list("d_parAll")
       
-      return(list(plots = par_pl, htmlTable = tbl_f, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
+      return(list(plots = par_pl, htmlTable = tbl_f, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality_type_, raw = raw_))
     }, 
     qcCat = NA_character_, 
     qcName = "PAR:~MQ~Parameters", 

@@ -80,6 +80,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
 
       mzQCdata_ <- list(ms2_decal)
       qcCv <- list("decalibration metric in MS2")
+      quality_type_ <- list("setQuality")
       raw_ <- list("df_msms")
       
       ##
@@ -105,7 +106,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
       }
       qcScore_all = Reduce(function(x,y) merge(x,y,all=TRUE), qcScore)
       
-      return(list(plots = lpl, qcScores = qcScore_all, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
+      return(list(plots = lpl, qcScores = qcScore_all, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality_type_, raw = raw_))
     }, 
     qcCat = "MS", 
     qcName = "MSMS:~MS^2~Cal~(%s)", 
@@ -186,11 +187,9 @@ current study. ",
         
         mzQCdata_ <- list(st_bin)
         qcCv <- list("missed cleavages frequence")
-        if(! is.null(df_evd)) {
-          raw_ <- list("df_msms")
-        }else {
-          raw_ <- list("df_msms")
-        }
+        quality_type_ <- list("setQuality")
+        raw_ <- list("df_msms")
+
         ## QC measure for missed-cleavages variation
         qc_score = data.frame(fc.raw.file = st_bin$fc.raw.file, valMC = st_bin[, "0"])
         qc_score$valMCVar = qualMedianDist(qc_score$valMC)
@@ -211,7 +210,7 @@ current study. ",
       colnames(qc_score)[colnames(qc_score) == "valMC"] = sprintf(.self$qcName, "Missed~Cleavages")
       colnames(qc_score)[colnames(qc_score) == "valMCVar"] = sprintf(.self$qcName, "Missed~Cleavages~Var")
 
-      return(list(plots = lpl, qcScores = qc_score, mzQCdata = mzQCdata_, qcCV = qcCv, raw = raw_))
+      return(list(plots = lpl, qcScores = qc_score, mzQCdata = mzQCdata_, qcCV = qcCv, quality_type = quality_type_, raw = raw_))
     }, 
     qcCat = "Prep", 
     qcName = "MSMS:~%s", 

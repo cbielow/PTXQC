@@ -57,6 +57,7 @@ qcMetric = setRefClass("qcMetric",
                  title = "list",
                  mzQCdata = "list", ##store the required data
                  qcCV = "list", ##cv_terms: ID/ name
+                 quality_type = "list", ##the type of quality
                  raw = "list", ##raw data of metrics
                  ## the following members are related to the heatmap only
                  qcScores = "data.frame", ## with columns "raw.file", "score"
@@ -80,6 +81,7 @@ qcMetric = setRefClass("qcMetric",
            .self$title = list();
            .self$mzQCdata = list();
            .self$qcCV = list();
+           .self$quality_type = list();
            .self$raw = list();
            .self$qcCat = qcCat;
            .self$qcName = qcName;
@@ -132,8 +134,9 @@ qcMetric = setRefClass("qcMetric",
          
          if ("htmlTable" %in% names(r)) .self$htmlTable = r[["htmlTable"]];
          if ("mzQCdata" %in% names(r)) .self$mzQCdata = r[["mzQCdata"]];
-         if("qcCV" %in% names(r)) .self$qcCV =  r[["qcCV"]];
-         if("raw" %in% names(r)) .self$raw =  r[["raw"]];
+         if ("qcCV" %in% names(r)) .self$qcCV =  r[["qcCV"]];
+         if ("quality_type" %in% names(r)) .self$quality_type = r[["quality_type"]]
+         if ("raw" %in% names(r)) .self$raw =  r[["raw"]];
          if ("qcScores" %in% names(r)) .self$qcScores = r[["qcScores"]];
          if ("title" %in% names(r)) .self$title = r[["title"]]
          
