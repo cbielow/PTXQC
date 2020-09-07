@@ -141,8 +141,7 @@ current study. ",
     workerFcn = function(.self, df_msms, df_evd = NULL)
     {
       ## completeness check
-      if (!checkInput(c("fc.raw.file"), df_msms)) return()
-      if (!checkInput(c("missed.cleavages"), df_msms) && !checkInput(c("sequence"), df_msms)) return()
+      if (!checkInput(c("fc.raw.file", "sequence"), df_msms)) return()
       if (!is.null(df_evd) && !checkInput(c("contaminant", "id"), df_evd)) return() 
       
       # if missed.cleavages is not given, it is assumed that trypsin was used for digestion 
@@ -150,8 +149,7 @@ current study. ",
         seqs = gsub('.{1}$', '', df_msms$sequence)
         df_msms$missed.cleavages = nchar(seqs) - nchar(gsub("K|R", "", seqs))
         msg_missed_clea = "(MCs computed assuming trypsin)"
-      }
-      else {
+      } else {
         msg_missed_clea = ""
       }
       
@@ -161,15 +159,22 @@ current study. ",
         ## remove contaminants
         msg_cont_removed = "(excludes contaminants)"
         if ("contaminant" %in% colnames(df_msms)) { # for MzTab
-          df_msms = df_msms[!df_msms$contaminant,]
-        }
-        else if (!is.null(df_evd)) {
+          df_msms_filt = df_msms[!df_msms$contaminant,]
+        } else if (!is.null(df_evd)) {
           if (!checkInput(c("evidence.id"), df_msms)) return()
-          df_msms = df_msms[!df_evd$contaminant[match(df_msms$evidence.id, df_evd$id)], ]
+          df_msms_filt = df_msms[!df_evd$contaminant[match(df_msms$evidence.id, df_evd$id)], ]
+        } else {
+          msg_cont_removed = "(includes contaminants -- no evidence.txt read)"
+          df_msms_filt = df_msms
         }
-        else msg_cont_removed = "(includes contaminants -- no evidence.txt read)"
         
-        st_bin = plyr::ddply(df_msms[, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
+        if (nrow(df_msms_filt) == 0)
+        { ## rare case when all PSMs are contaminants...
+          df_msms_filt = df_msms ## roll back to at least get a statistic...
+          msg_cont_removed = "(100% contaminants!)"
+        }
+        
+        st_bin = plyr::ddply(df_msms_filt[, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
           t = table(x$missed.cleavages)/nrow(x)
           r = rep(0, max_mc + 1)
           names(r) = as.character(0:max_mc)
