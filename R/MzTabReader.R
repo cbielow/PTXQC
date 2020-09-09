@@ -22,14 +22,14 @@ MzTabReader = setRefClass("MzTabReader",
                            return(.self)
                          },
                          #'
-readMzTab = function(.self, file) {
-  "Read a mzTab file into a list of 5 data.frames (one df per mzTab section).
+readMzTab = function(.self, mztab_file) {
+  "Read an mzTab file into a list of 5 data.frames (one df per mzTab section).
    Data.frames in the resulting list are named as follows:
      'MTD', 'PRT', 'PEP', 'PSM', 'SML',.
    Additionally, 'filename' and 'comments' are valid list elements.
   "
 
-  cat("Reading mzTab '", file, "' ...", sep = "")
+  cat("Reading mzTab '", mztab_file, "' ...", sep = "")
   
   ## this implementation is derived from with minor modifications
   ## https://github.com/lgatto/MSnbase/blob/master/R/MzTab.R
@@ -95,7 +95,7 @@ readMzTab = function(.self, file) {
   .self$fn_map$getShortNames(raw_filenames, ms_runs = ms_runs)
   
   
-  res[["filename"]] = file
+  res[["filename"]] = mztab_file
   res[["comments"]] = comments
   .self$sections = res
   return (NULL)
