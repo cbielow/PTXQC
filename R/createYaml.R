@@ -40,8 +40,6 @@ createYaml <- function(yc, path, param = NULL, DEBUG_PTXQC = FALSE, output = TRU
       param$param_PageNumbers <- "on"
       
     }
-    
-    if(is.null(txt_files)) txt_files <- ""
       
     ## determines if a local mqpar.xml should be used to grep all YAML parameters whose name starts with "MQpar_" from the
     ## original mqpar.xml instead of the yaml.config. The "MQpar_..." param from the config
