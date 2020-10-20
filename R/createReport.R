@@ -315,7 +315,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     
    
     ### warn of special contaminants!
-    if (class(param$yaml_contaminants) == "list")  ## SC are requested
+    if (class(yaml_param$yaml_contaminants) == "list")  ## SC are requested
     {
       if (!is.null(df_pg))
       {
@@ -362,7 +362,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     if (("retention.time.calibration" %in% colnames(df_evd)))
     {
       ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
-      if (!(param$param_evd_mbr == FALSE) & nrow(df_evd_tf)>0)
+      if (!(yaml_param$param_evd_mbr == FALSE) & nrow(df_evd_tf)>0)
       {
         lst_qcMetrics[["qcMetric_EVD_MBRAlign"]]$setData(df_evd, 
                                                          tolerance_matching = yaml_param$param_EV_MatchingTolerance, 
