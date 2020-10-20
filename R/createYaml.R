@@ -1,46 +1,60 @@
-#' Creates a yaml file storing the parameters that are used for creating the PTXQC report, 
-#' optionally returns these parameters and a list of qc-Metrics
+#' Creates a yaml file storing the parameters that are used for creating the PTXQC report 
+#' and returns these parameters as well as a list of available qc-Metrics objects.
+#' 
+#' Valid parameters are: 
+#' 
+#'    param_useMQPAR, add_fs_col, id_rate_bad, id_rate_great , pg_ratioLabIncThresh , param_PG_intThresh,
+#'    param_EV_protThresh , param_EV_intThresh, param_EV_pepThresh , yaml_contaminants, param_EV_MatchingTolerance,
+#'    param_evd_mbr , param_EV_PrecursorTolPPM, param_EV_PrecursorOutOfCalSD , param_EV_PrecursorTolPPMmainSearch, 
+#'    param_MSMSScans_ionInjThresh, param_OutputFormats and param_PageNumbers 
+#'    
+#'    Please provide them as a list() of this format: list$parameter_name
+#'
 #'
 #' @param yc A yaml class object created by YAMLClass$new()
-#' @param path path to an (empty) yaml file
-#' @param param list of parameters sorted by names (important for shiny application)
+#' @param store_path Store the YAML config in this file; will be overwritten if existing
+#' @param param list of parameters sorted by names; if NULL, will be populated with defaults
 #' @param DEBUG_PTXQC default FALSE
-#' @param get_parameters Should the parameters and qc-Metrics be returned? Default TRUE
-#' @param mztabe_mode default FALSE 
+#' @param MZTAB_MODE default FALSE 
 #' @param txt_files list of paths to MaxQuant files
-#' @param metrics list of metric names that should be plotted (important for shiny application)
-#' @return list of parameters used for creating the report and list of qc-Metrics
+#' @param metrics list of metric names that should be plotted; if NULL, will be populated with defaults
+#' @return list of parameters used for creating the report and list of qc-Metrics objects
 #' 
 #'
 #'
-createYaml <- function(yc, path, param = NULL, DEBUG_PTXQC = FALSE, output = TRUE, MZTAB_MODE = FALSE, txt_files = NULL, metrics = NULL){
+createYaml <- function(yc, store_path, param = list(), DEBUG_PTXQC = FALSE, MZTAB_MODE = FALSE, txt_files = NULL, metrics = NULL){
 
     ##
     ## YAML default config
     ##
-    if(is.null(param)){
-      param <- list()
-      param$param_useMQPAR <- TRUE
-      param$add_fs_col <- 14 
-      param$id_rate_bad <- 20
-      param$id_rate_great <- 35
-      param$pg_ratioLabIncThresh <- 4
-      param$param_PG_intThresh <- 25
-      param$param_EV_protThresh <- 3500
-      param$param_EV_intThresh <- 23
-      param$param_EV_pepThresh <- 15000
-      param$yaml_contaminants <- list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
-      param$param_EV_MatchingTolerance <- 1
-      param$param_evd_mbr <- "auto"
-      param$param_EV_PrecursorTolPPM <- 20
-      param$param_EV_PrecursorOutOfCalSD <- 2
-      param$param_EV_PrecursorTolPPMmainSearch <- NA
-      param$param_MSMSScans_ionInjThresh <- 10
-      param$param_OutputFormats <- c("html", "plainPDF")
-      param$param_PageNumbers <- "on"
-      
+    default_param <- list()
+    default_param$param_useMQPAR <- TRUE
+    default_param$add_fs_col <- 14 
+    default_param$id_rate_bad <- 20
+    default_param$id_rate_great <- 35
+    default_param$pg_ratioLabIncThresh <- 4
+    default_param$param_PG_intThresh <- 25
+    default_param$param_EV_protThresh <- 3500
+    default_param$param_EV_intThresh <- 23
+    default_param$param_EV_pepThresh <- 15000
+    default_param$yaml_contaminants <- list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
+    default_param$param_EV_MatchingTolerance <- 1
+    default_param$param_evd_mbr <- "auto"
+    default_param$param_EV_PrecursorTolPPM <- 20
+    default_param$param_EV_PrecursorOutOfCalSD <- 2
+    default_param$param_EV_PrecursorTolPPMmainSearch <- NA
+    default_param$param_MSMSScans_ionInjThresh <- 10
+    default_param$param_OutputFormats <- c("html", "plainPDF")
+    default_param$param_PageNumbers <- "on"
+    
+    ##
+    ##add missing parameters from default parameter list
+    ##
+    for(i in c(1:length(default_param))){
+      if(!names(default_param)[i] %in% names(param)) param[names(default_param)[i]] <- default_param[i]
     }
-      
+
+
     ## determines if a local mqpar.xml should be used to grep all YAML parameters whose name starts with "MQpar_" from the
     ## original mqpar.xml instead of the yaml.config. The "MQpar_..." param from the config
     ## will be ignored and the newly written yaml.config will contain the values from mqpar.xml.
@@ -135,11 +149,10 @@ createYaml <- function(yc, path, param = NULL, DEBUG_PTXQC = FALSE, output = TRU
       
       ##check for shiny metrics input
       if(!is.null(metrics)){
-        if(df.meta$.id[i] %in% metrics) yc$setYAML(pname, pval)
-        else yc$setYAML(pname, (-1))
+        if(!(df.meta$.id[i] %in% metrics)) pval = -1; ## omit the metric if not listed`
       }
       
-      param_v = yc$getYAML(pname, pval)
+      param_v = yc$getYAML(pname, pval) ## read value (if present), or return `pval`
       ## update
       if (is.numeric(param_v)) {
         lst_qcMetrics_ord[[i]]$orderNr = param_v  # for some reason, lst_qcMetrics[[df.meta$.id]] does not work
@@ -153,9 +166,9 @@ createYaml <- function(yc, path, param = NULL, DEBUG_PTXQC = FALSE, output = TRU
     lst_qcMetrics_ord = lst_qcMetrics[df.meta$.id]
     
     ## write out the final YAML file (so users can disable metrics, if they fail)
-    yc$writeYAML(path)
+    yc$writeYAML(store_path)
     
-    if(output) return(list(param, lst_qcMetrics_ord))
+    return(list("param" = param, "lst_qcMetrics" = lst_qcMetrics_ord))
     
     
 }
