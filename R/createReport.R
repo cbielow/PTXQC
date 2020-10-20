@@ -99,7 +99,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ## YAML config (with default values if no yaml file was given)
   ##
   
-  param_lstqcMetrics_list <- createYaml(yc = yc, path = rprt_fns$yaml_file, DEBUG_PTXQC = DEBUG_PTXQC, txt_files = txt_files)
+  param_lstqcMetrics_list <- createYaml(yc = yc, store_path = rprt_fns$yaml_file, DEBUG_PTXQC = DEBUG_PTXQC, txt_files = txt_files)
   yaml_param <- param_lstqcMetrics_list$param
   lst_qcMetrics <- param_lstqcMetrics_list$lst_qcMetrics
   
