@@ -70,7 +70,7 @@ should never be a problem. If you only have bad samples, you need to know the in
 To automatically score this, we found that the TIC should be 10-100x larger than the base peak, i.e. there 
 should be many other ions which are roughly as high (a good fragmentation ladder).
 If there are only a few spurious peaks (bad MS/MS), the TIC is much lower. Thus, we score the ratio 
-BP * 10 > TIC (this would be 100% score). If it's only BP * 3 < TIC, we say this MS/MS failed (0%).
+BP * 10 < TIC (this would be 100% score). If it's only BP * 3 > TIC, we say this MS/MS failed (0%).
 Anything between 3x and 10x gets a score in between. The score for the Raw file is computed as the
 median score across all its MS/MS scans.
 
