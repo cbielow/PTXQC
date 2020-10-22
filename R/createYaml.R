@@ -47,19 +47,20 @@ createYaml <- function(yc, store_path, param = list(), DEBUG_PTXQC = FALSE, MZTA
   default_param$param_OutputFormats <- c("html", "plainPDF")
   default_param$param_PageNumbers <- "on"
   
-  
-  ##
-  ## check for invalid parameters
-  ##
-  for(i in c(1:length(param))){
-    if(!names(param[i]) %in% names(default_param)) warning(paste0("Invalid parameter detected: ", names(param)[i])) 
-  }
+ 
   
   ##
   ##add missing parameters from default parameter list
   ##
   for(i in c(1:length(default_param))){
     if(!names(default_param)[i] %in% names(param)) param[names(default_param)[i]] <- default_param[i]
+  }
+  
+  ##
+  ## check for invalid parameters
+  ##
+  for(i in c(1:length(param))){
+    if(!names(param[i]) %in% names(default_param)) warning(paste0("Invalid parameter detected: ", names(param)[i])) 
   }
 
   
