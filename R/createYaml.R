@@ -1,4 +1,4 @@
-#' Creates a yaml file storing the parameters that are used for creating the PTXQC report 
+#' Creates a yaml object storing the parameters that are used for creating the PTXQC report 
 #' and returns these parameters as well as a list of available qc-Metrics objects.
 #' 
 #' Valid parameters are: 
@@ -12,18 +12,17 @@
 #'
 #'
 #' @param yc A yaml class object created by YAMLClass$new()
-#' @param store_path Store the YAML config in this file; will be overwritten if existing
 #' @param param list of parameters sorted by names; if NULL, will be populated with defaults
 #' @param DEBUG_PTXQC default FALSE
 #' @param MZTAB_MODE default FALSE 
 #' @param txt_files list of paths to MaxQuant files
 #' @param metrics list of metric names that should be plotted; if NULL, will be populated with defaults
-#' @return list of parameters used for creating the report and list of qc-Metrics objects
+#' @return filled yaml class object, list of parameters used for creating the report and list of qc-Metrics objects
 #' @export
 #'
 #'
-createYaml <- function(yc, store_path, param = list(), DEBUG_PTXQC = FALSE, MZTAB_MODE = FALSE, txt_files = NULL, metrics = NULL){
-  
+createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, MZTAB_MODE = FALSE, txt_files = NULL, metrics = NULL){
+
   ##
   ## YAML default config
   ##
@@ -47,7 +46,6 @@ createYaml <- function(yc, store_path, param = list(), DEBUG_PTXQC = FALSE, MZTA
   default_param$param_OutputFormats <- c("html", "plainPDF")
   default_param$param_PageNumbers <- "on"
   
- 
   
   ##
   ##add missing parameters from default parameter list
@@ -55,14 +53,16 @@ createYaml <- function(yc, store_path, param = list(), DEBUG_PTXQC = FALSE, MZTA
   for(i in c(1:length(default_param))){
     if(!names(default_param)[i] %in% names(param)) param[names(default_param)[i]] <- default_param[i]
   }
-  
+
   ##
   ## check for invalid parameters
   ##
   for(i in c(1:length(param))){
-    if(!names(param[i]) %in% names(default_param)) warning(paste0("Invalid parameter detected: ", names(param)[i])) 
+    if(!names(param)[i] %in% c(NA, names(default_param))) {
+      warning(paste0("Invalid parameter detected and removed: ", names(param)[i]))
+      param <- param[-i] 
+      }
   }
-
   
   
   ## determines if a local mqpar.xml should be used to grep all YAML parameters whose name starts with "MQpar_" from the
@@ -144,8 +144,8 @@ createYaml <- function(yc, store_path, param = list(), DEBUG_PTXQC = FALSE, MZTA
   ####
   ####  prepare the metrics
   ####
-  lst_qcMetrics = getMetricsObjects(DEBUG_PTXQC)
-  df.meta = getMetaData(lst_qcMetrics = lst_qcMetrics)
+  lst_qcMetrics = PTXQC:::getMetricsObjects(DEBUG_PTXQC)
+  df.meta = PTXQC:::getMetaData(lst_qcMetrics = lst_qcMetrics)
   df.meta
   ## reorder metrics (required for indexing below!)
   lst_qcMetrics_ord = lst_qcMetrics[df.meta$.id]
@@ -171,14 +171,11 @@ createYaml <- function(yc, store_path, param = list(), DEBUG_PTXQC = FALSE, MZTA
     }
   }
   ## re-read meta (new ordering?)
-  df.meta = getMetaData(lst_qcMetrics = lst_qcMetrics)
+  df.meta = PTXQC:::getMetaData(lst_qcMetrics = lst_qcMetrics)
   ## reorder metrics (again; after param update)
   lst_qcMetrics_ord = lst_qcMetrics[df.meta$.id]
   
-  ## write out the final YAML file (so users can disable metrics, if they fail)
-  yc$writeYAML(store_path)
-  
-  return(list("param" = param, "lst_qcMetrics" = lst_qcMetrics_ord))
+  return(list("yc" = yc, "param" = param, "lst_qcMetrics" = lst_qcMetrics_ord))
   
   
 }
