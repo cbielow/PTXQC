@@ -144,8 +144,8 @@ createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, MZTAB_MODE = FAL
   ####
   ####  prepare the metrics
   ####
-  lst_qcMetrics = PTXQC:::getMetricsObjects(DEBUG_PTXQC)
-  df.meta = PTXQC:::getMetaData(lst_qcMetrics = lst_qcMetrics)
+  lst_qcMetrics = getMetricsObjects(DEBUG_PTXQC)
+  df.meta = getMetaData(lst_qcMetrics = lst_qcMetrics)
   df.meta
   ## reorder metrics (required for indexing below!)
   lst_qcMetrics_ord = lst_qcMetrics[df.meta$.id]
@@ -171,7 +171,7 @@ createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, MZTAB_MODE = FAL
     }
   }
   ## re-read meta (new ordering?)
-  df.meta = PTXQC:::getMetaData(lst_qcMetrics = lst_qcMetrics)
+  df.meta = getMetaData(lst_qcMetrics = lst_qcMetrics)
   ## reorder metrics (again; after param update)
   lst_qcMetrics_ord = lst_qcMetrics[df.meta$.id]
   
