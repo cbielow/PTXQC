@@ -13,18 +13,31 @@ test_that("createYaml", {
   ##test invalid parameter input
   ##
   parameter <- list()
-  parameter$nonsense <- c(1,4)
-  expect_equivalent(createYaml(yc, param = parameter)$param$nonsense, NULL)
+  parameter$nonsense1 <- c(1,4)
+  parameter$nonsense2 <- "test"
+  parameter$param_PG_intThresh <- 30
+  
+  expect_null(createYaml(yc, param = parameter)$param$nonsense1)
+  expect_null(createYaml(yc, param = parameter)$param$nonsense2)
+  expect_equivalent(createYaml(yc, param = parameter)$param$param_PG_intThresh, 30)
+  expect_equal(length(createYaml(yc)$param), 19)
   
   ##
   ##test valid parameter input
   ##
-  yc <- YAMLClass$new(list())
+  
   parameter$param_PG_intThresh <- 30
   parameter$param_OutputFormats <- "txt"
+  
+  yc <- YAMLClass$new(list())
   expect_equivalent(createYaml(yc, param = parameter)$param$param_PG_intThresh, 30)
   expect_equivalent(createYaml(yc, param = parameter)$param$param_OutputFormats, "txt")
-  expect_equivalent(createYaml(yc, param = parameter)$param$add_fs_col, 14)
+  
+  ##test default values
+  yc <- YAMLClass$new(list())
+  expect_equivalent(createYaml(yc)$param$param_PG_intThresh, 25)
+  expect_equivalent(createYaml(yc)$param$param_OutputFormats, c("html", "plainPDF"))
+
   
   ##
   ##test metrics deactivation (all except qcMetric_PAR)
@@ -34,6 +47,10 @@ test_that("createYaml", {
   expect_equal(createYaml(yc, param = parameter, metrics = mets)$yc$yamlObj$order$qcMetric_EVD_UpSet, -1)
   expect_equal(createYaml(yc, param = parameter, metrics = mets)$yc$yamlObj$order$qcMetric_PAR, 1)
   
-  
+  ##test no deactivation 
+  yc <- YAMLClass$new(list())
+  expect_false(any(createYaml(yc)$yc$yamlObj$order < 1))
   
 })
+
+
