@@ -1,4 +1,4 @@
-#' Creates a yaml object storing the parameters that are used for creating the PTXQC report 
+#' Creates a yaml file storing the parameters that are used for creating the PTXQC report 
 #' and returns these parameters as well as a list of available qc-Metrics objects.
 #' 
 #' Valid parameters are: 
@@ -17,7 +17,7 @@
 #' @param MZTAB_MODE default FALSE 
 #' @param txt_files list of paths to MaxQuant files
 #' @param metrics list of metric names that should be plotted; if NULL, will be populated with defaults
-#' @return filled yaml class object, list of parameters used for creating the report and list of qc-Metrics objects
+#' @return list of parameters used for creating the report and list of qc-Metrics objects
 #' @export
 #'
 #'
@@ -57,7 +57,7 @@ createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, MZTAB_MODE = FAL
   ##
   ## check for invalid parameters
   ##
-  for(i in c(1:length(param))){
+  for(i in c(length(param):1)){
     if(!names(param)[i] %in% c(NA, names(default_param))) {
       warning(paste0("Invalid parameter detected and removed: ", names(param)[i]))
       param <- param[-i] 
