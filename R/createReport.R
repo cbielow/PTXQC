@@ -28,7 +28,8 @@
 #'          
 #' @export
 #'
-createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL){
+createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
+{
   if (!exists("DEBUG_PTXQC")) DEBUG_PTXQC = FALSE ## debug only when defined externally
   time_start = Sys.time()
   #mztab_file = "c:\\temp\\test.mzTab"
@@ -62,7 +63,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     mzt = MzTabReader$new()
     mzt$readMzTab(mztab_file) ## creates an inital fc.raw.file mapping from MTD
     expr_fn_map = quote(mzt$fn_map)
-    
+    txt_files = NULL
   } else 
   {
     if (!any(file.info(txt_folder)$isdir, na.rm = TRUE))
@@ -99,22 +100,18 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ## YAML config (with default values if no yaml file was given)
   ##
   
-  yc_param_lstqcMetrics_list <- createYaml(yc = yc, DEBUG_PTXQC = DEBUG_PTXQC, txt_files = txt_files)
+  yc_param_lstqcMetrics_list = createYaml(yc = yc, DEBUG_PTXQC = DEBUG_PTXQC, txt_files = txt_files)
   
-  yc <- yc_param_lstqcMetrics_list$yc
-  yaml_param <- yc_param_lstqcMetrics_list$param
-  lst_qcMetrics <- yc_param_lstqcMetrics_list$lst_qcMetrics
+  yc = yc_param_lstqcMetrics_list$yc
+  yaml_param = yc_param_lstqcMetrics_list$param
+  lst_qcMetrics = yc_param_lstqcMetrics_list$lst_qcMetrics
   
   
   ## write out the final YAML file (so users can disable metrics, if they fail)
   yc$writeYAML(rprt_fns$yaml_file)
   
-  ##the ordered list appears in line 656
-  lst_qcMetrics_ord <- lst_qcMetrics
-  
   out_formats_supported <- yaml_param$param_OutputFormats
-  
-  
+
   
   ## write shortnames and sorting of filenames
   eval(expr_fn_map)$writeMappingFile(rprt_fns$filename_sorting)
@@ -659,7 +656,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     printWithPage(hm[["plot"]], "p. 1")      # summary heatmap
     printWithPage(pl_nameMapping$plots, "p. 2")    # short file mapping
     pc = 3; ## subsequent pages start at #4
-    for (qcm in lst_qcMetrics_ord)
+    for (qcm in lst_qcMetrics)
     {
       for (p in qcm$plots)
       {

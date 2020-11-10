@@ -2,7 +2,6 @@
 #' and returns these parameters as well as a list of available qc-Metrics objects.
 #' 
 #' Valid parameters are: 
-#' 
 #'    param_useMQPAR, add_fs_col, id_rate_bad, id_rate_great , pg_ratioLabIncThresh , param_PG_intThresh,
 #'    param_EV_protThresh , param_EV_intThresh, param_EV_pepThresh , yaml_contaminants, param_EV_MatchingTolerance,
 #'    param_evd_mbr , param_EV_PrecursorTolPPM, param_EV_PrecursorOutOfCalSD , param_EV_PrecursorTolPPMmainSearch, 
@@ -12,16 +11,15 @@
 #'
 #'
 #' @param yc A yaml class object created by YAMLClass$new()
-#' @param param list of parameters sorted by names; if NULL, will be populated with defaults
-#' @param DEBUG_PTXQC default FALSE
-#' @param MZTAB_MODE default FALSE 
-#' @param txt_files list of paths to MaxQuant files
+#' @param param list of parameters sorted by names; if empty, will be populated with defaults
+#' @param DEBUG_PTXQC print some debugging information; default FALSE
+#' @param txt_files list of paths to MaxQuant files; if NULL, it is assumed that the parameters are for mzTab-mode
 #' @param metrics list of metric names that should be plotted; if NULL, will be populated with defaults
 #' @return list of parameters used for creating the report and list of qc-Metrics objects
 #' @export
 #'
 #'
-createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, MZTAB_MODE = FALSE, txt_files = NULL, metrics = NULL){
+createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, txt_files = NULL, metrics = NULL){
 
   ##
   ## YAML default config
@@ -103,7 +101,7 @@ createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, MZTAB_MODE = FAL
   param$yaml_contaminants = yc$getYAML("File$Evidence$SpecialContaminants", param$yaml_contaminants)
   
   param$param_EV_MatchingTolerance = yc$getYAML("File$Evidence$MQpar_MatchingTimeWindow_num", param$param_EV_MatchingTolerance)
-  if (param$param_useMQPAR &! MZTAB_MODE && !is.null(txt_files)) {
+  if (param$param_useMQPAR && !is.null(txt_files)) {
     v = getMQPARValue(txt_files$mqpar, "matchingTimeWindow") ## will also warn() if file is missing
     if (!is.null(v)) {
       param$param_EV_MatchingTolerance = yc$setYAML("File$Evidence$MQpar_MatchingTimeWindow_num", as.numeric(v))
@@ -112,7 +110,7 @@ createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, MZTAB_MODE = FAL
   param$param_evd_mbr = yc$getYAML("File$Evidence$MatchBetweenRuns_wA", param$param_evd_mbr)
   
   param$param_EV_PrecursorTolPPM = yc$getYAML("File$Evidence$MQpar_firstSearchTol_num", param$param_EV_PrecursorTolPPM)
-  if (param$param_useMQPAR & !MZTAB_MODE && !is.null(txt_files)) {
+  if (param$param_useMQPAR && !is.null(txt_files)) {
     v = getMQPARValue(txt_files$mqpar, "firstSearchTol") ## will also warn() if file is missing
     if (!is.null(v)) {
       param$param_EV_PrecursorTolPPM = yc$setYAML("File$Evidence$MQpar_firstSearchTol_num", as.numeric(v))
@@ -123,7 +121,7 @@ createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, MZTAB_MODE = FAL
   
   ## we do not dare to have a default, since it ranges from 6 - 4.5 ppm across MQ versions
   param$param_EV_PrecursorTolPPMmainSearch = yc$getYAML("File$Evidence$MQpar_mainSearchTol_num", param$param_EV_PrecursorTolPPMmainSearch)
-  if (param$param_useMQPAR & !MZTAB_MODE && !is.null(txt_files)) {
+  if (param$param_useMQPAR && !is.null(txt_files)) {
     v = getMQPARValue(txt_files$mqpar, "mainSearchTol") ## will also warn() if file is missing
     if (!is.null(v)) {
       param$param_EV_PrecursorTolPPMmainSearch = yc$setYAML("File$Evidence$MQpar_mainSearchTol_num", as.numeric(v))
@@ -167,7 +165,7 @@ createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, MZTAB_MODE = FAL
     if (is.numeric(param_v)) {
       lst_qcMetrics_ord[[i]]$orderNr = param_v  # for some reason, lst_qcMetrics[[df.meta$.id]] does not work
     } else {
-      stop("YAML param '", pname_v, "' is not numeric (", param_v, "). Please fix the YAML configuration!")
+      stop("YAML param '", pname, "' is not numeric (", param_v, "). Please fix the YAML configuration!")
     }
   }
   ## re-read meta (new ordering?)
