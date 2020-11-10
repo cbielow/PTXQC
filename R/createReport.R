@@ -28,8 +28,7 @@
 #'          
 #' @export
 #'
-createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
-{
+createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL){
   if (!exists("DEBUG_PTXQC")) DEBUG_PTXQC = FALSE ## debug only when defined externally
   time_start = Sys.time()
   #mztab_file = "c:\\temp\\test.mzTab"
@@ -54,7 +53,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   }
   yc = YAMLClass$new(yaml_obj)
   
-
+  
   MZTAB_MODE = !is.null(mztab_file)  ## will be TRUE if mzTab is detected
   
   if (MZTAB_MODE)
@@ -97,116 +96,26 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   eval(expr_fn_map)$readMappingFile(rprt_fns$filename_sorting)
   
   ##
-  ## YAML default config
+  ## YAML config (with default values if no yaml file was given)
   ##
-  ## determines if a local mqpar.xml should be used to grep all YAML parameters whose name starts with "MQpar_" from the
-  ## original mqpar.xml instead of the yaml.config. The "MQpar_..." param from the config
-  ## will be ignored and the newly written yaml.config will contain the values from mqpar.xml.
-  param_useMQPAR = yc$getYAML("PTXQC$UseLocalMQPar", TRUE)
   
-  add_fs_col = yc$getYAML("PTXQC$NameLengthMax_num", 14)
+  yc_param_lstqcMetrics_list <- createYaml(yc = yc, DEBUG_PTXQC = DEBUG_PTXQC, txt_files = txt_files)
   
-  id_rate_bad = yc$getYAML("File$Summary$IDRate$Thresh_bad_num", 20, 0, 100)
-  id_rate_great = yc$getYAML("File$Summary$IDRate$Thresh_great_num", 35, 0, 100)
+  yc <- yc_param_lstqcMetrics_list$yc
+  yaml_param <- yc_param_lstqcMetrics_list$param
+  lst_qcMetrics <- yc_param_lstqcMetrics_list$lst_qcMetrics
   
-  GL_name_min_length = 8
-  
-  pg_ratioLabIncThresh = yc$getYAML("File$ProteinGroups$RatioPlot$LabelIncThresh_num", 4)
-  ## default median intensity in log2 scale
-  param_PG_intThresh = yc$getYAML("File$ProteinGroups$IntensityThreshLog2_num", 25, 1, 100)
-
-  ## get scoring threshold (upper limit)
-  param_EV_protThresh = yc$getYAML("File$Evidence$ProteinCountThresh_num", 3500, 1, 1e5)
-
-  ## default median intensity in log2 scale
-  param_EV_intThresh = yc$getYAML("File$Evidence$IntensityThreshLog2_num", 23, 1, 100)
-
-  ## get scoring threshold (upper limit)
-  param_EV_pepThresh = yc$getYAML("File$Evidence$PeptideCountThresh_num", 15000, 1, 1e6)
-
-  ### warn of special contaminants!
-  ## these need to be in FASTA headers (description is not enough)!
-  ## syntax:  list( contaminant1 = c(name, threshold), contaminant2 = c(...), ...)
-  ##
-  ##  if within the YAML file
-  ##    SpecialContaminants: no
-  ##  is set, then 'yaml_contaminants' will be 'FALSE'
-  ##
-  contaminant_default = list("cont_MYCO" = c(name="MYCOPLASMA", threshold=1)) # name (FASTA), threshold for % of unique peptides
-  ##contaminant_default = FALSE ## to switch it off by default
-  yaml_contaminants = yc$getYAML("File$Evidence$SpecialContaminants", contaminant_default)
-  
-  param_EV_MatchingTolerance = yc$getYAML("File$Evidence$MQpar_MatchingTimeWindow_num", 1)
-  if (param_useMQPAR &! MZTAB_MODE) {
-    v = getMQPARValue(txt_files$mqpar, "matchingTimeWindow") ## will also warn() if file is missing
-    if (!is.null(v)) {
-      param_EV_MatchingTolerance = yc$setYAML("File$Evidence$MQpar_MatchingTimeWindow_num", as.numeric(v))
-    }
-  }
-  param_evd_mbr = yc$getYAML("File$Evidence$MatchBetweenRuns_wA", "auto")
-  
-  param_EV_PrecursorTolPPM = yc$getYAML("File$Evidence$MQpar_firstSearchTol_num", 20)
-  if (param_useMQPAR & !MZTAB_MODE) {
-    v = getMQPARValue(txt_files$mqpar, "firstSearchTol") ## will also warn() if file is missing
-    if (!is.null(v)) {
-      param_EV_PrecursorTolPPM = yc$setYAML("File$Evidence$MQpar_firstSearchTol_num", as.numeric(v))
-    }
-  }
-  
-  param_EV_PrecursorOutOfCalSD = yc$getYAML("File$Evidence$firstSearch_outOfCalWarnSD_num", 2)
-  
-  ## we do not dare to have a default, since it ranges from 6 - 4.5 ppm across MQ versions
-  param_EV_PrecursorTolPPMmainSearch = yc$getYAML("File$Evidence$MQpar_mainSearchTol_num", NA)
-  if (param_useMQPAR & !MZTAB_MODE) {
-    v = getMQPARValue(txt_files$mqpar, "mainSearchTol") ## will also warn() if file is missing
-    if (!is.null(v)) {
-      param_EV_PrecursorTolPPMmainSearch = yc$setYAML("File$Evidence$MQpar_mainSearchTol_num", as.numeric(v))
-    }
-  }
-  if (is.na(param_EV_PrecursorTolPPMmainSearch))
-  {
-    warning("PTXQC: Cannot draw borders for calibrated mass error, since neither 'File$Evidence$MQpar_mainSearchTol_num' is set nor a mqpar.xml file is present!", immediate. = TRUE)
-  }
-  
-  param_MSMSScans_ionInjThresh = yc$getYAML("File$MsMsScans$IonInjectionThresh_num", 10, 0, 200)
-
-  out_formats_supported = c("html", "plainPDF")
-  param_OutputFormats = yc$getYAML("PTXQC$OutputFormats", out_formats_supported)
-  
-  param_PageNumbers = yc$getYAML("PTXQC$PlainPDF$AddPageNumbers", "on")
-  
-
-  ####
-  ####  prepare the metrics
-  ####
-  lst_qcMetrics = getMetricsObjects(DEBUG_PTXQC)
-  df.meta = getMetaData(lst_qcMetrics = lst_qcMetrics)
-  df.meta
-  ## reorder metrics (required for indexing below!)
-  lst_qcMetrics_ord = lst_qcMetrics[df.meta$.id]
-  
-  ## write/update order from YAML
-  i = 1
-  for (i in 1:nrow(df.meta))
-  {
-    #cat(paste("meta id: ", df.meta$.id[i], "\n"))
-    pname = paste0("order$", df.meta$.id[i])
-    pval = df.meta$order[i]
-    param = yc$getYAML(pname, pval)
-    ## update
-    if (is.numeric(param)) {
-      lst_qcMetrics_ord[[i]]$orderNr = param  # for some reason, lst_qcMetrics[[df.meta$.id]] does not work
-    } else {
-      stop("YAML param '", pname, "' is not numeric (", param, "). Please fix the YAML configuration!")
-    }
-  }
-  ## re-read meta (new ordering?)
-  df.meta = getMetaData(lst_qcMetrics = lst_qcMetrics)
-  ## reorder metrics (again; after param update)
-  lst_qcMetrics_ord = lst_qcMetrics[df.meta$.id]
   
   ## write out the final YAML file (so users can disable metrics, if they fail)
   yc$writeYAML(rprt_fns$yaml_file)
+  
+  ##the ordered list appears in line 656
+  lst_qcMetrics_ord <- lst_qcMetrics
+  
+  out_formats_supported <- yaml_param$param_OutputFormats
+  
+  
+  
   ## write shortnames and sorting of filenames
   eval(expr_fn_map)$writeMappingFile(rprt_fns$filename_sorting)
   
@@ -217,7 +126,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   
   if (MZTAB_MODE) d_parAll = mzt$getParameters()
   else d_parAll = mq$readMQ(txt_files$param, type="par")
-
+  
   lst_qcMetrics[["qcMetric_PAR"]]$setData(d_parAll)
   
   ######
@@ -225,12 +134,12 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ######
   
   if (MZTAB_MODE) d_smy = mzt$getSummary()
-  else d_smy = mq$readMQ(txt_files$summary, type="sm", add_fs_col = add_fs_col)
+  else d_smy = mq$readMQ(txt_files$summary, type="sm", add_fs_col = yaml_param$add_fs_col)
   #colnames(d_smy)
   #colnames(d_smy[[1]])
- 
+  
   ### MS/MS identified [%]
-  lst_qcMetrics[["qcMetric_SM_MSMSIdRate"]]$setData(d_smy, id_rate_bad, id_rate_great)
+  lst_qcMetrics[["qcMetric_SM_MSMSIdRate"]]$setData(d_smy, yaml_param$id_rate_bad, yaml_param$id_rate_great)
   
   ### TIC
   if (MZTAB_MODE) lst_qcMetrics[["qcMetric_SM_TIC"]]$setData(d_smy)
@@ -238,7 +147,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ######
   ######  proteinGroups.txt ...
   ######
-    
+  
   if (MZTAB_MODE) df_pg = mzt$getProteins()
   else df_pg = mq$readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")
   
@@ -265,23 +174,23 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ## a global PG name mapping
     MAP_pg_groups = data.frame(long = colsW)
     MAP_pg_groups$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups$long, 
-                                                              min_out_length = GL_name_min_length, 
+                                                              min_out_length = yaml_param$GL_name_min_length, 
                                                               add_dots = TRUE), 
-                                                       min_out_length = GL_name_min_length))
+                                                       min_out_length = yaml_param$GL_name_min_length))
     ##
     ## Contaminants plots on Raw intensity
     ##
     lst_qcMetrics[["qcMetric_PG_Cont"]]$setData(df_pg, colsW, MAP_pg_groups)
-  
-  
+    
+    
     ###
     ### Raw intensity boxplot
     ###
     
     clusterCols$raw.intensity = colsW ## cluster using intensity
     
-    lst_qcMetrics[["qcMetric_PG_RawInt"]]$setData(df_pg, int_cols = colsW, MAP_pg_groups = MAP_pg_groups, thresh_intensity = param_PG_intThresh)
-  
+    lst_qcMetrics[["qcMetric_PG_RawInt"]]$setData(df_pg, int_cols = colsW, MAP_pg_groups = MAP_pg_groups, thresh_intensity = yaml_param$param_PG_intThresh)
+    
     ##
     ## LFQ boxplots
     ##
@@ -298,13 +207,13 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
       } else colsW = colsLF
       MAP_pg_groups_LFQ = data.frame(long = colsW)
       MAP_pg_groups_LFQ$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups_LFQ$long, 
-                                                                    min_out_length = GL_name_min_length, 
+                                                                    min_out_length = yaml_param$GL_name_min_length, 
                                                                     add_dots = TRUE), 
-                                                             min_out_length = GL_name_min_length))
-  
+                                                             min_out_length = yaml_param$GL_name_min_length))
+      
       clusterCols$lfq.intensity = colsW ## cluster using LFQ
       
-      lst_qcMetrics[["qcMetric_PG_LFQInt"]]$setData(df_pg, colsW, MAP_pg_groups_LFQ, param_PG_intThresh)
+      lst_qcMetrics[["qcMetric_PG_LFQInt"]]$setData(df_pg, colsW, MAP_pg_groups_LFQ, yaml_param$param_PG_intThresh)
     }
     
     ##
@@ -318,13 +227,13 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     {
       MAP_pg_groups_ITRAQ = data.frame(long = c(colsITRAQ))
       MAP_pg_groups_ITRAQ$short = shortenStrings(simplifyNames(delLCP(MAP_pg_groups_ITRAQ$long, 
-                                                                      min_out_length = GL_name_min_length, 
+                                                                      min_out_length = yaml_param$GL_name_min_length, 
                                                                       add_dots = TRUE), 
-                                                               min_out_length = GL_name_min_length))
-  
+                                                               min_out_length = yaml_param$GL_name_min_length))
+      
       clusterCols$reporter.intensity = colsITRAQ ## cluster using reporters
       
-      lst_qcMetrics[["qcMetric_PG_ReporterInt"]]$setData(df_pg, colsITRAQ, MAP_pg_groups_ITRAQ, param_PG_intThresh)
+      lst_qcMetrics[["qcMetric_PG_ReporterInt"]]$setData(df_pg, colsITRAQ, MAP_pg_groups_ITRAQ, yaml_param$param_PG_intThresh)
     }
     
     
@@ -336,7 +245,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     MAP_pg_groups_ALL = rbind(MAP_pg_groups, MAP_pg_groups_LFQ, MAP_pg_groups_ITRAQ)
     
     lst_qcMetrics[["qcMetric_PG_PCA"]]$setData(df_pg, clusterCols, MAP_pg_groups_ALL)
-  
+    
     
     ##################################
     ## ratio plots
@@ -356,43 +265,43 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     
     if (length(ratio_cols) > 0)
     {
-      lst_qcMetrics[["qcMetric_PG_Ratio"]]$setData(df_pg, ratio_cols = ratio_cols, thresh_LabelIncorp = pg_ratioLabIncThresh, GL_name_min_length = GL_name_min_length)
+      lst_qcMetrics[["qcMetric_PG_Ratio"]]$setData(df_pg, ratio_cols = ratio_cols, thresh_LabelIncorp = yaml_param$pg_ratioLabIncThresh, GL_name_min_length = yaml_param$GL_name_min_length)
     }
   }
   
   ######
   ######  evidence.txt ...
   ######
-
+  
   ## protein.names is only available from MQ 1.4 onwards
   if (MZTAB_MODE) {
     all_evd = mzt$getEvidence()
     df_evd = all_evd$genuine
     df_evd_tf = all_evd$transferred
-
+    
   }
   else {
     all_evd = mq$readMQ(txt_files$evd, type="ev", filter="R",
-                       col_subset=c("proteins",
-                                    numeric = "Retention.Length",
-                                    numeric = "retention.time.calibration", 
-                                    numeric = "Retention.time$", 
-                                    numeric = "Match.Time.Difference",
-                                    numeric = "^intensity$", 
-                                    "^Type$",
-                                    numeric = "Mass\\.Error", 
-                                    numeric = "^uncalibrated...calibrated." ,
-                                    numeric = "^m.z$",
-                                    numeric = "^score$", 
-                                    numeric = "^fraction$",  ## only available when fractions were given
-                                    "Raw.file", "^Protein.Group.IDs$", "Contaminant",
-                                    numeric = "[RK]\\.Count", 
-                                    numeric = "^Charge$", 
-                                    "modified.sequence",
-                                    numeric = "^Mass$",
-                                    "^protein.names$",
-                                    numeric = "^ms.ms.count$",
-                                    numeric = "^reporter.intensity.")) ## we want .corrected and .not.corrected
+                        col_subset=c("proteins",
+                                     numeric = "Retention.Length",
+                                     numeric = "retention.time.calibration", 
+                                     numeric = "Retention.time$", 
+                                     numeric = "Match.Time.Difference",
+                                     numeric = "^intensity$", 
+                                     "^Type$",
+                                     numeric = "Mass\\.Error", 
+                                     numeric = "^uncalibrated...calibrated." ,
+                                     numeric = "^m.z$",
+                                     numeric = "^score$", 
+                                     numeric = "^fraction$",  ## only available when fractions were given
+                                     "Raw.file", "^Protein.Group.IDs$", "Contaminant",
+                                     numeric = "[RK]\\.Count", 
+                                     numeric = "^Charge$", 
+                                     "modified.sequence",
+                                     numeric = "^Mass$",
+                                     "^protein.names$",
+                                     numeric = "^ms.ms.count$",
+                                     numeric = "^reporter.intensity.")) ## we want .corrected and .not.corrected
     ## contains NA if 'genuine' ID
     ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
     #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
@@ -407,26 +316,26 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     df_evd_tf = all_evd[all_evd$type == "MULTI-MATCH", , drop=FALSE] ## keep columns, if empty
     
   }
-## just a local scope to fold evidence metrics in the editor...
+  ## just a local scope to fold evidence metrics in the editor...
   {
     
-   
+    
     ### warn of special contaminants!
-    if (class(yaml_contaminants) == "list")  ## SC are requested
+    if (class(yaml_param$yaml_contaminants) == "list")  ## SC are requested
     {
       if (!is.null(df_pg))
       {
-        lst_qcMetrics[["qcMetric_EVD_UserContaminant"]]$setData(df_evd, df_pg, yaml_contaminants)
+        lst_qcMetrics[["qcMetric_EVD_UserContaminant"]]$setData(df_evd, df_pg, yaml_param$yaml_contaminants)
       } else {
-        lst_qcMetrics[["qcMetric_EVD_UserContaminant"]]$setData(df_evd, NULL, yaml_contaminants)
+        lst_qcMetrics[["qcMetric_EVD_UserContaminant"]]$setData(df_evd, NULL, yaml_param$yaml_contaminants)
       }
     }
     
     ##
     ## intensity of peptides
     ##
-    lst_qcMetrics[["qcMetric_EVD_PeptideInt"]]$setData(df_evd, param_EV_intThresh)
-
+    lst_qcMetrics[["qcMetric_EVD_PeptideInt"]]$setData(df_evd, yaml_param$param_EV_intThresh)
+    
     ##
     ## MS2/MS3 labeled (TMT/ITRAQ) only: reporter intensity of peptides
     ##
@@ -437,10 +346,10 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## peptide & protein counts
     ##
-    lst_qcMetrics[["qcMetric_EVD_ProteinCount"]]$setData(df_evd, df_evd_tf, param_EV_protThresh)
-
-    lst_qcMetrics[["qcMetric_EVD_PeptideCount"]]$setData(df_evd, df_evd_tf, param_EV_pepThresh)
-
+    lst_qcMetrics[["qcMetric_EVD_ProteinCount"]]$setData(df_evd, df_evd_tf, yaml_param$param_EV_protThresh)
+    
+    lst_qcMetrics[["qcMetric_EVD_PeptideCount"]]$setData(df_evd, df_evd_tf, yaml_param$param_EV_pepThresh)
+    
     ####
     #### peak length (not supported in MQ 1.0.13)
     ####
@@ -455,16 +364,16 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ## Even if MBR=off, this column always contains numbers (usually 0, or very small)
     ##
     
-
+    
     if (("retention.time.calibration" %in% colnames(df_evd)))
     {
       ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
-      if (!(param_evd_mbr == FALSE) & nrow(df_evd_tf)>0)
+      if (!(yaml_param$param_evd_mbr == FALSE) & nrow(df_evd_tf)>0)
       {
         lst_qcMetrics[["qcMetric_EVD_MBRAlign"]]$setData(df_evd, 
-                                                         tolerance_matching = param_EV_MatchingTolerance, 
+                                                         tolerance_matching = yaml_param$param_EV_MatchingTolerance, 
                                                          raw_file_mapping = eval(expr_fn_map)$raw_file_mapping)
-
+        
         ### 
         ###     MBR: ID transfer
         ###
@@ -473,7 +382,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         if (is.null(avg_peak_width)) {
           warning("RT peak width module did not run, but is required for MBR metrics. Enable it and try again or switch off MBR metrics!")
         } else lst_qcMetrics[["qcMetric_EVD_MBRIdTransfer"]]$setData(df_evd, df_evd_tf, avg_peak_width)
-
+        
         
         ##
         ## MBR: Tree Clustering (experimental)
@@ -481,7 +390,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         ## MBR: additional evidence by matching MS1 by AMT across files
         ##
         lst_qcMetrics[["qcMetric_EVD_MBRaux"]]$setData(df_evd)
-
+        
       } ## MBR has data
     } ## retention.time.difference column exists
     
@@ -492,7 +401,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##  (this uses genuine peptides only -- no MBR!)
     ## 
     lst_qcMetrics[["qcMetric_EVD_Charge"]]$setData(df_evd)
-
+    
     ##
     ## peptides per RT
     ##
@@ -529,49 +438,49 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ## additionally use MS2-ID rate (should be below 1%)
     df_idrate = d_smy[, c("fc.raw.file", "ms.ms.identified....")] ## returns NULL if d_smy == NULL
     
-    lst_qcMetrics[["qcMetric_EVD_PreCal"]]$setData(df_evd, df_idrate, param_EV_PrecursorTolPPM, param_EV_PrecursorOutOfCalSD)
-
+    lst_qcMetrics[["qcMetric_EVD_PreCal"]]$setData(df_evd, df_idrate, yaml_param$param_EV_PrecursorTolPPM, yaml_param$param_EV_PrecursorOutOfCalSD)
+    
     
     ##
     ## MS1 post calibration
     ##
-    lst_qcMetrics[["qcMetric_EVD_PostCal"]]$setData(df_evd, df_idrate, param_EV_PrecursorTolPPM, param_EV_PrecursorOutOfCalSD, param_EV_PrecursorTolPPMmainSearch)
-
-
+    lst_qcMetrics[["qcMetric_EVD_PostCal"]]$setData(df_evd, df_idrate, yaml_param$param_EV_PrecursorTolPPM, yaml_param$param_EV_PrecursorOutOfCalSD, yaml_param$param_EV_PrecursorTolPPMmainSearch)
+    
+    
     ##
     ## Top5 contaminants
     ##
     lst_qcMetrics[["qcMetric_EVD_Top5Cont"]]$setData(df_evd)
-
+    
     ##
     ## Oversampling: determine peaks repeatedly sequenced
     ##
     lst_qcMetrics[["qcMetric_EVD_MS2OverSampling"]]$setData(df_evd)
-
+    
     ##
     ## missing values
     ##
     lst_qcMetrics[["qcMetric_EVD_MissingValues"]]$setData(df_evd)
-
+    
     ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
     if (!DEBUG_PTXQC) df_evd = df_evd[, c("id", "contaminant")]
-}
-
-
-######
-######  msms.txt ...
-######
-
+  }
+  
+  
+  ######
+  ######  msms.txt ...
+  ######
+  
   if (MZTAB_MODE) df_msms = mzt$getMSMSScans(identified_only = TRUE)
   else df_msms = mq$readMQ(txt_files$msms, type="msms", filter = "", col_subset=c(numeric = "Missed\\.cleavages",
-                                                                                    "^Raw.file$",
-                                                                                    "^mass.deviations",
-                                                                                    "^masses$",
-                                                                                    "^mass.analyzer$",
-                                                                                    "fragmentation",
-                                                                                    "reverse",
-                                                                                    numeric = "^evidence.id$"
-                                                                                  ), check_invalid_lines = FALSE)
+                                                                                  "^Raw.file$",
+                                                                                  "^mass.deviations",
+                                                                                  "^masses$",
+                                                                                  "^mass.analyzer$",
+                                                                                  "fragmentation",
+                                                                                  "reverse",
+                                                                                  numeric = "^evidence.id$"
+  ), check_invalid_lines = FALSE)
   
   ## just a scope
   {
@@ -585,7 +494,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##  MS2 fragment decalibration
     ##
     lst_qcMetrics[["qcMetric_MSMS_MSMSDecal"]]$setData(df_msms, eval(expr_fn_map)$raw_file_mapping$to)
-  
+    
     ##
     ## missed cleavages per Raw file
     ##
@@ -594,29 +503,29 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     } else {
       lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms)
     }
-  
+    
   }
   ## save RAM: msms.txt is not required any longer
   if (!DEBUG_PTXQC) rm(df_msms)
   if (!DEBUG_PTXQC) rm(df_evd)
   
-
-
-######
-######  msmsScans.txt ...
-######
+  
+  
+  ######
+  ######  msmsScans.txt ...
+  ######
   if (MZTAB_MODE) df_msmsScans = mzt$getMSMSScans(identified_only = FALSE)
   else df_msmsScans = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", 
-                               col_subset = c(numeric = "^ion.injection.time", 
-                                              numeric = "^retention.time$", 
-                                              "^Identified", 
-                                              "^Scan.event.number", 
-                                              "^total.ion.current",
-                                              "^base.?peak.intensity", ## basepeak.intensity (MQ1.2) and base.peak.intensity (MQ1.3+)
-                                              "^Raw.file",
-                                              "^dp.aa$",
-                                              "^dp.modification$"),
-                               check_invalid_lines = FALSE)
+                                col_subset = c(numeric = "^ion.injection.time", 
+                                               numeric = "^retention.time$", 
+                                               "^Identified", 
+                                               "^Scan.event.number", 
+                                               "^total.ion.current",
+                                               "^base.?peak.intensity", ## basepeak.intensity (MQ1.2) and base.peak.intensity (MQ1.3+)
+                                               "^Raw.file",
+                                               "^dp.aa$",
+                                               "^dp.modification$"),
+                                check_invalid_lines = FALSE)
   
   # just a scope  
   {
@@ -632,12 +541,12 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
       ## TopN over RT
       ##
       lst_qcMetrics[["qcMetric_MSMSScans_TopNoverRT"]]$setData(df_msmsScans)
-  
+      
       ##
       ## Injection time over RT
       ##
-      lst_qcMetrics[["qcMetric_MSMSScans_IonInjTime"]]$setData(df_msmsScans, param_MSMSScans_ionInjThresh)
-  
+      lst_qcMetrics[["qcMetric_MSMSScans_IonInjTime"]]$setData(df_msmsScans, yaml_param$param_MSMSScans_ionInjThresh)
+      
       ##
       ## MS/MS intensity (TIC and base peak)
       ##
@@ -647,7 +556,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
       ## TopN counts
       ##
       lst_qcMetrics[["qcMetric_MSMSScans_TopN"]]$setData(df_msmsScans)
-  
+      
       ##
       ## Scan event: % identified
       ##
@@ -666,8 +575,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   }
   ## save RAM: msmsScans.txt is not required any longer
   if (!DEBUG_PTXQC) rm(df_msmsScans)
-    
-    
+  
+  
   #####################################################################
   ## list of qcMetric objects
   print("#Metrics: ")
@@ -688,7 +597,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   #
   #param_OutputFormats = "html pdf"
   #
-  out_formats = unlist(strsplit(param_OutputFormats, "[ ,]+"))
+  out_formats = unlist(strsplit(yaml_param$param_OutputFormats, "[ ,]+"))
   out_formats
   out_format_requested = out_formats_supported[match(out_formats, out_formats_supported)]
   if (any(is.na(out_format_requested)))
@@ -732,7 +641,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
       stop("Target file not writable")
     }
     
-    if (param_PageNumbers == "on")
+    if (yaml_param$param_PageNumbers == "on")
     {
       printWithPage = function(gg_obj, page_nr, filename = report_file_PDF)
       {
