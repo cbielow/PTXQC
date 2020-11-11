@@ -31,6 +31,20 @@
 createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL)
 {
   if (!exists("DEBUG_PTXQC")) DEBUG_PTXQC = FALSE ## debug only when defined externally
+  
+  
+  ## the following code makes sure that a plotting device is open.
+  ## In some scenarios, the a plotting device is not available by default, e.g. in non-interactive sessions (e.g. shinyApps).
+  ## Some versions of R then open a default pdf device to rplots.pdf, but permissions might not allow to write there - so our app crashes.
+  ## In any case, a plotting device is needed for some functions calls, e.g. in grid, to determine some meta-parameters, such as font size...
+  pdf(tempfile(pattern=".pdf")) ## create a real file, since the pdf(NULL) might not be able to fulfill all requests-
+  ptxqc_dummy_dev = dev.cur()   ## remember the device number
+  on.exit({                     # when leaving the function, close our device (avoid leaving zombies)
+    if (ptxqc_dummy_dev %in% dev.list()) {
+      dev.off(ptxqc_dummy_dev) 
+    } else warning("Dummy graphics device was closed by someone else. This should not have happened...")
+  })  
+  
   time_start = Sys.time()
   #mztab_file = "c:\\temp\\test.mzTab"
   ##mztab_file = NULL

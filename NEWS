@@ -7,6 +7,9 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.0.7 -- 2020/11/11
+  - [FIX] issue #82 cannot open file Rplots.pdf
+
 [CRAN] v1.0.6 -- 2020/09/09
   - [FIX] issue #85 MzTabReader broken (again)
 
