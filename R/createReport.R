@@ -16,7 +16,7 @@
 #' 
 #' @note You need write access to the txt/mzTab folder!
 #' 
-#' For updates, bug fixes and feedback please visit \url{http://github.com/cbielow/PTXQC}.
+#' For updates, bug fixes and feedback please visit \url{https://github.com/cbielow/PTXQC}.
 #'
 #' @param txt_folder Path to txt output folder of MaxQuant (e.g. "c:/data/Hek293/txt")
 #' @param mztab_file Alternative to 'txt_folder', you can provide a single mzTab file which contains PSM, PEP and PRT tables
@@ -37,11 +37,13 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ## In some scenarios, the a plotting device is not available by default, e.g. in non-interactive sessions (e.g. shinyApps).
   ## Some versions of R then open a default pdf device to rplots.pdf, but permissions might not allow to write there - so our app crashes.
   ## In any case, a plotting device is needed for some functions calls, e.g. in grid, to determine some meta-parameters, such as font size...
-  pdf(tempfile(pattern=".pdf")) ## create a real file, since the pdf(NULL) might not be able to fulfill all requests-
+  ptxqc_dummy_pdffile = tempfile(fileext=".pdf")
+  pdf(ptxqc_dummy_pdffile)      ## create a real file, since the pdf(NULL) might not be able to fulfill all requests-
   ptxqc_dummy_dev = dev.cur()   ## remember the device number
   on.exit({                     # when leaving the function, close our device (avoid leaving zombies)
     if (ptxqc_dummy_dev %in% dev.list()) {
       dev.off(ptxqc_dummy_dev) 
+      unlink(ptxqc_dummy_pdffile) ## delete the file; it might stay there for the whole session otherwise
     } else warning("Dummy graphics device was closed by someone else. This should not have happened...")
   })  
   

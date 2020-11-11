@@ -44,5 +44,5 @@ The PDF and the config file will be stored in the given txt folder.
 \note{
 You need write access to the txt/mzTab folder!
 
-For updates, bug fixes and feedback please visit \url{http://github.com/cbielow/PTXQC}.
+For updates, bug fixes and feedback please visit \url{https://github.com/cbielow/PTXQC}.
 }

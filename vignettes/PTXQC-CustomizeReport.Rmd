@@ -43,7 +43,7 @@ A configuration file allows you to enable/disable certain plots, and to modify m
 Disabling certain report sections will decrease report size and hide metrics which you may not need. The time required to create the report will also reduce, but usually this is not a bottleneck.
 
 PTXQC uses YAML format for its parameter configuration. YAML is short for 'YAML Aint Markup Language'; yes, it's an endless recursion.
-There is a nice tutorial for YAML at [http://rhnh.net/2011/01/31/yaml-tutorial] -- or just Google to find more.
+There is a nice tutorial for YAML at [https://rhnh.net/2011/01/31/yaml-tutorial] -- or just Google to find more.
 Also, any PTXQC YAML file will start with a comment section which explains the format.
 
 PTXQC will create a `report_*.yaml` file within your txt folder upon its first invocation.
