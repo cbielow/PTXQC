@@ -892,7 +892,7 @@ qcMetric_EVD_IDoverRT =  setRefClass(
 Ideally, the LC gradient is chosen such that the number of identifications (here, after FDR filtering) is 
 uniform over time, to ensure consistent instrument duty cycles. Sharp peaks and uneven distribution of 
 identifications over time indicate potential for LC gradient optimization. 
-See [Moruz 2014, DOI: 10.1002/pmic.201400036](http://www.ncbi.nlm.nih.gov/pubmed/24700534) for details.
+See [Moruz 2014, DOI: 10.1002/pmic.201400036](https://pubmed.ncbi.nlm.nih.gov/24700534/) for details.
 
 Heatmap score [EVD: ID rate over RT]: Scored using 'Uniform' scoring function, i.e. constant receives good score, extreme shapes are bad.
 ",
