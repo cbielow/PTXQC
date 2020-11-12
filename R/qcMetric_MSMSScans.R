@@ -11,7 +11,7 @@ qcMetric_MSMSScans_TopNoverRT =  setRefClass(
     helpTextTemplate = 
       "TopN over retention time. Similar to ID over RT, this metric reflects the complexity of the sample
 at any point in time. Ideally complexity should be made roughly equal (constant) by choosing a proper (non-linear) LC gradient.
-See [Moruz 2014, DOI: 10.1002/pmic.201400036](http://www.ncbi.nlm.nih.gov/pubmed/24700534) for details.
+See [Moruz 2014, DOI: 10.1002/pmic.201400036](https://pubmed.ncbi.nlm.nih.gov/24700534/) for details.
     
 Heatmap score [MS<sup>2</sup> Scans: TopN over RT]: Rewards uniform (function Uniform) TopN events over time.
 ",
