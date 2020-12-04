@@ -490,11 +490,11 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
                                                                                   "^mass.deviations",
                                                                                   "^masses$",
                                                                                   "^mass.analyzer$",
+                                                                                  "^sequence$",
                                                                                   "fragmentation",
                                                                                   "reverse",
                                                                                   numeric = "^evidence.id$"
   ), check_invalid_lines = FALSE)
-  
   ## just a scope
   {
     ### missed cleavages (again)

@@ -195,15 +195,15 @@ current study. ",
         qc_score = data.frame(fc.raw.file = unique(df_msms$fc.raw.file),
                               valMC = HEATMAP_NA_VALUE,
                               valMCVar = HEATMAP_NA_VALUE)
-      }## end enyzme check
+      }## end enzyme check
       
-      colnames(qc_score)[colnames(qc_score) == "valMC"] = sprintf(.self$qcName, "Missed~Cleavages")
-      colnames(qc_score)[colnames(qc_score) == "valMCVar"] = sprintf(.self$qcName, "Missed~Cleavages~Var")
+      colnames(qc_score)[colnames(qc_score) == "valMC"] = sprintf(.self$qcName, "")
+      colnames(qc_score)[colnames(qc_score) == "valMCVar"] = sprintf(.self$qcName, "~Var")
 
       return(list(plots = lpl, qcScores = qc_score))
     }, 
     qcCat = "Prep", 
-    qcName = "MSMS:~%s", 
+    qcName = "MSMS:~Missed~Cleavages%s", 
     orderNr = 0040
   )
     return(.self)
