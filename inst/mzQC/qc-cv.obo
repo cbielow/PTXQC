@@ -1,0 +1,552 @@
+format-version: 1.2
+data-version: 0.1.2
+date: 14:01:2020 10:28
+saved-by: julianu
+default-namespace: QC
+namespace-id-rule: * MS:$sequence(7,0,9999999)$
+namespace-id-rule: * QC:$sequence(7,0,9999999)$
+remark: coverage: Mass spectrometer quality control metrics
+remark: creator: Chris Bielow <chris.bielow <-at-> fu-berlin.de>
+remark: creator: Julian Uszkoreit <julian.uszkoreit <-at-> ruhr-uni-bochum.de>
+remark: creator: Martin Eisenacher <martin.eisenacher <-at-> ruhr-uni-bochum.de>
+remark: namespace: MS
+remark: namespace: QC
+import: http://ontologies.berkeleybop.org/uo.obo
+import: https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo
+ontology: qc
+
+[Term]
+id: MS:1009001
+name: quality control metrics generating software
+def: "Quality control metrics generating softwares are special types of analysis softwares, which are capable of generating QC metrics." [PSI:PI]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1009002
+name: QuaMeter IDFree
+def: "QuaMeter IDFree is a QC metrics generating software." [PSI:PI]
+is_a: MS:1009001 ! quality control metrics generating software
+
+[Term]
+id: MS:1009003
+name: iMonDB
+def: "iMonDB is a QC metrics generating software." [PSI:PI]
+is_a: MS:1009001 ! quality control metrics generating software
+
+[Term]
+id: QC:4000001
+name: QC metric
+def: "Parent term for QC metrics, each metric MUST have this as an ancestor in its is_a relations." [PSI:QC]
+
+[Term]
+id: QC:4000002
+name: QC metric value type
+def: "The QC metric type describes what type the respective metric is, like e.g. single value, n-tuple or table" [PSI:QC]
+
+[Term]
+id: QC:4000003
+name: single value
+def: "Metrics consisting of a single value (in contrast to n-tuple or table)." [PSI:QC]
+is_a: QC:4000002 ! QC metric value type
+
+[Term]
+id: QC:4000004
+name: n-tuple
+def: "Metrics consisting of n values (in contrast to single_value or table), n specified by the CV param value, e.g. n=4 for quartiles." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000002 ! QC metric value type
+
+[Term]
+id: QC:4000005
+name: corresponding lists
+def: "Metrics consisting of a variable number of lists with n elements each, n specified by the CV param value. The k-th elements of the lists correspond to each other (as RT and intensity lists for a chromatogram)." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000002 ! QC metric value type
+
+[Term]
+id: QC:4000006
+name: table
+def: "Metrics consisting of a table or data frame (in contrast to single_value or n-tuple), the values of the table may have different types in each column (in contrast to a matrix). The actual structure of the table is defined in the QC document." [PSI:QC]
+is_a: QC:4000002 ! QC metric value type
+
+[Term]
+id: QC:4000007
+name: matrix
+def: "A matrix is a rectangular array of values of the same type (in contrast to a table). The actual structure of the matrix is defined in the QC document." [PSI:QC]
+is_a: QC:4000002 ! QC metric value type
+
+[Term]
+id: QC:4000008
+name: QC metric basis
+def: "The basis for this QC metric, like ID based, ID free, quant based..." [PSI:QC]
+
+[Term]
+id: QC:4000009
+name: ID based
+def: "Metrics based on a previous identification run (in contrast to ID_free, Quant_based)" [PSI:QC]
+is_a: QC:4000008 ! QC metric basis
+
+[Term]
+id: QC:4000010
+name: ID free
+def: "Metrics not based on a previous identification run (in contrast to ID_based, quant_based)" [PSI:QC]
+is_a: QC:4000008 ! QC metric basis
+
+[Term]
+id: QC:4000011
+name: quantification based
+def: "Metrics based on a previous quantification run (in contrast to ID_free, ID_based)" [PSI:QC]
+is_a: QC:4000008 ! QC metric basis
+
+[Term]
+id: QC:4000012
+name: QC metric relation
+def: "A QC metric describes the basis for the metric calculation like \"one MS run\" or \"one spectrum\"" [PSI:QC]
+
+[Term]
+id: QC:4000013
+name: QC metric relation: one run
+def: "Describes a metric which is calculated on one run (e.g. one .raw file)" [PSI:QC]
+is_a: QC:4000012 ! QC metric relation
+
+[Term]
+id: QC:4000014
+name: QC metric relation: multiple runs
+def: "A metric which is calculated on multiple runs / a set of runs (e.g. multiple .raw files)" [PSI:QC]
+is_a: QC:4000012 ! QC metric relation
+
+[Term]
+id: QC:4000015
+name: QC metric relation: one spectrum
+def: "A metric which is calculated on one spectrum" [PSI:QC]
+is_a: QC:4000012 ! QC metric relation
+
+[Term]
+id: QC:4000016
+name: QC metric relation: multiple spectra
+def: "A metric which is calculated on multiple spectra" [PSI:QC]
+is_a: QC:4000012 ! QC metric relation
+
+[Term]
+id: QC:4000020
+name: XIC metric
+def: "A metric based on extracted ion chromatograms" [PSI:QC]
+is_a: QC:4000022 ! chromatogram metric
+
+[Term]
+id: QC:4000021
+name: retention time metric
+def: "A metric based on retention time" [PSI:QC]
+is_a: QC:4000001 ! QC metric
+
+[Term]
+id: QC:4000022
+name: chromatogram metric
+def: "A metric based on a chromatogram" [PSI:QC]
+is_a: QC:4000001 ! QC metric
+
+[Term]
+id: QC:4000023
+name: MS1 metric
+def: "a metric based on MS1 events" [PSI:QC]
+is_a: QC:4000028 ! MS metric
+
+[Term]
+id: QC:4000024
+name: MS2 metric
+def: "a metric based on MS2 events" [PSI:QC]
+is_a: QC:4000028 ! MS metric
+
+[Term]
+id: QC:4000025
+name: ion source metric
+def: "A metric related to events in the ion source" [PSI:QC]
+is_a: QC:4000028 ! MS metric
+
+[Term]
+id: QC:4000026
+name: environment metric
+def: "A metric related to measurements of the environment/laboratory/room." [PSI:QC]
+is_a: QC:4000001 ! QC metric
+
+[Term]
+id: QC:4000027
+name: sample preparation metric
+is_a: QC:4000001 ! QC metric
+
+[Term]
+id: QC:4000028
+name: MS metric
+is_a: QC:4000001 ! QC metric
+
+[Term]
+id: QC:4000050
+name: XIC-WideFrac
+def: "The fraction of precursor ions accounting for the top half of all peak widths" [PSI:QC]
+is_a: QC:4000003 ! single value
+is_a: QC:4000010 ! ID free
+is_a: QC:4000020 ! XIC metric
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000051
+name: XIC-FWHM quantiles
+def: "The first to n-th quantile of peak widths for the wide XICs." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000004 ! n-tuple
+is_a: QC:4000010 ! ID free
+is_a: QC:4000020 ! XIC metric
+relationship: has_relation MS:1000086 ! full width at half-maximum
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000052
+name: XIC-Height quantiles ratio to Q1
+def: "The log ratio for the second to n-th quantile of wide XIC heights over first quantile of heights." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000004 ! n-tuple
+is_a: QC:4000010 ! ID free
+is_a: QC:4000020 ! XIC metric
+relationship: has_relation MS:1000042 ! peak intensity
+relationship: has_relation MS:1000627 ! selected ion current chromatogram
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000053
+name: RT duration
+def: "The retention time duration of the MS run in seconds, similar to the highest scan time minus the lowest scan time." [PSI:QC]
+is_a: QC:4000003 ! single value
+is_a: QC:4000010 ! ID free
+is_a: QC:4000021 ! retention time metric
+relationship: has_relation MS:1000016 ! scan start time
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000054
+name: RT over TIC quantile
+def: "The interval when the respective quantile of the TIC accumulates divided by retention time duration. The number of quantiles observed is given by the size of the tuple." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000004 ! n-tuple
+is_a: QC:4000010 ! ID free
+is_a: QC:4000021 ! retention time metric
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation MS:1000235 ! total ion current chromatogram
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000055
+name: MS1 quantiles RT fraction
+def: "The interval for the first to n-th quantile of all MS1 events divided by RT-Duration." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000004 ! n-tuple
+is_a: QC:4000010 ! ID free
+is_a: QC:4000021 ! retention time metric
+is_a: QC:4000023 ! MS1 metric
+relationship: has_relation MS:1000016 ! scan start time
+relationship: has_relation MS:1000579 ! MS1 spectrum
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000056
+name: MS2 quantiles RT fraction
+def: "The interval for the first to n-th quantile of all MS2 events divided by RT-Duration." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000004 ! n-tuple
+is_a: QC:4000010 ! ID free
+is_a: QC:4000021 ! retention time metric
+is_a: QC:4000024 ! MS2 metric
+relationship: has_relation MS:1000016 ! scan start time
+relationship: has_relation MS:1000580 ! MSn spectrum
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000057
+name: MS1 quantile TIC change ratio to Q1
+def: "The log ratio for the second to n-th quantile of TIC changes over first quantile of TIC changes." [PSI:QC]
+is_a: QC:4000004 ! n-tuple
+is_a: QC:4000010 ! ID free
+is_a: QC:4000022 ! chromatogram metric
+is_a: QC:4000023 ! MS1 metric
+relationship: has_relation MS:1000016 ! scan start time
+relationship: has_relation MS:1000235 ! total ion current chromatogram
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000058
+name: MS1 quantile TIC ratio to Q1
+def: "The log ratio for the second to n-th quantile of TIC over first quantile of TIC." [PSI:QC]
+is_a: QC:4000004 ! n-tuple
+is_a: QC:4000010 ! ID free
+is_a: QC:4000022 ! chromatogram metric
+is_a: QC:4000023 ! MS1 metric
+relationship: has_relation MS:1000016 ! scan start time
+relationship: has_relation MS:1000235 ! total ion current chromatogram
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000059
+name: MS1 count
+def: "The number of MS1 events in the run." [PSI:QC]
+is_a: QC:4000003 ! single value
+is_a: QC:4000010 ! ID free
+is_a: QC:4000023 ! MS1 metric
+relationship: has_relation MS:1000579 ! MS1 spectrum
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000060
+name: MS2 count
+def: "The number of MS2 events in the run." [PSI:QC]
+is_a: QC:4000003 ! single value
+is_a: QC:4000010 ! ID free
+is_a: QC:4000023 ! MS1 metric
+relationship: has_relation MS:1000580 ! MSn spectrum
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000061
+name: Maximal MS2 frequency
+def: "The fastest frequency for MS/MS collection in any minute over the complete run" [PSI:QC]
+is_a: QC:4000003 ! single value
+is_a: QC:4000010 ! ID free
+is_a: QC:4000024 ! MS2 metric
+relationship: has_relation MS:1000029 ! sampling frequency
+relationship: has_relation MS:1000580 ! MSn spectrum
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000062
+name: MS2 density per quantile
+def: "The first to n-th quantile of MS2 scan peak counts." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000004 ! n-tuple
+is_a: QC:4000010 ! ID free
+is_a: QC:4000024 ! MS2 metric
+relationship: has_relation MS:1000035 ! peak picking
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000063
+name: MS2 known precursor charges fractions
+def: "The fraction of MS/MS precursors of the corresponding charge. The fractions are given in the first list, charges in the second list." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000005 ! corresponding lists
+is_a: QC:4000010 ! ID free
+is_a: QC:4000024 ! MS2 metric
+is_a: QC:4000025 ! ion source metric
+relationship: has_relation MS:1000041 ! charge state
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000064
+name: MS2 unknown and likely precursor charges fractions
+def: "The fractions of inferred charge state of MS/MS precursors. The fractions [0,1] are given in the first list, their charges in the second list. Charge 0 stands for unknown." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000005 ! corresponding lists
+is_a: QC:4000010 ! ID free
+is_a: QC:4000024 ! MS2 metric
+is_a: QC:4000025 ! ion source metric
+relationship: has_relation MS:1000041 ! charge state
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000065
+name: Precursor median m/z for IDs
+def: "Median m/z value for all identified peptides (unique ions) after FDR." [PSI:QC]
+is_a: QC:4000003 ! single value
+is_a: QC:4000009 ! ID based
+is_a: QC:4000023 ! MS1 metric
+is_a: QC:4000025 ! ion source metric
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000066
+name: Fraction of MS2 identified at different MS1 quantiles
+def: "Fraction of total MS2 scans identified after FDR in the respective quantile of peptides sorted by MS1 maximum intensity." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000004 ! n-tuple
+is_a: QC:4000009 ! ID based
+is_a: QC:4000023 ! MS1 metric
+is_a: QC:4000024 ! MS2 metric
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000067
+name: Total ion current chromatogram
+def: "The total ion current chromatogram. The first list contains the retention time values in second, the second list the corresponding abundances." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000005 ! corresponding lists
+is_a: QC:4000010 ! ID free
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation MS:1000235 ! total ion current chromatogram
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000068
+name: Ambient humidity
+def: "The ambient relative humidity in percent (0,100) over one or more time points. The first list contains is the ambient humidity value(s). The second contains the respective retention time. A negative RT implies that the exact time of measurement is unknown." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000005 ! corresponding lists
+is_a: QC:4000010 ! ID free
+is_a: QC:4000026 ! environment metric
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000069
+name: MS1 Total ion current chromatogram
+def: "The total ion current chromatogram of MS1 measurements. The first list contains the retention time values in second, the second list the corresponding abundances." [PSI:QC]
+comment: The metric enables to check visually e.g. MS1 TIC stability along the retention time and its absolute value compared to MS2 total ion chromatogram or other analyses MS1 TICs. TIC drops caused by e.g. spray stability issues or bubbles presence can be detected here.
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000005 ! corresponding lists
+is_a: QC:4000010 ! ID free
+is_a: QC:4000022 ! chromatogram metric
+is_a: QC:4000023 ! MS1 metric
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+relationship: has_relation QC:4000067 ! Total ion current chromatogram
+
+[Term]
+id: QC:4000070
+name: MS2 Total ion current chromatogram
+def: "The total ion current chromatogram of MS2 measurements. The first list contains the retention time values in second, the second list the corresponding abundances." [PSI:QC]
+comment: The metric enables to check visually e.g. MS2 TIC absolute value compared to MS1 total ion chromatogram or other analyses MS2 TICs.
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000005 ! corresponding lists
+is_a: QC:4000010 ! ID free
+is_a: QC:4000022 ! chromatogram metric
+is_a: QC:4000024 ! MS2 metric
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+relationship: has_relation QC:4000067 ! Total ion current chromatogram
+
+[Term]
+id: QC:4000071
+name: Fraction of peptide IDs around max MS1
+def: "Fraction of all peptides identified at least X min earlier or later than the most intense MS1 signal of the identification. The values are given in a corresponding list, where the first value is the X minutes before (negative) or after (positive) max MS1 and the second value is the fraction of IDs." [PSI:QC]
+comment: Estimates very early peak broadening.
+is_a: QC:4000005 ! corresponding lists
+is_a: QC:4000009 ! ID based
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000072
+name: Interquartile RT period for peptide identifications
+def: "The interquartile retention time period, in seconds, for all peptide identifications over the complete run." [PSI:QC]
+comment: Longer times indicate better chromatographic separation.
+is_a: QC:4000003 ! single value
+is_a: QC:4000009 ! ID based
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000073
+name: Peptide identification rate of the interquartile RT period
+def: "The identification rate of peptides for the interquartile retention time period, in peptides per second." [PSI:QC]
+comment: Higher rates indicate efficient sampling and identification.
+is_a: QC:4000003 ! single value
+is_a: QC:4000009 ! ID based
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+relationship: has_relation QC:4000072 ! Interquartile RT period for peptide identifications
+
+[Term]
+id: QC:4000074
+name: Median MS1 peak FWHM for peptides
+def: "Median of all MS1 peak widths at half maximum (FWHM) for all identified peptides, in seconds" [PSI:QC]
+comment: Sharper peak widths (i.e. smaller values) indicate better chromatographic resolution.
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: QC:4000003 ! single value
+is_a: QC:4000009 ! ID based
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation MS:1000086 ! full width at half-maximum
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000075
+name: Interquartile distance of MS1 peak FWHM for identifications
+def: "Interquartile distance of all MS1 peak widths at half maximum (FWHM) for all identifications, in seconds" [PSI:QC]
+comment: Tighter distributions indicate better consistency.
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: QC:4000003 ! single value
+is_a: QC:4000009 ! ID based
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation MS:1000086 ! full width at half-maximum
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000076
+name: Median MS1 peak FWHM for peptides in RT quantile
+def: "Median of all MS1 peak widths at half maximum (FWHM) for all identified peptide, in seconds, in the respective identifications' quantiles ordered by retention time. The data is given in a tuple defining the quantiles, 4-tuple represents quartiles, 10-tuple deciles, etc." [PSI:QC]
+comment: Sharper peak widths (i.e. smaller values) indicate better chromatographic resolution in the given quantile.
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: QC:4000004 ! n-tuple
+is_a: QC:4000009 ! ID based
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation MS:1000086 ! full width at half-maximum
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000077
+name: Area under TIC
+def: "The area under the total ion chromatogram." [PSI:QC]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: QC:4000003 ! single value
+is_a: QC:4000010 ! ID free
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation MS:1000235 ! total ion current chromatogram
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000078
+name: Area under TIC RT quantiles
+def: "The area under the total ion chromatogram of the retention time quantiles. Number of quantiles are given by the n-tuple." [PSI:QC]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: QC:4000004 ! n-tuple
+is_a: QC:4000010 ! ID free
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation MS:1000235 ! total ion current chromatogram
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000079
+name: Pump pressure chromatogram
+def: "Representation of chromatographic pressure versus time. The first list contains the retention time points in seconds, the second list the corresponding pressures in pascal." [PSI:QC]
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000005 ! corresponding lists
+is_a: QC:4000010 ! ID free
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation MS:1003019 ! pressure chromatogram
+relationship: has_relation QC:4000013 ! QC metric relation: one run
+
+[Term]
+id: QC:4000080
+name: Peptide elution order trailing
+def: "N(a, b) are the peptides common in the run and a reference run. N(a,b)_i to N(a,b)_j are the first to last eluting common peptides in the run ordered by retention time. This metric is the maximum of ('elution rank' of peptide N(a,b)_t in run) - ('elution_rank' of peptide N(a,b)_t in reference) for the first tenth of common peptides ordered by retention time. The metric is finally normalised with dividing by the number of (identified) peptides in the run." [PSI:QC]
+comment: The elution rank difference gives you a measure of how many peptides are eluting early.
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000003 ! single value
+is_a: QC:4000009 ! ID based
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation QC:4000014 ! QC metric relation: multiple runs
+
+[Term]
+id: QC:4000081
+name: Peptide elution order preceding
+def: "N(a, b) are the peptides common in the run and a reference run. N(a,b)_i to N(a,b)_j are the first to last eluting common peptides in the run ordered by retention time. This metric is the maximum of ('elution rank' of peptide N(a,b)_t in run) - ('elution_rank' of peptide N(a,b)_t in reference) for the last tenth of common peptides ordered by retention time. The metric is finally normalised with dividing by the number of (identified) peptides in the run." [PSI:QC]
+comment: The elution rank difference gives you a measure of how many peptides are eluting late.
+xref: value-type:xsd\:int "The allowed value-type for this CV term."
+is_a: QC:4000003 ! single value
+is_a: QC:4000009 ! ID based
+is_a: QC:4000022 ! chromatogram metric
+relationship: has_relation QC:4000014 ! QC metric relation: multiple runs
+
+[Typedef]
+id: has_relation
+name: has_relation
+
+[Typedef]
+id: has_type
+name: has_type
+
+[Typedef]
+id: has_units
+name: has_units
