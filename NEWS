@@ -7,8 +7,9 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
-upcoming v1.0.? -- 2020/12/04
+upcoming v1.0.8 -- 2020/12/11
   - [FIX] issue #90 Missed Cleavages Plot missing
+  - [FIX] issue #91 Wrong score for MSMSScans Intensity
 
 [CRAN] v1.0.7 -- 2020/11/11
   - [FIX] issue #82 cannot open file Rplots.pdf
