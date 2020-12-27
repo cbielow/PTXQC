@@ -103,7 +103,7 @@ Heatmap score [MS<sup>2</sup> Scans: Intensity]: Linear score (0-100%) between 3
       dd.all = merge(log.dd.tic, log.dd.bpi, by='fc.raw.file')
       
       ## for scoring...
-      dd.ratio = dd[,list(ratio=median(total.ion.current/base.peak.intensity)), by ='fc.raw.file']
+      dd.ratio = dd[,list(ratio=median(total.ion.current/base.peak.intensity, na.rm=TRUE)), by ='fc.raw.file']
       dd.ratio
       
       
