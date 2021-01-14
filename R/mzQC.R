@@ -5,18 +5,6 @@ createMzQC = function(rprt_fns)
   
   ##save required data of each metric in JSON-format
   cat("Creating metric json file ...", '\n')
-  ##load the cv Term
-  metric_info <- read_cvTerm(cv_obo_file)
-  ##copy cv Term table
-  metric_info <- data.frame(matrix(unlist(metric_info), ncol = 4))
-  colnames(metric_info) <- c("cvRef", " accession", "name", "unit")
-  ##Read the value stored in each class
-  metrics_file = rprt_fns$metrics_file
-  metric_info = readValue(qcMetric = lst_qcMetrics, qc_cv = metric_info)
-  
-  input_rawData <- list(df_evd, df_msms, df_msmsScans, d_parAll, df_pg, d_smy)
-  rawData_name <- c("df_evd", "df_msms", "df_msmsScans", "d_parAll", "df_pg", "d_smy")
-  inputfiles_info <- get_inputInfo(input_rawData , rawData_name)
   
   analysisSoftware <- list(name = "PTXQC",
                            version = as.character(packageVersion("PTXQC")),
@@ -24,11 +12,15 @@ createMzQC = function(rprt_fns)
   
   mzQC_version <- "0.1.1"
   creationDate <- as.character(Sys.time(), format="%Y-%m-%dT%H:%M:%S" )
-  runQuality = metric_info[which(metric_info$quality_type == "runQuality"), ]
-  setQuality = metric_info[which(metric_info$quality_type == "setQuality"), ]
-  controlledVocabularies <- list(list(name = "Quality control metrics generating software",
-                                      uri = "github.com/HUPO-PSI/mzQC/blob/bulk-cvterms/cv/qc-cv.obo",
-                                      version = "0.1.2" ))
+  cv_infos = list(json_cvInfo("Proteomics Standards Initiative Quality Control Ontology",
+                           "https://github.com/HUPO-PSI/qcML-development/blob/master/cv/v0_1_0/qc-cv.obo",
+                           "0.1.0"),
+               json_cvInfo("Proteomics Standards Initiative Mass Spectrometry Ontology",
+                           "https://github.com/HUPO-PSI/psi-ms-CV/blob/master/psi-ms.obo",
+                           "4.1.7"))
+  
+  jsonlite::prettify(jsonlite::toJSON(cv_infos, auto_unbox = TRUE))
+  
   ## create output file
   createmzQC(version = mzQC_version, creationDate = creationDate, runQualities = runQuality, setQualities = setQuality,
              controlledVocabularies = controlledVocabularies, file = metrics_file, data_input = inputfiles_info,
@@ -36,6 +28,11 @@ createMzQC = function(rprt_fns)
   
   cat("done",'\n')
   cat(paste("mzQC file created at\n\n    ", rprt_fns$metrics_file, ".*\n\n", sep=""))
+}
+
+json_cvInfo = function(name, uri, version)
+{
+  return (list(name = name, uri = uri, version = version))
 }
 
 
@@ -48,10 +45,38 @@ createMzQC = function(rprt_fns)
 #' @export
 #' 
 parseOBO = function(cv_obo_file){
-  ontology <- get_ontology(cv_obo_file)
+  ontology = ontologyIndex::get_ontology(cv_obo_file)
   obo = scan(file = cv_obo_file, what = "character")
   return(obo)
 }
 
+mzQC = setRefClass(
+  'mzQC',
+  fields = list(version = 'character',
+                creationDate = 'MzQCDateTime',
+                contactName = 'character',
+                contactAddress = 'character',
+                readMe = 'character',
+                runQualities = 'runQuality',
+                setQualities = 'setQuality',
+                controlledVocabularies = 'controlledVocabulary'
+                ),
+  methods = list(
+    toJSON = function(.self, ...)
+    {
+      return (jsonlite::toJSON(list(version = .self$version,
+                                    creationDate = .self$creationDate
+                                    ## todo, add the rest...
+                                    ), ...))
+    }
+  )
+)
+
+
+
+
+asJSON <- jsonlite:::asJSON
+setMethod('asJSON', 'BankAccount', function(x, ...) x$toJSON())
+jsonlite::toJSON(bb)
 
 
