@@ -135,6 +135,7 @@ In certain situations, the whole txt-folder or a single MaxQuant/mzTab file migh
 ### Contributing - Get Involved!
 
 We welcome input from our user base!
+PTX-QC has a very permissive **BSD-3 clause License** (see [DESCRIPTION](DESCRIPTION) file), so feel free to fork, patch and contribute!
 There are many ways to get involved, _you do not need to be a developer_!
   - suggest a new metric (and why you think it's useful) by opening [a new ticket][issuetracker] here on GitHub.
   - suggest changes to existing metrics (improvements or bugfixes), see above.
