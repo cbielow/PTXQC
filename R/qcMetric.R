@@ -111,7 +111,7 @@ qcMetric = setRefClass("qcMetric",
                     round(sum(mem_after[, 6])-sum(mem_before[, 2]),0) ,")\n",
                     "\nDuration: ", round((proc.time() - t_before)[3]), " s\n\n"))
          if (is.null(r)) {
-           warning(c("Worker of '", .self$qcName, "' returned prematurely! Skipping metric!"))
+           message(c("Worker of '", .self$qcName, "' returned prematurely due to missing data! Skipping metric!"))
            return(NULL);         
          }
          

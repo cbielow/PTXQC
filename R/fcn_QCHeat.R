@@ -41,6 +41,8 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
     } 
     ## check if fc.raw.filenames are known (e.g. when column was named fc.raw.file but values are from raw.file)
     if (!(all(qcm_sc$fc.raw.file %in% raw_file_mapping$to))) {
+      cat("An error occured. Current filename mapping is:\n")
+      print(raw_file_mapping)
       stop("Internal error in getQCHeatMap(): 'fc.raw.file' column has invalid entries for metric '", qcm$qcName, "' with fc.raw.file names: [", paste(qcm_sc$fc.raw.file, collapse=","),"]!")
     }
     return(qcm_sc)
@@ -135,10 +137,10 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
                          guide = guide_legend(title = "score"),
                          breaks=c(1,0.5,0),
                          labels=c("best","under\nperforming","fail")) +
-    theme(axis.text.x = element_text(angle = 90, 
+    theme(axis.text.x = suppressWarnings(element_text(angle = 90, 
                                      vjust = 0.5, 
                                      hjust = 1, 
-                                     colour=QCM_final.m$axisCol[!duplicated(QCM_final.m$variable2)])) +
+                                     colour=QCM_final.m$axisCol[!duplicated(QCM_final.m$variable2)]))) +
     ggtitle("Performance overview") +
     xlab("") +
     ylab("Raw file")

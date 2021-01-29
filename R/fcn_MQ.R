@@ -204,11 +204,11 @@ getFragmentErrors = function(x, recurse = 0)
   abs_error95 = quantile(abs(err), probs = 0.95)
   ## if dimension (Da vs ppm) seem weird, try switching to the other -- but avoid infinite recursion
   if (recurse == 0 & (ms2_unit == "[ppm]") & (abs_error95 > 200)) {
-    warning(paste0("MS/MS fragment error seems rather large ", abs_error95, ". Reporting in [Da]...\n"))
+    message(paste0("MS/MS fragment error seems rather large ", abs_error95, ". Reporting in [Da]...\n"))
     x$mass.analyzer = "ITMS"
     return (getFragmentErrors(x, recurse = 1))
   } else if (recurse == 0 & (ms2_unit == "[Da]") & (abs_error95 < 0.2)) {
-    warning(paste0("MS/MS fragment error seems rather small ", abs_error95, ". Reporting in [ppm]...\n"))
+    message(paste0("MS/MS fragment error seems rather small ", abs_error95, ". Reporting in [ppm]...\n"))
     x$mass.analyzer = paste0(" ", x$mass.analyzer); ## just something which the regex above does not recognize and fallback to ppm
     return (getFragmentErrors(x, recurse = 1))
   }

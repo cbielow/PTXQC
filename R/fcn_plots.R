@@ -20,8 +20,9 @@ plot_ContsPG = function(data)
 {
   data$section = as.integer(seq(0, nrow(data)/correctSetSize(nrow(data),30)*0.999, length.out=nrow(data)))
   p = ggplot(data=data, aes_string(x = "group", y = "cont_pc", alpha="logAbdClass")) +
+        suppressWarnings(## supresses 'Using alpha for a discrete variable is not advised'
         scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(data$logAbdClass))==1) + 1], 1.0), ## ordering of range is critical!
-                             name = "Abundance\nclass") +
+                             name = "Abundance\nclass")) +
         geom_col() +
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
         xlab("")  +
@@ -196,8 +197,9 @@ plot_ContEVD = function(data, top5)
                                   y = "s.intensity", 
                                fill = "Protein")) +
         geom_col(aes_string(alpha = "Log10Diff")) +
-        scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(d_sum$Log10Diff))==1) + 1], 1.0),
-                             name = "Abundance\nclass") +
+        suppressWarnings(## supresses 'Using alpha for a discrete variable is not advised'
+          scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(d_sum$Log10Diff))==1) + 1], 1.0),
+                               name = "Abundance\nclass")) +
         xlab("")  +
         theme_bw() +
         ggtitle("EVD: Top5 Contaminants per Raw file") +
@@ -240,7 +242,7 @@ plot_ContEVD = function(data, top5)
 #'  data = data.frame( x = c(x1,x2),
 #'                     y = c(y1,y2), 
 #'                     col = c(rep("ok", length(x1)), rep("shifted", length(x2))), 
-#'                     ltype = "dotted")
+#'                     ltype = c(rep("solid", length(x1)), rep("dotted", length(x2))))
 #'  plot_RatiosPG(data, range(data$x), "Ratio plot", "red", "group")
 #' 
 plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
@@ -256,10 +258,10 @@ plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
     ylab("density")  +
     scale_fill_manual(values = rep(RColorBrewer::brewer.pal(6,"Accent"), times=40), guide_legend(legend_title)) + 
     scale_colour_manual(values = rep(RColorBrewer::brewer.pal(6,"Accent"), times=40)) +
-    scale_alpha_discrete(range = c(1, 0.2), 
+    suppressWarnings(scale_alpha_discrete(range = c(1, 0.2), 
                          labels=c("dotted"="unimodal", "solid"="multimodal"),
                          guide_legend("shape")
-    ) +
+    )) +
     scale_x_continuous(limits = d_range, trans = "identity", breaks = c(-br, 0, br), labels=c(paste0("1/",2^(br)), 1, 2^br)) +
     guides(colour = FALSE) +
     theme(plot.title = element_text(colour = main_col)) +

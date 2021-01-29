@@ -185,19 +185,21 @@ plotNameMapping = function(.self)
   #mq_mapping = mq$raw_file_mapping
   mq_mapping = .self$raw_file_mapping
   pl_title = "Mapping of Raw files to their short names\nMapping source: " %+% .self$mapping.creation %+% extra;
-  
+
   mappingChunk = function(mq_mapping)
   {
     mq_mapping$ypos = -(1:nrow(mq_mapping))
     head(mq_mapping)
-    mq_mapping.long = reshape2::melt(mq_mapping, id.vars = c("ypos"))
+    ## convert factors to string, because they will all end up in a common 'value' column
+    mq_mapping.s = data.frame(lapply(mq_mapping, function(x) if (is.factor(x)) as.character(x) else {x}), stringsAsFactors= FALSE)
+    mq_mapping.long = reshape2::melt(mq_mapping.s, id.vars = c("ypos"), value.name = "value")
     head(mq_mapping.long)
     mq_mapping.long$variable = as.character(mq_mapping.long$variable)
     mq_mapping.long$col = "#000000";
     mq_mapping.long$col[mq_mapping.long$variable=="to"] = "#5F0000"
     mq_mapping.long$variable[mq_mapping.long$variable=="from"] = xpos[1]
     mq_mapping.long$variable[mq_mapping.long$variable=="to"] = xpos[2]
-    if (nchar(extra)) mq_mapping.long$variable[mq_mapping.long$variable=="best.effort"] = xpos[3]
+    mq_mapping.long$variable[mq_mapping.long$variable=="best.effort"] = xpos[3]
     mq_mapping.long$variable = as.numeric(mq_mapping.long$variable)
     mq_mapping.long$size = 2;
     
@@ -206,7 +208,6 @@ plotNameMapping = function(.self)
     mq_mapping.long2$hpos = 0 ## left aligned,  1=right aligned
     mq_mapping.long2$hpos[mq_mapping.long2$variable==xpos[1]] = 1
     mq_mapping.long2$hpos[mq_mapping.long2$variable==xpos[2]] = 0
-    if (nchar(extra)) mq_mapping.long2$hpos[mq_mapping.long2$variable==xpos[3]] = 0
     
     mqmap_pl = ggplot(mq_mapping.long2, aes_string(x = "variable", y = "ypos"))  +
       geom_text(aes_string(label="value"), color = mq_mapping.long2$col, hjust=mq_mapping.long2$hpos, size=mq_mapping.long2$size) +

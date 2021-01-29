@@ -180,6 +180,6 @@ brewer.pal.Safe = function(n = 3, palette = "Set1")
   idx = which(rownames(RColorBrewer::brewer.pal.info) == palette)
   if (length(idx) != 1) stop("Palette ", palette," unknown!")
   if (RColorBrewer::brewer.pal.info$maxcolors[idx] < n) stop("Palette ", palette, " provides ", RColorBrewer::brewer.pal.info$maxcolors[idx], " colors, but not ", n, " as requested!")
-  
-  return (RColorBrewer::brewer.pal(n, palette))
+  ## avoid warning about less than 3 colors, if n<3
+  return (RColorBrewer::brewer.pal(max(3,n), palette)[1:n])
 }

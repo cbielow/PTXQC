@@ -279,7 +279,8 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
       ## check if reporter.intensity.0... is present
       cols_reporter = grepv("^reporter.intensity.corrected.[0-9]", colnames(df_evd));
       cols_reporter.nc = grepv("^reporter.intensity.[0-9]", colnames(df_evd));
-      if(length(cols_reporter) <= 1 || length(cols_reporter.nc) <= 1) {warning("Two reporter.intensity and two reporter.intensity.corrected columns are needed for metric ReporterIntensity.")
+      if(length(cols_reporter) <= 1 || length(cols_reporter.nc) <= 1) {
+        message("Info: Two reporter.intensity and two reporter.intensity.corrected columns are needed for metric ReporterIntensity.")
         return()}
       ## check if correction was done at all
       if (all(df_evd[1:1000, cols_reporter] == df_evd[1:1000, cols_reporter.nc], na.rm = TRUE))
@@ -1120,7 +1121,7 @@ Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = samp
           byXflex(df_evd[, c("intensity", "pname", "fc.raw.file", "contaminant")], df_evd$fc.raw.file, 40, sort_indices = TRUE, 
                   plot_ContEVD, top5=cont.top5.names)
       }
-      
+
       ## QC measure for contamination
       qc_cont = plyr::ddply(df_evd[, c("intensity", "contaminant", "fc.raw.file")], "fc.raw.file", 
                       function(x) {
