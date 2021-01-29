@@ -62,25 +62,41 @@ getShortNames = function(.self, raw_filenames, max_length = 10, ms_runs = NULL)
   
   cat(paste0("Adding fc.raw.file column ..."))
   ## if there is no mapping, or if its incomplete (outdated mapping file)
-  if (nrow(.self$raw_file_mapping) == 0 || any(is.na(match(raw_filenames, .self$raw_file_mapping$from))))
-  { ## --> redo
+  has_mapping = (nrow(.self$raw_file_mapping) != 0)
+  incomplete_mapping = has_mapping && any(is.na(match(raw_filenames, .self$raw_file_mapping$from)))
+  if (!has_mapping || incomplete_mapping)
+  { 
+    ## if the mapping is 'auto', we got handed an incomplete/different txt file before, which does not match
+    ## the current file. Some files got mixed up, so we stop!
+    if (incomplete_mapping)
+    {
+      if (is.na(.self$mapping.creation))
+      {
+        stop("mapping.creation member not properly initialized!")
+      }
+      ## we had NA's in auto mode ... bad
+      if (.self$mapping.creation == .self$getMappingCreation()['auto'])
+      { ## mapping is incomplete
+        missing = unique(raw_filenames[is.na(match(raw_filenames, .self$raw_file_mapping$from))])
+        stop(paste0("Hithero unknown Raw files: ", paste(missing, collapse=", ", sep=""), " encountered which were not present in previous data files.\nDid you mix output files from different analyses?"))
+      } 
+    }
+    ## --> redo
     rfm = .self$getShortNamesStatic(unique(raw_filenames), max_length)
     if (!is.null(ms_runs)) {
       rfm$ms.run = ms_runs[ match(rfm$from, raw_filenames)  ]
     }
+    ## and remember it
     .self$raw_file_mapping = rfm
+    cat("Created a new filename mapping:\n")
+    print(rfm)
+    
     ## indicate to outside that a new table is ready
     .self$mapping.creation = .self$getMappingCreation()['auto']
   }
   ## do the mapping    
   v.result = as.factor(.self$raw_file_mapping$to[match(raw_filenames, .self$raw_file_mapping$from)])
   
-  ## check for NA's
-  if (any(is.na(v.result)))
-  { ## if mapping is incomplete
-    missing = unique(raw_filenames[is.na(v.result)])
-    stop(paste0("Hithero unknown Raw files: ", paste(missing, collapse=", ", sep=""), " encountered in file '", file, "' which were not present in previous data files.\nPlease delete the file or fix it."))
-  } 
   cat(paste0(" done\n"))
   return (v.result)
 }, 
@@ -274,7 +290,7 @@ readMappingFile = function(.self, filename)
     }
     .self$raw_file_mapping = dfs
     ## set who defined it
-    .self$mapping.creation = 'file (user-defined)'
+    .self$mapping.creation = .self$getMappingCreation()['user']
     .self$external.mapping.file = filename; ## remember filename for later error messages
     return (TRUE)
   }
