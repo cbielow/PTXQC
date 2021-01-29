@@ -512,7 +512,7 @@ RTalignmentTree = function(df_evd, col_fraction = c())
       theme(axis.text.y = element_text(colour = ddata$labels$col),
                      axis.text.x = element_blank()) +
       coord_flip() +
-      addGGtitle("[experimental] EVD: Clustering Tree of Raw files", "by Correlation of Corrected Retention Times")
+      ggtitle("[experimental] EVD: Clustering Tree of Raw files", "by Correlation of Corrected Retention Times")
   #p
   return(p)
 }

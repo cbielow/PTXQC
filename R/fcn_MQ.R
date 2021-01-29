@@ -113,13 +113,13 @@ boxplotCompare = function(data,
       geom_boxplot(varwidth = TRUE) +
       xlab("") + 
       ylab(ylab) +
-      ylim(ylims) +
+      coord_cartesian(ylim = ylims) + ## avoid Warning: Removed xxx rows containing non-finite values (stat_boxplot), because a simple ylim(ylims) would replace outliers by
       scale_alpha(guide = FALSE) +
       scale_fill_manual(values = cols, name = "Category") + 
       scale_color_manual(values = dark_cols, name = "Category") + 
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
       theme(legend.position = ifelse(length(cols)==1, "none", "right")) +
-      addGGtitle(mainlab, sublab) + 
+      ggtitle(mainlab, sublab) + 
       scale_x_discrete_reverse(factor(unique(data$group)))
     
     if (!is.na(abline))

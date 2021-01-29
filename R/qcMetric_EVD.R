@@ -329,7 +329,7 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
           ylab("reporter intensity (log10)") +
           guides(alpha=guide_legend(title="Label Eff"), fill = guide_legend(reverse = TRUE)) + ## inverse label order, so that channel 0 is on top
           theme(axis.text.x = element_text(angle=45, vjust = 0.5), legend.position="right", plot.title = element_text(color=title_color)) +
-          addGGtitle("EVD: Reporter label intensities", title_subtext) + 
+          ggtitle("EVD: Reporter label intensities", title_subtext) + 
           #geom_hline(size = 1, alpha = 0.5, yintercept = ref_median, colour = "black") +
           scale_alpha(range = range(ylims$labEff_PC)) +
           scale_x_discrete_reverse(unique(data$fc.raw.file)) +
@@ -1259,7 +1259,7 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
       lpl = byXflex(pep_set, pep_set$fc.raw.file, subset_size = 50, FUN = function(dx) {
         p = ggplot(dx) + 
           geom_bar(aes_string(x = "fc.raw.file", y = "idFraction"), stat = "identity") +
-          addGGtitle("[experimental] EVD: Non-Missing Peptides", "compared to all peptides seen in experiment") +
+          ggtitle("[experimental] EVD: Non-Missing Peptides", "compared to all peptides seen in experiment") +
           xlab("") +
           ylab("Fraction of total peptides [%]") +
           ylim(0, 100) +
@@ -1281,7 +1281,7 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
       p = ggplot(tbl_smry, aes_string(x = "x", y = "FreqCum")) + 
         geom_line() +
         geom_point() +
-        addGGtitle("[experimental] EVD: Non-missing by set", "") +
+        ggtitle("[experimental] EVD: Non-missing by set") +
         xlab("Minimum # Raw files") +
         ylab("Fraction of total peptides [%]") +
         ylim(0, 100)

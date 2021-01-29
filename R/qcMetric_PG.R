@@ -236,7 +236,7 @@ Heatmap score: none (since data source proteinGroups.txt is not related 1:1 to R
         data = data[, colSums(data, na.rm = TRUE) > 0, drop = FALSE]
         rownames(data) = MAP_pg_groups$short[match(rownames(data), MAP_pg_groups$long)]
         pl = try(getPCA(data = data,
-                        gg_layer = addGGtitle(paste0("PG: PCA of '", sub(".", " ", cond, fixed = TRUE), "'"), "(excludes contaminants)")
+                        gg_layer = ggtitle(paste0("PG: PCA of '", sub(".", " ", cond, fixed = TRUE), "'"), "(excludes contaminants)")
                        )[["plots"]])
         #print(pl)
         if (!inherits(pl, "try-error")) lpl = append(lpl, pl);

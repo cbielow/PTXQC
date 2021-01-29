@@ -79,7 +79,7 @@ plot_ContUser = function(data, name_contaminant, extra_limit, subtitle = NULL)
   maxY = max(datav$value, extra_limit)
   p = ggplot(datav, aes_string(x = "fc.raw.file", y = "value")) +
         geom_col(aes_string(fill = "variable"), position = "dodge", width=.7) +
-        addGGtitle(paste0("EVD: Contaminant '", name_contaminant, "'"), subtitle) +
+        ggtitle(paste0("EVD: Contaminant '", name_contaminant, "'"), subtitle) +
         xlab("")  +
         ylab("abundance fraction (%)") +
         ylim(c(0, maxY * 1.1)) +
@@ -303,7 +303,7 @@ plot_CountData = function(data, y_max, thresh_line, title)
         scale_x_discrete_reverse(data$fc.raw.file) +
         ylim(0, y_max) +
         scale_fill_manual(values = c("green", "#BEAED4", "blue")) +
-        addGGtitle(title_main, title_sub) + 
+        ggtitle(title_main, title_sub) + 
         geom_abline(alpha = 0.5, intercept = thresh_line, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
         coord_flip()
   return(p)
@@ -404,7 +404,7 @@ plot_MBRAlign = function(data, y_lim, title_sub, match_tol)
         xlab("corrected RT [min]") +
         ylab(expression(Delta*"RT [min]")) +
         facet_wrap(~ fc.raw.file_ext) +
-        addGGtitle("EVD: MBR - alignment", title_sub)  
+        ggtitle("EVD: MBR - alignment", title_sub)  
   #print(p)
   return(p)
 }
@@ -499,7 +499,7 @@ plot_MBRgain = function(data, title_sub = "")
 {
   p = ggplot(data = data, aes_string(x = "abs", y = "pc", col = "fc.raw.file")) + 
         geom_point(size=2) + 
-        addGGtitle("EVD: Peptides inferred by MBR", title_sub) +
+        ggtitle("EVD: Peptides inferred by MBR", title_sub) +
         xlab("number of transferred ID's") +
         ylab("gain on top of genuine IDs [%]") +
         xlim(0, max(data$abs, na.rm = TRUE)*1.1) + ## accounting for labels near the border
@@ -885,7 +885,7 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
                    colour="red",
                    linetype = "longdash") +  ## == vline for coord_flip
         coord_flip() +
-        addGGtitle("EVD: Uncalibrated mass error", title_sub)
+        ggtitle("EVD: Uncalibrated mass error", title_sub)
 
   #print(p)
   return(p)
@@ -942,7 +942,7 @@ plot_CalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit
     ylim(y_lim) +
     scale_x_discrete_reverse(data$fc.raw.file) +
     coord_flip() +
-    addGGtitle("EVD: Calibrated mass error", title_sub)
+    ggtitle("EVD: Calibrated mass error", title_sub)
   if (!is.na(extra_limit)) {
     p = p + geom_hline(yintercept = c(-extra_limit, extra_limit), colour="red", linetype = "longdash")  ## == vline for coord_flip
   }
@@ -1075,7 +1075,7 @@ plot_MissedCleavages = function(data, title_sub = "")
         geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
         coord_flip() +
         scale_x_discrete_reverse(st_bin.m$fc.raw.file) +
-        addGGtitle("MSMS: Missed cleavages per Raw file", title_sub)
+        ggtitle("MSMS: Missed cleavages per Raw file", title_sub)
   
   #print(p)
   return(p)

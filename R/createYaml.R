@@ -129,7 +129,7 @@ createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, txt_files = NULL
   }
   if (is.na(param$param_EV_PrecursorTolPPMmainSearch))
   {
-    warning("PTXQC: Cannot draw borders for calibrated mass error, since neither 'File$Evidence$MQpar_mainSearchTol_num' is set nor a mqpar.xml file is present!", immediate. = TRUE)
+    #warning("PTXQC: Cannot draw valid range borders for calibrated mass error, since neither 'File$Evidence$MQpar_mainSearchTol_num' is set nor a mqpar.xml file is present!", immediate. = TRUE)
   }
   
   param$param_MSMSScans_ionInjThresh = yc$getYAML("File$MsMsScans$IonInjectionThresh_num", param$param_MSMSScans_ionInjThresh, 0, 200)

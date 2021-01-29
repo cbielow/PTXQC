@@ -118,30 +118,6 @@ ggAxisLabels = function(x, n = 20)
 }
 
 
-#' Add title and subtitle to a ggplot
-#' 
-#' Found in http://www.antoni.fr/blog/?p=39 .. whewww... modified a little
-#' 
-#' Usage: 
-#'   ggplot(...) + geom_X(...) + addGGtitle(...)
-#'   
-#' @param main String for main title
-#' @param sub Optional string for sub title
-#' @return A ggplot object
-#' 
-#' @import ggplot2
-#' @export
-#' 
-addGGtitle = function(main, sub = NULL){
-  if (is.null(sub) || sub=="") {
-    pl = ggtitle(main)
-  } else {
-    pl = ggtitle(eval(parse(text=paste("expression(atop(\"",main, "\",", " scriptstyle(\"", sub , "\")))", sep=""))))
-  }
-  return (pl)
-}
-
-
 #' 
 #' Distribute a set of points with fixed y-values on a stretch of the x-axis.
 #' 
