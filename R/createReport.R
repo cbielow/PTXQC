@@ -118,19 +118,36 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ## start logging the output
   if (enable_log)
   {
-    my_log <- file(rprt_fns$log_file) # File name of output log
-    sink(my_log, append = TRUE, type = "output", split = TRUE) # Writing console output to log file
-    sink(my_log, append = TRUE, type = "message")  ## cannot be split ... so we need to decide where it should go
+    ## we remember the last error, so we can tell if a new one occurred
+    try(stop("PTXQC_ERROR_DETECTOR"), silent = TRUE)
+    last_error_msg__ = geterrmessage();
+    
+    my_log = file(rprt_fns$log_file, open = "wt") # File name of output log
+    sink(my_log, type = "output", split = TRUE) # Writing console output to log file
+    sink(my_log, type = "message")  ## cannot be split ... so we need to decide where it should go
     on.exit({  
-      # Restore output to console
-      sink() 
+      
+      ## show warnings, before we leave
+      print(warnings());
+      
+      
+      ## see if an error occurred: if yes, print it
+      if (last_error_msg__ != geterrmessage()) {
+        cat("\nTraceback:\n")
+        traceback()
+        cat(paste0("\nAn error occurred: '", trimws(geterrmessage()), "'. See '", rprt_fns$log_file, "' for details!\n\n\n"))  
+      }
+
+      ## Restore output to console
       sink(type="message")
+      sink() 
+      
       
     }, add = TRUE)
   }
   
   cat(paste0(date(), ": Starting QC computation on report '", rprt_fns$report_file_prefix, "'\n"))
-  
+
   ##
   ## YAML config (with default values if no yaml file was given)
   ##
@@ -140,7 +157,6 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   yc = yc_param_lstqcMetrics_list$yc
   yaml_param = yc_param_lstqcMetrics_list$param
   lst_qcMetrics = yc_param_lstqcMetrics_list$lst_qcMetrics
-  
   
   ## write out the final YAML file (so users can disable metrics, if they fail)
   yc$writeYAML(rprt_fns$yaml_file)
@@ -714,7 +730,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   
   cat(paste("Report file created at\n\n    ", rprt_fns$report_file_prefix, ".*\n\n", sep=""))
   cat(paste0("\n\nTime elapsed: ", round(as.double(Sys.time() - time_start, units="mins"), 1), " min\n\n"))
-  
+
   ## return path to PDF report and YAML config, etc
   return(rprt_fns)
 }
