@@ -14,24 +14,24 @@ getReportFilenames(
 \item{folder}{Directory where the MaxQuant output (txt folder) or the mzTab file resides}
 
 \item{report_name_has_folder}{Boolean: Should the report files (html, pdf) contain the name
-of the deepest(=last) subdirectory in 'txt_folder' which is not 'txt'?
+of the deepest(=last) subdirectory in **txt_folder** which is not `txt`?
 Useful for discerning different reports in a PDF viewer.
-E.g. when flag is FALSE: 'report_v0.91.0.html'; and 'report_v0.91.0_bloodStudy.html' when flag is TRUE (and the
-txt folder is '.../bloodStudy/txt/' or '...bloodStudy/', i.e. './txt/' will be skipped over)}
+E.g. when flag is FALSE: `report_v0.91.0.html`; and `report_v0.91.0_bloodStudy.html` when flag is TRUE (and the
+txt folder is `.../bloodStudy/txt/` or `...bloodStudy/`)}
 
 \item{mzTab_filename}{If input is an mzTab, specify its name, so that the filenames can use its basename as infix
-E.g. when mzTab_filename = 'HEK293-study.mzTab' then the output will be
-     report_HEK293-study.html.
+E.g. when `mzTab_filename = 'HEK293-study.mzTab'` then the output will be
+     `report_HEK293-study.html`.
 This allows to get reports on multiple mzTabs in the same folder without overwriting report results.}
 }
 \value{
 List of output file names (just names, no file is created) 
         with list entries: 
-        yaml_file, heatmap_values_file, R_plots_file, filename_sorting, stats_file, log_file, report_file_prefix, report_file_PDF, report_file_HTML
+        **yaml_file**, **heatmap_values_file**, **R_plots_file**, **filename_sorting**, **stats_file**, **log_file**, **report_file_prefix**, **report_file_PDF**, **report_file_HTML**
 }
 \description{
-You can combine @p report_name_has_folder and @p mzTab_filename to obtain filenames which are even more
+You can combine **report_name_has_folder** (and **mzTab_filename** for mzTab files) to obtain report filenames which are even more
 robust to moving around (since they contain infixes of the mzTab filename and the folder),
-e.g. @em report_HEK293-study_myProjects.html, where the input 
-     was mzTab_filename='HEK293-study.mzTab' and folder='c:/somePath/myProjects/'.
+e.g. `@em `report_HEK293-study_myProjects.html``, where the input 
+     was `mzTab_filename='HEK293-study.mzTab` and `folder='c:/somePath/myProjects/`.
 }

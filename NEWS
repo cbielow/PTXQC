@@ -7,6 +7,12 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.0.9 -- 2021/01/29
+  - [FEATURE] allow redirecting console output to file (#94)
+  - [FIX] reduce ggplot warnings
+  - [FEATURE] mzQC data type support (preliminary; no export yet)
+
+
 [CRAN] v1.0.8 -- 2020/12/11
   - [FIX] issue #90 Missed Cleavages Plot missing
   - [FIX] issue #91 Wrong score for MSMSScans Intensity

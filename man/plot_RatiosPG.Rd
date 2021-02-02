@@ -32,7 +32,7 @@ The 'x' values are expected to be log2() transformed already.
  data = data.frame( x = c(x1,x2),
                     y = c(y1,y2), 
                     col = c(rep("ok", length(x1)), rep("shifted", length(x2))), 
-                    ltype = "dotted")
+                    ltype = c(rep("solid", length(x1)), rep("dotted", length(x2))))
  plot_RatiosPG(data, range(data$x), "Ratio plot", "red", "group")
 
 }

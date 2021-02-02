@@ -9,11 +9,10 @@ PTXQC
 
 ### Latest changes / ChangeLog
 
-  
+  - v1.00.09 - Jan 2021: output logging to external file (#94); mzQC support (partial); less warnings;
   - v1.00.08 - Dec 2020: fix issues with two metrics (#90, #91)
   - v1.00.07 - Nov 2020: fix issues with creating intermediate Rplots.pdf
   - v1.00.05 - Jun 2020: mzTab fixes introduced in v1.0.4
-  - v1.00.04 - Mar 2020: mzTab support for iTRAQ/TMT; minor fixes
 
 See [NEWS][News_File] file for a version history.
 
