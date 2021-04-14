@@ -36,16 +36,16 @@ boxplotCompare = function(data,
                           coord_flip = TRUE,
                           names = NA)
 {
-  
+ 
   if (ncol(data) == 2) {
     data$contaminant = FALSE ## add a third column, if missing
   }
   colnames(data) = c("group", "value", "contaminant")
-  
+
   if (log2) {
     data$value = log2(data$value)
   }
-  
+
   ## shorten group names
   if (class(names)=='data.frame')
   {
@@ -74,10 +74,14 @@ boxplotCompare = function(data,
   #stopifnot(class(data$group2) == "factor")
   #stopifnot(all(as.numeric(data$group) == as.numeric(data$group2))) ## as.numeric() is meaningless on factors with different levels
   data$group = data$group2
-  
   ## remove -inf and NA's
   data = data[!is.infinite(data$value) & !is.na(data$value), ]
   
+  if (nrow(data)== 0){
+    return(list(ggText(mainlab,
+                   "No intensity found",
+                   "red")))
+  }
   groups = unique(data$group);
   ## add color for H vs L (if SILAC)
   cols = c("sample" = "black", 

@@ -1253,3 +1253,14 @@ darken = function(color, factor=0.8){
 }
 
 
+
+checkEnglishLocale = function(df_evd) {
+  if (!checkInput(c("charge"), df_evd)) return(TRUE)
+  
+  
+  if (any(df_evd$charge < 0)){
+    return (FALSE)
+  }
+  else return (TRUE)
+}
+
