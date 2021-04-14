@@ -370,7 +370,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ## just a local scope to fold evidence metrics in the editor...
   {
     if (!checkEnglishLocale(df_evd)){
-      stop ("The check for english locale failed. Please check the locale and input files. ")
+      stop ("\n\nThe data in evidence.txt looks weird! MaxQuant was run under a wrong locale/region settings (i.e. make sure to use an english locale, specifically, the decimal separator should be '.'!). Please fix the locale on the PC where MaxQuant was used, and redo the computation.\n\n")
     } 
     
     ### warn of special contaminants!
