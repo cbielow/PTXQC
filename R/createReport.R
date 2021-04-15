@@ -146,6 +146,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     }, add = TRUE)
   }
   
+  
+  
   cat(paste0(date(), ": Starting QC computation on report '", rprt_fns$report_file_prefix, "'\n"))
 
   ##
@@ -167,6 +169,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ## write shortnames and sorting of filenames
   eval(expr_fn_map)$writeMappingFile(rprt_fns$filename_sorting)
   
+ 
   
   ######
   ######  parameters.txt ...
@@ -366,7 +369,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   }
   ## just a local scope to fold evidence metrics in the editor...
   {
-    
+    if (!checkEnglishLocale(df_evd)){
+      stop ("\n\nThe data in evidence.txt looks weird! MaxQuant was run under a wrong locale/region settings (i.e. make sure to use an english locale, specifically, the decimal separator should be '.'!). Please fix the locale on the PC where MaxQuant was used, and redo the computation.\n\n")
+    } 
     
     ### warn of special contaminants!
     if (class(yaml_param$yaml_contaminants) == "list")  ## SC are requested
@@ -378,7 +383,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         lst_qcMetrics[["qcMetric_EVD_UserContaminant"]]$setData(df_evd, NULL, yaml_param$yaml_contaminants)
       }
     }
-    
+   
     ##
     ## intensity of peptides
     ##
@@ -513,6 +518,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
     if (!DEBUG_PTXQC) df_evd = df_evd[, c("id", "contaminant")]
   }
+  
+  
   
   
   ######
@@ -731,6 +738,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   cat(paste("Report file created at\n\n    ", rprt_fns$report_file_prefix, ".*\n\n", sep=""))
   cat(paste0("\n\nTime elapsed: ", round(as.double(Sys.time() - time_start, units="mins"), 1), " min\n\n"))
 
+ 
   ## return path to PDF report and YAML config, etc
   return(rprt_fns)
 }
