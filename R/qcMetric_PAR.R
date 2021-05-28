@@ -10,7 +10,7 @@ track database completeness and database version information (if given in the fi
     workerFcn=function(.self, df_mqpar)
     {
       ##todo: read in mqpar.xml to get group information and ppm tolerances for all groups (parameters.txt just gives Group1)
-      
+
       line_break = "\n"; ## use space to make it work with table
       ## remove AIF stuff
       df_mqpar = df_mqpar[!grepl("^AIF ", df_mqpar$parameter),]
@@ -36,25 +36,16 @@ track database completeness and database version information (if given in the fi
       
       ## sort by name
       d_par = d_par[order(d_par$parameter), ]
-      ## merge parameter names which have identical values (could be many for mzTab)
-      d_par_uniq = as.data.table(d_par)[,{df = .SD[1,]
-                                          u = unique(.SD$parameter)
-                                          if (length(unique) > 1)
-                                          {
-                                            df$parameter = paste0(.SD$parameter[1], "..", .SD$parameter[.N])
-                                          }
-                                          df # return
-                                         }, by = "value"]
-      
+
       ## two column layout
-      if (nrow(d_par_uniq) %% 2 != 0) d_par_uniq = rbind(d_par_uniq, "", fill = TRUE) ## make even number of rows
-      mid = nrow(d_par_uniq) / 2
-      d_par_uniq$page = 1
-      d_par_uniq$page[1:mid] = 0
+      if (nrow(d_par) %% 2 != 0) d_par = rbind(d_par, "", fill = TRUE) ## make even number of rows
+      mid = nrow(d_par) / 2
+      d_par$page = 1
+      d_par$page[1:mid] = 0
       
       parC = c("parameter", "value")
-      class(d_par_uniq) = "data.frame"
-      d_par2 = cbind(d_par_uniq[d_par_uniq$page==0, parC], d_par_uniq[d_par_uniq$page==1, parC])
+     
+      d_par2 = cbind(d_par[d_par$page==0, parC], d_par[d_par$page==1, parC])
       
       ## HTML: alternative table
       ## (do this before line breaks, since Html can handle larger strings)      
