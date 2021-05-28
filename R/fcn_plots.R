@@ -1026,15 +1026,16 @@ plot_MS2Decal = function(data)
     qnt = quantile(x$msErr, probs = c(0.02, 0.98), na.rm = TRUE)
     return (x[qnt[1] < x$msErr & x$msErr < qnt[2], ])
   })
+  p = ggplot(data2, aes_string(x = "msErr", fill="type", alpha="0.9")) + 
+    ## individual bin width for each raw file by using a function
+    geom_histogram(binwidth = function(x) {diff(range(x, na.rm = TRUE))/30}) +
+    xlab("fragment mass delta") +  
+    scale_alpha(guide = "none") +
+    ylab("count") + 
+    scale_fill_manual(values = c(forward = "#99d594", decoy = "#ff0000")) +
+    ggtitle("MSMS: Fragment mass errors per Raw file") +
+    facet_wrap(~file, scales = "fixed")
   
-  p = ggplot(data2, aes_string(x = "msErr", fill="type")) + 
-        ## individual bin width for each raw file by using a function
-        geom_histogram(binwidth = function(x) {diff(range(x, na.rm = TRUE))/30}) +
-        xlab("fragment mass delta") +  
-        ylab("count") + 
-        scale_fill_manual(values = c(forward = "#99d594", decoy = "#ff0000")) +
-        ggtitle("MSMS: Fragment mass errors per Raw file") +
-        facet_wrap(~file, scales = "fixed")
       
   #print(p)
   return(p)
