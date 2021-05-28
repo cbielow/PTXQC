@@ -417,8 +417,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ## Even if MBR=off, this column always contains numbers (usually 0, or very small)
     ##
     
-    
-    if (!("retention.time.calibration" %in% colnames(df_evd)))
+    if ("retention.time.calibration" %in% colnames(df_evd))
     {
       ## this should enable us to decide if MBR was used (we could also look up parameters.txt -- if present)
       if (!(yaml_param$param_evd_mbr == FALSE) & nrow(df_evd_tf)>0)
@@ -445,7 +444,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         lst_qcMetrics[["qcMetric_EVD_MBRaux"]]$setData(df_evd)
         
       } ## MBR has data
-    } ## retention.time.difference column exists
+    } ## retention.time.calibration column exists
     
     
     ##
