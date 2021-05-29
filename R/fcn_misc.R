@@ -1257,6 +1257,8 @@ darken = function(color, factor=0.8){
 #' When MaxQuant is run with a wrong locale (i.e. the decimal separator is not a '.', but a ','), 
 #' then MaxQuant results are plainly wrong and broken. The can be detected by, e.g. checking for negative charge annotation
 #'
+#' @param df_evd Evidence table from which we only need the 'charge' column
+#'
 checkEnglishLocale = function(df_evd) {
   if (!checkInput(c("charge"), df_evd)) return(TRUE)
   
