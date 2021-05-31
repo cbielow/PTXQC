@@ -441,7 +441,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         ##  and
         ## MBR: additional evidence by matching MS1 by AMT across files
         ##
-        lst_qcMetrics[["qcMetric_EVD_MBRaux"]]$setData(df_evd)
+        lst_qcMetrics[["qcMetric_EVD_MBRaux"]]$setData(all_evd)
         
       } ## MBR has data
     } ## retention.time.calibration column exists
