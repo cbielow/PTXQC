@@ -869,7 +869,6 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
   data$col[data$fc.raw.file %in% stats$fc.raw.file[stats$outOfCal]] = "out-of-search-tol"
   ## only show legend if special things happen  
   showColLegend = ifelse(length(setdiff(data$col, "default")) > 0, "legend", "none")
-  
   ## amend SD to fc.raw.file
   stats$fcr_new_lvl = paste0(stats$fc.raw.file, " (sd = ", stats$sd_uncal, "ppm)")
   
@@ -882,7 +881,8 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
         ylab(expression(Delta~"mass [ppm]")) +
         xlab("") +
         ylim(y_lim) +
-        scale_x_discrete_reverse(data$fc.raw.file_ext) +
+        #scale_x_discrete_reverse(data$fc.raw.file_ext) +
+        scale_x_discrete(limits=rev) +
         geom_hline(yintercept = c(-extra_limit, extra_limit), 
                    colour="red",
                    linetype = "longdash") +  ## == vline for coord_flip
@@ -942,7 +942,8 @@ plot_CalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit
     ylab(expression(Delta~"mass [ppm]")) +
     xlab("") +
     ylim(y_lim) +
-    scale_x_discrete_reverse(data$fc.raw.file) +
+    #scale_x_discrete_reverse(data$fc.raw.file) +
+    scale_x_discrete(limits=rev) +
     coord_flip() +
     ggtitle("EVD: Calibrated mass error", title_sub)
   if (!is.na(extra_limit)) {
