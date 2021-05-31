@@ -38,7 +38,7 @@ track database completeness and database version information (if given in the fi
       d_par = d_par[order(d_par$parameter), ]
 
       ## two column layout
-      if (nrow(d_par) %% 2 != 0) d_par = rbind(d_par, "", fill = TRUE) ## make even number of rows
+      if (nrow(d_par) %% 2 != 0) d_par[nrow(d_par)+1,] = ""  ## make even number of rows
       mid = nrow(d_par) / 2
       d_par$page = 1
       d_par$page[1:mid] = 0
