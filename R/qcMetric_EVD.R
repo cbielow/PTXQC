@@ -816,7 +816,7 @@ Heatmap score: none.
         RTalignmentTree(df_evd[(df_evd$type %in% c("MULTI-MSMS")), 
                                c("calibrated.retention.time", "fc.raw.file", col_fraction, "modified.sequence", "charge")],
                         col_fraction = col_fraction)
-      
+
       ## MBR: additional evidence by matching MS1 by AMT across files
       if (any(df_evd$is.transferred)) {
         ## gain for each raw file: absolute gain, and percent gain

@@ -41,5 +41,5 @@ See the package vignettes for documentation on how to create and customize a rep
   [4]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-Basic_Guide_for_R_users.Rmd
   [5]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-DragNDrop.Rmd
   [JPR_paper]: https://doi.org/10.1021/acs.jproteome.5b00780
-  [example_html]: http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/inst/examples/report_v1.0.0__txt_5files_withMatch-100min.html
-  [example_pdf]: report_v1.0.0__txt_5files_withMatch-100min.pdf
+  [example_html]: http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/inst/examples/report_v1.0.10__txt_5files_withMatch-100min.html
+  [example_pdf]: report_v1.0.10__txt_5files_withMatch-100min.pdf

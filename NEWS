@@ -7,6 +7,12 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.0.10 -- 2021/05/29
+  - [FEATURE] detect if MaxQuant was run with wrong decimal separator (non UK/US locale) (issue #98)
+  - [FIX] issue #97 Revive missing MBR metrics (introduced in PTXQC 1.0.9)
+  - [FIX] issue #101 Restore full Parameter list showing MaxQuant parameters
+  - [FIX] issue #102 Decoy distribution not shown in MS/MS mass error plot
+
 [CRAN] v1.0.9 -- 2021/01/29
   - [FEATURE] allow redirecting console output to file (#94)
   - [FIX] reduce ggplot warnings
