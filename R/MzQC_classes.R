@@ -74,10 +74,10 @@ isUndefined = function(s, ..., verbose = TRUE)
 #'
 #' @examples 
 #'   isValidMzQC(MzQCcvParameter$new("QC:4000059"))       # FALSE
+#'   isValidMzQC(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra")) # TRUE
 #'   isValidMzQC(list(MzQCcvParameter$new("QC:4000059"))) # FALSE
 #'   isValidMzQC(list(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra"))) # TRUE
-#'   isValidMzQC(list(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra")),
-#'                MzQCcvParameter$new()) # FALSE
+#'   isValidMzQC(list(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra")), MzQCcvParameter$new()) # FALSE
 #'   
 #' @export
 #'
@@ -113,7 +113,7 @@ isValidMzQC = function(x, ...)
 #' @param data A datastructure of R lists/arrays as obtained by 'jsonlite::fromJSON()'
 #'
 #' @examples 
-#'  data = MzQCcvParameter$new("acc", "myName", "desc")
+#'  data = MzQCcvParameter$new("acc", "myName", "value")
 #'  data_recovered = fromDatatoMzQC(MzQCcvParameter, list(jsonlite::fromJSON(jsonlite::toJSON(data))))
 #'  data_recovered
 #'
@@ -237,10 +237,8 @@ setMethod('asJSON', 'MzQCDateTime', function(x, ...) x$toJSON(...))
 #' @examples 
 #'   MzQCcontrolledVocabulary$new(
 #'     "Proteomics Standards Initiative Quality Control Ontology",
-#'     "https://github.com/HUPO-PSI/qcML-development/blob/master/cv/v0_1_0/qc-cv.obo",
-#'     "0.1.0")
-#'   isValidMzQC(MzQCcontrolledVocabulary$new(
-#'    "Proteomics Standards Initiative Quality Control Ontology"))
+#'     "https://github.com/HUPO-PSI/mzQC/blob/master/cv/qc-cv.obo",
+#'     "1.2.0")
 #'    
 #' @export
 #'   
@@ -489,8 +487,8 @@ setMethod('asJSON', 'MzQCanalysisSoftware', function(x, ...) x$toJSON(...))
 #'The metadata for a run/setQuality
 #'
 #' @field label Unique name for the run (for runQuality) or set (for setQuality).
-#' @field inputFiles Array of MzQCinputFile objects 
-#' @field analysisSoftware Array of MzQCanalysisSoftware objects 
+#' @field inputFiles Array/list of MzQCinputFile objects 
+#' @field analysisSoftware Array/list of MzQCanalysisSoftware objects 
 #' @field cvParameters [optional] Array of cvParameters objects 
 #'
 #' @export MzQCmetadata
@@ -598,9 +596,9 @@ MzQCqualityMetric = setRefClass(
 setMethod('asJSON', 'MzQCqualityMetric', function(x, ...) x$toJSON(...))
 
 
-a_qc_metric = MzQCqualityMetric$new("acc", "nnam")
-xq = jsonlite::toJSON(a_qc_metric)
-jsonlite::fromJSON(xq)
+#a_qc_metric = MzQCqualityMetric$new("acc", "nnam")
+#xq = jsonlite::toJSON(a_qc_metric)
+#jsonlite::fromJSON(xq)
 
 
 #'
@@ -617,7 +615,7 @@ MzQCbaseQuality = setRefClass(
   fields = list(metadata = 'MzQCmetadata',
                 qualityMetrics = 'list'), # array of MzQCqualityMetric
   methods = list(
-    initialize = function(metadata = NA, qualityMetrics = list())
+    initialize = function(metadata = MzQCmetadata$new(), qualityMetrics = list())
     {
       .self$metadata = metadata
       .self$qualityMetrics = qualityMetrics
@@ -644,6 +642,16 @@ MzQCbaseQuality = setRefClass(
 )
 setMethod('asJSON', 'MzQCbaseQuality', function(x, ...) x$toJSON(...))
 
+
+MzQCrunQuality =  setRefClass(
+  "MzQCrunQuality",
+  contains = "MzQCbaseQuality"
+)
+MzQCsetQuality =  setRefClass(
+  "MzQCsetQuality",
+  contains = "MzQCbaseQuality"
+)
+
 ###########################################################################
 
 #' Root element of an mzQC document
@@ -655,8 +663,8 @@ setMethod('asJSON', 'MzQCbaseQuality', function(x, ...) x$toJSON(...))
 #' @field contactName Name of the operator/creator of this mzQC file.
 #' @field contactAddress Contact address (mail/e-mail or phone)
 #' @field readMe Description and comments about the mzQC file contents.
-#' @field runQualities Array of MzQCbaseQuality;
-#' @field setQualities Array of MzQCbaseQuality
+#' @field runQualities Array of MzQCrunQuality;
+#' @field setQualities Array of MzQCsetQuality
 #' @field controlledVocabularies Array of CV domains used (obo files)
 #' 
 #' @export MzQCmzQC
@@ -669,8 +677,8 @@ MzQCmzQC = setRefClass(
                 contactName = 'character',            # optional
                 contactAddress = 'character',         # optional
                 readMe = 'character',                 # optional
-                runQualities = 'list',                # either this ... or  (array of MzQCbaseQuality)
-                setQualities = 'list',                # ... this must be present  (array of MzQCbaseQuality)
+                runQualities = 'list',                # either this ... or  (array of MzQCrunQuality)
+                setQualities = 'list',                # ... this must be present  (array of MzQCsetQuality)
                 controlledVocabularies = 'list'),     # array of MzQCcontrolledVocabulary
   methods = list(
     initialize = function(version = NA_character_, 
@@ -697,7 +705,11 @@ MzQCmzQC = setRefClass(
       if (isUndefined(.self$version) +
           !isValidMzQC(.self$creationDate, .self$runQualities, .self$setQualities, .self$controlledVocabularies)) return(FALSE)
       # at least one must be present
-      if (length(.self$runQualities) + length(.self$setQualities) == 0) return(FALSE)
+      if (length(.self$runQualities) + length(.self$setQualities) == 0)
+      {
+        warning("At least one runQuality or setQuality must be present! (currently all empty)", immediate. = TRUE, call. = FALSE)
+        return(FALSE)
+      }
       return(TRUE)
     },
     toJSON = function(.self, ...)
@@ -721,10 +733,10 @@ MzQCmzQC = setRefClass(
       .self$contactName = NULL_to_charNA(data$contactName)
       .self$contactAddress = NULL_to_charNA(data$contactAddress)
       .self$readMe = NULL_to_charNA(data$readMe)
-      .self$runQualities = fromDatatoMzQC(MzQCbaseQuality, data$runQualities) ## if data$runQualities is empty, or NA, the empty list will be returned
-      .self$setQualities = fromDatatoMzQC(MzQCbaseQuality, data$setQualities) ## if data$setQualities is empty, or NA, the empty list will be returned
+      .self$runQualities = fromDatatoMzQC(MzQCrunQuality, data$runQualities) ## if data$runQualities is empty, or NA, the empty list will be returned
+      .self$setQualities = fromDatatoMzQC(MzQCsetQuality, data$setQualities) ## if data$setQualities is empty, or NA, the empty list will be returned
       .self$controlledVocabularies = fromDatatoMzQC(MzQCcontrolledVocabulary, data$controlledVocabularies) ## if data$controlledVocabularies is empty, or NA, the empty list will be returned
     }
   )
 )
-setMethod('asJSON', 'MzQCbaseQuality', function(x, ...) x$toJSON(...))
+setMethod('asJSON', 'MzQCmzQC', function(x, ...) x$toJSON(...))

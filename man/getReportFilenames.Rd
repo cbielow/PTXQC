@@ -27,7 +27,7 @@ This allows to get reports on multiple mzTabs in the same folder without overwri
 \value{
 List of output file names (just names, no file is created) 
         with list entries: 
-        **yaml_file**, **heatmap_values_file**, **R_plots_file**, **filename_sorting**, **stats_file**, **log_file**, **report_file_prefix**, **report_file_PDF**, **report_file_HTML**
+        **yaml_file**, **heatmap_values_file**, **R_plots_file**, **filename_sorting**, **mzQC_file**, **log_file**, **report_file_prefix**, **report_file_PDF**, **report_file_HTML**
 }
 \description{
 You can combine **report_name_has_folder** (and **mzTab_filename** for mzTab files) to obtain report filenames which are even more

@@ -938,7 +938,7 @@ getAbundanceClass = function(x) {
 #'        
 #' @return List of output file names (just names, no file is created) 
 #'         with list entries: 
-#'         **yaml_file**, **heatmap_values_file**, **R_plots_file**, **filename_sorting**, **stats_file**, **log_file**, **report_file_prefix**, **report_file_PDF**, **report_file_HTML**
+#'         **yaml_file**, **heatmap_values_file**, **R_plots_file**, **filename_sorting**, **mzQC_file**, **log_file**, **report_file_prefix**, **report_file_PDF**, **report_file_HTML**
 #' 
 #' @export
 #' 
@@ -978,7 +978,7 @@ getReportFilenames = function(folder, report_name_has_folder = TRUE, mzTab_filen
             heatmap_values_file = paste0(report_file_prefix, "_heatmap.txt"),
             R_plots_file = paste0(report_file_prefix, "_plots.Rdata"),
             filename_sorting = paste0(report_file_prefix, "_filename_sort.txt"),
-            stats_file = paste0(report_file_prefix, "_stats.txt"),
+            mzQC_file = paste0(report_file_prefix, ".mzQC"),
             log_file = paste0(report_file_prefix, ".log"),
             qc_file = paste0(report_file_prefix, ".mzQC"),
             report_file_prefix = report_file_prefix,
