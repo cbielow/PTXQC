@@ -9,7 +9,7 @@
 #' 
 parseOBO = function(cv_obo_file){
   ontology = ontologyIndex:::get_ontology(cv_obo_file, extract_tags = "everything")
-  obo = scan(file = cv_obo_file, what = "character")
+  #obo = scan(file = cv_obo_file, what = "character")
   return(ontology)
 }
 
@@ -26,12 +26,13 @@ getCVDictionary = function()
 {
   qc = parseOBO(system.file("./cv/qc-cv.obo", package="PTXQC"))
   ms = parseOBO(system.file("./cv/psi-ms.obo", package="PTXQC"))
-  return(rbind(qc, ms))
+  both = list()
+  for (name in names(qc))
+  {
+    both[[name]] = append(qc[[name]], ms[[name]])
+  }
+  return(both)
 }
-
-# mzcv_dict = getCVDictionary()
-# accession = "QC:4000020"
-
 
 
 
@@ -62,16 +63,17 @@ getCVTemplate = function(accession, mzcv_dict)
 #' Collects all 'mzQC' members from each entry in lst_qcMetrics and stores them in an overall mzQC object, which can be written to disk or augmented otherwise
 #'
 #' @param lst_qcMetrics A list of qcMetric objects which have their mzQC member populated
+#' @return An MzQCmzQC object
 #' 
 #' @export
 #' 
 assembleMZQC = function(lst_qcMetrics)
 {
   out = MzQCmzQC$new(version = "1.0.0", 
-                     #creationDate = MzQCDateTime$new(), 
+                     creationDate = MzQCDateTime$new(), 
                      contactName = Sys.info()["user"], 
                      contactAddress = NA_character_, 
-                     readMe = NA_character_,
+                     description = NA_character_,
                      runQualities = list(),
                      setQualities = list(), 
                      controlledVocabularies = list(
@@ -84,19 +86,9 @@ assembleMZQC = function(lst_qcMetrics)
                                                 "https://github.com/HUPO-PSI/psi-ms-CV/blob/master/psi-ms.obo",
                                                 "4.1.7")))
 
-  run_qualities = list(
-    ## TEMP!!
-    ## 
-    ## 
-    ## !!!
-    #mzML = getCVTemplate("MS:1000584", mzcv_dict)
-    ## 
-    #                    MzQCrunQuality$new(MzQCmetadata$new("label",
-    #                                                        list(MzQCinputFile$new("a.mzML", "c:\temp\a.mzML", MzQCcvParameter$new()))),
-    #                                       list(MzQCqualityMetric$new("acc", "name", "desc", 1, "millisecond"))
-  )                
-                       
+  run_qualities = list()
   set_qualities = list()
+  
   for (metric in lst_qcMetrics)
   {
     mzqc_data = metric$mzQC

@@ -20561,7 +20561,7 @@ is_a: MS:1001459 ! file format
 [Term]
 id: MS:1003162
 name: PTX-QC
-def: "Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization" [DOI:10.1021/acs.jproteome.5b00780, PMID:26653327, https://github.com/cbielow/PTXQC/]
+def: "Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization." [DOI:10.1021/acs.jproteome.5b00780, PMID:26653327, https://github.com/cbielow/PTXQC/]
 is_a: MS:1001456 ! analysis software
 synonym: "PTXQC" EXACT []
 

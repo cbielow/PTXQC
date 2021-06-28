@@ -205,7 +205,7 @@ MzQCDateTime = setRefClass(
     },
     set = function(.self, date)
     {
-      .self$datetime = format(as.POSIXct(date), "%Y-%m-%d %H:%M:%S")
+      .self$datetime = format(as.POSIXct(date), "%Y-%m-%dT%H:%M:%S")  # using ISO8601 format
     },
     isValid = function(.self)
     {
@@ -662,7 +662,7 @@ MzQCsetQuality =  setRefClass(
 #' @field creationDate Creation date of the mzQC file.
 #' @field contactName Name of the operator/creator of this mzQC file.
 #' @field contactAddress Contact address (mail/e-mail or phone)
-#' @field readMe Description and comments about the mzQC file contents.
+#' @field description Description and comments about the mzQC file contents.
 #' @field runQualities Array of MzQCrunQuality;
 #' @field setQualities Array of MzQCsetQuality
 #' @field controlledVocabularies Array of CV domains used (obo files)
@@ -676,7 +676,7 @@ MzQCmzQC = setRefClass(
                 creationDate = 'MzQCDateTime',
                 contactName = 'character',            # optional
                 contactAddress = 'character',         # optional
-                readMe = 'character',                 # optional
+                description = 'character',                 # optional
                 runQualities = 'list',                # either this ... or  (array of MzQCrunQuality)
                 setQualities = 'list',                # ... this must be present  (array of MzQCsetQuality)
                 controlledVocabularies = 'list'),     # array of MzQCcontrolledVocabulary
@@ -685,7 +685,7 @@ MzQCmzQC = setRefClass(
                           creationDate = MzQCDateTime$new(), 
                           contactName = NA_character_, 
                           contactAddress = NA_character_, 
-                          readMe = NA_character_,
+                          description = NA_character_,
                           runQualities = list(),
                           setQualities = list(), 
                           controlledVocabularies = list())
@@ -694,7 +694,7 @@ MzQCmzQC = setRefClass(
       .self$creationDate = creationDate
       .self$contactName = contactName
       .self$contactAddress = contactAddress
-      .self$readMe = readMe
+      .self$description = description
       .self$runQualities = runQualities
       .self$setQualities = setQualities
       .self$controlledVocabularies = controlledVocabularies
@@ -720,7 +720,7 @@ MzQCmzQC = setRefClass(
                "creationDate" = .self$creationDate)
       if (!isUndefined(.self$contactName)) r$contactName = .self$contactName
       if (!isUndefined(.self$contactAddress)) r$contactAddress = .self$contactAddress
-      if (!isUndefined(.self$readMe)) r$readMe = .self$readMe
+      if (!isUndefined(.self$description)) r$description = .self$description
       r$runQualities = .self$runQualities
       r$setQualities = .self$setQualities
       r$controlledVocabularies = .self$controlledVocabularies
@@ -732,7 +732,7 @@ MzQCmzQC = setRefClass(
       .self$creationDate = fromDatatoMzQC(MzQCDateTime, data$creationDate)
       .self$contactName = NULL_to_charNA(data$contactName)
       .self$contactAddress = NULL_to_charNA(data$contactAddress)
-      .self$readMe = NULL_to_charNA(data$readMe)
+      .self$description = NULL_to_charNA(data$description)
       .self$runQualities = fromDatatoMzQC(MzQCrunQuality, data$runQualities) ## if data$runQualities is empty, or NA, the empty list will be returned
       .self$setQualities = fromDatatoMzQC(MzQCsetQuality, data$setQualities) ## if data$setQualities is empty, or NA, the empty list will be returned
       .self$controlledVocabularies = fromDatatoMzQC(MzQCcontrolledVocabulary, data$controlledVocabularies) ## if data$controlledVocabularies is empty, or NA, the empty list will be returned
