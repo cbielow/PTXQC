@@ -21,7 +21,7 @@ and can produce plots and mzQC values (at runtime, when data is provided) using 
 
 \item{\code{qcScores}}{Data.frame of scores from a qcMetric (computed within workerFcn())}
 
-\item{\code{mzQC}}{An mzQC runQuality or setQuality (after setData() was called)}
+\item{\code{mzQC}}{An named list of mzQC MzQCqualityMetric's (named by their fc.raw.file for runQuality or concatenated fc.raw.files for setQualities (e.g. "file 1;file4")) (valid after setData() was called)}
 
 \item{\code{qcCat}}{QC category (LC, MS, or prep)}
 

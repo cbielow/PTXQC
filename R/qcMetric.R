@@ -10,7 +10,7 @@
 #' @field workerFcn Function which generates a result (usually plots). Data is provided using setData().
 #' @field plots     List of plots (after setData() was called)
 #' @field qcScores  Data.frame of scores from a qcMetric (computed within workerFcn())
-#' @field mzQC      An mzQC runQuality or setQuality (after setData() was called)
+#' @field mzQC      An named list of mzQC MzQCqualityMetric's (named by their fc.raw.file for runQuality or concatenated fc.raw.files for setQualities (e.g. "file 1;file4")) (valid after setData() was called)
 #' @field qcCat     QC category (LC, MS, or prep)
 #' @field qcName    Name of the qcScore in the heatmap
 #' @field orderNr   Column index during heatmap generation and for the general order of plots

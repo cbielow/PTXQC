@@ -146,6 +146,10 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     }, add = TRUE)
   }
   
+  ## load mzQC CV
+  cv_dict = CVDictionarySingleton$new()
+  cv_dict$data = getCVDictionary() ## load the data once
+  ## --> wherever you need this data, simply re-grab the singleton using 'CVDictionarySingleton$new()'
   
   
   cat(paste0(date(), ": Starting QC computation on report '", rprt_fns$report_file_prefix, "'\n"))
@@ -629,6 +633,15 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   }
   ## save RAM: msmsScans.txt is not required any longer
   if (!DEBUG_PTXQC) rm(df_msmsScans)
+  
+  #####################################################################
+  #####################################################################
+  ## write mzQC file
+   
+  writeMZQC(
+    rprt_fns$mzQC_file, 
+    assembleMZQC(lst_qcMetrics, raw_file_mapping = eval(expr_fn_map)$raw_file_mapping)
+  )
   
   
   #####################################################################

@@ -4,10 +4,15 @@
 \alias{assembleMZQC}
 \title{Collects all 'mzQC' members from each entry in lst_qcMetrics and stores them in an overall mzQC object, which can be written to disk or augmented otherwise}
 \usage{
-assembleMZQC(lst_qcMetrics)
+assembleMZQC(lst_qcMetrics, raw_file_mapping)
 }
 \arguments{
-\item{lst_qcMetrics}{A list of qcMetric objects which have their mzQC member populated}
+\item{lst_qcMetrics}{A list of qcMetric objects which have their mzQC member populated with "MzQCrunQuality" and/or "MzQCsetQuality" objects}
+
+\item{raw_file_mapping}{A data.frame with cols 'from', to' and maybe 'best.effort' (if shorting was unsuccessful), as e.g. obtained by a FilenameMapper$raw_file_mapping}
+}
+\value{
+An MzQCmzQC object
 }
 \description{
 Collects all 'mzQC' members from each entry in lst_qcMetrics and stores them in an overall mzQC object, which can be written to disk or augmented otherwise
