@@ -428,9 +428,9 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
       ## add mzQC metric
       template_proteinCount = getQualityMetricTemplate("QC:4000184")
       mzqc = lapply(1:nrow(qc_protc), function(row){
-          out = template_proteinCount;
+          out = template_proteinCount$copy();
           out$value = qc_protc$genuineAll[row];
-          cat(row, " ", qc_protc$genuineAll[row], " ",out$value, "\n");
+          #cat(row, " ", qc_protc$genuineAll[row], " ",out$value, "\n");
           return(out) })
       names(mzqc) = qc_protc$fc.raw.file
       ## done

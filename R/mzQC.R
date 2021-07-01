@@ -167,6 +167,10 @@ assembleMZQC = function(lst_qcMetrics, raw_file_mapping)
     }
     
   }
+  ## remove the names from lists (to make it a JSON array; otherwise it would be an object)
+  names(run_qualities) = NULL
+  names(set_qualities) = NULL
+  
   out$runQualities = run_qualities
   out$setQualities = set_qualities
   
