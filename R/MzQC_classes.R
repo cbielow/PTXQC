@@ -77,7 +77,8 @@ isUndefined = function(s, ..., verbose = TRUE)
 #'   isValidMzQC(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra")) # TRUE
 #'   isValidMzQC(list(MzQCcvParameter$new("QC:4000059"))) # FALSE
 #'   isValidMzQC(list(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra"))) # TRUE
-#'   isValidMzQC(list(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra")), MzQCcvParameter$new()) # FALSE
+#'   isValidMzQC(list(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra")), 
+#'               MzQCcvParameter$new()) # FALSE
 #'   
 #' @export
 #'
@@ -676,7 +677,7 @@ MzQCmzQC = setRefClass(
                 creationDate = 'MzQCDateTime',
                 contactName = 'character',            # optional
                 contactAddress = 'character',         # optional
-                description = 'character',                 # optional
+                description = 'character',            # optional
                 runQualities = 'list',                # either this ... or  (array of MzQCrunQuality)
                 setQualities = 'list',                # ... this must be present  (array of MzQCsetQuality)
                 controlledVocabularies = 'list'),     # array of MzQCcontrolledVocabulary

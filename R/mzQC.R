@@ -7,7 +7,7 @@
 #' 
 #' 
 parseOBO = function(cv_obo_file){
-  ontology = ontologyIndex:::get_ontology(cv_obo_file, extract_tags = "everything")
+  ontology = ontologyIndex::get_ontology(cv_obo_file, extract_tags = "everything")
   #obo = scan(file = cv_obo_file, what = "character")
   return(ontology)
 }
@@ -47,10 +47,10 @@ CVDictionarySingleton <- R6::R6Class("CVDictionarySingleton", inherit = R6P::Sin
 #' 
 #' @return An instance of MzQCqualityMetric
 #' 
-getQualityMetricTemplate = function(accession, mzcv_dict = CVDictionarySingleton$new())
+getQualityMetricTemplate = function(accession, mzcv_dict = CVDictionarySingleton$new()$data)
 {
   idx = which(accession == mzcv_dict$id)
-  if (length(idx) == 0) stop("Accession '", accession, "' is not a valid CV term in the current dictionary.")
+  if (length(idx) == 0) stop("Accession '", accession, "' is not a valid CV term in the current dictionary (", length(mzcv_dict$id), " entries].")
   
   out = MzQCqualityMetric$new(accession, mzcv_dict$name[idx], mzcv_dict$def[idx])
   return(out)
@@ -64,7 +64,7 @@ getQualityMetricTemplate = function(accession, mzcv_dict = CVDictionarySingleton
 #' 
 #' @return An instance of MzQCcvParameter
 #' 
-getCVTemplate = function(accession, mzcv_dict = CVDictionarySingleton$new())
+getCVTemplate = function(accession, mzcv_dict = CVDictionarySingleton$new()$data)
 {
   idx = which(accession == mzcv_dict$id)
   if (length(idx) == 0) stop("Accession '", accession, "' is not a valid CV term in the current dictionary.")
@@ -87,13 +87,13 @@ getRunQualityTemplate = function(fc.raw.file, raw_file_mapping)
   idx = which(raw_file_mapping$to == fc.raw.file)
   if (length(idx) != 1) stop("fc.raw.file '", fc.raw.file, "' is not (or not unique) in mapping table.")
   
-  raw_file = raw_file_mapping$from[id]
+  raw_file = as.character(raw_file_mapping$from[idx])
 
     ## todo: we're just guessing here...
   filename = paste0(raw_file, ".mzML"); 
   fullpath = paste0("???/", filename);
   
-  mzML_format = getCVTemplate("MS:1000584")
+  mzML_format = getCVTemplate(accession = "MS:1000584")
   ptxqc_software = MzQCanalysisSoftware$new("MS:1003162", "PTX-QC", as.character(utils::packageVersion("PTXQC")), "https://github.com/cbielow/PTXQC/", "Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.", "Proteomics Quality Control")
   
   out = MzQCrunQuality$new(MzQCmetadata$new(raw_file,  ## label
@@ -140,6 +140,8 @@ assembleMZQC = function(lst_qcMetrics, raw_file_mapping)
     mzqc_data = metric$mzQC
     if (is.null(mzqc_data)) next
     if (class(mzqc_data) != "list") stop("mzQC member of metric must be of class 'list()'")
+    if (length(mzqc_data) == 0) next
+    if (any(is.null(names(mzqc_data)))) stop("mzQC member of metric '", metric$qcName, "' is a list, but has no names (must be fc.raw.file names or a concatenation of those)")
     
     ## either an fc.raw.file or a concatenation of them
     for (name in names(mzqc_data))
@@ -151,7 +153,7 @@ assembleMZQC = function(lst_qcMetrics, raw_file_mapping)
         rc = run_qualities[[name]];
         if (is.null(rc)) rc = getRunQualityTemplate(name, raw_file_mapping)
         ## append ...
-        l = length(rc$qualityMetrics)
+        l = 1 + length(rc$qualityMetrics)
         rc$qualityMetrics[[l]] = mzqc_data[[name]]
         ## write back
         run_qualities[[name]] = rc
@@ -173,32 +175,6 @@ assembleMZQC = function(lst_qcMetrics, raw_file_mapping)
 
 
 #'
-#' Checks if filepath ends in suffix. If suffix does not start with a '.' it is prepended automatically.
-#' 
-#' @return TRUE if yes, FALSE otherwise
-#' 
-#' @export
-#' 
-#' @examples 
-#'   hasFileSuffix("bla.txt", "txt")    # TRUE
-#'   hasFileSuffix("bla.txt", ".txt")   # TRUE
-#'   hasFileSuffix("bla.txt", "doc")    # FALSE
-#'   hasFileSuffix("bla.txt", ".doc")   # FALSE
-#'   hasFileSuffix("fo", ".doc")        # FALSE
-#'   hasFileSuffix("", ".doc")          # FALSE
-#'   hasFileSuffix("foo", "")           # FALSE
-#' 
-hasFileSuffix = function(filepath, suffix)
-{
-  if (substr(suffix,1,1) != '.') suffix = paste0('.', suffix)
-  
-  filepath = tolower(filepath)
-  suffix = tolower(suffix)
-  
-  return(suffix == substring(filepath, first = nchar(filepath) - nchar(suffix) + 1))
-}
-
-#'
 #' Writes a full mzQC object to disk
 #' 
 #' @param filepath A filename (with path) to write to. Should have '.mzQC' as suffix.
@@ -210,7 +186,7 @@ writeMZQC = function(filepath, mzqc_obj)
   if (!hasFileSuffix(filepath, ".mzQC")) warning("'", filepath, "' does not end in '.mzQC'. Please fix the output filename.")
   
   
-  content = jsonlite::toJSON(mzqc_obj)
+  content = jsonlite::toJSON(mzqc_obj, pretty = TRUE, auto_unbox = TRUE)
   
   cat(content, file = filepath)
   
