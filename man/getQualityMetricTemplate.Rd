@@ -5,7 +5,10 @@
 \title{Fills a MzQCqualityMetric object with id(accession) and name.
 The value (if any) and unit (if any) need to be set afterwards.}
 \usage{
-getQualityMetricTemplate(accession, mzcv_dict = CVDictionarySingleton$new())
+getQualityMetricTemplate(
+  accession,
+  mzcv_dict = CVDictionarySingleton$new()$data
+)
 }
 \arguments{
 \item{accession}{The ID (=accession) of the term in the CV}

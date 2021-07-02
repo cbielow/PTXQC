@@ -1009,7 +1009,6 @@ getReportFilenames = function(folder, report_name_has_folder = TRUE, mzTab_filen
             filename_sorting = paste0(report_file_prefix, "_filename_sort.txt"),
             mzQC_file = paste0(report_file_prefix, ".mzQC"),
             log_file = paste0(report_file_prefix, ".log"),
-            qc_file = paste0(report_file_prefix, ".mzQC"),
             report_file_prefix = report_file_prefix,
             report_file_PDF = paste0(report_file_prefix, ".pdf"),
             report_file_HTML = paste0(report_file_prefix, ".html")
