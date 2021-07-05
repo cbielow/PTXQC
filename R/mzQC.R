@@ -34,7 +34,10 @@ getCVDictionary = function()
 #' 
 #' Define a Singleton class which can hold a CV dictionary (so we do not have to load the .obo files over and over again)
 #' 
+#' @export
+#' 
 CVDictionarySingleton <- R6::R6Class("CVDictionarySingleton", inherit = R6P::Singleton, public = list(
+  #' @field data Stores the data of the singleton. Set the data once before using the singleton all over the place
   data = NULL
 ))
 
@@ -78,7 +81,7 @@ getCVTemplate = function(accession, mzcv_dict = CVDictionarySingleton$new()$data
 #' Get an mzQC runQuality without actual metrics, but with full metadata
 #' 
 #' @param fc.raw.file For which run
-#' @param raw_file_mapping A data.frame with cols 'from', to' and maybe 'best.effort' (if shorting was unsuccessful), as e.g. obtained by a FilenameMapper$raw_file_mapping
+#' @param raw_file_mapping A data.frame with cols 'from', 'to' and maybe 'best.effort' (if shorting was unsuccessful), as e.g. obtained by a FilenameMapper$raw_file_mapping
 #' @return An MzQCrunQuality object
 #'
 getRunQualityTemplate = function(fc.raw.file, raw_file_mapping)

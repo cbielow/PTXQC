@@ -9,7 +9,7 @@ getRunQualityTemplate(fc.raw.file, raw_file_mapping)
 \arguments{
 \item{fc.raw.file}{For which run}
 
-\item{raw_file_mapping}{A data.frame with cols 'from', to' and maybe 'best.effort' (if shorting was unsuccessful), as e.g. obtained by a FilenameMapper$raw_file_mapping}
+\item{raw_file_mapping}{A data.frame with cols 'from', 'to' and maybe 'best.effort' (if shorting was unsuccessful), as e.g. obtained by a FilenameMapper$raw_file_mapping}
 }
 \value{
 An MzQCrunQuality object

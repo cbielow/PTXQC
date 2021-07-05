@@ -11,6 +11,13 @@ Define a Singleton class which can hold a CV dictionary (so we do not have to lo
 \section{Super class}{
 \code{\link[R6P:Singleton]{R6P::Singleton}} -> \code{CVDictionarySingleton}
 }
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{data}}{Stores the data of the singleton. Set the data once before using the singleton all over the place}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
