@@ -7,6 +7,9 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.00.11 -- 2021/07/08
+  - [FEATURE] initial support for mzQC Quality Control output
+
 [CRAN] v1.0.10 -- 2021/05/29
   - [FEATURE] detect if MaxQuant was run with wrong decimal separator (non UK/US locale) (issue #98)
   - [FIX] issue #97 Revive missing MBR metrics (introduced in PTXQC 1.0.9)

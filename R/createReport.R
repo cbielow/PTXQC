@@ -118,40 +118,27 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ## start logging the output
   if (enable_log)
   {
-    ## we remember the last error, so we can tell if a new one occurred
-    try(stop("PTXQC_ERROR_DETECTOR"), silent = TRUE)
-    last_error_msg__ = geterrmessage();
-    
+    ## establish our own error handler, so we can see the traceback etc
+    options(error=function(x) { 
+            cat("\nTraceback:\n")
+            traceback()
+            cat(paste0("\nAn error occurred: '", trimws(geterrmessage()), "'. See '", rprt_fns$log_file, "' for details!\n\n\n"))})
+
     my_log = file(rprt_fns$log_file, open = "wt") # File name of output log
     sink(my_log, type = "output", split = TRUE) # Writing console output to log file
     sink(my_log, type = "message")  ## cannot be split ... so we need to decide where it should go
+
     on.exit({  
-      
       ## show warnings, before we leave
       print(warnings());
-      
-      
-      ## see if an error occurred: if yes, print it
-      if (last_error_msg__ != geterrmessage()) {
-        cat("\nTraceback:\n")
-        traceback()
-        cat(paste0("\nAn error occurred: '", trimws(geterrmessage()), "'. See '", rprt_fns$log_file, "' for details!\n\n\n"))  
-      }
-
+    
       ## Restore output to console
       sink(type="message")
       sink() 
-      
-      
     }, add = TRUE)
   }
   
-  ## load mzQC CV
-  cv_dict = CVDictionarySingleton$new()
-  cv_dict$data = getCVDictionary() ## load the data once
-  ## --> wherever you need this data, simply re-grab the singleton using 'CVDictionarySingleton$new()'
-  
-  
+
   cat(paste0(date(), ": Starting QC computation on report '", rprt_fns$report_file_prefix, "'\n"))
 
   ##
@@ -173,7 +160,16 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ## write shortnames and sorting of filenames
   eval(expr_fn_map)$writeMappingFile(rprt_fns$filename_sorting)
   
- 
+  
+  ## load mzQC CV
+  cv_dict = CVDictionarySingleton$new()
+  cv_dict$data = getCVDictionary() ## load the data once
+  ## --> wherever you need this data, simply re-grab the singleton using 'CVDictionarySingleton$new()$data'
+  
+  ## get full filenames (and their suffix -- for mzQC metadata)
+  file_meta = QCMetaFilenames$new()
+  file_meta$data = getMetaFilenames(txt_files$mqpar, base_folder)
+  ## --> wherever you need this data, simply re-grab the singleton using 'QCMetaFilenames$new()$data'
   
   ######
   ######  parameters.txt ...
@@ -202,7 +198,6 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ######
   ######  proteinGroups.txt ...
   ######
-  
   if (MZTAB_MODE) df_pg = mzt$getProteins()
   else df_pg = mq$readMQ(txt_files$groups, type="pg", col_subset=NA, filter="R")
   
@@ -637,7 +632,6 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   #####################################################################
   #####################################################################
   ## write mzQC file
-   
   writeMZQC(
     rprt_fns$mzQC_file, 
     assembleMZQC(lst_qcMetrics, raw_file_mapping = eval(expr_fn_map)$raw_file_mapping)

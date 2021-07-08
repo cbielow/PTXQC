@@ -29,6 +29,25 @@ hasFileSuffix = function(filepath, suffix)
 
 
 #'
+#' Removes the last suffix (including the last dot) from a filename.
+#' If no dot exists, the full string is returned.
+#' 
+#' @param filepath A filename (with optional path -- which is retained!)
+#' @return The input with removed suffix
+#' 
+#' @examples 
+#'  removeSuffix("test.tar.gz")  # --> 'test.tar'
+#'  removeSuffix("test.mzML")  # --> 'test'
+#'  removeSuffix("/path/to/test.mzML")  # --> '/path/to/test'
+#'  removeSuffix("test_no_dot")  # --> 'test_no_dot'
+#'
+removeSuffix = function(filepath)
+{
+  gsub("(.*)\\..*$", "\\1", filepath)
+}
+
+
+#'
 #' Get the longest common prefix from a set of strings.
 #' 
 #' Input is converted to character (e.g. from factor) first.

@@ -102,7 +102,7 @@ createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, txt_files = NULL
   
   param$param_EV_MatchingTolerance = yc$getYAML("File$Evidence$MQpar_MatchingTimeWindow_num", param$param_EV_MatchingTolerance)
   if (param$param_useMQPAR && !is.null(txt_files)) {
-    v = getMQPARValue(txt_files$mqpar, "matchingTimeWindow") ## will also warn() if file is missing
+    v = getMQPARValue(txt_files$mqpar, "//matchingTimeWindow") ## will also warn() if file is missing
     if (!is.null(v)) {
       param$param_EV_MatchingTolerance = yc$setYAML("File$Evidence$MQpar_MatchingTimeWindow_num", as.numeric(v))
     }
@@ -111,7 +111,7 @@ createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, txt_files = NULL
   
   param$param_EV_PrecursorTolPPM = yc$getYAML("File$Evidence$MQpar_firstSearchTol_num", param$param_EV_PrecursorTolPPM)
   if (param$param_useMQPAR && !is.null(txt_files)) {
-    v = getMQPARValue(txt_files$mqpar, "firstSearchTol") ## will also warn() if file is missing
+    v = getMQPARValue(txt_files$mqpar, "//firstSearchTol") ## will also warn() if file is missing
     if (!is.null(v)) {
       param$param_EV_PrecursorTolPPM = yc$setYAML("File$Evidence$MQpar_firstSearchTol_num", as.numeric(v))
     }
@@ -122,7 +122,7 @@ createYaml <- function(yc, param = list(), DEBUG_PTXQC = FALSE, txt_files = NULL
   ## we do not dare to have a default, since it ranges from 6 - 4.5 ppm across MQ versions
   param$param_EV_PrecursorTolPPMmainSearch = yc$getYAML("File$Evidence$MQpar_mainSearchTol_num", param$param_EV_PrecursorTolPPMmainSearch)
   if (param$param_useMQPAR && !is.null(txt_files)) {
-    v = getMQPARValue(txt_files$mqpar, "mainSearchTol") ## will also warn() if file is missing
+    v = getMQPARValue(txt_files$mqpar, "//mainSearchTol") ## will also warn() if file is missing
     if (!is.null(v)) {
       param$param_EV_PrecursorTolPPMmainSearch = yc$setYAML("File$Evidence$MQpar_mainSearchTol_num", as.numeric(v))
     }

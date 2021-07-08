@@ -42,6 +42,41 @@ CVDictionarySingleton <- R6::R6Class("CVDictionarySingleton", inherit = R6P::Sin
 ))
 
 
+
+#' 
+#' Define a Singleton class which holds the full raw filenames (+path) and their PSI-MS CV terms for usage in the mzQC metadata
+#' 
+#' @export
+#' 
+QCMetaFilenames <- R6::R6Class("QCMetaFilenames", inherit = R6P::Singleton, public = list(
+  #' @field data Stores the data of the singleton. Set the data once before using the singleton all over the place
+  data = NULL
+))
+
+
+getMetaFilenames = function(mqpar_file, base_folder)
+{
+  out = NA
+  ## mqpar_file = "Z:\\projects\\QC\\PTXQC\\data\\ecoli_small\\mqpar.xml"
+  ## base_folder = "Z:\\projects\\QC\\PTXQC\\data\\ecoli_small\\combined\\txt\\"
+  xml_rawfiles = getMQPARValue(mqpar_file, "//string[parent::filePaths|parent::Filenames]", allow_multiple = TRUE)
+  if (is.null(xml_rawfiles)) {
+    ## try again using parent directory
+    warning("No mqpar.xml found in '", mqpar_file, "'. Trying two folders up.")
+    up_dir = paste0(base_folder, "/../../mqpar.xml")
+    xml_rawfiles = getMQPARValue(up_dir, "//string[parent::filePaths|parent::Filenames]", allow_multiple = TRUE)
+  }
+  ## second try...
+  if (is.null(xml_rawfiles)) {
+    warning("No mqpar.xml found in '", up_dir, "'. Giving up to read full file paths The mqQC file will contain incomplete information and may not validate.")
+  } else {
+    ## cannot use 'eval(expr_fn_map)$raw_file_mapping' yet, since we do not have read any .txt files which fills the mapping
+    out = data.frame(file = basename(xml_rawfiles), path = xml_rawfiles, file_no_suffix = removeSuffix(basename(xml_rawfiles)), CV = suffixToCV(xml_rawfiles))
+  }
+  return (out)
+}
+
+
 #' Fills a MzQCqualityMetric object with id(accession) and name.
 #' The value (if any) and unit (if any) need to be set afterwards.
 #' 
@@ -91,18 +126,31 @@ getRunQualityTemplate = function(fc.raw.file, raw_file_mapping)
   if (length(idx) != 1) stop("fc.raw.file '", fc.raw.file, "' is not (or not unique) in mapping table.")
   
   raw_file = as.character(raw_file_mapping$from[idx])
-
-    ## todo: we're just guessing here...
-  filename = paste0(raw_file, ".mzML"); 
-  fullpath = paste0("???/", filename);
+  meta = QCMetaFilenames$new()$data
+  if (is.null(meta) || sum(meta$file_no_suffix == raw_file) == 0) {
+    ## we're just guessing here...
+    warning("Cannot properly fill metadata of mzQC file, since full filenames are unknown. Using placeholders.")
+    filename = paste0(raw_file, ".raw"); 
+    fullpath = paste0("???/", filename);
+    accession = suffixToCV(".raw")
+  } else {
+    idx_meta = which(meta$file_no_suffix == raw_file)
+    filename = as.character(meta$file[idx_meta])
+    fullpath = as.character(meta$path[idx_meta])
+    accession = as.character(meta$CV[idx_meta])
+  }
   
-  mzML_format = getCVTemplate(accession = "MS:1000584")
-  ptxqc_software = MzQCanalysisSoftware$new("MS:1003162", "PTX-QC", as.character(utils::packageVersion("PTXQC")), "https://github.com/cbielow/PTXQC/", "Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.", "Proteomics Quality Control")
+  file_format = getCVTemplate(accession = accession)
+  ptxqc_software = MzQCanalysisSoftware$new("MS:1003162", "PTX-QC", 
+                                            as.character(utils::packageVersion("PTXQC")), 
+                                            "https://github.com/cbielow/PTXQC/",
+                                            "Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.",
+                                            "Proteomics Quality Control")
   
   out = MzQCrunQuality$new(MzQCmetadata$new(raw_file,  ## label
-                                      list(MzQCinputFile$new(filename, fullpath, mzML_format)),
-                                      list(ptxqc_software)),
-                          list())
+                                            list(MzQCinputFile$new(filename, fullpath, file_format)),
+                                            list(ptxqc_software)),
+                           list())
   
   return(out)
 }
@@ -165,7 +213,7 @@ assembleMZQC = function(lst_qcMetrics, raw_file_mapping)
         ##
         ## setQuality
         ## 
-        
+        stop("setQuality not implemented yet")
       }
     }
     
@@ -199,6 +247,49 @@ writeMZQC = function(filepath, mzqc_obj)
   
 }
 
+
+#'
+#' For a given filename, check the suffix and translate it to an PSI-MS CV term, e.g. 'MS:1000584'
+#' 
+#' The following mapping is currently known:
+#' .raw    : MS:1000563 ! Thermo RAW format
+#' .mzML   : MS:1000584 ! mzML format
+#' .mzData : MS:1000564 ! PSI mzData format
+#' .wiff   : MS:1000562 ! ABI WIFF format
+#' .pkl    : MS:1000565 ! Micromass PKL format
+#' .mzXML  : MS:1000566 ! ISB mzXML format
+#' .yep    : MS:1000567 ! Bruker/Agilent YEP format
+#' .dta    : MS:1000613 ! Sequest DTA format
+#' .mzMLb  : MS:1002838 ! mzMLb format
+#' 
+#' Falls back to 'MS:1000560 ! mass spectrometer file format' if no match could be found.
+#' 
+#' @param filepath A filename (with optional path)
+#' @return A CV term accession as string, e.g. 'MS:1000584'
+#' 
+#' @examples 
+#'   suffixToCV("test.mZmL")  # MS:1000584
+#'   suffixToCV("test.raw")  # MS:1000563
+#'   suffixToCV(c("test.raw", "bla.mzML"))
+#'
+suffixToCV = function(filepath)
+{
+  if (length(filepath) > 1) return(sapply(filepath, suffixToCV))
+  
+  if (hasFileSuffix(filepath, ".raw")) return ("MS:1000563");
+  if (hasFileSuffix(filepath, ".mzML")) return ("MS:1000584");
+  if (hasFileSuffix(filepath, ".mzData")) return ("MS:1000564");
+  if (hasFileSuffix(filepath, ".wiff")) return ("MS:1000562");
+  if (hasFileSuffix(filepath, ".pkl")) return ("MS:1000565");
+  if (hasFileSuffix(filepath, ".mzXML")) return ("MS:1000566");
+  if (hasFileSuffix(filepath, ".yep")) return ("MS:1000567");
+  if (hasFileSuffix(filepath, ".dta")) return ("MS:1000613");
+  if (hasFileSuffix(filepath, ".mzMLb")) return ("MS:1002838");
+  
+  warning("File '", filepath, "' has an unknown suffix. Falling back to 'MS:1000560 ! mass spectrometer file format'.")
+  return("MS:1000560")
+}
+  
 
 
 

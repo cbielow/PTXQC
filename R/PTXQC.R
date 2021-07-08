@@ -44,6 +44,7 @@
 #' @import stats
 #' @import utils
 #' @import UpSetR
+#' @import xml2
 #' @import yaml
 #' 
 NULL
