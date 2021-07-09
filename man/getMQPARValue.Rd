@@ -10,6 +10,8 @@ getMQPARValue(mqpar_filename, xpath, allow_multiple = FALSE)
 \item{mqpar_filename}{Filename (incl. absolute or relative path) to the mqpar.xml file}
 
 \item{xpath}{An XPath to extract the content of XML tag(s), e.g. '//firstSearchTol'}
+
+\item{allow_multiple}{If the XPath expression returns more than one value, all values must be identical (not allowing multiple different values) or 'stop()' is called}
 }
 \value{
 The stored value as string(!)

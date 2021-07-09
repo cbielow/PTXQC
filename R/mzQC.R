@@ -127,7 +127,7 @@ getRunQualityTemplate = function(fc.raw.file, raw_file_mapping)
   
   raw_file = as.character(raw_file_mapping$from[idx])
   meta = QCMetaFilenames$new()$data
-  if (is.null(meta) || sum(meta$file_no_suffix == raw_file) == 0) {
+  if (is.null(meta) || is.na(meta) || sum(meta$file_no_suffix == raw_file) == 0) {
     ## we're just guessing here...
     warning("Cannot properly fill metadata of mzQC file, since full filenames are unknown. Using placeholders.")
     filename = paste0(raw_file, ".raw"); 
@@ -272,6 +272,8 @@ writeMZQC = function(filepath, mzqc_obj)
 #'   suffixToCV("test.raw")  # MS:1000563
 #'   suffixToCV(c("test.raw", "bla.mzML"))
 #'
+#' @export
+#' 
 suffixToCV = function(filepath)
 {
   if (length(filepath) > 1) return(sapply(filepath, suffixToCV))

@@ -15,6 +15,7 @@
 #' 
 #' @param mqpar_filename Filename (incl. absolute or relative path) to the mqpar.xml file
 #' @param xpath          An XPath to extract the content of XML tag(s), e.g. '//firstSearchTol'
+#' @param allow_multiple If the XPath expression returns more than one value, all values must be identical (not allowing multiple different values) or 'stop()' is called
 #' 
 #' @return The stored value as string(!)
 #'

@@ -40,6 +40,8 @@ hasFileSuffix = function(filepath, suffix)
 #'  removeSuffix("test.mzML")  # --> 'test'
 #'  removeSuffix("/path/to/test.mzML")  # --> '/path/to/test'
 #'  removeSuffix("test_no_dot")  # --> 'test_no_dot'
+#' 
+#' @export
 #'
 removeSuffix = function(filepath)
 {
