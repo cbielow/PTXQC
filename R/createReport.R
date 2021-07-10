@@ -34,7 +34,6 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
 {
   if (!exists("DEBUG_PTXQC")) DEBUG_PTXQC = FALSE ## debug only when defined externally
   
-  
   ## the following code makes sure that a plotting device is open.
   ## In some scenarios, the a plotting device is not available by default, e.g. in non-interactive sessions (e.g. shinyApps).
   ## Some versions of R then open a default pdf device to rplots.pdf, but permissions might not allow to write there - so our app crashes.
@@ -352,7 +351,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
                                      numeric = "^Mass$",
                                      "^protein.names$",
                                      numeric = "^ms.ms.count$",
-                                     numeric = "^reporter.intensity.")) ## we want .corrected and .not.corrected
+                                     numeric = "^reporter.intensity.", 
+                                     numeric = "Missed\\.cleavages",
+                                     "^sequence$")) ## we want .corrected and .not.corrected
     ## contains NA if 'genuine' ID
     ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
     #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
@@ -552,11 +553,14 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## missed cleavages per Raw file
     ##
-    if (!is.null(df_evd)) {
+    # df_evd can be NULL; that's no problem
       lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms, df_evd)
-    } else {
-      lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms)
-    }
+   
+    # In case missed.cleavages is not in msms but in evd 
+    # metric checks if it was already done  
+      lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_evd)
+    
+    
     
   }
   ## save RAM: msms.txt is not required any longer
