@@ -351,9 +351,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
                                      numeric = "^Mass$",
                                      "^protein.names$",
                                      numeric = "^ms.ms.count$",
-                                     numeric = "^reporter.intensity.", 
+                                     numeric = "^reporter.intensity.", ## we want .corrected and .not.corrected
                                      numeric = "Missed\\.cleavages",
-                                     "^sequence$")) ## we want .corrected and .not.corrected
+                                     "^sequence$")) 
     ## contains NA if 'genuine' ID
     ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
     #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
@@ -516,7 +516,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     lst_qcMetrics[["qcMetric_EVD_MissingValues"]]$setData(df_evd)
     
     ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
-    if (!DEBUG_PTXQC) df_evd = df_evd[, c("id", "contaminant")]
+    if (!DEBUG_PTXQC) df_evd = df_evd[, c("id", "contaminant", "fc.raw.file", "sequence", "missed.cleavages")]
   }
   
   
@@ -554,11 +554,11 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ## missed cleavages per Raw file
     ##
     # df_evd can be NULL; that's no problem
-      lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms, df_evd)
+    lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms, df_evd)
    
     # In case missed.cleavages is not in msms but in evd 
     # metric checks if it was already done  
-      lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_evd)
+    lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_evd)
     
     
     

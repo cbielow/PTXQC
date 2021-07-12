@@ -138,36 +138,36 @@ Heatmap score [MSMS: MC]: the fraction (0% - 100%) of fully cleaved peptides per
 
 Heatmap score [MSMS: MC Var]: each Raw file is scored for its deviation (score: MedianDist) from the 'average' digestion state of the 
 current study. ",
-    workerFcn = function(.self, df_msms, df_evd = NULL)
+    workerFcn = function(.self, df_any, df_evd = NULL)
     {
       ## completeness check
-      if (!checkInput(c("fc.raw.file", "sequence", "missed.cleavages"), df_msms)) return()
-      if (!is.null(df_evd) && !checkInput(c("contaminant", "id"), df_evd)) return() 
+      if (!checkInput(c("fc.raw.file", "sequence", "missed.cleavages"), df_any)) return()
+      if (!is.null(df_evd) && !checkInput(c("contaminant", "id"), df_evd)) {df_evd = NULL}
       if (length(.self$plots) != 0 ) return()
  
       
-      max_mc = max(-Inf, df_msms$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
+      max_mc = max(-Inf, df_any$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
       if (!is.infinite(max_mc))
       { ## MC's require an enzyme to be set
         ## remove contaminants
         msg_cont_removed = "(excludes contaminants)"
-        if ("contaminant" %in% colnames(df_msms)) { # for MzTab
-          df_msms_filt = df_msms[!df_msms$contaminant,]
+        if ("contaminant" %in% colnames(df_any)) { # for MzTab
+          df_any_filt = df_any[!df_any$contaminant,]
         } else if (!is.null(df_evd)) {
-          if (!checkInput(c("evidence.id"), df_msms)) return()
-          df_msms_filt = df_msms[!df_evd$contaminant[match(df_msms$evidence.id, df_evd$id)], ]
+          if (!checkInput(c("evidence.id"), df_any)) return()
+          df_any_filt = df_any[!df_evd$contaminant[match(df_any$evidence.id, df_evd$id)], ]
         } else {
           msg_cont_removed = "(includes contaminants -- no evidence.txt read)"
-          df_msms_filt = df_msms
+          df_any_filt = df_any
         }
         
-        if (nrow(df_msms_filt) == 0)
+        if (nrow(df_any_filt) == 0)
         { ## rare case when all PSMs are contaminants...
-          df_msms_filt = df_msms ## roll back to at least get a statistic...
+          df_any_filt = df_any ## roll back to at least get a statistic...
           msg_cont_removed = "(100% contaminants!)"
         }
         
-        st_bin = plyr::ddply(df_msms_filt[, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
+        st_bin = plyr::ddply(df_any_filt[, c("missed.cleavages", "fc.raw.file")], "fc.raw.file", .fun = function(x) {
           t = table(x$missed.cleavages)/nrow(x)
           r = rep(0, max_mc + 1)
           names(r) = as.character(0:max_mc)
@@ -185,7 +185,7 @@ current study. ",
       } else {
         lpl = list(ggText("MSMS: Missed cleavages per Raw file",
                           "No enzyme was specified.\nDigestion efficiency cannot be scored."))
-        qc_score = data.frame(fc.raw.file = unique(df_msms$fc.raw.file),
+        qc_score = data.frame(fc.raw.file = unique(df_any$fc.raw.file),
                               valMC = HEATMAP_NA_VALUE,
                               valMCVar = HEATMAP_NA_VALUE)
       }## end enzyme check
