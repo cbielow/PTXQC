@@ -516,7 +516,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     lst_qcMetrics[["qcMetric_EVD_MissingValues"]]$setData(df_evd)
     
     ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
-    if (!DEBUG_PTXQC) df_evd = df_evd[, c("id", "contaminant", "fc.raw.file", "sequence", "missed.cleavages")]
+    if (!DEBUG_PTXQC) df_evd = df_evd[, names(df_evd) %in% c("id", "contaminant", "fc.raw.file", "sequence", "missed.cleavages")]
   }
   
   
