@@ -395,6 +395,7 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
       .self$helpText = sprintf(.self$helpTextTemplate, thresh_protCount)
       
       protC = getProteinCounts(rbind(df_evd[,req_cols], df_evd_tf[, req_cols]))
+      
       protC$block = factor(assignBlocks(protC$fc.raw.file, 30))
       
       max_prot = max(unlist(plyr::dlply(protC, "fc.raw.file", function(x) sum(x$counts))))
@@ -424,7 +425,16 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
       qc_protc[,cname] = qualLinThresh(qc_protc$genuineAll, thresh_protCount)
       qcScore = qc_protc[, c("fc.raw.file", cname)]
       
-      return(list(plots = lpl, qcScores = qcScore))
+      ## add mzQC metric
+      template_proteinCount = getQualityMetricTemplate("QC:4000184")
+      mzqc = lapply(1:nrow(qc_protc), function(row){
+          out = template_proteinCount$copy();
+          out$value = qc_protc$genuineAll[row];
+          #cat(row, " ", qc_protc$genuineAll[row], " ",out$value, "\n");
+          return(out) })
+      names(mzqc) = qc_protc$fc.raw.file
+      ## done
+      return(list(plots = lpl, qcScores = qcScore, mzQC = mzqc))
     }, 
     qcCat = 'general', 
     qcName = "EVD:~Protein~Count~(\">%1.0f\")", 

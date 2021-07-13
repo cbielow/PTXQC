@@ -509,7 +509,7 @@ RTalignmentTree = function(df_evd, col_fraction = c())
       geom_segment(aes_string(x = "x", y = "y", xend = "xend", yend = "yend")) +
       scale_x_continuous(breaks = ddata$labels$x, labels = ddata$labels$label) +
       theme_blank() +
-      theme(axis.text.y = element_text(colour = ddata$labels$col),
+      theme(axis.text.y = element_text(colour = ddata$labels$col), ## is a vector not officially supported...
                      axis.text.x = element_blank()) +
       coord_flip() +
       ggtitle("[experimental] EVD: Clustering Tree of Raw files", "by Correlation of Corrected Retention Times")

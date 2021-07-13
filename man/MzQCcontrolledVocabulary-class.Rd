@@ -22,9 +22,7 @@ An controlled vocabulary document, usually pointing to an .obo file
 \examples{
   MzQCcontrolledVocabulary$new(
     "Proteomics Standards Initiative Quality Control Ontology",
-    "https://github.com/HUPO-PSI/qcML-development/blob/master/cv/v0_1_0/qc-cv.obo",
-    "0.1.0")
-  isValidMzQC(MzQCcontrolledVocabulary$new(
-   "Proteomics Standards Initiative Quality Control Ontology"))
+    "https://github.com/HUPO-PSI/mzQC/blob/master/cv/qc-cv.obo",
+    "1.2.0")
    
 }

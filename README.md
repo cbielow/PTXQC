@@ -9,7 +9,7 @@ PTXQC
 
 ### Latest changes / ChangeLog
 
-
+  - v1.00.11 - July 2021: initial support for mzQC Quality Control output
   - v1.00.10 - May 2021: detect non UK/US locale (https://github.com/cbielow/PTXQC/pull/99); Revive missing MBR metrics (https://github.com/cbielow/PTXQC/issues/97); restore full Parameter list (showing MaxQuant parameters (https://github.com/cbielow/PTXQC/issues/101); decoy distribution in MS/MS mass error plot restored (https://github.com/cbielow/PTXQC/issues/102)
   - v1.00.09 - Jan 2021: output logging to external file (https://github.com/cbielow/PTXQC/issues/94); mzQC support (partial); less warnings;
   - v1.00.08 - Dec 2020: fix issues with two metrics (https://github.com/cbielow/PTXQC/issues/90, https://github.com/cbielow/PTXQC/issues/91)
@@ -43,6 +43,7 @@ DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
     - 10 min [Installation](#installation)
   - MaxQuant locale check, i.e. dot as decimal separator (since PTXQC 1.0.10; see https://github.com/cbielow/PTXQC/pull/99 for details)
   - Html/PDF report will be generated within your MaxQuant-txt folder or next to the mzTab file
+  - writes an mzQC file (https://github.com/HUPO-PSI/mzQC/) for archiving or downstream processing (since PTXQC 1.0.11)
   - optional configuration file *in YAML format* for generation of shorter/customized reports
 
 ### Target audience

@@ -28,9 +28,10 @@ i.e.
 }
 \examples{
   isValidMzQC(MzQCcvParameter$new("QC:4000059"))       # FALSE
+  isValidMzQC(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra")) # TRUE
   isValidMzQC(list(MzQCcvParameter$new("QC:4000059"))) # FALSE
   isValidMzQC(list(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra"))) # TRUE
-  isValidMzQC(list(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra")),
-               MzQCcvParameter$new()) # FALSE
+  isValidMzQC(list(MzQCcvParameter$new("QC:4000059", "Number of MS1 spectra")), 
+              MzQCcvParameter$new()) # FALSE
   
 }

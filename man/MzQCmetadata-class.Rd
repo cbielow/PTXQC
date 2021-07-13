@@ -13,9 +13,9 @@ The metadata for a run/setQuality
 \describe{
 \item{\code{label}}{Unique name for the run (for runQuality) or set (for setQuality).}
 
-\item{\code{inputFiles}}{Array of MzQCinputFile objects}
+\item{\code{inputFiles}}{Array/list of MzQCinputFile objects}
 
-\item{\code{analysisSoftware}}{Array of MzQCanalysisSoftware objects}
+\item{\code{analysisSoftware}}{Array/list of MzQCanalysisSoftware objects}
 
 \item{\code{cvParameters}}{[optional] Array of cvParameters objects}
 }}

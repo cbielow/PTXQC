@@ -4,11 +4,11 @@
 \name{qcMetric-class}
 \alias{qcMetric-class}
 \alias{qcMetric}
-\title{Class which can compute plots (usually for a single metric).}
+\title{Class which can compute plots and generate mzQC output (usually for a single metric).}
 \description{
 Reference class which is instanciated with a metric description and a
 worker function (at initialization time, i.e. in the package)
-and can produce plots (at runtime, when data is provided) using setData().
+and can produce plots and mzQC values (at runtime, when data is provided) using setData().
 }
 \section{Fields}{
 
@@ -19,13 +19,15 @@ and can produce plots (at runtime, when data is provided) using setData().
 
 \item{\code{plots}}{List of plots (after setData() was called)}
 
-\item{\code{qcScores}}{[placeholder] Data.frame of scores from a qcMetric (computed within workerFcn())}
+\item{\code{qcScores}}{Data.frame of scores from a qcMetric (computed within workerFcn())}
 
-\item{\code{qcCat}}{[placeholder] QC category (LC, MS, or prep)}
+\item{\code{mzQC}}{An named list of mzQC MzQCqualityMetric's (named by their fc.raw.file for runQuality or concatenated fc.raw.files for setQualities (e.g. "file 1;file4")) (valid after setData() was called)}
 
-\item{\code{qcName}}{[placeholder] Name of the qcScore in the heatmap}
+\item{\code{qcCat}}{QC category (LC, MS, or prep)}
 
-\item{\code{orderNr}}{[placeholder] column index during heatmap generation and for the general order of plots}
+\item{\code{qcName}}{Name of the qcScore in the heatmap}
+
+\item{\code{orderNr}}{Column index during heatmap generation and for the general order of plots}
 }}
 
 

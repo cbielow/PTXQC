@@ -19,11 +19,11 @@ At least one of runQualities or setQualities MUST be present.
 
 \item{\code{contactAddress}}{Contact address (mail/e-mail or phone)}
 
-\item{\code{readMe}}{Description and comments about the mzQC file contents.}
+\item{\code{description}}{Description and comments about the mzQC file contents.}
 
-\item{\code{runQualities}}{Array of MzQCbaseQuality;}
+\item{\code{runQualities}}{Array of MzQCrunQuality;}
 
-\item{\code{setQualities}}{Array of MzQCbaseQuality}
+\item{\code{setQualities}}{Array of MzQCsetQuality}
 
 \item{\code{controlledVocabularies}}{Array of CV domains used (obo files)}
 }}

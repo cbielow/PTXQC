@@ -36,11 +36,21 @@ test_that("createReport", {
   
   unzip(local_zip, exdir = tempdir()) ## extracts content
   txt_folder = file.path(tempdir(), "txt")
-  yaml_obj = list() ## no special config...
   
+  ##
+  ## test mqPar parser while we have the data here..
+  ## 
+  expect_equal(getMQPARValue(paste0(txt_folder, "/mqpar.xml"), "//firstSearchTol"), "20")
+  expect_equal(getMQPARValue(paste0(txt_folder, "/mqpar.xml"), "//matchingTimeWindow"), "0.7")
+  expect_equal(getMQPARValue(paste0(txt_folder, "/mqpar.xml"), "//string[parent::filePaths|parent::Filenames]", allow_multiple = TRUE),
+               c("M:\\projects\\QC\\ecoli_small\\Toni_20120502_GM_Ecoli_01.raw", "M:\\projects\\QC\\ecoli_small\\Toni_20120502_GM_Ecoli_02.raw"))
+  
+  
+  
+  yaml_obj = list() ## no special config...
   r = createReport(txt_folder, NULL, yaml_obj)
-  expect_equal(c("yaml_file", "heatmap_values_file", "R_plots_file", "filename_sorting", "stats_file",         
-                 "log_file", "qc_file", "report_file_prefix", "report_file_PDF", "report_file_HTML"), names(r))
+  expect_equal(c("yaml_file", "heatmap_values_file", "R_plots_file", "filename_sorting", "mzQC_file",         
+                 "log_file", "report_file_prefix", "report_file_PDF", "report_file_HTML"), names(r))
   rep_files = c(r[["report_file_PDF"]], r[["report_file_HTML"]])
   
   print(list.files(path = txt_folder))
@@ -63,6 +73,14 @@ test_that("createReport", {
   expect_equal(dim(d_filenamesort), c(2, 3)) ## two files, three columns
   expect_equal(as.character(d_filenamesort$new.Name), c("..Ecoli_01", "..Ecoli_02"))
   
+  ## remove creationDate from mzQC file, since its changing dynamically
+  no_date = function(file)
+  {
+    lines = readLines(file, warn = FALSE)
+    grep("\"creationDate\"", lines, fixed = TRUE, invert = TRUE, value = TRUE)
+  }
+  
+  expect_equal(no_date(r[["mzQC_file"]]), no_date(system.file("./examples/report_ecoli_small.mzQC", package="PTXQC")))
   
   unlink(local_zip) ## delete zip
   unlink(txt_folder, recursive = TRUE) ## delete txt-folder

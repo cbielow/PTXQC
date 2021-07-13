@@ -4,12 +4,14 @@
 \alias{getMQPARValue}
 \title{Retrieve a parameter value from a mqpar.xml file}
 \usage{
-getMQPARValue(mqpar_filename, param_name)
+getMQPARValue(mqpar_filename, xpath, allow_multiple = FALSE)
 }
 \arguments{
 \item{mqpar_filename}{Filename (incl. absolute or relative path) to the mqpar.xml file}
 
-\item{param_name}{XML tag name, e.g. 'firstSearchTol' from which to read the value}
+\item{xpath}{An XPath to extract the content of XML tag(s), e.g. '//firstSearchTol'}
+
+\item{allow_multiple}{If the XPath expression returns more than one value, all values must be identical (not allowing multiple different values) or 'stop()' is called}
 }
 \value{
 The stored value as string(!)
@@ -19,10 +21,10 @@ If the file has the param, then return it as string.
 If the file is missing, warning is shown and NULL is returned.
 If the param (i.e. XML tag) is unknown or cannot be extracted, the program will quit (since this is a hard error).
 When multiple occurrences of the param are found (usually due to parameter groups), we test if the values are all identical.
-If so, the value is returned. If the values are different, a warning is emitted and NULL is returned.
+If so, the value is returned. If the values are different, a warning is emitted and NULL is returned unless 'allow_multiple = TRUE'
 }
 \details{
-E.g. calling getMQPARValue("mqpar.xml", "firstSearchTol")
+E.g. calling getMQPARValue("mqpar.xml", "//firstSearchTol")
 will look up the line
 <firstSearchTol>20</firstSearchTol>
 and return "20" (string!).

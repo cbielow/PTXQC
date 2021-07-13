@@ -17,7 +17,7 @@ if your mzQC object representation is already a list
 because upon detecting lists, this function will call 'class$fromData(element)' for every element.
 }
 \examples{
- data = MzQCcvParameter$new("acc", "myName", "desc")
+ data = MzQCcvParameter$new("acc", "myName", "value")
  data_recovered = fromDatatoMzQC(MzQCcvParameter, list(jsonlite::fromJSON(jsonlite::toJSON(data))))
  data_recovered
 

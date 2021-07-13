@@ -7,7 +7,7 @@
 parseOBO(cv_obo_file)
 }
 \arguments{
-\item{cv_obo_file}{"xxx.obo"}
+\item{cv_obo_file}{A path to an .obo file}
 }
 \value{
 A list containing cv term information

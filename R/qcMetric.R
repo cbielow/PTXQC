@@ -1,18 +1,19 @@
 
 #'
-#' Class which can compute plots (usually for a single metric).
+#' Class which can compute plots and generate mzQC output (usually for a single metric).
 #'
 #' Reference class which is instanciated with a metric description and a
 #' worker function (at initialization time, i.e. in the package)
-#' and can produce plots (at runtime, when data is provided) using setData().
+#' and can produce plots and mzQC values (at runtime, when data is provided) using setData().
 #'
-#' @field helpText Description (lengthy) of the metric and plot elements
+#' @field helpText  Description (lengthy) of the metric and plot elements
 #' @field workerFcn Function which generates a result (usually plots). Data is provided using setData().
-#' @field plots List of plots (after setData() was called)
-#' @field qcScores [placeholder] Data.frame of scores from a qcMetric (computed within workerFcn())
-#' @field qcCat [placeholder] QC category (LC, MS, or prep)
-#' @field qcName [placeholder] Name of the qcScore in the heatmap
-#' @field orderNr [placeholder] column index during heatmap generation and for the general order of plots
+#' @field plots     List of plots (after setData() was called)
+#' @field qcScores  Data.frame of scores from a qcMetric (computed within workerFcn())
+#' @field mzQC      An named list of mzQC MzQCqualityMetric's (named by their fc.raw.file for runQuality or concatenated fc.raw.files for setQualities (e.g. "file 1;file4")) (valid after setData() was called)
+#' @field qcCat     QC category (LC, MS, or prep)
+#' @field qcName    Name of the qcScore in the heatmap
+#' @field orderNr   Column index during heatmap generation and for the general order of plots
 #'
 #' @exportClass qcMetric
 #' @export qcMetric
@@ -57,6 +58,7 @@ qcMetric = setRefClass("qcMetric",
                  title = "list",
                  ## the following members are related to the heatmap only
                  qcScores = "data.frame", ## with columns "raw.file", "score"
+                 mzQC = "list", ## of MzQCbaseQuality objects
                  qcCat = "character", ## one of "prep", "LC", "MS" or empty (e.g. for PG)
                  qcName = "character", ## expression e.g. "MS^2~ID~Rate"
                  orderNr = "numeric", ## ordering of plots -- also applies to Heatmap; gaps are ignored
@@ -74,6 +76,7 @@ qcMetric = setRefClass("qcMetric",
            .self$plots = list();  ## obtained from worker
            .self$htmlTable = NA_character_;  ## obtained from worker
            .self$qcScores = data.frame();  ## obtained from worker
+           .self$mzQC = list();  ## obtained from worker
            .self$title = list();
            .self$qcCat = qcCat;
            .self$qcName = qcName;
@@ -124,6 +127,7 @@ qcMetric = setRefClass("qcMetric",
          .self$plots = lpl;
          #.self$plots = r[["plots"]]
          
+         if ("mzQC" %in% names(r)) .self$mzQC = r[["mzQC"]];
          if ("htmlTable" %in% names(r)) .self$htmlTable = r[["htmlTable"]];
          if ("qcScores" %in% names(r)) .self$qcScores = r[["qcScores"]];
          if ("title" %in% names(r)) .self$title = r[["title"]]

@@ -35,6 +35,8 @@
 #' @import knitr
 #' @import methods
 #' @import plyr
+#' @import R6
+#' @import R6P
 #' @import RColorBrewer
 #' @rawNamespace import(reshape2, except = c(dcast, melt))
 #' @import rmarkdown
@@ -42,6 +44,7 @@
 #' @import stats
 #' @import utils
 #' @import UpSetR
+#' @import xml2
 #' @import yaml
 #' 
 NULL
