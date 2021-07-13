@@ -34,7 +34,6 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
 {
   if (!exists("DEBUG_PTXQC")) DEBUG_PTXQC = FALSE ## debug only when defined externally
   
-  
   ## the following code makes sure that a plotting device is open.
   ## In some scenarios, the a plotting device is not available by default, e.g. in non-interactive sessions (e.g. shinyApps).
   ## Some versions of R then open a default pdf device to rplots.pdf, but permissions might not allow to write there - so our app crashes.
@@ -352,7 +351,9 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
                                      numeric = "^Mass$",
                                      "^protein.names$",
                                      numeric = "^ms.ms.count$",
-                                     numeric = "^reporter.intensity.")) ## we want .corrected and .not.corrected
+                                     numeric = "^reporter.intensity.", ## we want .corrected and .not.corrected
+                                     numeric = "Missed\\.cleavages",
+                                     "^sequence$")) 
     ## contains NA if 'genuine' ID
     ## ms.ms.count is always 0 when mtd has a number; 'type' is always "MULTI-MATCH" and ms.ms.ids is empty!
     #dsub = d_evd[,c("ms.ms.count", "match.time.difference")]
@@ -515,7 +516,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     lst_qcMetrics[["qcMetric_EVD_MissingValues"]]$setData(df_evd)
     
     ## trim down to the absolute required (we need to identify contaminants in MSMS.txt later on)
-    if (!DEBUG_PTXQC) df_evd = df_evd[, c("id", "contaminant")]
+    ## --> use %in% because some columns, e.g. 'missed.cleavages' are optional
+    if (!DEBUG_PTXQC) df_evd = df_evd[, names(df_evd) %in% c("id", "contaminant", "fc.raw.file", "sequence", "missed.cleavages")]
   }
   
   
@@ -552,11 +554,14 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     ##
     ## missed cleavages per Raw file
     ##
-    if (!is.null(df_evd)) {
-      lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms, df_evd)
-    } else {
-      lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms)
-    }
+    # df_evd can be NULL; that's no problem
+    lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_msms, df_evd)
+   
+    # In case missed.cleavages is not in msms but in evd 
+    # metric checks if it was already done  
+    lst_qcMetrics[["qcMetric_MSMS_MissedCleavages"]]$setData(df_evd)
+    
+    
     
   }
   ## save RAM: msms.txt is not required any longer
