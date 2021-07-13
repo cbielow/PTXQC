@@ -34,7 +34,7 @@ getMQPARValue = function(mqpar_filename, xpath, allow_multiple = FALSE)
   
   lines = xml2::read_xml(mqpar_filename)
   ## is the tag present multiple times? (if yes, we found parameter groups)
-  results = xml_text(xml_find_all(lines, xpath))
+  results = xml2::xml_text(xml2::xml_find_all(lines, xpath))
 
   if (length(results) == 0) {
     stop("getMQPARValue(): The XPath '", xpath, "' was not found in the file '", mqpar_filename, "'. Please contact the package support.", call. = FALSE);
