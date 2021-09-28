@@ -312,7 +312,10 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
         if ("+" %in% x$identified) xp = x$n[x$identified=="+"]
         if ("-" %in% x$identified) xm = x$n[x$identified=="-"]
         ratio = xp * 100 / sum(xp, xm)
-        
+        if (is.na(ratio)) 
+        { # the whole 'identified' column is empty (no '+', no '-')
+          ratio = 0 
+        }
         return (data.frame(ratio = ratio, count = sum(x$n)))
       })
       head(df.ratio)
@@ -321,7 +324,10 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
       
       ## QC measure for constantly identifiying peptides, irrespective of scan event number
       ## -- we weight scan events by their number of occurence
-      qc_TopN_ID = plyr::ddply(df.ratio, "fc.raw.file", function(x) data.frame(val = qualUniform(x$ratio, x$count)))
+      qc_TopN_ID = plyr::ddply(df.ratio, "fc.raw.file", function(x) {
+        data.frame(val = qualUniform(x$ratio, x$count))
+      })
+        
       colnames(qc_TopN_ID)[colnames(qc_TopN_ID) == "val"] = .self$qcName
       
       return(list(plots = lpl, qcScores = qc_TopN_ID))

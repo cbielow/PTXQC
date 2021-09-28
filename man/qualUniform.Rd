@@ -15,7 +15,7 @@ qualUniform(x, weight = vector())
 Value between [0, 1]
 }
 \description{
-Ranges between 0 (worst score) and 1 (best score).
+The score ranges between 0 (worst score) and 1 (best score).
 Input 'x' is a vector of counts (or probabilities) for equally spaced bins in a histogram.
 A uniform distribution (e.g. c(3,3,3) will get a score of 1. The worst possible case (e.g. c(4,0,0)), will get a score of 0,
 and a linear increasing function (e.g. c(1,2,3)) will get something in between (0.585 here)
