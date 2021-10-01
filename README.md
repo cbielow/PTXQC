@@ -9,7 +9,7 @@ PTXQC
 
 ### Latest changes / ChangeLog
 
-  - v1.00.11 - July 2021: initial support for mzQC Quality Control output
+  - v1.00.11 - Sep 2021: initial support for mzQC Quality Control output (https://github.com/cbielow/PTXQC/pull/105); Missed cleavages can be computed from evidence.txt (https://github.com/cbielow/PTXQC/pull/104); minor fixes
   - v1.00.10 - May 2021: detect non UK/US locale (https://github.com/cbielow/PTXQC/pull/99); Revive missing MBR metrics (https://github.com/cbielow/PTXQC/issues/97); restore full Parameter list (showing MaxQuant parameters (https://github.com/cbielow/PTXQC/issues/101); decoy distribution in MS/MS mass error plot restored (https://github.com/cbielow/PTXQC/issues/102)
   - v1.00.09 - Jan 2021: output logging to external file (https://github.com/cbielow/PTXQC/issues/94); mzQC support (partial); less warnings;
   - v1.00.08 - Dec 2020: fix issues with two metrics (https://github.com/cbielow/PTXQC/issues/90, https://github.com/cbielow/PTXQC/issues/91)

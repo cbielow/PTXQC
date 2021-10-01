@@ -118,7 +118,7 @@ boxplotCompare = function(data,
       xlab("") + 
       ylab(ylab) +
       coord_cartesian(ylim = ylims) + ## avoid Warning: Removed xxx rows containing non-finite values (stat_boxplot), because a simple ylim(ylims) would replace outliers by
-      scale_alpha(guide = FALSE) +
+      scale_alpha(guide = "none") +
       scale_fill_manual(values = cols, name = "Category") + 
       scale_color_manual(values = dark_cols, name = "Category") + 
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
