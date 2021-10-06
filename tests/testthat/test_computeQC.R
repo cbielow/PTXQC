@@ -73,11 +73,11 @@ test_that("createReport", {
   expect_equal(dim(d_filenamesort), c(2, 3)) ## two files, three columns
   expect_equal(as.character(d_filenamesort$new.Name), c("..Ecoli_01", "..Ecoli_02"))
   
-  ## remove creationDate and contactName from mzQC file, since its changing dynamically
+  ## remove creationDate, contactName, and URI from mzQC file, since its changing dynamically
   no_volatile = function(file)
   {
     lines = readLines(file, warn = FALSE)
-    grep("\"creationDate\"|\"contactName\"", lines, invert = TRUE, value = TRUE)
+    grep("\"creationDate\"|\"contactName\"|\"location\"", lines, invert = TRUE, value = TRUE)
   }
   
   expect_equal(no_volatile(r[["mzQC_file"]]), no_volatile(system.file("./examples/report_ecoli_small.mzQC", package="PTXQC")))

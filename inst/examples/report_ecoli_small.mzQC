@@ -11,7 +11,7 @@
             "inputFiles": [
               {
                 "name": "Toni_20120502_GM_Ecoli_01.raw",
-                "location": "M:\\projects\\QC\\ecoli_small\\Toni_20120502_GM_Ecoli_01.raw",
+                "location": "fake/dir/Toni_20120502_GM_Ecoli_01.raw",
                 "fileFormat": {
                   "accession": "MS:1000563",
                   "name": "Thermo RAW format"
@@ -44,7 +44,7 @@
             "inputFiles": [
               {
                 "name": "Toni_20120502_GM_Ecoli_02.raw",
-                "location": "M:\\projects\\QC\\ecoli_small\\Toni_20120502_GM_Ecoli_02.raw",
+                "location": "/fake/dir/Toni_20120502_GM_Ecoli_02.raw",
                 "fileFormat": {
                   "accession": "MS:1000563",
                   "name": "Thermo RAW format"
