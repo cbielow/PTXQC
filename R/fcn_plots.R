@@ -197,7 +197,7 @@ plot_ContEVD = function(data, top5)
                                   y = "s.intensity", 
                                fill = "Protein")) +
         geom_col(aes_string(alpha = "Log10Diff")) +
-        suppressWarnings(## supresses 'Using alpha for a discrete variable is not advised'
+        suppressWarnings(## suppresses 'Using alpha for a discrete variable is not advised'
           scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(d_sum$Log10Diff))==1) + 1], 1.0),
                                name = "Abundance\nclass")) +
         xlab("")  +
@@ -545,7 +545,7 @@ plot_Charge = function(d_charge)
         xlab("Raw file") +
         ylab("fraction [%]") +
         guides(fill = guide_legend(title="charge"),
-                                   color = FALSE) + # avoid black line in legend
+                                   color = "none") + # avoid black line in legend
         scale_x_reverse() +
         coord_flip() +
         theme(axis.text.y = element_blank(), axis.ticks = element_blank()) +
@@ -595,7 +595,7 @@ plot_IDsOverRT = function(data, x_lim = range(data$RT), y_max = max(data$counts)
     ylim(from = 0, to = y_max) +
     ylab("ID count") +
     ggtitle("EVD: IDs over RT") +
-    guides(colour = guide_legend(title="Raw file"), linetype = FALSE) +
+    guides(colour = guide_legend(title="Raw file"), linetype = "none") +
     scale_linetype_manual(values = rep_len(c("solid", "dashed"), nrOfRaws)) +
     scale_color_manual(values = brewer.pal.Safe(nrOfRaws, "Set1")) 
   #print(p)

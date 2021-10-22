@@ -1081,6 +1081,9 @@ The 'Abundance class' models the average peptide intensity in each Raw file and 
 transparency. It is not unusual to see samples with low sample content to have higher contamination.
 If you see only one abundance class ('mid'), this means all your Raw files have roughly
 the same peptide intensity distribution.
+
+If you see less than 5 contaminants, it either means there are actually less, or that one (or more) of the shortened contaminant names
+subsume multiple of the top5 contaminants (since they start with the same prefix).
     
 Heatmap score [EVD: Contaminants]: as fraction of summed intensity with 0 = sample full of contaminants; 1 = no contaminants
 
