@@ -197,7 +197,7 @@ plot_ContEVD = function(data, top5)
                                   y = "s.intensity", 
                                fill = "Protein")) +
         geom_col(aes_string(alpha = "Log10Diff")) +
-        suppressWarnings(## supresses 'Using alpha for a discrete variable is not advised'
+        suppressWarnings(## suppresses 'Using alpha for a discrete variable is not advised'
           scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(d_sum$Log10Diff))==1) + 1], 1.0),
                                name = "Abundance\nclass")) +
         xlab("")  +
