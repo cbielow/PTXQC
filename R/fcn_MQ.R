@@ -103,9 +103,17 @@ boxplotCompare = function(data,
   }
   data$cat[data$contaminant] = cat[5]
   
+  levels(data$cat)
+  ## get rid of unused levels
+  data$cat = data$cat[, drop = TRUE]
+  
+  ## subset the factor as well (otherwise ggplot will show unused factors in the legend)
+  cols_sub = cols[names(cols) %in% levels(data$cat)]
+  dark_cols_sub = dark_cols[names(dark_cols) %in% levels(data$cat)]
+  
   ## compute global y-limits (so we can fix it across plots)
   ylims = grDevices::boxplot.stats(data$value)$stats[c(1, 5)]
-  ## make sure to inlude abline (if existing)
+  ## make sure to include abline (if existing)
   if (!is.na(abline))
   {
     ylims = c(ylims[1], max(ylims[2], abline))
@@ -119,10 +127,10 @@ boxplotCompare = function(data,
       ylab(ylab) +
       coord_cartesian(ylim = ylims) + ## avoid Warning: Removed xxx rows containing non-finite values (stat_boxplot), because a simple ylim(ylims) would replace outliers by
       scale_alpha(guide = "none") +
-      scale_fill_manual(values = cols, name = "Category") + 
-      scale_color_manual(values = dark_cols, name = "Category") + 
+      scale_fill_manual(values = cols_sub, name = "Category", drop = TRUE) + 
+      scale_color_manual(values = dark_cols_sub, name = "Category", drop = TRUE) + 
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
-      theme(legend.position = ifelse(length(cols)==1, "none", "right")) +
+      theme(legend.position = ifelse(length(cols_sub)==1, "none", "right")) +
       ggtitle(mainlab, sublab) + 
       scale_x_discrete_reverse(factor(unique(data$group)))
     
