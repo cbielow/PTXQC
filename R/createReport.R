@@ -684,7 +684,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
       }
       cat(paste0("HTML TEMPLATE: ", html_template, "\n"))
       out_dir = dirname(rprt_fns$report_file_HTML)
-      file.copy(html_template, out_dir, overwrite = TRUE)
+      file.copy(html_template, out_dir, overwrite = FALSE)
       out_template = file.path(out_dir, basename(html_template))
       ## Rmarkdown: convert to Markdown, and then to HTML (or PDF) ...
       ## Intermediates_dir is required if inputdir!=outputdir, since Shiny server might not allow write-access to input file directory
@@ -721,6 +721,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
         print(gg_obj)
       }
     }
+    cat("\nCreating PDF ...\n")
     grDevices::pdf(report_file_PDF)
     printWithPage(hm[["plot"]], "p. 1")      # summary heatmap
     printWithPage(pl_nameMapping$plots, "p. 2")    # short file mapping

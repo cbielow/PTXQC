@@ -155,18 +155,19 @@ document.getElementById("locale_shorttext").innerHTML = shorttext;
   - navigate using the 'Table of Content' above or just scroll down
   - collapse sections by just clicking their name
   - click on the "&darr; Show Help" symbol to see a description for each metric and its scoring
-  - edit the config `r paste0("file:///", gsub("\\\\", "/", rprt_fns$yaml_file))` to
+  - edit the YAML config <a href="`r paste0("file:./", basename(rprt_fns$yaml_file))`">`r paste0("file:./", basename(rprt_fns$yaml_file))`</a> to
      - set the report format (HTML, plainPDF, or both)
      - disable metrics
      - customize the order of metrics
      - set individual target thresholds
-  - edit `r paste0("file:///", gsub("\\\\", "/", rprt_fns$filename_sorting))` to customize
+  - edit `r paste0("file:./", basename(rprt_fns$filename_sorting))` to customize
      - the order of Raw files in plots and heatmap
      - abbreviations of Raw file names
-  - edit the Html template `r paste0("file:///", gsub("\\\\", "/", html_template))` to
+  - edit the Html template `r paste0("file:./", basename(html_template))` to
      - alter the look and feel of this report (e.g. colors, font and image sizes, help texts, etc.)
   - report bugs and file requests via the [GitHub issue tracker](https://github.com/cbielow/PTXQC/issues)
   - full PTXQC manual available [here](https://github.com/cbielow/PTXQC)
+
 
 ## HeatMap
 ```{r MQparams, echo=FALSE, results="asis"}
