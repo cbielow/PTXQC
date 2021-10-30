@@ -598,11 +598,13 @@ during MaxQuant configuration.
 The resulting residual RT delta after RT alignment (compared to a reference Raw file), is shown as green/red dots. One dot represents
 one peptide (incl. charge). Every dot (peptide) outside an allowed residual delta RT (1min by default) is colored red.
 All others are green.
+The ratio of 'green' vs. 'green+red' peptides is annotated using 'sc: ' (for 'score') in the plot subtitles. High values are better (green peptides dominate).
 
 If moving 'red' dots to the horizontal zero-line (to make them green) requires large RT shifts, then increasing the alignment
 search window might help MaxQuant to find a better alignment.
 
-Heatmap score [EVD: MBR Align]: fraction of 'green' vs. 'green+red' peptides.
+
+Heatmap score [EVD: MBR Align]: ratio of 'green' vs. 'green+red' peptides 
 ",
     workerFcn = function(.self, df_evd, tolerance_matching, raw_file_mapping)
     {
