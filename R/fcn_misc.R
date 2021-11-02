@@ -747,7 +747,7 @@ repEach = function(x, n)
 
 #' Find the local maxima in a vector of numbers.
 #' 
-#' A vector of booleans is returned with the same length as input (omitting NA's)
+#' A vector of booleans is returned with the same length as input
 #' which contains TRUE when there is a maximum.
 #' Simply sum up the vector to get the number of maxima.
 #' 
@@ -760,28 +760,38 @@ repEach = function(x, n)
 #'     r = getMaxima(c(1,0,3,4,5,0))                                
 #'     all(r == c(TRUE,FALSE,FALSE,FALSE,TRUE,FALSE))
 #'     
+#'     getMaxima(c(1, NA, 3, 2, 3, NA, 4, 2, 5))
+#'     
 #' @export     
 #'     
 getMaxima = function(x, thresh_rel = 0.2)
 {
   pos = rep(FALSE, length(x))
-  x = na.omit(x)
-  thresh_abs = max(x) * thresh_rel
-  last = x[1]
+  thresh_abs = max(x, na.rm = TRUE) * thresh_rel
+  x_noNA = na.omit(x)
+  if (length(x_noNA) == 0) return(pos)
+  last = x_noNA[1]
+  ## find index of first non-NA in 'x'
+  i = which(last == x)[1]
+  last_nonNA_i = i
   up = TRUE ## we start going up (if the next point is lower, the first point is a maximum)
-  for (i in 2:length(x))
+  while (i < length(x))
   {
+    i = i + 1;
+    if (is.na(x[i])) next;
+    
     if (last < x[i] && !up) 
     { # ascending in down mode
       up = !up
     } else if (last > x[i] && up)
     { # going down in up mode
       up = !up
-      if (x[i-1]>=thresh_abs) pos[i-1] = TRUE
+      if (x[last_nonNA_i]>=thresh_abs) pos[last_nonNA_i] = TRUE
     }
     last = x[i]
+    last_nonNA_i = i
   }
-  if (up) pos[length(x)] = TRUE ## if we ended going up, the last point is a maximum
+  if (up) pos[last_nonNA_i] = TRUE ## if we ended going up, the last point is a maximum
   return (pos)
 }
 
