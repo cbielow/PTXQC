@@ -16,12 +16,14 @@ to be a maximum (i.e., a noise threshold). Default is 20\%.}
 Vector of bool's, where TRUE indicates a local maximum.
 }
 \description{
-A vector of booleans is returned with the same length as input (omitting NA's)
+A vector of booleans is returned with the same length as input
 which contains TRUE when there is a maximum.
 Simply sum up the vector to get the number of maxima.
 }
 \examples{
     r = getMaxima(c(1,0,3,4,5,0))                                
     all(r == c(TRUE,FALSE,FALSE,FALSE,TRUE,FALSE))
+    
+    getMaxima(c(1, NA, 3, 2, 3, NA, 4, 2, 5))
     
 }
