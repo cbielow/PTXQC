@@ -7,9 +7,10 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
-[?] v1.00.12 -- develop
+[CRAN] v1.00.12 -- 2021/11/02
   - [FIX] Documentation and cosmetic fixes (pr #109)
   - [FIX/DOC] improved legends and better links in Html reports (pr #111)
+  - [FIX] crash on Raw files with only a single MSMS spectrum (pr #112)
 
 [CRAN] v1.00.11 -- 2021/09/28
   - [FEATURE] initial support for mzQC Quality Control output (pr #105)
