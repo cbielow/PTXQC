@@ -77,7 +77,7 @@ test_that("createReport", {
   no_volatile = function(file)
   {
     lines = readLines(file, warn = FALSE)
-    grep("\"creationDate\"|\"contactName\"|\"location\"", lines, invert = TRUE, value = TRUE)
+    grep("\"creationDate\"|\"contactName\"|\"location\"|\"version\"", lines, invert = TRUE, value = TRUE)
   }
   
   expect_equal(no_volatile(r[["mzQC_file"]]), no_volatile(system.file("./examples/report_ecoli_small.mzQC", package="PTXQC")))
