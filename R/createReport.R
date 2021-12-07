@@ -167,7 +167,8 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   
   ## get full filenames (and their suffix -- for mzQC metadata)
   file_meta = QCMetaFilenames$new()
-  file_meta$data = getMetaFilenames(txt_files$mqpar, base_folder)
+  ## does only work if mqpar.xml is present (for now)
+  if (!MZTAB_MODE) file_meta$data = getMetaFilenames(txt_files$mqpar, base_folder)
   ## --> wherever you need this data, simply re-grab the singleton using 'QCMetaFilenames$new()$data'
   
   ######
