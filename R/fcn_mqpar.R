@@ -25,7 +25,7 @@ getMQPARValue = function(mqpar_filename, xpath, allow_multiple = FALSE)
 {
   #xpath = "//firstSearchTol"
   #mqpar_filename = txt_files$mqpar
-  if (!file.exists(pattern=mqpar_filename)) {
+  if (!file.exists(mqpar_filename)) {
     message("Info: The file '", mqpar_filename, "' was not found. MaxQuant parameters could not be extracted. Will fall back to default value, which however is only an approximation.",
             " Please either: a) copy the mqpar.xml which was used for this MQ analysis into your TXT folder or,",
             " b) make sure that you configure all YAML parameters whose name starts with 'MQpar_' correctly.", immediate. = TRUE)
