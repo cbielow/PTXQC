@@ -65,7 +65,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
   ###
   ###  prepare the YAML config
   ###
-  if (class(yaml_obj) != "list")
+  if (!inherits(yaml_obj, "list"))
   {
     stop(paste0("Argument 'yaml_obj' is not of type list\n"));
   }
@@ -375,7 +375,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     } 
     
     ### warn of special contaminants!
-    if (class(yaml_param$yaml_contaminants) == "list")  ## SC are requested
+    if (inherits(yaml_param$yaml_contaminants, "list"))  ## SC are requested
     {
       if (!is.null(df_pg))
       {

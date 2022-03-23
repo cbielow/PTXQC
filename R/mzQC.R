@@ -3,7 +3,7 @@
 #' Get the information of each CV term from an obo file.
 #' 
 #' @param cv_obo_file A path to an .obo file
-#' @return A list containing cv term information
+#' @return A list containing CV term information
 #' 
 #' 
 parseOBO = function(cv_obo_file){
@@ -190,7 +190,7 @@ assembleMZQC = function(lst_qcMetrics, raw_file_mapping)
   {
     mzqc_data = metric$mzQC
     if (is.null(mzqc_data)) next
-    if (class(mzqc_data) != "list") stop("mzQC member of metric must be of class 'list()'")
+    if (!inherits(mzqc_data, "list")) stop("mzQC member of metric must be of class 'list()'")
     if (length(mzqc_data) == 0) next
     if (any(is.null(names(mzqc_data)))) stop("mzQC member of metric '", metric$qcName, "' is a list, but has no names (must be fc.raw.file names or a concatenation of those)")
     

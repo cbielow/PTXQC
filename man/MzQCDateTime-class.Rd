@@ -18,6 +18,9 @@ The format is "%Y-%m-%d %H:%M:%S".
 \examples{
    dt1 = MzQCDateTime$new("1900-01-01")
    dt2 = MzQCDateTime$new(Sys.time())
+   ## test faulty input
+   ## errors with 'character string is not in a standard unambiguous format'
+   try(MzQCDateTime$new('lala'), silent=TRUE) 
    ## test roundtrip conversion from/to JSON
    dt2$fromData(jsonlite::fromJSON(jsonlite::toJSON(dt1)))
    
