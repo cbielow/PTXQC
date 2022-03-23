@@ -119,7 +119,7 @@ qcMetric = setRefClass("qcMetric",
          }
          
          if (!("plots" %in% names(r))) stop(c("Worker of '", .self$qcName, "' did not return valid result format!"))
-         if (!class(r[["plots"]]) == "list") stop(c("Worker of '", .self$qcName, "' did not return plots in list format!"))
+         if (!inherits(r[["plots"]], "list")) stop(c("Worker of '", .self$qcName, "' did not return plots in list format!"))
          
 
          lpl = flattenList(r[["plots"]])
@@ -141,7 +141,7 @@ qcMetric = setRefClass("qcMetric",
          if (!withTitle) { ## no title
            r = lapply(.self$plots, function(p) {
              ## delete title 
-             if ("ggplot" %in% class(p)) p = p + ggtitle(NULL)
+             if (inherits(p, "ggplot")) p = p + ggtitle(NULL)
              return (p)
            })
            return(r)

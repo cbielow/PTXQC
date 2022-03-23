@@ -87,7 +87,7 @@ isValidMzQC = function(x, ...)
   # anchor
   if (missing(x)) return(TRUE)
   
-  if ("list" %in% class(x)) {
+  if (inherits(x, "list")) {
     idx = sapply(x, isValidMzQC)
     if (any(idx == FALSE)) {
       warning(paste0("In list of '", class(x[[1]]), "', the element(s) #[", paste(which(idx == FALSE), collapse = ","), "] is/are invalid."), immediate. = TRUE, call. = FALSE)
@@ -122,7 +122,7 @@ isValidMzQC = function(x, ...)
 #'   
 fromDatatoMzQC = function(mzqc_class, data)
 {
-  if ("list" %in% class(data))
+  if (inherits(data, "list"))
   {
     return(sapply(data, function(x) {
       obj = mzqc_class$new()
@@ -190,6 +190,9 @@ NULL_to_NA = function(var_or_NULL) {
 #' @examples
 #'    dt1 = MzQCDateTime$new("1900-01-01")
 #'    dt2 = MzQCDateTime$new(Sys.time())
+#'    ## test faulty input
+#'    ## errors with 'character string is not in a standard unambiguous format'
+#'    try(MzQCDateTime$new('lala'), silent=TRUE) 
 #'    ## test roundtrip conversion from/to JSON
 #'    dt2$fromData(jsonlite::fromJSON(jsonlite::toJSON(dt1)))
 #     dt1$datetime == dt2$datetime    ## TRUE
@@ -404,7 +407,7 @@ setMethod('asJSON', 'MzQCinputFile', function(x, ...) x$toJSON(...))
 # x2 = jsonlite::toJSON(nif2)
 # xdata = jsonlite::fromJSON(x, simplifyDataFrame = FALSE)
 # xdata
-# class(fromDatatoMzQC(MzQCcvParameter, xdata$fileProperties)) == "list"
+# inherits(fromDatatoMzQC(MzQCcvParameter, xdata$fileProperties), "list")
 # jsonlite::toJSON(xdata, pretty = TRUE, auto_unbox = T)
 # isValidMzQC(l2)
 # nif$fromData(xdata)

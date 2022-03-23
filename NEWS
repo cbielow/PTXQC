@@ -7,6 +7,9 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.00.13 -- 2022/03/22
+  - [FIX] Remove dependency 'kableExtra' and use 'htmlTable' package instead
+
 [CRAN] v1.00.12 -- 2021/11/02
   - [FIX] Documentation and cosmetic fixes (pr #109)
   - [FIX/DOC] improved legends and better links in Html reports (pr #111)

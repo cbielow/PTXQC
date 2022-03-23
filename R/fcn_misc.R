@@ -1292,7 +1292,7 @@ getMetricsObjects = function(DEBUG_PTXQC = FALSE)
   
   lst_qcMetrics = sapply(lst_qcMetrics_str, function(m) {
     q = get(m)
-    if (class(q) %in% "refObjectGenerator"){
+    if (inherits(q, "refObjectGenerator")) {
       return(q$new())
     }
     return(NULL)

@@ -4,17 +4,15 @@
 \alias{getHTMLTable}
 \title{Create an HTML table with an extra header row}
 \usage{
-getHTMLTable(data, header = NA, font_size = 12)
+getHTMLTable(data, caption = NA)
 }
 \arguments{
 \item{data}{A data.frame which serves as table}
 
-\item{header}{A set of headlines, e.g. c("top line", "bottom line")}
-
-\item{font_size}{Html font size}
+\item{caption}{A set of headlines, e.g. c("top line", "bottom line")}
 }
 \value{
-table as character string for cat()'ing into html
+table as html character string for cat()'ing into an html document
 }
 \description{
 Create an HTML table with an extra header row
@@ -23,7 +21,6 @@ Create an HTML table with an extra header row
   data = data.frame(raw.file = letters[1:4],
                     id.rate = 3:6)
   getHTMLTable(data, 
-               header = "some header line", 
-               font_size = 11)
+               caption = "some header line")
 
 }
