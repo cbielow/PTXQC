@@ -90,7 +90,8 @@ getQualityMetricTemplate = function(accession, mzcv_dict = CVDictionarySingleton
   idx = which(accession == mzcv_dict$id)
   if (length(idx) == 0) stop("Accession '", accession, "' is not a valid CV term in the current dictionary (", length(mzcv_dict$id), " entries].")
   
-  out = MzQCqualityMetric$new(accession, mzcv_dict$name[idx], mzcv_dict$def[idx])
+  ## as.character() avoids the names() of the arguments to be forwarded into 'out'
+  out = MzQCqualityMetric$new(accession, as.character(mzcv_dict$name[idx]), as.character(mzcv_dict$def[idx]))
   return(out)
 }
 
@@ -107,7 +108,8 @@ getCVTemplate = function(accession, mzcv_dict = CVDictionarySingleton$new()$data
   idx = which(accession == mzcv_dict$id)
   if (length(idx) == 0) stop("Accession '", accession, "' is not a valid CV term in the current dictionary.")
   
-  out = MzQCcvParameter$new(accession, mzcv_dict$name[idx])
+  ## as.character() avoids the names() of the arguments to be forwarded into 'out'
+  out = MzQCcvParameter$new(accession, as.character(mzcv_dict$name[idx]))
   return(out)
 }
 
@@ -156,11 +158,11 @@ getRunQualityTemplate = function(fc.raw.file, raw_file_mapping)
 }
 
 #'
-#' Collects all 'mzQC' members from each entry in lst_qcMetrics and stores them in an overall mzQC object, which can be written to disk or augmented otherwise
+#' Collects all 'mzQC' members from each entry in lst_qcMetrics and stores them in an overall mzQC object, which can be written to disk (see writeMZQC()) or augmented otherwise
 #'
 #' @param lst_qcMetrics A list of qcMetric objects which have their mzQC member populated with "MzQCrunQuality" and/or "MzQCsetQuality" objects
 #' @param raw_file_mapping A data.frame with cols 'from', to' and maybe 'best.effort' (if shorting was unsuccessful), as e.g. obtained by a FilenameMapper$raw_file_mapping
-#' @return An MzQCmzQC object
+#' @return An MzQCmzQC object (root object of an mzQC document)
 #' 
 #' @export
 #' 
