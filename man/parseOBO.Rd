@@ -10,7 +10,7 @@ parseOBO(cv_obo_file)
 \item{cv_obo_file}{A path to an .obo file}
 }
 \value{
-A list containing cv term information
+A list containing CV term information
 }
 \description{
 Get the information of each CV term from an obo file.

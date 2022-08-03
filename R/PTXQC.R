@@ -31,7 +31,6 @@
 #' @import grid
 #' @import grDevices
 #' @import gtable
-#' @import kableExtra
 #' @import knitr
 #' @import methods
 #' @import plyr

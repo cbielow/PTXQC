@@ -269,11 +269,11 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
       .self$mq.data[, int_cols[int_cols_nn]] = sapply(int_cols[int_cols_nn], function(x_name)
       {
         x = .self$mq.data[, x_name]
-        if (class(x) == "integer")
+        if (inherits(x, "integer"))
         {
           x = as.numeric(x)
         }
-        if (class(x) != "numeric")
+        if (!inherits(x, "numeric"))
         {
           cat(paste(x[grep(",", x)], collapse = ",", sep=", "))
           cat(paste(unique(x), collapse = ",", sep=", "))

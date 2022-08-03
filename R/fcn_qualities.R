@@ -258,7 +258,7 @@ qualHighest = function(x, N)
 #'
 qualBestKS = function(x) {
   
-  if (class(x) != "list") stop("Function bestKS() expects a list!")
+  if (!inherits(x, "list")) stop("Function bestKS() expects a list!")
   if (length(x) == 0) stop("Error: qualBestKS() received empty data!")
 
   if (is.null(names(x))) names(x) = 1:length(x)

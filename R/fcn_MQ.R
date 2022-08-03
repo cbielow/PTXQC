@@ -47,7 +47,7 @@ boxplotCompare = function(data,
   }
 
   ## shorten group names
-  if (class(names)=='data.frame')
+  if (inherits(names, 'data.frame'))
   {
     stopifnot(sort(colnames(names)) == c("long", "short"))
     data$group = names$short[match(data$group, names$long)]
@@ -58,7 +58,7 @@ boxplotCompare = function(data,
     }
   }
   ## make it a factor
-  if (!("factor" %in% class(data$group))) data$group = factor(data$group)
+  if (!inherits(data$group, "factor")) data$group = factor(data$group)
   
   ## actual number of entries in each column (e.g. LFQ often has 0)
   ncol.stat = plyr::ddply(data, "group", function(x)
@@ -71,7 +71,7 @@ boxplotCompare = function(data,
   data$group2 = ncol.stat$newname[match(data$group, ncol.stat$group)]
 
   ## check (ddply makes  ncol.stat$newname a factor with matching levels)
-  #stopifnot(class(data$group2) == "factor")
+  #stopifnot(inherits(data$group2, "factor"))
   #stopifnot(all(as.numeric(data$group) == as.numeric(data$group2))) ## as.numeric() is meaningless on factors with different levels
   data$group = data$group2
   ## remove -inf and NA's

@@ -49,7 +49,7 @@ track database completeness and database version information (if given in the fi
       
       ## HTML: alternative table
       ## (do this before line breaks, since Html can handle larger strings)      
-      tbl_f = getHTMLTable(d_par2, header = fasta_files, font_size = 12)
+      tbl_f = getHTMLTable(d_par2, caption = fasta_files)
 
       ## break long values into multiple lines (to preserve PDF table width)
       splitMaxLen = function(s) {

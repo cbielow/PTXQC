@@ -712,9 +712,11 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
 #' 
 #' 
 #' @param data A data.frame which serves as table
-#' @param header A set of headlines, e.g. c("top line", "bottom line")
-#' @param font_size Html font size
-#' @return table as character string for cat()'ing into html
+#' @param caption A set of headlines, e.g. c("top line", "bottom line")
+#' @return table as html character string for cat()'ing into an html document
+#'
+#' @import htmlTable
+#' @import magrittr
 #'
 #' @export 
 #' 
@@ -722,22 +724,16 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
 #'   data = data.frame(raw.file = letters[1:4],
 #'                     id.rate = 3:6)
 #'   getHTMLTable(data, 
-#'                header = "some header line", 
-#'                font_size = 11)
+#'                caption = "some header line")
 #' 
-getHTMLTable = function(data, header = NA, font_size = 12)
+getHTMLTable = function(data, caption = NA)
 {
-  tbl = kableExtra::kable_styling(kableExtra::kable(data, row.names = FALSE, format = "html"),
-                                  bootstrap_options = c("striped", "hover", "condensed"), 
-                                  full_width = FALSE, 
-                                  font_size = font_size)
-
-  if (!any(is.na(header)))
-  {
-    header__ = header;
-    tbl = kableExtra::add_header_above(tbl, c(header__ = ncol(data)))
-    tbl = gsub("header__", paste(header__, sep = "", collapse = "<br>"), as.character(tbl))
-  } 
+  
+  tbl = data %>% 
+          addHtmlTableStyle(align = 'l',  ## align columns left
+                            col.rgroup = c("none", "#F7F7F7")) %>%
+          htmlTable(rnames = FALSE,    ## no row names
+                    caption = caption) 
 
   return(tbl)
 }
