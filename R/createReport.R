@@ -30,7 +30,11 @@
 #'          
 #' @export
 #'
-createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(), report_filenames = NULL, enable_log = FALSE)
+createReport = function(txt_folder = NULL,
+                        mztab_file = NULL,
+                        yaml_obj = list(),
+                        report_filenames = NULL,
+                        enable_log = FALSE)
 {
   if (!exists("DEBUG_PTXQC")) DEBUG_PTXQC = FALSE ## debug only when defined externally
   
@@ -345,7 +349,6 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
                                      numeric = "^score$", 
                                      numeric = "^fraction$",  ## only available when fractions were given
                                      "Raw.file", "^Protein.Group.IDs$", "Contaminant",
-                                     numeric = "[RK]\\.Count", 
                                      numeric = "^Charge$", 
                                      "modified.sequence",
                                      numeric = "^Mass$",
@@ -410,6 +413,7 @@ createReport = function(txt_folder = NULL, mztab_file = NULL, yaml_obj = list(),
     if ("retention.length" %in% colnames(df_evd))  
     {
       lst_qcMetrics[["qcMetric_EVD_RTPeakWidth"]]$setData(df_evd)
+      #lst_qcMetrics[["qcMetric_EVD_CarryOver"]]$setData(df_evd)
     } ## end retention length (aka peak width)
     
     ##

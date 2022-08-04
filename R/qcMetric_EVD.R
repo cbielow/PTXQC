@@ -1215,6 +1215,70 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
 
 #####################################################################
 
+qcMetric_EVD_CarryOver =  setRefClass(
+  "qcMetric_EVD_CarryOver",
+  contains = "qcMetric",
+  methods = list(initialize=function() {  callSuper(  
+    helpTextTemplate = 
+      "Sample carryover ... not ready yet... 
+
+Heatmap score [EVD: Carryover]: The percentage of peptide identifications whose sequence gives rise to a large 'retention span'. 
+",
+    workerFcn = function(.self, df_evd)
+    {
+      ## completeness check
+      if (!checkInput(c("fc.raw.file", "ms.ms.count", "retention.length"), df_evd)) return()
+      
+      raws_perPlot = 6
+      
+      aboveThresh_fn = function(data) {
+        #t = quantile(data, probs=0.75, na.rm=TRUE) + 3*IQR(data, na.rm = TRUE)
+        t = median(data, na.rm=TRUE) * 10
+        return(t)
+      }
+      
+      rt_range = range(df_evd$retention.time, na.rm = TRUE)
+      df_carry = plyr::ddply(df_evd, "fc.raw.file", function(x) {
+        thresh = round(aboveThresh_fn(x$retention.length), 1)
+        weirds = x[x$retention.length > thresh,]
+        ## remove "0", since this would be MBR-features
+        weirds = weirds[weirds$ms.ms.count!=0,]
+        if (nrow(weirds) == 0) return(data.frame())
+        weirds$fc.raw.file = paste0(weirds$fc.raw.file, " (>", thresh, " min)")
+        h = hist(weirds$retention.time, breaks=seq(from=rt_range[1]-3, to=rt_range[2]+3, by=3), plot = FALSE)
+        result = data.frame(RT = h$mid, counts = h$counts, fn = weirds$fc.raw.file[1])
+        return(result)
+      })
+      #df_carry = result
+      df_carry$fc.raw.file = df_carry$fn
+      lpl =
+        byXflex(df_carry, df_carry$fc.raw.file, raws_perPlot, plot_DataOverRT, sort_indices = TRUE, 
+                title = "EVD: Peptides with wide RT span", y_lab = "# of Peptide Sequences")
+      lpl
+      
+      
+      qc_evd_carry = plyr::ddply(df_evd, "fc.raw.file", function(x) {
+        thresh = aboveThresh_fn(x$retention.length);
+        pc = sum(x$retention.length > thresh, na.rm = TRUE) / nrow(x)
+        return (data.frame(larger_pc=pc))
+      })
+      
+      ## QC measure for how many IDs are part of a large span
+      cname = .self$qcName
+      qc_evd_carry[, cname] = qualLinThresh(1 - qc_evd_carry$larger_pc)
+      
+      return(list(plots = lpl, qcScores = qc_evd_carry[, c("fc.raw.file", cname)]))
+    }, 
+    qcCat = "MS", 
+    qcName = "EVD:~CarryOver", 
+    orderNr = 0250
+  )
+    return(.self)
+  })
+)  
+
+#####################################################################
+
 qcMetric_EVD_MissingValues =  setRefClass(
   "qcMetric_EVD_MissingValues",
   contains = "qcMetric",
