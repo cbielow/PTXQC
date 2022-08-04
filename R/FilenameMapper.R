@@ -312,7 +312,7 @@ writeMappingFile = function(.self, filename)
   "
   if (nrow(.self$raw_file_mapping) == 0)
   {
-    cat("No mapping found. Writing not possible!")
+    cat("No mapping found. Writing mapping file '", filename, "' not possible!")
     return (FALSE)
   }
   

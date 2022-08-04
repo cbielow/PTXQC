@@ -558,18 +558,7 @@ plot_Charge = function(d_charge)
 #'
 #' Plot IDs over time for each Raw file.
 #' 
-#' The plots shows the charge distribution per Raw file.
-#' The output of 'mosaicize()' can be used directly.
-#' 
-#' The input is a data.frame with columns
-#'   'RT' - RT in seconds, representing one bin
-#'   'counts' - number of IDs at this bin
-#'   'fc.raw.file' - name of the Raw file
-#' where each row represents one bin in RT.
-#' 
-#' At most nine(!) Raw files can be plotted. If more are given,
-#' an error is thrown.
-#' 
+#' Uses plot_DataOverRT() internally.
 #' 
 #' @param data A data.frame with columns as described above
 #' @param x_lim Limits of the x-axis (2-tuple)
@@ -587,14 +576,49 @@ plot_Charge = function(d_charge)
 #' 
 plot_IDsOverRT = function(data, x_lim = range(data$RT), y_max = max(data$counts))
 {
+  return(plot_DataOverRT(data, "EVD: IDs over RT", "ID count", x_lim, y_max))
+}
+
+
+#'
+#' Plot some count data over time for each Raw file.
+#' 
+#' The input is a data.frame with columns
+#'   'RT' - RT in seconds, representing one bin
+#'   'counts' - number of counts at this bin
+#'   'fc.raw.file' - name of the Raw file
+#' where each row represents one bin in RT.
+#' 
+#' At most nine(!) Raw files can be plotted. If more are given,
+#' an error is thrown.
+#' 
+#' 
+#' @param data A data.frame with columns as described above
+#' @param title The plot title
+#' @param y_lab Label of y-axis
+#' @param x_lim Limits of the x-axis (2-tuple)
+#' @param y_max Maximum of the y-axis (single value)
+#' @return GGplot object
+#'
+#' @import ggplot2
+#' @export
+#' 
+#' @examples
+#'  data = data.frame(fc.raw.file = rep(paste('file', letters[1:3]), each=30),
+#'                             RT = seq(20, 120, length.out = 30),
+#'                         counts = c(rnorm(30, 400, 20), rnorm(30, 250, 15), rnorm(30, 50, 15)))
+#'  plot_DataOverRT(data, "some title", "count data")
+#' 
+plot_DataOverRT = function(data, title, y_lab, x_lim = range(data$RT), y_max = max(data$counts))
+{
   nrOfRaws = length(unique(data$fc.raw.file))
   p = ggplot(data = data) +
     geom_line(aes_string(x = "RT", y = "counts", colour = "fc.raw.file", linetype = "fc.raw.file")) +
     xlim(x_lim) +
     xlab("RT [min]") + 
     ylim(from = 0, to = y_max) +
-    ylab("ID count") +
-    ggtitle("EVD: IDs over RT") +
+    ylab(y_lab) +
+    ggtitle(title) +
     guides(colour = guide_legend(title="Raw file"), linetype = "none") +
     scale_linetype_manual(values = rep_len(c("solid", "dashed"), nrOfRaws)) +
     scale_color_manual(values = brewer.pal.Safe(nrOfRaws, "Set1")) 
@@ -730,10 +754,10 @@ getHTMLTable = function(data, caption = NA)
 {
   
   tbl = data %>% 
-          addHtmlTableStyle(align = 'l',  ## align columns left
-                            col.rgroup = c("none", "#F7F7F7")) %>%
-          htmlTable(rnames = FALSE,    ## no row names
-                    caption = caption) 
+          htmlTable::addHtmlTableStyle(align = 'l',  ## align columns left
+                                       col.rgroup = c("none", "#F7F7F7")) %>%
+          htmlTable::htmlTable(rnames = FALSE,    ## no row names
+                               caption = caption) 
 
   return(tbl)
 }
