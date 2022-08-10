@@ -1,55 +1,5 @@
 
 #'
-#' Checks if filepath ends in suffix. If suffix does not start with a '.' it is prepended automatically.
-#' 
-#' @param filepath A relative or absolute path to a file, whose suffix is checked
-#' @param suffix This is the suffix we expect (the '.' is prepended internally if missing)
-#' @return TRUE if yes, FALSE otherwise
-#' 
-#' @export
-#' 
-#' @examples 
-#'   hasFileSuffix("bla.txt", "txt")    # TRUE
-#'   hasFileSuffix("bla.txt", ".txt")   # TRUE
-#'   hasFileSuffix("bla.txt", "doc")    # FALSE
-#'   hasFileSuffix("bla.txt", ".doc")   # FALSE
-#'   hasFileSuffix("fo", ".doc")        # FALSE
-#'   hasFileSuffix("", ".doc")          # FALSE
-#'   hasFileSuffix("foo", "")           # FALSE
-#' 
-hasFileSuffix = function(filepath, suffix)
-{
-  if (substr(suffix,1,1) != '.') suffix = paste0('.', suffix)
-  
-  filepath = tolower(filepath)
-  suffix = tolower(suffix)
-  
-  return(suffix == substring(filepath, first = nchar(filepath) - nchar(suffix) + 1))
-}
-
-
-#'
-#' Removes the last suffix (including the last dot) from a filename.
-#' If no dot exists, the full string is returned.
-#' 
-#' @param filepath A filename (with optional path -- which is retained!)
-#' @return The input with removed suffix
-#' 
-#' @examples 
-#'  removeSuffix("test.tar.gz")  # --> 'test.tar'
-#'  removeSuffix("test.mzML")  # --> 'test'
-#'  removeSuffix("/path/to/test.mzML")  # --> '/path/to/test'
-#'  removeSuffix("test_no_dot")  # --> 'test_no_dot'
-#' 
-#' @export
-#'
-removeSuffix = function(filepath)
-{
-  gsub("(.*)\\..*$", "\\1", filepath)
-}
-
-
-#'
 #' Get the longest common prefix from a set of strings.
 #' 
 #' Input is converted to character (e.g. from factor) first.
