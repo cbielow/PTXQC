@@ -143,7 +143,8 @@ current study. ",
       ## completeness check
       if (!checkInput(c("fc.raw.file", "sequence", "missed.cleavages"), df_any)) return()
       if (!is.null(df_evd) && !checkInput(c("contaminant", "id"), df_evd)) {df_evd = NULL}
-      if (length(.self$plots) != 0 ) return()
+      ## metric already ran... return result we have
+      if (length(.self$plots) != 0 ) return(list(plots = .self$plots, qcScores = .self$qcScores))
  
       
       max_mc = max(-Inf, df_any$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
