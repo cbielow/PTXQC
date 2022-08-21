@@ -2,7 +2,7 @@
 % Please edit documentation in R/mzQC.R
 \name{assembleMZQC}
 \alias{assembleMZQC}
-\title{Collects all 'mzQC' members from each entry in lst_qcMetrics and stores them in an overall mzQC object, which can be written to disk or augmented otherwise}
+\title{Collects all 'mzQC' members from each entry in lst_qcMetrics and stores them in an overall mzQC object, which can be written to disk (see writeMZQC()) or augmented otherwise}
 \usage{
 assembleMZQC(lst_qcMetrics, raw_file_mapping)
 }
@@ -12,8 +12,8 @@ assembleMZQC(lst_qcMetrics, raw_file_mapping)
 \item{raw_file_mapping}{A data.frame with cols 'from', to' and maybe 'best.effort' (if shorting was unsuccessful), as e.g. obtained by a FilenameMapper$raw_file_mapping}
 }
 \value{
-An MzQCmzQC object
+An MzQCmzQC object (root object of an mzQC document)
 }
 \description{
-Collects all 'mzQC' members from each entry in lst_qcMetrics and stores them in an overall mzQC object, which can be written to disk or augmented otherwise
+Collects all 'mzQC' members from each entry in lst_qcMetrics and stores them in an overall mzQC object, which can be written to disk (see writeMZQC()) or augmented otherwise
 }

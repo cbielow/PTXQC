@@ -21,19 +21,19 @@ Define a Singleton class which holds the full raw filenames (+path) and their PS
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-clone}{\code{QCMetaFilenames$clone()}}
+\item \href{#method-QCMetaFilenames-clone}{\code{QCMetaFilenames$clone()}}
 }
 }
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="R6P" data-topic="Singleton" data-id="initialize">}\href{../../R6P/html/Singleton.html#method-initialize}{\code{R6P::Singleton$initialize()}}\out{</span>}
-}
-\out{</details>}
-}
+\if{html}{\out{
+<details open><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="R6P" data-topic="Singleton" data-id="initialize"><a href='../../R6P/html/Singleton.html#method-Singleton-initialize'><code>R6P::Singleton$initialize()</code></a></span></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-QCMetaFilenames-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-QCMetaFilenames-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

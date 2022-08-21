@@ -17,18 +17,7 @@ plot_IDsOverRT(data, x_lim = range(data$RT), y_max = max(data$counts))
 GGplot object
 }
 \description{
-The plots shows the charge distribution per Raw file.
-The output of 'mosaicize()' can be used directly.
-}
-\details{
-The input is a data.frame with columns
-  'RT' - RT in seconds, representing one bin
-  'counts' - number of IDs at this bin
-  'fc.raw.file' - name of the Raw file
-where each row represents one bin in RT.
-
-At most nine(!) Raw files can be plotted. If more are given,
-an error is thrown.
+Uses plot_DataOverRT() internally.
 }
 \examples{
  data = data.frame(fc.raw.file = rep(paste('file', letters[1:3]), each=30),
