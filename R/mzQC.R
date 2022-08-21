@@ -28,7 +28,7 @@ getMetaFilenames = function(mqpar_file, base_folder)
     warning("No mqpar.xml found in '", up_dir, "'. Giving up to read full file paths The mqQC file will contain incomplete information and may not validate.")
   } else {
     ## cannot use 'eval(expr_fn_map)$raw_file_mapping' yet, since we do not have read any .txt files which fills the mapping
-    out = data.frame(file = basename(xml_rawfiles), path = xml_rawfiles, file_no_suffix = removeFileSuffix(basename(xml_rawfiles)), CV = rmzqc::filenameToCV(xml_rawfiles))
+    out = data.frame(file = basename(xml_rawfiles), path = xml_rawfiles, file_no_suffix = rmzqc::removeFileSuffix(basename(xml_rawfiles)), CV = rmzqc::filenameToCV(xml_rawfiles))
   }
   return (out)
 }
