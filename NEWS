@@ -7,6 +7,10 @@ Versions uploaded to CRAN are marked with [CRAN].
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.00.14 -- 2022/08/22
+  - [FIX] crash when re-running PTX-QC on a txt folder where a (very old) PTX-QC was already run (pr #118)
+  - [FIX] msmsScans TopNoverN metric showing invalid data for MaxQuant 2.x (pr #119)
+
 [CRAN] v1.00.13 -- 2022/03/22
   - [FIX] Remove dependency 'kableExtra' and use 'htmlTable' package instead
 
