@@ -683,7 +683,7 @@ createReport = function(txt_folder = NULL,
       ## HTML reports require Pandoc for converting Markdown to Html via the rmarkdown package
       if (DEBUG_PTXQC) {
         html_template = paste0(getwd(), "/inst/reportTemplate/PTXQC_report_template.Rmd")
-        if (!file.exists(html_template)) stop("Wrong working directroy. Please set your working directory to the PTXQC main dir such that 'paste0(getwd(), '/inst/reportTemplate/PTXQC_report_template.Rmd')' is a valid file.")
+        if (!file.exists(html_template)) stop("Wrong working directory. Please set your working directory to the PTXQC main dir such that 'paste0(getwd(), '/inst/reportTemplate/PTXQC_report_template.Rmd')' is a valid file.")
       } else {
         html_template = system.file("./reportTemplate/PTXQC_report_template.Rmd", package="PTXQC")
       }
@@ -693,8 +693,16 @@ createReport = function(txt_folder = NULL,
       out_template = file.path(out_dir, basename(html_template))
       ## Rmarkdown: convert to Markdown, and then to HTML (or PDF) ...
       ## Intermediates_dir is required if inputdir!=outputdir, since Shiny server might not allow write-access to input file directory
-      rmarkdown::render(out_template, output_file = rprt_fns$report_file_HTML) #, intermediates_dir = dirname(rprt_fns$report_file_HTML))
-    } else {
+      res_html = try(
+        rmarkdown::render(out_template, output_file = rprt_fns$report_file_HTML) #, intermediates_dir = dirname(rprt_fns$report_file_HTML))
+      )
+      if (inherits(res_html, "try-error")) {
+        warning("Creating the HTML template did not succeed, probably due to an outdated markdown template the in
+                txt folder. PTXQC will use the default template now instead. Fix or remove the broken/old .Rmd file from the ", txt_folder, 
+                " to avoid this warning.", immediate. = TRUE)
+        rmarkdown::render(html_template, output_file = rprt_fns$report_file_HTML) #, intermediates_dir = dirname(rprt_fns$report_file_HTML))
+      } 
+   } else {
       warning("The 'Pandoc' converter is not installed on your system or you do not have read-access to it!\n",
               "Pandoc is required for HTML reports.\n",
               "Please install Pandoc <http://pandoc.org/installing.html> or make sure you have access to pandoc(.exe).\n",
