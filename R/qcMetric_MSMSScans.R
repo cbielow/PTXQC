@@ -367,7 +367,7 @@ Heatmap score [MS<sup>2</sup> Scans: DepPep]: No score.
     {
       ## completeness check
       if (!checkInput(c("fc.raw.file", "dp.modification", "dp.aa", "identified"), d_msmsScan)) return()
-      stopifnot(unique(d_msmsScan$identified) %in% c("-","+"))
+      stopifnot(unique(d_msmsScan$identified) %in% c("-","+",""))
 
       ## modified subset
       d_msmsScan$hasDP = (d_msmsScan$dp.modification != "") & (tolower(d_msmsScan$dp.modification) != "unmodified")
