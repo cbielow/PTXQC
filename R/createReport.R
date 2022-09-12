@@ -642,10 +642,11 @@ createReport = function(txt_folder = NULL,
   #####################################################################
   #####################################################################
   ## write mzQC file
-  writeMZQC(
+  try( ## if not enough metrics are produced, then writing will fail (e.g. one run or setQuality needs to be present)
+    writeMZQC(
     rprt_fns$mzQC_file, 
     assembleMZQC(lst_qcMetrics, raw_file_mapping = eval(expr_fn_map)$raw_file_mapping)
-  )
+  ))
   
   
   #####################################################################
