@@ -140,13 +140,12 @@ Heatmap score [MSMS: MC Var]: each Raw file is scored for its deviation (score: 
 current study. ",
     workerFcn = function(.self, df_any, df_evd = NULL)
     {
+      ## metric already ran... return result we have
+      if (length(.self$plots) != 0 ) return(list(plots = .self$plots, qcScores = .self$qcScores))
       ## completeness check
       if (!checkInput(c("fc.raw.file", "sequence", "missed.cleavages"), df_any)) return()
       if (!is.null(df_evd) && !checkInput(c("contaminant", "id"), df_evd)) {df_evd = NULL}
-      ## metric already ran... return result we have
-      if (length(.self$plots) != 0 ) return(list(plots = .self$plots, qcScores = .self$qcScores))
- 
-      
+
       max_mc = max(-Inf, df_any$missed.cleavages, na.rm = TRUE) ## will be -Inf iff enzyme was not specified and columns is 100% NA
       if (!is.infinite(max_mc))
       { ## MC's require an enzyme to be set
