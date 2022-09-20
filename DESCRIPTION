@@ -23,6 +23,7 @@ Imports:
     ggplot2 (>= 2.2),
     ggdendro,
     grid,
+    gridExtra,
     grDevices,
     gtable,
     htmlTable,

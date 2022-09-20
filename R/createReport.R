@@ -677,6 +677,8 @@ createReport = function(txt_folder = NULL,
     stop("Output format(s) not supported: '", paste(out_formats[is.na(out_format_requested)], collapse="', '"), "'")
   }
   
+  ## a bit hacky, but we want gridExtra plots to plot when we call print() -- similar to ggplot's print
+  print.gtable = function(t) { plot(t)}
   
   if ("html" %in% out_format_requested)
   {
