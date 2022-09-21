@@ -9,7 +9,7 @@ PTXQC
 
 ### Latest changes / ChangeLog
 
-v1.00.14 - August 2022
+v1.00.14 - September 2022
   
 See [NEWS][News_File] file for a version history.
 
