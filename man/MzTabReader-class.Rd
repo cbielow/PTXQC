@@ -21,6 +21,8 @@ and is automatically updated/queried when $readMzTab is called.
 \section{Methods}{
 
 \describe{
+\item{\code{RTUnitCorrection(dt)}}{Convert all RT columns from seconds (OpenMS default) to minutes (MaxQuant default)}
+
 \item{\code{getEvidence()}}{Basically the PSM table and additionally columns named 'raw.file' and 'fc.raw.file'.}
 
 \item{\code{getMSMSScans(identified_only = FALSE)}}{Basically the PSM table (partially renamed columns) and additionally two columns 'raw.file' and 'fc.raw.file'. 
@@ -34,7 +36,5 @@ If identified_only is TRUE, only MS2 scans which were identified (i.e. a PSM) ar
 similar to MaxQuants summary.txt.}
 
 \item{\code{renameColumns(dt, namelist)}}{Renames all columns and throws a warning if a column does not exist in the data}
-
-\item{\code{RTUnitCorrection(dt)}}{Convert all RT columns from seconds (OpenMS default) to minutes (MaxQuant default)}
 }}
 

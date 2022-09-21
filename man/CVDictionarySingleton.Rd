@@ -21,19 +21,19 @@ Define a Singleton class which can hold a CV dictionary (so we do not have to lo
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-clone}{\code{CVDictionarySingleton$clone()}}
+\item \href{#method-CVDictionarySingleton-clone}{\code{CVDictionarySingleton$clone()}}
 }
 }
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="R6P" data-topic="Singleton" data-id="initialize">}\href{../../R6P/html/Singleton.html#method-initialize}{\code{R6P::Singleton$initialize()}}\out{</span>}
-}
-\out{</details>}
-}
+\if{html}{\out{
+<details open><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="R6P" data-topic="Singleton" data-id="initialize"><a href='../../R6P/html/Singleton.html#method-Singleton-initialize'><code>R6P::Singleton$initialize()</code></a></span></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-CVDictionarySingleton-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-CVDictionarySingleton-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

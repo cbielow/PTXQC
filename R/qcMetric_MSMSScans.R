@@ -307,10 +307,12 @@ Heatmap score [MS<sup>2</sup> Scans: TopN ID over N]: Rewards uniform identifica
       #   --> fail, 'D' and p-values are too low
       df.ratio = plyr::ddply(DF, c("scan.event.number", "fc.raw.file"), function(x)
       {
-        xp = xm = 0
+        xp = xm1 = xm2 = 0
         if ("+" %in% x$identified) xp = x$n[x$identified=="+"]
-        if ("-" %in% x$identified) xm = x$n[x$identified=="-"]
-        ratio = xp * 100 / sum(xp, xm)
+        if ("-" %in% x$identified) xm1 = x$n[x$identified=="-"]
+        if ("" %in% x$identified) xm2 = x$n[x$identified==""] # MQ 2.x leaves unidentified empty
+        
+        ratio = xp * 100 / sum(xp, xm1, xm2)
         if (is.na(ratio)) 
         { # the whole 'identified' column is empty (no '+', no '-')
           ratio = 0 
@@ -365,7 +367,7 @@ Heatmap score [MS<sup>2</sup> Scans: DepPep]: No score.
     {
       ## completeness check
       if (!checkInput(c("fc.raw.file", "dp.modification", "dp.aa", "identified"), d_msmsScan)) return()
-      stopifnot(unique(d_msmsScan$identified) %in% c("-","+"))
+      stopifnot(unique(d_msmsScan$identified) %in% c("-","+",""))
 
       ## modified subset
       d_msmsScan$hasDP = (d_msmsScan$dp.modification != "") & (tolower(d_msmsScan$dp.modification) != "unmodified")
