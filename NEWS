@@ -3,9 +3,20 @@ i.e. a list of new features / bugfixes by version number.
 
 Versions uploaded to CRAN are marked with [CRAN].
 
+Glossary:
+ 'pr' means 'pull request' on GitHub
+ 'issue' is an issue on GitHub
+ 
+ The respective details can be found by visiting GitHub, e.g. https://github.com/cbielow/PTXQC/pull/124
+ for pr #124 (you can use the same URL also for issues)
+
 #################################
 #########   CHANGELOG  ##########
 #################################
+
+PRE!!! v1.00.15 -- 2022/??/??
+  - better reporter ion minimum range in violin plot (pr #124)
+
 
 [CRAN] v1.00.14 -- 2022/09/21
   - [FIX] crash when re-running PTX-QC on a txt folder where a (very old) PTX-QC was already run (issue #118)
