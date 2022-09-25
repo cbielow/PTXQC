@@ -307,12 +307,11 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
       dt_reps$channel = factor(dt_reps$channel, levels = sort(unique(dt_reps$channel), decreasing = TRUE))
       head(dt_reps)
       
-      ylims_minmax = range(dt_reps$intensity)
+      ylims_minmax = range(dt_reps$intensity[dt_reps$intensity>0])
+      if (is.na(ylims_minmax[1])) {ylims_minmax = range(1)} ## data is all 0! Make range at least 1, so log-range does not crash
       
       fcn_boxplot_internal = function(data, title_subtext = title_subtext, title_color = title_color) 
       {
-        #require(ggplot2)
-        #data = ylims
         ### first subplot (distribution of intensities)
         data_noZero = data[data$intensity!=0,]
         pl = ggplot(data=data_noZero) +
@@ -330,9 +329,8 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
                 legend.position = "right",
                 plot.title = element_text(color = title_color)) +
           ggtitle(g_title, title_subtext) + 
-          #scale_alpha(range = range(ylims$labEff_PC)) +
           PTXQC:::scale_x_discrete_reverse(unique(data$fc.raw.file)) +
-          scale_y_log10(limits = ylims_minmax + 1) + ## +1 to make sure that lower bound is not 0 (--> since log(0) = error)
+          scale_y_log10(limits = ylims_minmax) +
           coord_flip() 
         #pl
         
