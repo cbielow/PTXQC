@@ -29,7 +29,8 @@ ggText = function(title, text, col = "black") {
 #'
 printWithFooter = function(gg_obj, bottom_left = NULL, bottom_right = NULL) 
 {
-  print(gg_obj)
+  if ("gtable" %in% class(gg_obj)) plot(gg_obj) else print(gg_obj)
+  
   if (!is.null(bottom_left))
   {
     label = grid::textGrob(bottom_left,

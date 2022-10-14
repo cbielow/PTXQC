@@ -29,6 +29,7 @@
 #' @import ggplot2
 #' @import ggdendro
 #' @import grid
+#' @import gridExtra
 #' @import grDevices
 #' @import gtable
 #' @import knitr
