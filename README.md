@@ -9,7 +9,8 @@ PTXQC
 
 ### Latest changes / ChangeLog
 
-v1.00.14 - September 2022
+latest Release: v1.0.14 - September 2022
+latest Release on CRAN: v1.0.14 - September 2022
   
 See [NEWS][News_File] file for a version history.
 

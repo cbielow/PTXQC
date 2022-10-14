@@ -1,47 +1,4 @@
 
-#'
-#' Get the information of each CV term from an obo file.
-#' 
-#' @param cv_obo_file A path to an .obo file
-#' @return A list containing CV term information
-#' 
-#' 
-parseOBO = function(cv_obo_file){
-  ontology = ontologyIndex::get_ontology(cv_obo_file, extract_tags = "everything")
-  #obo = scan(file = cv_obo_file, what = "character")
-  return(ontology)
-}
-
-#'
-#' Parse the content of 'qc-cv.obo' and 'psi-ms.obo' from the 'PTXQC/cv/' folder and return their union as ontology
-#' 
-#' @return a list with 'id', 'name', 'def', 'parents', 'children' which contains the CV entries
-#' 
-#' @export
-#' 
-getCVDictionary = function()
-{
-  qc = parseOBO(system.file("./cv/qc-cv.obo", package="PTXQC"))
-  ms = parseOBO(system.file("./cv/psi-ms.obo", package="PTXQC"))
-  both = list()
-  for (name in names(qc))
-  {
-    both[[name]] = append(qc[[name]], ms[[name]])
-  }
-  return(both)
-}
-
-#' 
-#' Define a Singleton class which can hold a CV dictionary (so we do not have to load the .obo files over and over again)
-#' 
-#' @export
-#' 
-CVDictionarySingleton <- R6::R6Class("CVDictionarySingleton", inherit = R6P::Singleton, public = list(
-  #' @field data Stores the data of the singleton. Set the data once before using the singleton all over the place
-  data = NULL
-))
-
-
 
 #' 
 #' Define a Singleton class which holds the full raw filenames (+path) and their PSI-MS CV terms for usage in the mzQC metadata
@@ -71,47 +28,11 @@ getMetaFilenames = function(mqpar_file, base_folder)
     warning("No mqpar.xml found in '", up_dir, "'. Giving up to read full file paths The mqQC file will contain incomplete information and may not validate.")
   } else {
     ## cannot use 'eval(expr_fn_map)$raw_file_mapping' yet, since we do not have read any .txt files which fills the mapping
-    out = data.frame(file = basename(xml_rawfiles), path = xml_rawfiles, file_no_suffix = removeSuffix(basename(xml_rawfiles)), CV = suffixToCV(xml_rawfiles))
+    out = data.frame(file = basename(xml_rawfiles), path = xml_rawfiles, file_no_suffix = rmzqc::removeFileSuffix(basename(xml_rawfiles)), CV = rmzqc::filenameToCV(xml_rawfiles))
   }
   return (out)
 }
 
-
-#' Fills a MzQCqualityMetric object with id(accession) and name.
-#' The value (if any) and unit (if any) need to be set afterwards.
-#' 
-#' @param accession The ID (=accession) of the term in the CV
-#' @param mzcv_dict A CV dictionary, as obtained by getCVDictionary(); defaults to a singleton, which needs to be filled manually beforehand
-#' 
-#' @return An instance of MzQCqualityMetric
-#' 
-getQualityMetricTemplate = function(accession, mzcv_dict = CVDictionarySingleton$new()$data)
-{
-  idx = which(accession == mzcv_dict$id)
-  if (length(idx) == 0) stop("Accession '", accession, "' is not a valid CV term in the current dictionary (", length(mzcv_dict$id), " entries].")
-  
-  ## as.character() avoids the names() of the arguments to be forwarded into 'out'
-  out = MzQCqualityMetric$new(accession, as.character(mzcv_dict$name[idx]), as.character(mzcv_dict$def[idx]))
-  return(out)
-}
-
-#' Fills a MzQCcvParameter object with id(accession) and name.
-#' The value (if any) needs to be set afterwards.
-#' 
-#' @param accession The ID (=accession) of the term in the CV
-#' @param mzcv_dict A CV dictionary, as obtained by getCVDictionary(); defaults to a singleton, which needs to be filled manually beforehand
-#' 
-#' @return An instance of MzQCcvParameter
-#' 
-getCVTemplate = function(accession, mzcv_dict = CVDictionarySingleton$new()$data)
-{
-  idx = which(accession == mzcv_dict$id)
-  if (length(idx) == 0) stop("Accession '", accession, "' is not a valid CV term in the current dictionary.")
-  
-  ## as.character() avoids the names() of the arguments to be forwarded into 'out'
-  out = MzQCcvParameter$new(accession, as.character(mzcv_dict$name[idx]))
-  return(out)
-}
 
 
 #'
@@ -120,6 +41,8 @@ getCVTemplate = function(accession, mzcv_dict = CVDictionarySingleton$new()$data
 #' @param fc.raw.file For which run
 #' @param raw_file_mapping A data.frame with cols 'from', 'to' and maybe 'best.effort' (if shorting was unsuccessful), as e.g. obtained by a FilenameMapper$raw_file_mapping
 #' @return An MzQCrunQuality object
+#' 
+#' @import rmzqc
 #'
 getRunQualityTemplate = function(fc.raw.file, raw_file_mapping)
 {
@@ -134,7 +57,7 @@ getRunQualityTemplate = function(fc.raw.file, raw_file_mapping)
     warning("Cannot properly fill metadata of mzQC file, since full filenames are unknown. Using placeholders.")
     filename = paste0(raw_file, ".raw"); 
     fullpath = paste0("???/", filename);
-    accession = suffixToCV(".raw")
+    accession = rmzqc::filenameToCV(filename)
   } else {
     idx_meta = which(meta$file_no_suffix == raw_file)
     filename = as.character(meta$file[idx_meta])
@@ -142,17 +65,13 @@ getRunQualityTemplate = function(fc.raw.file, raw_file_mapping)
     accession = as.character(meta$CV[idx_meta])
   }
   
-  file_format = getCVTemplate(accession = accession)
-  ptxqc_software = MzQCanalysisSoftware$new("MS:1003162", "PTX-QC", 
-                                            as.character(utils::packageVersion("PTXQC")), 
-                                            "https://github.com/cbielow/PTXQC/",
-                                            "Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.",
-                                            "Proteomics Quality Control")
+  file_format = rmzqc::getCVTemplate(accession = accession)
+  ptxqc_software = rmzqc::toAnalysisSoftware(id = "MS:1003162", version = as.character(utils::packageVersion("PTXQC")))
   
-  out = MzQCrunQuality$new(MzQCmetadata$new(raw_file,  ## label
-                                            list(MzQCinputFile$new(filename, fullpath, file_format)),
-                                            list(ptxqc_software)),
-                           list())
+  out = rmzqc::MzQCrunQuality$new(rmzqc::MzQCmetadata$new(raw_file,  ## label
+                                                          list(rmzqc::MzQCinputFile$new(filename, fullpath, file_format)),
+                                                          list(ptxqc_software)),
+                                  list())
   
   return(out)
 }
@@ -168,22 +87,14 @@ getRunQualityTemplate = function(fc.raw.file, raw_file_mapping)
 #' 
 assembleMZQC = function(lst_qcMetrics, raw_file_mapping)
 {
-  out = MzQCmzQC$new(version = "1.0.0", 
-                     creationDate = MzQCDateTime$new(), 
-                     contactName = Sys.info()["user"], 
-                     contactAddress = NA_character_, 
-                     description = NA_character_,
-                     runQualities = list(),
-                     setQualities = list(), 
-                     controlledVocabularies = list(
-                                              MzQCcontrolledVocabulary$new(
-                                                "Proteomics Standards Initiative Quality Control Ontology",
-                                                "https://github.com/HUPO-PSI/mzQC/blob/master/cv/qc-cv.obo",
-                                                "1.2.0"),
-                                              MzQCcontrolledVocabulary$new(
-                                                "Proteomics Standards Initiative Mass Spectrometry Ontology",
-                                                "https://github.com/HUPO-PSI/psi-ms-CV/blob/master/psi-ms.obo",
-                                                "4.1.7")))
+  out = rmzqc::MzQCmzQC$new(version = "1.0.0", 
+                            creationDate = MzQCDateTime$new(), 
+                            contactName = Sys.info()["user"], 
+                            contactAddress = NA_character_, 
+                            description = NA_character_,
+                            runQualities = list(),
+                            setQualities = list(), 
+                            controlledVocabularies = list(rmzqc::getDefaultCV()))
 
   run_qualities = list()
   set_qualities = list()
@@ -231,69 +142,6 @@ assembleMZQC = function(lst_qcMetrics, raw_file_mapping)
 }
 
 
-#'
-#' Writes a full mzQC object to disk
-#' 
-#' @param filepath A filename (with path) to write to. Should have '.mzQC' as suffix.
-#' @param mzqc_obj An mzQC object, which is serialized to JSON and then written to disk
-#'
-writeMZQC = function(filepath, mzqc_obj)
-{
-  
-  if (!hasFileSuffix(filepath, ".mzQC")) warning("'", filepath, "' does not end in '.mzQC'. Please fix the output filename.")
-  
-  
-  content = jsonlite::toJSON(mzqc_obj, pretty = TRUE, auto_unbox = TRUE)
-  
-  cat(content, file = filepath)
-  
-}
-
-
-#'
-#' For a given filename, check the suffix and translate it to an PSI-MS CV term, e.g. 'MS:1000584'
-#' 
-#' The following mapping is currently known:
-#' .raw    : MS:1000563 ! Thermo RAW format
-#' .mzML   : MS:1000584 ! mzML format
-#' .mzData : MS:1000564 ! PSI mzData format
-#' .wiff   : MS:1000562 ! ABI WIFF format
-#' .pkl    : MS:1000565 ! Micromass PKL format
-#' .mzXML  : MS:1000566 ! ISB mzXML format
-#' .yep    : MS:1000567 ! Bruker/Agilent YEP format
-#' .dta    : MS:1000613 ! Sequest DTA format
-#' .mzMLb  : MS:1002838 ! mzMLb format
-#' 
-#' Falls back to 'MS:1000560 ! mass spectrometer file format' if no match could be found.
-#' 
-#' @param filepath A filename (with optional path)
-#' @return A CV term accession as string, e.g. 'MS:1000584'
-#' 
-#' @examples 
-#'   suffixToCV("test.mZmL")  # MS:1000584
-#'   suffixToCV("test.raw")  # MS:1000563
-#'   suffixToCV(c("test.raw", "bla.mzML"))
-#'
-#' @export
-#' 
-suffixToCV = function(filepath)
-{
-  if (length(filepath) > 1) return(sapply(filepath, suffixToCV))
-  
-  if (hasFileSuffix(filepath, ".raw")) return ("MS:1000563");
-  if (hasFileSuffix(filepath, ".mzML")) return ("MS:1000584");
-  if (hasFileSuffix(filepath, ".mzData")) return ("MS:1000564");
-  if (hasFileSuffix(filepath, ".wiff")) return ("MS:1000562");
-  if (hasFileSuffix(filepath, ".pkl")) return ("MS:1000565");
-  if (hasFileSuffix(filepath, ".mzXML")) return ("MS:1000566");
-  if (hasFileSuffix(filepath, ".yep")) return ("MS:1000567");
-  if (hasFileSuffix(filepath, ".dta")) return ("MS:1000613");
-  if (hasFileSuffix(filepath, ".mzMLb")) return ("MS:1002838");
-  
-  warning("File '", filepath, "' has an unknown suffix. Falling back to 'MS:1000560 ! mass spectrometer file format'.")
-  return("MS:1000560")
-}
-  
 
 
 

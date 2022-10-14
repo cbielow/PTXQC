@@ -449,7 +449,7 @@ Heatmap score [EVD: Prot Count (>%1.0f)]: Linear scoring from zero. Reaching or 
       qcScore = qc_protc[, c("fc.raw.file", cname)]
       
       ## add mzQC metric
-      template_proteinCount = getQualityMetricTemplate("QC:4000184")
+      template_proteinCount = rmzqc::getQualityMetricTemplate("MS:1002406") # count of identified clusters
       mzqc = lapply(1:nrow(qc_protc), function(row){
           out = template_proteinCount$copy();
           out$value = qc_protc$genuineAll[row];
