@@ -753,11 +753,11 @@ plotTableRaw = function(data, colours="black", fill=NA, just="centre")
 getHTMLTable = function(data, caption = NA)
 {
   
-  tbl = data %>% 
-          htmlTable::addHtmlTableStyle(align = 'l',  ## align columns left
-                                       col.rgroup = c("none", "#F7F7F7")) %>%
-          htmlTable::htmlTable(rnames = FALSE,    ## no row names
-                               caption = caption) 
+  tbl = htmlTable::addHtmlTableStyle(data,
+                                     align = 'l',  ## align columns left
+                                     col.rgroup = c("none", "#F7F7F7"))
+  tbl = htmlTable::htmlTable(tbl, rnames = FALSE,    ## no row names
+                             caption = caption) 
 
   return(tbl)
 }
