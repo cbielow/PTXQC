@@ -48,7 +48,7 @@ track database completeness and database version information (if given in the fi
       d_par2 = cbind(d_par[d_par$page==0, parC], d_par[d_par$page==1, parC])
       
       ## HTML: alternative table
-      ## (do this before line breaks, since Html can handle larger strings)      
+      ## (do this before line breaks, since Html can handle larger strings)
       tbl_f = getHTMLTable(d_par2, caption = fasta_files)
 
       ## break long values into multiple lines (to preserve PDF table width)
