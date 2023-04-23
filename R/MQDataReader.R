@@ -49,6 +49,9 @@ read.MQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col =
 #' Note: you must find a regex which matches both versions, or explicitly add both terms if you are requesting only a subset
 #'       of columns!
 #' 
+#' Fixes for msmsScans.txt:
+#'  negative Scan Event Numbers in msmsScans.txt are reconstructed by using other columns
+#' 
 #' Example of usage:
 #' \preformatted{
 #'   mq = MQDataReader$new()
@@ -83,7 +86,8 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
   #'               "pg" (proteinGroups) [default], adds abundance index columns (*AbInd*, replacing 'intensity')
   #'               "sm" (summary), splits into three row subsets (raw.file, condition, total)
   #'               "ev" (evidence), will fix empty modified.sequence cells for older MQ versions (when MBR is active)
-  #'               Any other value will not add any special columns
+  #'               "msms_scans", will fix invalid (negative) scan event numbers
+  #'               Any other value will not add/modify any columns
   #' @param col_subset A vector of column names as read by read.delim(), e.g., spaces are replaced by dot already.
   #'                   If given, only columns with these names (ignoring lower/uppercase) will be returned (regex allowed)
   #'                   E.g. col_subset=c("^lfq.intensity.", "protein.name")
@@ -336,7 +340,22 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
       .self$mq.data$modified.sequence[idx_mm] = rep(.self$mq.data$modified.sequence[idx_block_start-1],
                                                     idx_block_end-idx_block_start+1)
     }
+  } else if (type == "msms_scans") {
+    
+    ## fix scan.event.number (some MQ 1.6.17.0 results have negative values...)
+    if (min(.self$mq.data$scan.event.number, na.rm = TRUE) < 1)
+    { ## fix by manually computing it from 'Scan index' and 'MS scan index' (the precursor MS1)
+      warning("Found MaxQuant bug in msmsScans.txt (Scan Event Numbers are negative)")
+      req_cols = c("raw.file", "ms.scan.index", "scan.index")
+      if (!checkInput(req_cols, .self$mq.data)) stop("Could not find all of '", paste0(req_cols, sep="', '"), "' in msmsScans.txt load() request. Please request loading these columns in order to fix the scan.event.number values.")
+      dtemp = as.data.table(.self$mq.data)
+      ## sort by precursor index + MS2 index, such that subsetting later already has the right order
+      setorder(dtemp, raw.file, ms.scan.index, scan.index) 
+      dtemp[, scan.event.number := 1:.N, by = .(raw.file, ms.scan.index)]
+      .self$mq.data = as.data.frame(dtemp)
+    }
   }
+  
   
   
   if (add_fs_col & "raw.file" %in% colnames(.self$mq.data))

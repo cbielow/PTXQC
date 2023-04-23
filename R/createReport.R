@@ -571,12 +571,14 @@ createReport = function(txt_folder = NULL,
   ######
   ######  msmsScans.txt ...
   ######
-  if (MZTAB_MODE) df_msmsScans = mzt$getMSMSScans(identified_only = FALSE)
-  else df_msmsScans = mq$readMQ(txt_files$msmsScan, type = "msms", filter = "", 
+  if (MZTAB_MODE) df_msmsScans = mzt$getMSMSScans(identified_only = FALSE) else
+     df_msmsScans = mq$readMQ(txt_files$msmsScan, type = "msms_scans", filter = "", 
                                 col_subset = c(numeric = "^ion.injection.time", 
                                                numeric = "^retention.time$", 
                                                "^Identified", 
-                                               "^Scan.event.number", 
+                                               numeric = "^Scan.event.number", 
+                                               numeric = 'Scan.index',    ## required for fixing scan.event.number, in case its broken
+                                               numeric = 'MS.scan.index', ## required for fixing scan.event.number, in case its broken
                                                "^total.ion.current",
                                                "^base.?peak.intensity", ## basepeak.intensity (MQ1.2) and base.peak.intensity (MQ1.3+)
                                                "^Raw.file",
