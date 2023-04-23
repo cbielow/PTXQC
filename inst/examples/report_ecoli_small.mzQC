@@ -1,89 +1,80 @@
 {
   "mzQC": {
     "version": "1.0.0",
-    "creationDate": "2021-07-08T12:08:13",
-    "contactName": "system-username-here",
+    "creationDate": "2023-04-11T15:33:24",
+    "contactName": "bielow",
     "runQualities": [
-      [
-        {
-          "metadata": {
-            "label": "Toni_20120502_GM_Ecoli_01",
-            "inputFiles": [
-              {
-                "name": "Toni_20120502_GM_Ecoli_01.raw",
-                "location": "fake/dir/Toni_20120502_GM_Ecoli_01.raw",
-                "fileFormat": {
-                  "accession": "MS:1000563",
-                  "name": "Thermo RAW format"
-                }
-              }
-            ],
-            "analysisSoftware": [
-              {
-                "accession": "MS:1003162",
-                "name": "PTX-QC",
-                "version": "1.0.11",
-                "uri": "https://github.com/cbielow/PTXQC/",
-                "description": "Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.",
-                "value": "Proteomics Quality Control"
-              }
-            ]
-          },
-          "qualityMetrics": [
+      {
+        "metadata": {
+          "label": "Toni_20120502_GM_Ecoli_01",
+          "inputFiles": [
             {
-              "accession": "QC:4000184",
-              "name": "Number of different distinct proteins from all PSM",
-              "description": "\"Number of different distinct protein from all PSM after FDR filtering. (No undistinguishability groups.)\" [PSI:QC]",
-              "value": 1079
+              "name": "Toni_20120502_GM_Ecoli_01.raw",
+              "location": "file:///M:/projects/QC/ecoli_small/Toni_20120502_GM_Ecoli_01.raw",
+              "fileFormat": {
+                "accession": "MS:1000563",
+                "name": "Thermo RAW format"
+              }
+            }
+          ],
+          "analysisSoftware": [
+            {
+              "accession": "MS:1003162",
+              "name": "PTX-QC",
+              "version": "1.0.15",
+              "uri": "https://github.com/cbielow/PTXQC/",
+              "description": "\"Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.\" [DOI:10.1021/acs.jproteome.5b00780, PMID:26653327, https://github.com/cbielow/PTXQC/]"
             }
           ]
         },
-        {
-          "metadata": {
-            "label": "Toni_20120502_GM_Ecoli_02",
-            "inputFiles": [
-              {
-                "name": "Toni_20120502_GM_Ecoli_02.raw",
-                "location": "/fake/dir/Toni_20120502_GM_Ecoli_02.raw",
-                "fileFormat": {
-                  "accession": "MS:1000563",
-                  "name": "Thermo RAW format"
-                }
-              }
-            ],
-            "analysisSoftware": [
-              {
-                "accession": "MS:1003162",
-                "name": "PTX-QC",
-                "version": "1.0.11",
-                "uri": "https://github.com/cbielow/PTXQC/",
-                "description": "Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.",
-                "value": "Proteomics Quality Control"
-              }
-            ]
-          },
-          "qualityMetrics": [
+        "qualityMetrics": [
+          {
+            "accession": "MS:1002406",
+            "name": "count of identified clusters",
+            "description": "\"The number of protein clusters that have been identified, which must match the number of clusters that pass the threshold in the file.\" [DOI:10.1002/pmic.201400080, PMID:25092112]",
+            "value": 1079
+          }
+        ]
+      },
+      {
+        "metadata": {
+          "label": "Toni_20120502_GM_Ecoli_02",
+          "inputFiles": [
             {
-              "accession": "QC:4000184",
-              "name": "Number of different distinct proteins from all PSM",
-              "description": "\"Number of different distinct protein from all PSM after FDR filtering. (No undistinguishability groups.)\" [PSI:QC]",
-              "value": 1054
+              "name": "Toni_20120502_GM_Ecoli_02.raw",
+              "location": "file:///M:/projects/QC/ecoli_small/Toni_20120502_GM_Ecoli_02.raw",
+              "fileFormat": {
+                "accession": "MS:1000563",
+                "name": "Thermo RAW format"
+              }
+            }
+          ],
+          "analysisSoftware": [
+            {
+              "accession": "MS:1003162",
+              "name": "PTX-QC",
+              "version": "1.0.15",
+              "uri": "https://github.com/cbielow/PTXQC/",
+              "description": "\"Proteomics (PTX) - QualityControl (QC) software for QC report generation and visualization.\" [DOI:10.1021/acs.jproteome.5b00780, PMID:26653327, https://github.com/cbielow/PTXQC/]"
             }
           ]
-        }
-      ]
+        },
+        "qualityMetrics": [
+          {
+            "accession": "MS:1002406",
+            "name": "count of identified clusters",
+            "description": "\"The number of protein clusters that have been identified, which must match the number of clusters that pass the threshold in the file.\" [DOI:10.1002/pmic.201400080, PMID:25092112]",
+            "value": 1054
+          }
+        ]
+      }
     ],
     "controlledVocabularies": [
       {
-        "name": "Proteomics Standards Initiative Quality Control Ontology",
-        "uri": "https://github.com/HUPO-PSI/mzQC/blob/master/cv/qc-cv.obo",
-        "version": "1.2.0"
-      },
-      {
         "name": "Proteomics Standards Initiative Mass Spectrometry Ontology",
-        "uri": "https://github.com/HUPO-PSI/psi-ms-CV/blob/master/psi-ms.obo",
-        "version": "4.1.7"
+        "uri": "https://github.com/HUPO-PSI/psi-ms-CV/releases/download/v4.1.95/psi-ms.obo",
+        "version": "4.1.95"
       }
     ]
   }
-}
+} 
