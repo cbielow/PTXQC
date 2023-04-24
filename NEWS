@@ -14,8 +14,9 @@ Glossary:
 #########   CHANGELOG  ##########
 #################################
 
-PRE!!! v1.00.15 -- 2022/??/??
+[CRAN] v1.00.15 -- 2023/04/23
   - better reporter ion minimum range in violin plot (pr #124)
+  - workaround for MQ bug causing negative scan index in msms_scan.txt (issue #128)
   - use 'rmzqc' package to handle mzQC output
 
 [CRAN] v1.00.14 -- 2022/09/21
