@@ -15,7 +15,8 @@ E.g. to filter both, \code{filter = "C+R"}}
 "pg" (proteinGroups) [default], adds abundance index columns (*AbInd*, replacing 'intensity')
 "sm" (summary), splits into three row subsets (raw.file, condition, total)
 "ev" (evidence), will fix empty modified.sequence cells for older MQ versions (when MBR is active)
-Any other value will not add any special columns}
+"msms_scans", will fix invalid (negative) scan event numbers
+Any other value will not add/modify any columns}
 
 \item{col_subset}{A vector of column names as read by read.delim(), e.g., spaces are replaced by dot already.
 If given, only columns with these names (ignoring lower/uppercase) will be returned (regex allowed)
@@ -82,6 +83,9 @@ MQ 1.6 uses: reporter.intensity.X and reporter.intensity.corrected.X
 
 Note: you must find a regex which matches both versions, or explicitly add both terms if you are requesting only a subset
       of columns!
+
+Fixes for msmsScans.txt:
+ negative Scan Event Numbers in msmsScans.txt are reconstructed by using other columns
 
 Example of usage:
 \preformatted{

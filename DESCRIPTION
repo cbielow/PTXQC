@@ -49,6 +49,6 @@ VignetteBuilder: knitr
 License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 Roxygen: list()
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 URL: https://github.com/cbielow/PTXQC
 BugReports: https://github.com/cbielow/PTXQC/issues
