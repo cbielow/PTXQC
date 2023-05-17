@@ -14,6 +14,9 @@ Glossary:
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.00.16 -- 2023/05/17
+  - add MaxQuant 2.4 support (#130)
+
 [CRAN] v1.00.15 -- 2023/04/23
   - better reporter ion minimum range in violin plot (pr #124)
   - workaround for MQ bug causing negative scan index in msms_scan.txt (issue #128)

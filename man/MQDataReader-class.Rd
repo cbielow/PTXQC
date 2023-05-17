@@ -87,6 +87,8 @@ Note: you must find a regex which matches both versions, or explicitly add both 
 Fixes for msmsScans.txt:
  negative Scan Event Numbers in msmsScans.txt are reconstructed by using other columns
 
+Automatically detects UTF8-BOM encoding and deals with it (since MQ2.4).
+
 Example of usage:
 \preformatted{
   mq = MQDataReader$new()

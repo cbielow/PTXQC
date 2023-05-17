@@ -7,13 +7,14 @@ qcMetric_PAR =  setRefClass(
 Key parameters are MaxQuant version, Re-quantify, Match-between-runs and mass search tolerances. 
 A list of protein database files is also provided, allowing to 
 track database completeness and database version information (if given in the filename).", 
-    workerFcn=function(.self, df_mqpar)
+    workerFcn=function(.self, d_parAll)
     {
       ##todo: read in mqpar.xml to get group information and ppm tolerances for all groups (parameters.txt just gives Group1)
 
       line_break = "\n"; ## use space to make it work with table
       ## remove AIF stuff
-      df_mqpar = df_mqpar[!grepl("^AIF ", df_mqpar$parameter),]
+      
+      df_mqpar = d_parAll[!grepl("^AIF ", d_parAll$parameter),]
       df_mqpar$value = gsub(";", line_break, df_mqpar$value)
       ## seperate FASTA files (usually they destroy the layout)
       idx_fastafile = grepl("fasta file", df_mqpar$parameter, ignore.case = TRUE)
