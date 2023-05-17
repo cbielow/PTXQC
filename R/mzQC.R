@@ -56,20 +56,22 @@ getRunQualityTemplate = function(fc.raw.file, raw_file_mapping)
     ## we're just guessing here...
     warning("Cannot properly fill metadata of mzQC file, since full filenames are unknown. Using placeholders.")
     filename = paste0(raw_file, ".raw"); 
-    fullpath = paste0("???/", filename);
+    location = paste0("???/", filename);
     accession = rmzqc::filenameToCV(filename)
   } else {
     idx_meta = which(meta$file_no_suffix == raw_file)
     filename = as.character(meta$file[idx_meta])
-    fullpath = as.character(meta$path[idx_meta])
+    location = as.character(meta$path[idx_meta])
     accession = as.character(meta$CV[idx_meta])
   }
-  
+  ## make location a proper URI
+  if (!startsWith(location, "file:///")) location = paste0("file:///", location);
+  location = gsub("\\", "/", location, fixed = TRUE)
   file_format = rmzqc::getCVTemplate(accession = accession)
   ptxqc_software = rmzqc::toAnalysisSoftware(id = "MS:1003162", version = as.character(utils::packageVersion("PTXQC")))
   
   out = rmzqc::MzQCrunQuality$new(rmzqc::MzQCmetadata$new(raw_file,  ## label
-                                                          list(rmzqc::MzQCinputFile$new(filename, fullpath, file_format)),
+                                                          list(rmzqc::MzQCinputFile$new(filename, location, file_format)),
                                                           list(ptxqc_software)),
                                   list())
   

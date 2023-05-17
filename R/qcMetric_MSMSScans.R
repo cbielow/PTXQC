@@ -21,6 +21,7 @@ Heatmap score [MS<sup>2</sup> Scans: TopN over RT]: Rewards uniform (function Un
       if (!checkInput(c("fc.raw.file", "retention.time", "scan.event.number", "rRT"), df_msmsScans)) return()
       dd = data.table::as.data.table(df_msmsScans[, c("fc.raw.file", "retention.time", "scan.event.number", "rRT")])
       data.table::setkey(dd, fc.raw.file, retention.time) ## sort by RT
+
       ## find the highest scan event (SE) after an MS1 scan
       DF_max = dd[, {
           idx = which(getMaxima(scan.event.number, thresh_rel = 0.0))

@@ -21,6 +21,26 @@ read.MQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col =
   mq$readMQ(file, filter, type, col_subset, add_fs_col, LFQ_action, ...)
 }
 
+#' Determine if a file is 'UTF-8' or 'UTF-8-BOM' (as of MQ2.4) or 'UTF-16BE' or 'UTF-16LE'
+#' @param filename Relative or absolute path to a file
+#' @return '' if the file does not exist or is not readable
+getFileEncoding = function(filename)
+{
+  file_handle = try(file(filename, "rb"))
+  if (inherits(file_handle, 'try-error')) return("")
+  
+  data = readBin(file_handle, "raw", n = 4)
+  
+  if (data[1]==as.raw(0xef) & data[2]==as.raw(0xbb) & data[3]==as.raw(0xbf)) 
+    return("UTF-8-BOM")
+  if (data[1]==as.raw(0xfe) & data[2]==as.raw(0xff))
+    return("UTF-16BE")  ##UTF16 big endian
+  if (data[1]==as.raw(0xff) & data[2]==as.raw(0xfe))
+    return("UTF-16LE")  ##UTF16 little endian
+  return("UTF-8")
+}
+
+
 #'
 #' S5-RefClass to read MaxQuant .txt files
 #'
@@ -49,6 +69,11 @@ read.MQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col =
 #' Note: you must find a regex which matches both versions, or explicitly add both terms if you are requesting only a subset
 #'       of columns!
 #' 
+#' Fixes for msmsScans.txt:
+#'  negative Scan Event Numbers in msmsScans.txt are reconstructed by using other columns
+#'
+#' Automatically detects UTF8-BOM encoding and deals with it (since MQ2.4).
+#'
 #' Example of usage:
 #' \preformatted{
 #'   mq = MQDataReader$new()
@@ -83,7 +108,8 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
   #'               "pg" (proteinGroups) [default], adds abundance index columns (*AbInd*, replacing 'intensity')
   #'               "sm" (summary), splits into three row subsets (raw.file, condition, total)
   #'               "ev" (evidence), will fix empty modified.sequence cells for older MQ versions (when MBR is active)
-  #'               Any other value will not add any special columns
+  #'               "msms_scans", will fix invalid (negative) scan event numbers
+  #'               Any other value will not add/modify any columns
   #' @param col_subset A vector of column names as read by read.delim(), e.g., spaces are replaced by dot already.
   #'                   If given, only columns with these names (ignoring lower/uppercase) will be returned (regex allowed)
   #'                   E.g. col_subset=c("^lfq.intensity.", "protein.name")
@@ -112,13 +138,17 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
   ## error message if failure should occur below
   msg_parse_error = paste0("\n\nParsing the file '", file, "' failed. See message above why. If the file is not usable but other files are ok, disable the corresponding section in the YAML config. You might also be running a foreign locale (e.g. Chinese) - switch to an English locale and make sure that txt files are encoded in ASCII (Latin-1)!")
   
+  ## get encoding, to pass on to read.delim
+  file_encoding = getFileEncoding(file)
+  
+  
   ## resolve set of columns which we want to keep
   #example: col_subset = c("Multi.*", "^Peaks$")
   colClasses = NA ## read.table: keep all columns by default
   if (sum(!is.na(col_subset)) > 0)
   { ## just read a tiny bit to get column names
     ## do not use data.table::fread for this, since it will read the WHOLE file and takes ages...
-    data_header = try(read.delim(file, comment.char="", nrows=2))
+    data_header = try(read.delim(file, comment.char="", nrows=2, fileEncoding = file_encoding))
     if (inherits(data_header, 'try-error')) stop(msg_parse_error, call. = FALSE);
     
     colnames(data_header) = tolower(colnames(data_header))
@@ -161,7 +191,9 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
   ##    However, when the colClass is 'numeric', whitespaces are stripped, and only AFTERWARDS the string
   ##    is checked against na.strings
   ##  - the '\u975E\u6570\u5B57' na-string is the chinese UTF-8 representation of "NA"
-  .self$mq.data = try(read.delim(file, na.strings=c("NA", "n. def.", "n.def.", "\u975E\u6570\u5B57"), encoding="UTF-8", comment.char="", stringsAsFactors = FALSE, colClasses = colClasses, ...))
+  .self$mq.data = try(read.delim(file, na.strings=c("NA", "n. def.", "n.def.", "\u975E\u6570\u5B57"), 
+                                 encoding="UTF-8", comment.char="", stringsAsFactors = FALSE, colClasses = colClasses, 
+                                 fileEncoding = file_encoding, ...))
   if (inherits(.self$mq.data, 'try-error')) stop(msg_parse_error, call. = FALSE);
   
   #colnames(.self$mq.data)
@@ -336,7 +368,22 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
       .self$mq.data$modified.sequence[idx_mm] = rep(.self$mq.data$modified.sequence[idx_block_start-1],
                                                     idx_block_end-idx_block_start+1)
     }
+  } else if (type == "msms_scans") {
+    
+    ## fix scan.event.number (some MQ 1.6.17.0 results have negative values...)
+    if (min(.self$mq.data$scan.event.number, na.rm = TRUE) < 1)
+    { ## fix by manually computing it from 'Scan index' and 'MS scan index' (the precursor MS1)
+      warning("Found MaxQuant bug in msmsScans.txt (Scan Event Numbers are negative)")
+      req_cols = c("raw.file", "ms.scan.index", "scan.index")
+      if (!checkInput(req_cols, .self$mq.data)) stop("Could not find all of '", paste0(req_cols, sep="', '"), "' in msmsScans.txt load() request. Please request loading these columns in order to fix the scan.event.number values.")
+      dtemp = as.data.table(.self$mq.data)
+      ## sort by precursor index + MS2 index, such that subsetting later already has the right order
+      setorder(dtemp, raw.file, ms.scan.index, scan.index) 
+      dtemp[, scan.event.number := 1:.N, by = .(raw.file, ms.scan.index)]
+      .self$mq.data = as.data.frame(dtemp)
+    }
   }
+  
   
   
   if (add_fs_col & "raw.file" %in% colnames(.self$mq.data))

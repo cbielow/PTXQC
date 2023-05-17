@@ -62,7 +62,7 @@ Read more about `report_vXXX_filename_sort.txt` and `report_vXXX.yaml` in the [P
   
 
   [MaxQuant]: https://maxquant.org
-  [OpenMS]: https://www.openms.de
+  [OpenMS]: https://openms.de/
   [OpenMSdoc]: https://abibuilder.cs.uni-tuebingen.de/archive/openms/Documentation/nightly/html/index.html
   [Ref_VignCust]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-CustomizeReport.Rmd
 
