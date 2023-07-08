@@ -96,7 +96,7 @@ assembleMZQC = function(lst_qcMetrics, raw_file_mapping)
                             description = NA_character_,
                             runQualities = list(),
                             setQualities = list(), 
-                            controlledVocabularies = list(rmzqc::getDefaultCV()))
+                            controlledVocabularies = list(rmzqc::getCVInfo()))
 
   run_qualities = list()
   set_qualities = list()
