@@ -48,7 +48,7 @@ test_that("createReport", {
   
   
   yaml_obj = list() ## no special config...
-  r = createReport(txt_folder, NULL, yaml_obj)
+  r = PTXQC::createReport(txt_folder, NULL, yaml_obj)
   expect_equal(c("yaml_file", "heatmap_values_file", "R_plots_file", "filename_sorting", "mzQC_file",         
                  "log_file", "report_file_prefix", "report_file_PDF", "report_file_HTML"), names(r))
   rep_files = c(r[["report_file_PDF"]], r[["report_file_HTML"]])
