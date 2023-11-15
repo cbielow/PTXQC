@@ -27,9 +27,11 @@ read.MQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col =
 getFileEncoding = function(filename)
 {
   file_handle = try(file(filename, "rb"))
+  
   if (inherits(file_handle, 'try-error')) return("")
   
   data = readBin(file_handle, "raw", n = 4)
+  close(file_handle)
   
   if (data[1]==as.raw(0xef) & data[2]==as.raw(0xbb) & data[3]==as.raw(0xbf)) 
     return("UTF-8-BOM")
