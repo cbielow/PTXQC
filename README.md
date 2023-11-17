@@ -2,14 +2,14 @@ PTXQC
 ---------------
 
 [![License (3-Clause BSD)](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg?style=flat-square)](https://opensource.org/license/bsd-3-clause/)
-[![Project Stats](https://www.openhub.net/p/PTXQC/widgets/project_thin_badge.gif)](https://www.openhub.net/p/PTXQC)
+[![Project Stats](https://openhub.net/p/PTXQC/widgets/project_thin_badge.gif)](https://openhub.net/p/PTXQC)
 
 **This package allows users of MaxQuant (from .txt files) and OpenMS (from mzTab files) to generate quality control reports in Html/PDF format.**
 
 ### Latest changes / ChangeLog
 
-latest Release: v1.0.16 - May 2023
-latest Release on CRAN: v1.0.16 - May 2023
+latest Release: v1.0.17 - July 2023
+latest Release on CRAN: same
   
 See [NEWS][News_File] file for a version history.
 

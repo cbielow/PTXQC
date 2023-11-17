@@ -1,8 +1,8 @@
 Package: PTXQC
 Type: Package
 Title: Quality Report Generation for MaxQuant and mzTab Results
-Version: 1.0.16
-Date: 2023-05-17
+Version: 1.0.17
+Date: 2023-07-05
 Author: Chris Bielow [aut, cre],
   Juliane Schmachtenberg [ctb],
   Swenja Wagner [ctb],
@@ -36,7 +36,7 @@ Imports:
     RColorBrewer,
     reshape2,
     rmarkdown,
-    rmzqc (>= 0.4.2),
+    rmzqc (>= 0.5.0),
     seqinr,
     stats,
     utils,

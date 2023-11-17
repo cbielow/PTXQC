@@ -14,6 +14,9 @@ Glossary:
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.00.17 -- 2023/07/05
+  - support for the latest rmzqc package
+  
 [CRAN] v1.00.16 -- 2023/05/17
   - add MaxQuant 2.4 support (#130)
 
