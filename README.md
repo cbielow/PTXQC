@@ -8,7 +8,7 @@ PTXQC
 
 ### Latest changes / ChangeLog
 
-latest Release: v1.0.17 - July 2023
+latest Release: v1.1.0 - Dec 2023
 latest Release on CRAN: same
   
 See [NEWS][News_File] file for a version history.
@@ -151,6 +151,10 @@ There are many ways to get involved, _you do not need to be a developer_!
   - suggest changes to existing metrics (improvements or bugfixes), see above.
   - suggest improvements to our documentation (e.g. [additional vignettes][Ref_Vign])
   - write code (in R) and submit a [Pull Request (PR)][PullRequest].
+
+### PTX-QC user forum
+
+Come and interact with developers and users at https://discord.gg/MB6PvpctUY
 
 
 ### Misc
