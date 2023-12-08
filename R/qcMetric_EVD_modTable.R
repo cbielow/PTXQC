@@ -3,26 +3,25 @@ qcMetric_EVD_modTable =  setRefClass(
   contains = "qcMetric",
   methods = list(initialize=function() {  callSuper(    
     helpTextTemplate = 
-      "Compute an occurence table of modifications (e.g. Oxidation (M)) as well as unmodified peptides.
+      "Compute an occurence table of modifications (e.g. Oxidation (M)) for all peptides, including the unmodified.
 
-The plot will show percentages, i.e. is normalized by the total number of peptide sequences (charge state counts) per Raw file.
+The plot will show percentages, i.e. is normalized by the total number of peptide sequences (where different charge state counts as a separate peptide) per Raw file.
 
-The sum of numbers may exceed 100% per Raw file, since a peptide can have multiple modifications.
+The sum of frequencies may exceed 100% per Raw file, since a peptide can have multiple modifications.
 E.g. given three peptides in a single Raw file                 <br>
 1. _M(Oxidation (M))LVLDEADEM(Oxidation (M))LNK_               <br>
 2. _(Acetyl (Protein N-term))M(Oxidation (M))YGLLLENLSEYIK_    <br>
 3. DPFIANGER                                                   <br>
 
-, will result in the following frequencies:
+, the following frequencies arise:
 
 * 33% of 'Acetyl (Protein N-term)' <br>
 * 33% of 'Oxidation (M)'           <br>
 * 33% of '2 Oxidation (M)'         <br>
 * 33% of 'Unmodified'              <br>
 
-Thus, 33% of sequences are unmodified, implying 66% are modified at least once. Note that a modification, e.g. Oxidation(M), occurs multiple times in a single peptide it's listed as a separate modification.
-
-
+Thus, 33% of sequences are unmodified, implying 66% are modified at least once. 
+If a modification, e.g. Oxidation(M), occurs multiple times in a single peptide it's listed as a separate modification (here '2 Oxidation (M)').
 
 Heatmap score [EVD: Pep ModTable]: Deviation of (unmodified peptides fraction) when compared to a representative Raw file ('qualMedianDist' function).
 ",

@@ -1,6 +1,5 @@
-
 #' 
-#' @brief Convert list of (mixed)modifications to a frequency table
+#' Convert list of (mixed)modifications to a frequency table
 #' 
 #' @param mod_list A vector with modifications, each for a specific peptide. Multiple mods per entry are allowed, each separated by comma.
 #' @return A data.frame with 'modification_names' and 'Freq' (0-100)

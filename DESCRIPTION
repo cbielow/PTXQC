@@ -2,7 +2,7 @@ Package: PTXQC
 Type: Package
 Title: Quality Report Generation for MaxQuant and mzTab Results
 Version: 1.1.0
-Date: 2023-12-01
+Date: 2023-12-08
 Author: Chris Bielow [aut, cre],
   Juliane Schmachtenberg [ctb],
   Swenja Wagner [ctb],
