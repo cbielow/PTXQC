@@ -15,7 +15,7 @@ modsToTableByRaw(
 
 \item{name_unmod}{String in 'modifications' which represents an unmodified peptide}
 
-\item{name_unmod_inverse}{If non-empty, then inverse the frequencies of the 'name_unmod' modifications (i.e. 100-x) IFF they are >=50% on average (across Raw files) and rename them to this string}
+\item{name_unmod_inverse}{If non-empty, then inverse the frequencies of the 'name_unmod' modifications (i.e. 100-x) IFF they are >=50\% on average (across Raw files) and rename them to this string}
 }
 \value{
 A data.table with 'fc.raw.file', 'modification_names' (factor), and 'Freq' (0-100)

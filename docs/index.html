@@ -157,12 +157,11 @@
 <h3 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h3>
 <p>A short <strong>overview video</strong> on PTX-QC] can be found <a href="https://youtu.be/sb-mydbNRS4" class="external-link">here</a>. If you want to jump to certain sections: - <a href="https://youtu.be/sb-mydbNRS4?t=75" class="external-link">Motivation for doing QC</a> - <a href="https://youtu.be/sb-mydbNRS4?t=522" class="external-link">Installation demo</a> - <a href="https://youtu.be/sb-mydbNRS4?t=880" class="external-link">Report Generation using Drag’n’Drop</a> - <a href="https://youtu.be/sb-mydbNRS4?t=1043" class="external-link">Inspecting and configuring a Report</a></p>
-<p>Besides this documentation on GitHub, the package vignettes of PTXQC will give you valuable information. <em>After</em> the package is installed (see below), you can browse the vignettes using either of these commands within R:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">help</span>(<span class="at">package=</span><span class="st">"PTXQC"</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">browseVignettes</span>(<span class="at">package =</span> <span class="st">'PTXQC'</span>)</span></code></pre></div>
-<p>If you do not want to wait that long, you can look at the <a href="https://cran.r-project.org/package=PTXQC" class="external-link">latest online vignette at CRAN</a></p>
-<p>You will find documentation on - Full List of Quality Metrics with help text - Input and Output - Report customization - (for MaxQuant/OpenMS users) Usage of Drag’n’drop - (for R users) Code examples in R</p>
-<p>The ‘List of Metrics’ vignette contains a full description for each metric (as seen in the Help section of a Html report).</p>
+<p>We use <a href="https://pkgdown.r-lib.org/" class="external-link">pgkdown</a> to create a HTML documentation, which includes the Vignettes, our function documentation etc. See the <a href="http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/docs/index.html" class="external-link">./docs/index.html</a> subfolder. If you do not know where to start, look at the package vignettes.</p>
+<p>Our Vignettes give details on: - Full List of Quality Metrics with help text (‘List of Metrics’) - Input and Output - Report customization - (for MaxQuant/OpenMS users) Usage of Drag’n’drop - (for R users) Code examples in R</p>
+<p>The ‘List of Metrics’ vignette contains a full description for each metric (the same as seen in the Help section of each Html report).</p>
+<p>Within R, you can browse the vignettes using either of these commands (<em>after</em> the package is installed (see below)): help(package=“PTXQC”) browseVignettes(package = ‘PTXQC’)</p>
+<p>Of course, you can also look at the Vignettes on CRAN: <a href="https://cran.r-project.org/package=PTXQC" class="external-link">latest online vignette at CRAN</a></p>
 </div>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -173,18 +172,18 @@
 <p><strong>If you just want to use PTXQC (and maybe even modify) it:</strong></p>
 <p><em>First</em>, install <a href="https://github.com/jgm/pandoc/releases" class="external-link">pandoc</a> (see bottom of linked page). Pandoc is required in order to locally build the package vignettes (documentation), but you can also read the <a href="https://github.com/cbielow/PTXQC/tree/master/vignettes" class="external-link">vignettes</a> online from the PTXQC GitHub page. More importantly, Pandoc enables PTXQC to write QC reports in HTML format (which come with a help text for each plot and are interactive). PDF reports only contain plots! The reports are printed as PDF by default and additionally as HTML if Pandoc is found. <strong>If you install Pandoc later while your R session is already open, you need to close and re-open R in order to make R aware of Pandoc!</strong></p>
 <p>You can grab PTXQC from either <a href="https://CRAN.R-project.org/package=PTXQC" class="external-link">CRAN</a> <em>or</em> <a href="https://github.com/cbielow/PTXQC#installation" class="external-link">GitHub</a>. GitHub installation will give you the latest package; the CRAN version might be a little older, but is faster to install. Check the <a href="https://github.com/cbielow/PTXQC/blob/master/NEWS" class="external-link">NEWS</a> file for CRAN submissions and version. &gt; For the code blocks below: Run <strong>each line</strong> separately in your R console, i.e. do not copy and paste the whole block. &gt; If an error should occur, this allows to track it down more easily. See <a href="https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-FAQ.Rmd" class="external-link">FAQ - Installation</a> &gt; how to resolve them.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="do">## CRAN</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"PTXQC"</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="do">## CRAN</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"PTXQC"</span>)</span></code></pre></div>
 <p>or</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="do">## GitHub</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">require</span>(devtools, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) <span class="fu">install.packages</span>(<span class="st">"devtools"</span>)</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"devtools"</span>)             <span class="do">## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="do">## use build_vignettes = FALSE if you did not install pandoc or if you encounter errors when building vignettes (e.g. PRIDE ftp unavailable)!</span></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="fu">install_github</span>(<span class="st">"cbielow/PTXQC"</span>, <span class="at">build_vignettes =</span> <span class="cn">TRUE</span>, <span class="at">dependencies =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="do">## GitHub</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">require</span>(devtools, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) <span class="fu">install.packages</span>(<span class="st">"devtools"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"devtools"</span>)             <span class="do">## this might give a warning like 'WARNING: Rtools is required ...'. Ignore it.</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="do">## use build_vignettes = FALSE if you did not install pandoc or if you encounter errors when building vignettes (e.g. PRIDE ftp unavailable)!</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">install_github</span>(<span class="st">"cbielow/PTXQC"</span>, <span class="at">build_vignettes =</span> <span class="cn">TRUE</span>, <span class="at">dependencies =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <p>To get started, see the help and/or vignettes:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">help</span>(<span class="at">package=</span><span class="st">"PTXQC"</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">browseVignettes</span>(<span class="at">package =</span> <span class="st">'PTXQC'</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">help</span>(<span class="at">package=</span><span class="st">"PTXQC"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">browseVignettes</span>(<span class="at">package =</span> <span class="st">'PTXQC'</span>)</span></code></pre></div>
 <p>Please feel free to report bugs (see below), or issue pull requests!</p>
 </div>
 <div class="section level3">
