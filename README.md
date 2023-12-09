@@ -51,16 +51,19 @@ DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
 
 A short **overview video** on PTX-QC] can be found [here](https://youtu.be/sb-mydbNRS4). 
 If you want to jump to certain sections:
- - [Motivation for doing QC](https://youtu.be/sb-mydbNRS4?t=75)
- - [Installation demo](https://youtu.be/sb-mydbNRS4?t=522)
- - [Report Generation using Drag'n'Drop](https://youtu.be/sb-mydbNRS4?t=880)
- - [Inspecting and configuring a Report](https://youtu.be/sb-mydbNRS4?t=1043)
+
+  - [Motivation for doing QC](https://youtu.be/sb-mydbNRS4?t=75)
+  - [Installation demo](https://youtu.be/sb-mydbNRS4?t=522)
+  - [Report Generation using Drag'n'Drop](https://youtu.be/sb-mydbNRS4?t=880)
+  - [Inspecting and configuring a Report](https://youtu.be/sb-mydbNRS4?t=1043)
   
 We use [pgkdown](https://pkgdown.r-lib.org/) to create a HTML documentation, which includes the Vignettes, our function documentation etc.
-See the [./docs/index.html](http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/docs/index.html) subfolder.
-If you do not know where to start, look at the package vignettes.
+You can create the documentation locally: `pkgdown::build_site()` or visit the online-version on Github at [./docs/index.html](http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/docs/index.html).
+
+If you do not know where to start, look at the package vignettes first.
 
 Our Vignettes give details on:
+
   - Full List of Quality Metrics with help text ('List of Metrics')
   - Input and Output
   - Report customization
@@ -70,9 +73,11 @@ Our Vignettes give details on:
 The 'List of Metrics' vignette contains a full description for each metric (the same as seen in the Help section of each Html report).
 
 Within R, you can browse the vignettes using either of these commands (*after* the package is installed (see below)):
+```
     help(package="PTXQC")
     browseVignettes(package = 'PTXQC')
-  
+```
+
 Of course, you can also look at the Vignettes on CRAN:
 [latest online vignette at CRAN](https://cran.r-project.org/package=PTXQC)
 

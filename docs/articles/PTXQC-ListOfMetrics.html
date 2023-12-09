@@ -174,11 +174,23 @@
 <ul>
 <li>applicable only to certain types of data, e.g. SILAC or TMT</li>
 <li>metric was disabled manually using the YAML config file</li>
-<li>missing input data (incomplete tables), e.g. only evidence.txt is
-present</li>
+<li>missing input data (incomplete tables), i.e. some .txt files are
+missing</li>
+</ul>
+<p>Metric names are prefixed by the data-source, e.g. “EVD: Charge”
+displays and scores the charge distribution, based on data from
+‘evidence.txt’ (EVD).</p>
+<ul>
+<li>EVD: evidence.txt</li>
+<li>SM: summary.txt</li>
+<li>PAR: parameters.txt</li>
+<li>PG: proteingroups.txt</li>
+<li>MSMS: msms.txt</li>
+<li>MS2Scans: msmsscans.txt</li>
 </ul>
 <p>Some metrics are incompletely named here, since they might contain
-(hithero unknown) thresholds.</p>
+(hithero unknown) thresholds, which are taken from mqpar.xml (when
+available) or defaulted in real reports.</p>
 </div>
 <div class="section level2">
 <h2 id="metrics">Metrics <a name="Metrics"></a><a class="anchor" aria-label="anchor" href="#metrics"></a>
