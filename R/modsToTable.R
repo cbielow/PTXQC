@@ -7,7 +7,7 @@
 #' @export
 #' 
 #' @examples
-#' modsToTable(c("Oxidation (M)", "Unmodified", "Oxidation (M),Acetyl (Protein N-term)", "2 Oxidation (M)", "Unmodified", "Unmodified"))
+#' modsToTable(c("Ox (M)", "Unmodified", "Ox (M),Acetyl (Prot N-term)", "2 Ox (M)", "Unmodified", "Unmodified"))
 #' 
 #'
 modsToTable = function(mod_list)
