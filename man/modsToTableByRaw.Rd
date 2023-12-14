@@ -24,8 +24,13 @@ A data.table with 'fc.raw.file', 'modification_names' (factor), and 'Freq' (0-10
 Convert list of (mixed)modifications to a frequency table
 }
 \examples{
-data = data.frame(fc.raw.file = rep(c("file A", "file B"), each = 3),
-                  modifications = c("Oxidation (M)", "Unmodified", "Oxidation (M),Acetyl (Protein N-term)", "2 Oxidation (M)", "Unmodified", "Unmodified"))
+data = data.frame(fc.raw.file = rep(c("file A", "file B"),
+                                each = 3),
+       modifications = c("Oxidation (M)",
+                        "Unmodified",
+                        "Oxidation (M),Acetyl (Protein N-term)",
+                        "2 Oxidation (M)", 
+                        "Unmodified", "Unmodified"))
 modsToTableByRaw(data)
 
 

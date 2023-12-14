@@ -22,7 +22,12 @@ The input is a data.frame, as obtained from modsToTableByRaw().
 \examples{
 
  data = data.frame(fc.raw.file = rep(c("file A", "file B"), each=3),
-                   modifications = c("Oxidation (M)", "Unmodified", "Oxidation (M), Acetyl (Protein N-term)", "2 Oxidation (M)", "Unmodified", "Unmodified"))
+                   modifications = c("Oxidation (M)",
+                   "Unmodified",
+                   "Oxidation (M), Acetyl (Protein N-term)",
+                   "2 Oxidation (M)", 
+                   "Unmodified", 
+                   "Unmodified"))
  tbl = modsToTableByRaw(data)
  plot_peptideMods(tbl,show_missing_modification_levels = TRUE)
 

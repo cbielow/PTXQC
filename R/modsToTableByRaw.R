@@ -9,13 +9,19 @@
 #' @export
 #' 
 #' @examples
-#' data = data.frame(fc.raw.file = rep(c("file A", "file B"), each = 3),
-#'                   modifications = c("Oxidation (M)", "Unmodified", "Oxidation (M),Acetyl (Protein N-term)", "2 Oxidation (M)", "Unmodified", "Unmodified"))
+#' data = data.frame(fc.raw.file = rep(c("file A", "file B"),
+#'                                 each = 3),
+#'        modifications = c("Oxidation (M)",
+#'                         "Unmodified",
+#'                         "Oxidation (M),Acetyl (Protein N-term)",
+#'                         "2 Oxidation (M)", 
+#'                         "Unmodified", "Unmodified"))
 #' modsToTableByRaw(data)
 #' 
 #'
 modsToTableByRaw = function(df_evd, name_unmod = "Unmodified", name_unmod_inverse = "Modified (total)")
 {
+  fc.raw.file <- modification_names <- Freq <- NULL  ## make R check happy and avoid 'no visible binding for global variable'
   dt_evd = data.table::data.table(df_evd)
   mods_tbl = dt_evd[, modsToTable(.SD$modifications), by = fc.raw.file]
   
@@ -30,7 +36,6 @@ modsToTableByRaw = function(df_evd, name_unmod = "Unmodified", name_unmod_invers
     }
     mods_tbl = droplevels(mods_tbl) ## drop 'Unmodified' level
   }
-  
   
   return(as.data.frame(mods_tbl))
 }
