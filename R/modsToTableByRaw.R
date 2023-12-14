@@ -19,7 +19,7 @@ modsToTableByRaw = function(df_evd, name_unmod = "Unmodified", name_unmod_invers
   dt_evd = data.table::data.table(df_evd)
   mods_tbl = dt_evd[, modsToTable(.SD$modifications), by = fc.raw.file]
   
-  mods_tbl$modification_names = as.factor(mods_tbl$modification_names) ## ensure all mods are known when subsetting the data
+  mods_tbl$modification_names = as.factor(mods_tbl$modification_names) ## ensure all mods are known when subsetting the data later
   
   ## inverse frequencies for 'modified' if they are >=50% (to make the plot more compact)
   if (nchar(name_unmod_inverse)){
@@ -28,8 +28,9 @@ modsToTableByRaw = function(df_evd, name_unmod = "Unmodified", name_unmod_invers
       mods_tbl[modification_names==name_unmod, Freq := 100 - Freq]
       mods_tbl[modification_names==name_unmod, modification_names := name_unmod_inverse]
     }
-    
+    mods_tbl = droplevels(mods_tbl) ## drop 'Unmodified' level
   }
+  
   
   return(as.data.frame(mods_tbl))
 }

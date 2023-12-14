@@ -27,7 +27,7 @@ plot_peptideMods = function(tbl, y_max = NA, show_missing_modification_levels = 
     y_max = max(tbl$Freq, na.rm = TRUE)
   } 
 
-  ## augment '0' for missing factors
+  ## augment '0'-frequency for missing factors
   if (show_missing_modification_levels) {
     tbl$fc.raw.file = droplevels(as.factor(tbl$fc.raw.file))  ## we need fc.raw.file to be a factor, but we do not want its unused levels
     all_combinations = expand.grid(lapply(tbl[c("fc.raw.file","modification_names")], levels))
@@ -40,7 +40,8 @@ plot_peptideMods = function(tbl, y_max = NA, show_missing_modification_levels = 
     geom_col(position = "dodge") +
     xlab("") +
     ylab("Occurence [%]") +
-    scale_x_discrete_reverse(tbl$fc.raw.file) + 
+    scale_x_discrete_reverse(tbl$fc.raw.file) +
+    guides(fill = guide_legend(reverse = TRUE), color = guide_none()) + ## reverse order of mods in legend, to match order in plot
     ylim(0, y_max) +
     ggtitle("EVD: variable modifications per Raw file") + 
     coord_flip()

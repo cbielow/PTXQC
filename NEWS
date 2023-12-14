@@ -14,7 +14,7 @@ Glossary:
 #########   CHANGELOG  ##########
 #################################
 
-[CRAN] v1.1.0 -- 2023/12/01
+[CRAN] v1.1.0 -- 2023/12/13
   - new DDA metric: frequencies of variable modifications per Raw file
 
 [CRAN] v1.00.17 -- 2023/07/05

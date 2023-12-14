@@ -16,7 +16,7 @@ A data.frame with 'modification_names' and 'Freq' (0-100)
 Convert list of (mixed)modifications to a frequency table
 }
 \examples{
-modsToTable(c("Oxidation (M)", "Unmodified", "Oxidation (M),Acetyl (Protein N-term)", "2 Oxidation (M)", "Unmodified", "Unmodified"))
+modsToTable(c("Ox (M)", "Unmodified", "Ox (M),Acetyl (Prot N-term)", "2 Ox (M)", "Unmodified", "Unmodified"))
 
 
 }

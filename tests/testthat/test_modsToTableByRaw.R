@@ -19,5 +19,6 @@ test_that("modstoTableByRaw", {
                           modification_names = factor(c("C", "MOD_TOTAL",    "A", "MOD_TOTAL"), levels = levels(r_rename$modification_names)),
                           Freq = c(100/3, 100/3,                             100/3, 100/3))
   testthat::expect_equal(r_rename, exp_rename)
-
+  testthat::expect_equal("Unmodified" %in% levels(r_rename$modification_names), FALSE)
+  
 })
