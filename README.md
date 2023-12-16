@@ -38,7 +38,7 @@ DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
     - 10 min [Installation](#installation)
   - MaxQuant locale check, i.e. dot as decimal separator (since PTXQC 1.0.10; see https://github.com/cbielow/PTXQC/pull/99 for details)
   - Html/PDF report will be generated within your MaxQuant-txt folder or next to the mzTab file
-  - writes an mzQC file (https://github.com/HUPO-PSI/mzQC/) for archiving or downstream processing (since PTXQC 1.0.11)
+  - writes a mockup mzQC file (https://github.com/HUPO-PSI/mzQC/) for archiving or downstream processing (actual metrics still require exporting; PR's welcome)
   - optional configuration file *in YAML format* for generation of shorter/customized reports
 
 ### Target audience
