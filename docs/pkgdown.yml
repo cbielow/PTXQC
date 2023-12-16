@@ -1,0 +1,12 @@
+pandoc: 3.1.1
+pkgdown: 2.0.7
+pkgdown_sha: ~
+articles:
+  PTXQC-Basic_Guide_for_R_users: PTXQC-Basic_Guide_for_R_users.html
+  PTXQC-CustomizeReport: PTXQC-CustomizeReport.html
+  PTXQC-DragNDrop: PTXQC-DragNDrop.html
+  PTXQC-FAQ: PTXQC-FAQ.html
+  PTXQC-Input_And_Output_Data: PTXQC-Input_And_Output_Data.html
+  PTXQC-ListOfMetrics: PTXQC-ListOfMetrics.html
+last_built: 2023-12-09T12:50Z
+

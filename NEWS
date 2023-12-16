@@ -14,8 +14,14 @@ Glossary:
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.1.0 -- 2023/12/13
+  - new DDA metric: frequencies of variable modifications per Raw file
+
 [CRAN] v1.00.17 -- 2023/07/05
   - support for the latest rmzqc package
+
+[CRAN] v1.00.17 -- 2023/07/05
+  - support for the latest rmzqc package (prepare for export)
   
 [CRAN] v1.00.16 -- 2023/05/17
   - add MaxQuant 2.4 support (#130)
@@ -23,7 +29,7 @@ Glossary:
 [CRAN] v1.00.15 -- 2023/04/23
   - better reporter ion minimum range in violin plot (pr #124)
   - workaround for MQ bug causing negative scan index in msms_scan.txt (issue #128)
-  - use 'rmzqc' package to handle mzQC output
+  - use 'rmzqc' package to handle mzQC output (prepare for export)
 
 [CRAN] v1.00.14 -- 2022/09/21
   - [FIX] crash when re-running PTX-QC on a txt folder where a (very old) PTX-QC was already run (issue #118)

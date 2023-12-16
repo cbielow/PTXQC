@@ -499,7 +499,7 @@ byX <- function(data, indices, subset_size = 5, FUN, sort_indices = TRUE, ...)
     #cat(paste("block", x, " ... "))
     range = x:(min(x+subset_size-1, length(groups)))
     lns = indices %in% groups[range];
-    subset = droplevels(data[lns, , drop = FALSE])
+    subset = (data[lns, , drop = FALSE])
     rownames(subset) = rownames(data)[lns]
     #cat(paste("call\n"))
     r = FUN(subset, ...)    

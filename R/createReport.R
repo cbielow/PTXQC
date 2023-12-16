@@ -342,7 +342,10 @@ createReport = function(txt_folder = NULL,
                                      numeric = "^m.z$",
                                      numeric = "^score$", 
                                      numeric = "^fraction$",  ## only available when fractions were given
-                                     "Raw.file", "^Protein.Group.IDs$", "Contaminant",
+                                     "Raw.file", 
+                                     "^Protein.Group.IDs$", 
+                                     "Contaminant",
+                                     "^modifications$",
                                      numeric = "^Charge$", 
                                      "modified.sequence",
                                      numeric = "^Mass$",
@@ -391,6 +394,12 @@ createReport = function(txt_folder = NULL,
     ## MS2/MS3 labeled (TMT/ITRAQ) only: reporter intensity of peptides
     ##
     lst_qcMetrics[["qcMetric_EVD_ReporterInt"]]$setData(df_evd)
+    
+    
+    ##
+    ## Variable modification frequencies
+    ##
+    lst_qcMetrics[["qcMetric_EVD_modTable"]]$setData(df_evd)
     
     
     

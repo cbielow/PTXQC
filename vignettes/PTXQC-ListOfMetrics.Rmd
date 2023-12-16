@@ -70,10 +70,19 @@ Reasons why metrics might not appear in every report
  
  * applicable only to certain types of data, e.g. SILAC or TMT
  * metric was disabled manually using the YAML config file
- * missing input data (incomplete tables), e.g. only evidence.txt is present
+ * missing input data (incomplete tables), i.e. some .txt files are missing
 
+Metric names are prefixed by the data-source, e.g. "EVD: Charge" displays and scores the charge distribution, based on data from 'evidence.txt' (EVD).
+
+ * EVD: evidence.txt
+ * SM: summary.txt
+ * PAR: parameters.txt
+ * PG: proteingroups.txt
+ * MSMS: msms.txt
+ * MS2Scans: msmsscans.txt
  
-Some metrics are incompletely named here, since they might contain (hithero unknown) thresholds.
+
+Some metrics are incompletely named here, since they might contain (hithero unknown) thresholds, which are taken from mqpar.xml (when available) or defaulted in real reports.
 
 # Metrics <a name="Metrics"/>
 ```{r metrics, echo=FALSE, results="asis"}

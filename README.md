@@ -8,8 +8,8 @@ PTXQC
 
 ### Latest changes / ChangeLog
 
-latest Release on Github: v1.0.17 - July 2023
-latest Release on CRAN: v1.0.17 - July 2023
+latest Release: v1.1.0 - Dec 2023
+latest Release on CRAN: same
   
 See [NEWS][News_File] file for a version history.
 
@@ -51,29 +51,36 @@ DOI: [10.1021/acs.jproteome.5b00780][JPR_paper]
 
 A short **overview video** on PTX-QC] can be found [here](https://youtu.be/sb-mydbNRS4). 
 If you want to jump to certain sections:
- - [Motivation for doing QC](https://youtu.be/sb-mydbNRS4?t=75)
- - [Installation demo](https://youtu.be/sb-mydbNRS4?t=522)
- - [Report Generation using Drag'n'Drop](https://youtu.be/sb-mydbNRS4?t=880)
- - [Inspecting and configuring a Report](https://youtu.be/sb-mydbNRS4?t=1043)
-  
-Besides this documentation on GitHub, the package vignettes
-of PTXQC will give you valuable information. *After* the package is installed (see below),
-you can browse the vignettes using either of these commands within R:
 
-    help(package="PTXQC")
-    browseVignettes(package = 'PTXQC')
+  - [Motivation for doing QC](https://youtu.be/sb-mydbNRS4?t=75)
+  - [Installation demo](https://youtu.be/sb-mydbNRS4?t=522)
+  - [Report Generation using Drag'n'Drop](https://youtu.be/sb-mydbNRS4?t=880)
+  - [Inspecting and configuring a Report](https://youtu.be/sb-mydbNRS4?t=1043)
   
-If you do not want to wait that long, you can look at the 
-[latest online vignette at CRAN](https://cran.r-project.org/package=PTXQC)
+We use [pgkdown](https://pkgdown.r-lib.org/) to create a HTML documentation, which includes the Vignettes, our function documentation etc.
+You can create the documentation locally: `pkgdown::build_site()` or visit the online-version on Github at [./docs/index.html](http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/docs/index.html).
 
-You will find documentation on
-  - Full List of Quality Metrics with help text
+If you do not know where to start, look at the package vignettes first.
+
+Our Vignettes give details on:
+
+  - Full List of Quality Metrics with help text ('List of Metrics')
   - Input and Output
   - Report customization
   - (for MaxQuant/OpenMS users) Usage of Drag'n'drop
   - (for R users) Code examples in R
 
-The 'List of Metrics' vignette contains a full description for each metric (as seen in the Help section of a Html report).
+The 'List of Metrics' vignette contains a full description for each metric (the same as seen in the Help section of each Html report).
+
+Within R, you can browse the vignettes using either of these commands (*after* the package is installed (see below)):
+```
+    help(package="PTXQC")
+    browseVignettes(package = 'PTXQC')
+```
+
+Of course, you can also look at the Vignettes on CRAN:
+[latest online vignette at CRAN](https://cran.r-project.org/package=PTXQC)
+
   
 ### Installation
 
@@ -151,6 +158,10 @@ There are many ways to get involved, _you do not need to be a developer_!
   - suggest changes to existing metrics (improvements or bugfixes), see above.
   - suggest improvements to our documentation (e.g. [additional vignettes][Ref_Vign])
   - write code (in R) and submit a [Pull Request (PR)][PullRequest].
+
+### PTX-QC user forum
+
+Come and interact with developers and users at https://discord.gg/MB6PvpctUY
 
 
 ### Misc
