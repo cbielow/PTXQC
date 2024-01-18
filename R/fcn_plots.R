@@ -256,11 +256,11 @@ plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
     geom_area(aes_string(alpha = "ltype", fill = "col")) +
     xlab("ratio")  +
     ylab("density")  +
-    scale_fill_manual(values = rep(RColorBrewer::brewer.pal(6,"Accent"), times=40), guide_legend(legend_title)) + 
+    scale_fill_manual(values = rep(RColorBrewer::brewer.pal(6,"Accent"), times=40), guide = guide_legend(legend_title)) + 
     scale_colour_manual(values = rep(RColorBrewer::brewer.pal(6,"Accent"), times=40)) +
     suppressWarnings(scale_alpha_discrete(range = c(1, 0.2), 
                          labels=c("dotted"="unimodal", "solid"="multimodal"),
-                         guide_legend("shape")
+                         guide = guide_legend("shape")
     )) +
     scale_x_continuous(limits = d_range, trans = "identity", breaks = c(-br, 0, br), labels=c(paste0("1/",2^(br)), 1, 2^br)) +
     guides(color = "none") +
