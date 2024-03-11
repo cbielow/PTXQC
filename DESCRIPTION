@@ -1,8 +1,8 @@
 Package: PTXQC
 Type: Package
 Title: Quality Report Generation for MaxQuant and mzTab Results
-Version: 1.1.0
-Date: 2023-12-08
+Version: 1.1.1
+Date: 2024-03-11
 Author: Chris Bielow [aut, cre],
   Juliane Schmachtenberg [ctb],
   Swenja Wagner [ctb],
@@ -49,6 +49,6 @@ VignetteBuilder: knitr
 License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 Roxygen: list()
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 URL: https://github.com/cbielow/PTXQC
 BugReports: https://github.com/cbielow/PTXQC/issues

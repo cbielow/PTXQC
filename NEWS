@@ -14,8 +14,12 @@ Glossary:
 #########   CHANGELOG  ##########
 #################################
 
-[CRAN] v1.1.0 -- 2023/12/13
-  - new DDA metric: frequencies of variable modifications per Raw file
+[CRAN] v1.1.1 -- 2024/03/11
+  - compatibility with latest ggplot2 (v. 3.5.0) (pr #135)
+
+
+[CRAN] v1.1.0 -- 2023/12/16
+  - new DDA metric: frequencies of variable modifications per Raw file (pr #134)
 
 [CRAN] v1.00.17 -- 2023/07/05
   - support for the latest rmzqc package
