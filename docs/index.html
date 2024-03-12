@@ -37,7 +37,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">PTXQC</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.1</span>
       </span>
     </div>
 
@@ -96,12 +96,12 @@
 <div class="section level2">
 <h2 id="ptxqc">PTXQC<a class="anchor" aria-label="anchor" href="#ptxqc"></a>
 </h2>
-<p><a href="https://opensource.org/license/bsd-3-clause/" class="external-link"><img src="https://img.shields.io/badge/license-BSD%203--Clause-blue.svg?style=flat-square" alt="License (3-Clause BSD)"></a> <a href="https://openhub.net/p/PTXQC" class="external-link"><img src="https://openhub.net/p/PTXQC/widgets/project_thin_badge.gif" alt="Project Stats"></a></p>
+<p><a href="https://opensource.org/license/bsd-3-clause" class="external-link"><img src="https://img.shields.io/badge/license-BSD%203--Clause-blue.svg?style=flat-square" alt="License (3-Clause BSD)"></a> <a href="https://openhub.net/p/PTXQC" class="external-link"><img src="https://openhub.net/p/PTXQC/widgets/project_thin_badge.gif" alt="Project Stats"></a></p>
 <p><strong>This package allows users of MaxQuant (from .txt files) and OpenMS (from mzTab files) to generate quality control reports in Html/PDF format.</strong></p>
 <div class="section level3">
 <h3 id="latest-changes--changelog">Latest changes / ChangeLog<a class="anchor" aria-label="anchor" href="#latest-changes--changelog"></a>
 </h3>
-<p>latest Release: v1.1.0 - Dec 2023 latest Release on CRAN: same</p>
+<p>latest Release: v1.1.0 - Dec 2023<br> latest Release on CRAN: same</p>
 <p>See <a href="https://github.com/cbielow/PTXQC/blob/master/NEWS" class="external-link">NEWS</a> file for a version history.</p>
 </div>
 <div class="section level3">
@@ -140,7 +140,7 @@
 </li>
 <li>MaxQuant locale check, i.e. dot as decimal separator (since PTXQC 1.0.10; see <a href="https://github.com/cbielow/PTXQC/pull/99" class="external-link uri">https://github.com/cbielow/PTXQC/pull/99</a> for details)</li>
 <li>Html/PDF report will be generated within your MaxQuant-txt folder or next to the mzTab file</li>
-<li>writes an mzQC file (<a href="https://github.com/HUPO-PSI/mzQC/" class="external-link uri">https://github.com/HUPO-PSI/mzQC/</a>) for archiving or downstream processing (since PTXQC 1.0.11)</li>
+<li>writes a mockup mzQC file (<a href="https://github.com/HUPO-PSI/mzQC/" class="external-link uri">https://github.com/HUPO-PSI/mzQC/</a>) for archiving or downstream processing (actual metrics still require exporting; PR’s welcome)</li>
 <li>optional configuration file <em>in YAML format</em> for generation of shorter/customized reports</li>
 </ul>
 </div>
@@ -156,8 +156,14 @@
 <div class="section level3">
 <h3 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h3>
-<p>A short <strong>overview video</strong> on PTX-QC] can be found <a href="https://youtu.be/sb-mydbNRS4" class="external-link">here</a>. If you want to jump to certain sections: - <a href="https://youtu.be/sb-mydbNRS4?t=75" class="external-link">Motivation for doing QC</a> - <a href="https://youtu.be/sb-mydbNRS4?t=522" class="external-link">Installation demo</a> - <a href="https://youtu.be/sb-mydbNRS4?t=880" class="external-link">Report Generation using Drag’n’Drop</a> - <a href="https://youtu.be/sb-mydbNRS4?t=1043" class="external-link">Inspecting and configuring a Report</a></p>
-<p>We use <a href="https://pkgdown.r-lib.org/" class="external-link">pgkdown</a> to create a HTML documentation, which includes the Vignettes, our function documentation etc. You can call it locally: <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code> or visit the online-version on Github at <a href="http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/docs/index.html" class="external-link">./docs/index.html</a>.</p>
+<p>A short <strong>overview video</strong> on PTX-QC] can be found <a href="https://youtu.be/sb-mydbNRS4" class="external-link">here</a>. If you want to jump to certain sections:</p>
+<ul>
+<li><a href="https://youtu.be/sb-mydbNRS4?t=75" class="external-link">Motivation for doing QC</a></li>
+<li><a href="https://youtu.be/sb-mydbNRS4?t=522" class="external-link">Installation demo</a></li>
+<li><a href="https://youtu.be/sb-mydbNRS4?t=880" class="external-link">Report Generation using Drag’n’Drop</a></li>
+<li><a href="https://youtu.be/sb-mydbNRS4?t=1043" class="external-link">Inspecting and configuring a Report</a></li>
+</ul>
+<p>We use <a href="https://pkgdown.r-lib.org/" class="external-link">pgkdown</a> to create a HTML documentation, which includes the Vignettes, our function documentation etc. You can create the documentation locally: <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code> or visit the online-version on Github at <a href="http://htmlpreview.github.io/?https://github.com/cbielow/PTXQC/blob/master/docs/index.html" class="external-link">./docs/index.html</a>.</p>
 <p>If you do not know where to start, look at the package vignettes first.</p>
 <p>Our Vignettes give details on:</p>
 <ul>
@@ -248,6 +254,13 @@
 </ul>
 </div>
 
+<div class="community">
+<h2 data-toc-skip>Community</h2>
+<ul class="list-unstyled">
+<li><a href="CONTRIBUTING.html">Contributing guide</a></li>
+<li><a href="CODE_OF_CONDUCT.html">Code of conduct</a></li>
+</ul>
+</div>
 
 <div class="citation">
 <h2 data-toc-skip>Citation</h2>

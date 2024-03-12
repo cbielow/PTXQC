@@ -22,7 +22,7 @@
 #' @section Output:
 #' Either a PDF and/or Html report which contains QC plots and a description of the metrics.
 #'
-#' @docType package
+"_PACKAGE"
 #' @name PTXQC
 #' 
 #' @import data.table

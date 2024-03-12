@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PTXQC</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.1</span>
       </span>
     </div>
 
@@ -105,8 +105,13 @@
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">data</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>fc.raw.file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"file A"</span>, <span class="st">"file B"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                  modifications <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Oxidation (M)"</span>, <span class="st">"Unmodified"</span>, <span class="st">"Oxidation (M),Acetyl (Protein N-term)"</span>, <span class="st">"2 Oxidation (M)"</span>, <span class="st">"Unmodified"</span>, <span class="st">"Unmodified"</span><span class="op">)</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">data</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>fc.raw.file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"file A"</span>, <span class="st">"file B"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                each <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>       modifications <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Oxidation (M)"</span>,</span></span>
+<span class="r-in"><span>                        <span class="st">"Unmodified"</span>,</span></span>
+<span class="r-in"><span>                        <span class="st">"Oxidation (M),Acetyl (Protein N-term)"</span>,</span></span>
+<span class="r-in"><span>                        <span class="st">"2 Oxidation (M)"</span>, </span></span>
+<span class="r-in"><span>                        <span class="st">"Unmodified"</span>, <span class="st">"Unmodified"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">modsToTableByRaw</span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   fc.raw.file      modification_names     Freq</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1      file A Acetyl (Protein N-term) 33.33333</span>
