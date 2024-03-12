@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PTXQC</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.1</span>
       </span>
     </div>
 
@@ -103,7 +103,12 @@
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="va">data</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>fc.raw.file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"file A"</span>, <span class="st">"file B"</span><span class="op">)</span>, each<span class="op">=</span><span class="fl">3</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                   modifications <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Oxidation (M)"</span>, <span class="st">"Unmodified"</span>, <span class="st">"Oxidation (M), Acetyl (Protein N-term)"</span>, <span class="st">"2 Oxidation (M)"</span>, <span class="st">"Unmodified"</span>, <span class="st">"Unmodified"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                   modifications <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Oxidation (M)"</span>,</span></span>
+<span class="r-in"><span>                   <span class="st">"Unmodified"</span>,</span></span>
+<span class="r-in"><span>                   <span class="st">"Oxidation (M), Acetyl (Protein N-term)"</span>,</span></span>
+<span class="r-in"><span>                   <span class="st">"2 Oxidation (M)"</span>, </span></span>
+<span class="r-in"><span>                   <span class="st">"Unmodified"</span>, </span></span>
+<span class="r-in"><span>                   <span class="st">"Unmodified"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="va">tbl</span> <span class="op">=</span> <span class="fu"><a href="modsToTableByRaw.html">modsToTableByRaw</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="fu">plot_peptideMods</span><span class="op">(</span><span class="va">tbl</span>,show_missing_modification_levels <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plot_peptideMods-1.png" alt="" width="700" height="433"></span>

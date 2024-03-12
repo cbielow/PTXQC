@@ -1,4 +1,6 @@
 .gitignore
 .travis.yml
 PTXQC.Rproj
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
 ^docs/
