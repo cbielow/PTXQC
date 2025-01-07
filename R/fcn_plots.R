@@ -252,7 +252,7 @@ plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
   p =
     ggplot(data = df_ratios, aes_string(x = "x", y = "y", colour = "col")) + 
     facet_grid(col ~ ., scales = "free_y") +
-    geom_line(size = 1.2) +
+    geom_line(linewidth = 1.2) +
     geom_area(aes_string(alpha = "ltype", fill = "col")) +
     xlab("ratio")  +
     ylab("density")  +
@@ -266,7 +266,7 @@ plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
     guides(color = "none") +
     theme(plot.title = element_text(colour = main_col)) +
     theme_bw() +
-    geom_vline(alpha = 0.5, xintercept = 0, colour = "green", linetype = "dashed", size = 1.5) +
+    geom_vline(alpha = 0.5, xintercept = 0, colour = "green", linetype = "dashed", linewidth = 1.5) +
     ggtitle(main_title)
   #print(p)
   return (p)
@@ -306,7 +306,7 @@ plot_CountData = function(data, y_max, thresh_line, title)
         ylim(0, y_max) +
         scale_fill_manual(values = c("green", "#BEAED4", "blue")) +
         ggtitle(title_main, title_sub) + 
-        geom_abline(alpha = 0.5, intercept = thresh_line, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
+        geom_abline(alpha = 0.5, intercept = thresh_line, slope = 0, colour = "black", linetype = "dashed", linewidth = 1.5) +
         coord_flip()
   return(p)
 }
@@ -335,7 +335,7 @@ plot_CountData = function(data, y_max, thresh_line, title)
 plot_RTPeakWidth = function(data, x_lim, y_lim)
 {
   p = ggplot(data) +
-    geom_line(aes_string(x = "RT", y = "peakWidth", colour = "fc.raw.file"), size=1, alpha=0.7) +
+    geom_line(aes_string(x = "RT", y = "peakWidth", colour = "fc.raw.file"), linewidth = 1, alpha = 0.7) +
     scale_color_manual(values = brewer.pal.Safe(length(unique(data$fc.raw.file)), "Set1")) +
     guides(color = guide_legend(title = "Raw file\n(avg. peak width)")) +
     xlab("retention time [min]") +
@@ -500,7 +500,7 @@ plot_MBRIDtransfer = function(data)
 plot_MBRgain = function(data, title_sub = "")
 {
   p = ggplot(data = data, aes_string(x = "abs", y = "pc", col = "fc.raw.file")) + 
-        geom_point(size=2) + 
+        geom_point(size = 2) + 
         ggtitle("EVD: Peptides inferred by MBR", title_sub) +
         xlab("number of transferred ID's") +
         ylab("gain on top of genuine IDs [%]") +
@@ -1099,7 +1099,7 @@ plot_MissedCleavages = function(data, title_sub = "")
         ylab("missed cleavages [%]") + 
         theme(legend.title = element_blank()) +
         scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000", "#800080", "#000000"), 10)) +
-        geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
+        geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", linewidth = 1.5) +
         coord_flip() +
         scale_x_discrete_reverse(st_bin.m$fc.raw.file) +
         ggtitle("MSMS: Missed cleavages per Raw file", title_sub)
@@ -1281,7 +1281,7 @@ plot_ScanIDRate = function(data)
 plot_TIC = function(data, x_lim, y_lim)
 {
   p = ggplot(data) +
-    geom_line(aes_string(x = "RT", y = "intensity", colour = "fc.raw.file"), size=1, alpha=0.7) +
+    geom_line(aes_string(x = "RT", y = "intensity", colour = "fc.raw.file"), linewidth = 1, alpha = 0.7) +
     scale_color_manual(values = brewer.pal.Safe(length(unique(data$fc.raw.file)), "Set1")) +
     guides(color = guide_legend(title = "Raw file\n(avg. peak width)")) +
     xlab("retention time [min]") +
