@@ -3,6 +3,8 @@
 #' 
 #' Define a Singleton class which holds the full raw filenames (+path) and their PSI-MS CV terms for usage in the mzQC metadata
 #' 
+#' The internal data is filled using, e.g. 'getMetaFilenames()'
+#' 
 #' @export
 #' 
 QCMetaFilenames <- R6::R6Class("QCMetaFilenames", inherit = R6P::Singleton, public = list(
@@ -11,16 +13,30 @@ QCMetaFilenames <- R6::R6Class("QCMetaFilenames", inherit = R6P::Singleton, publ
 ))
 
 
-getMetaFilenames = function(mqpar_file, base_folder)
+#'
+#' Parses the given mqpar.xml file (or, if not found, tries the 'txt_folder' + '/../../' folder (i.e. where the raw data should be)) to extract the full filepaths for all Raw files
+#' 
+#' @param mqpar_file Location of the mqpar.xml (can be empty, if unknown)
+#' @param txt_folder Fallback option: path to the txt folder (which contains evidence.txt, etc)
+#'
+#' @return May return 'NULL' if no mqpar.xml could be found.
+#'         Otherwise: data.frame with columns:
+#'         \itemize{
+#'           \item 'file' (no path), 'path' (full path incl. names)
+#'           \item 'file_no_suffix' (as 'file' but without suffix) 
+#'           \item 'CV' (CV term for filetype, e.g. for Thermo Raw)
+#'         }
+#'
+getMetaFilenames = function(mqpar_file, txt_folder)
 {
   out = NULL
   ## mqpar_file = "Z:\\projects\\QC\\PTXQC\\data\\ecoli_small\\mqpar.xml"
-  ## base_folder = "Z:\\projects\\QC\\PTXQC\\data\\ecoli_small\\combined\\txt\\"
+  ## txt_folder = "Z:\\projects\\QC\\PTXQC\\data\\ecoli_small\\combined\\txt\\"
   xml_rawfiles = getMQPARValue(mqpar_file, "//string[parent::filePaths|parent::Filenames]", allow_multiple = TRUE)
   if (is.null(xml_rawfiles)) {
     ## try again using parent directory
     warning("No mqpar.xml found in '", mqpar_file, "'. Trying two folders up.")
-    up_dir = paste0(base_folder, "/../../mqpar.xml")
+    up_dir = paste0(txt_folder, "/../../mqpar.xml")
     xml_rawfiles = getMQPARValue(up_dir, "//string[parent::filePaths|parent::Filenames]", allow_multiple = TRUE)
   }
   ## second try...
@@ -53,8 +69,9 @@ getRunQualityTemplate = function(fc.raw.file, raw_file_mapping)
   raw_file = as.character(raw_file_mapping$from[idx])
   meta = QCMetaFilenames$new()$data
   if (is.null(meta) || sum(meta$file_no_suffix == raw_file) == 0) {
+    ## no mqpar.xml found
     ## we're just guessing here...
-    warning("Cannot properly fill metadata of mzQC file, since full filenames are unknown. Using placeholders.")
+    warning("Cannot properly fill metadata of mzQC file, since full filenames are unknown due to missing mqpar.xml. Using placeholders.")
     filename = paste0(raw_file, ".raw"); 
     location = paste0("???/", filename);
     accession = rmzqc::filenameToCV(filename)
