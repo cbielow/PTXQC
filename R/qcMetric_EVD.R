@@ -1496,7 +1496,7 @@ Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in com
       if (length(lf) <= 1)
       {
         lpl = list(ggText("UpSetR", "Only single Raw file detected. Cannot compute unions/intersections."))
-        return(list(plots = lpl, titles = list("EVD: UpSet")))
+        return(list(plots = lpl, title = list("EVD: UpSet")))
       }
       
       

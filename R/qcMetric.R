@@ -135,8 +135,13 @@ qcMetric = setRefClass("qcMetric",
            return(NULL);         
          }
          
-         if (!("plots" %in% names(r))) stop(c("Worker of '", .self$qcName, "' did not return valid result format!"))
+         valid_elements = c("plots", "mzQC", "htmlTable", "qcScores", "title")
+         required_elements = c("plots")
+         
+         if (!(all(required_elements %in% names(r)))) stop(c("Worker of '", .self$qcName, "' did not return all required fields (", paste(required_elements, collapse = ","), ")!"))
          if (!inherits(r[["plots"]], "list")) stop(c("Worker of '", .self$qcName, "' did not return plots in list format!"))
+         
+         if (!all(names(r) %in% valid_elements)) stop(c("Worker of '", .self$qcName, "' return invalid fields (", paste(setdiff(names(r), valid_elements), collapse = ","), ")!"))
          
 
          lpl = flattenList(r[["plots"]])
