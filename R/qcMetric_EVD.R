@@ -1195,6 +1195,8 @@ state) was identified by at least two distinct MS<sup>2</sup> spectra in the sam
     or even omission of other 3D-peaks, reducing the number of identified peptides. Oversampling occurs in 
     low-complexity samples or long LC gradients, as well as undersized dynamic exclusion windows for data 
     independent acquisitions. 
+    
+    If DIA-Data: this metric is skipped
 
 Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversampled 3D-peaks. 
 ",
@@ -1202,6 +1204,9 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
     {
       ## completeness check
       if (!checkInput(c("fc.raw.file", "ms.ms.count"), df_evd)) return()
+      
+      ## this is DIA data -- omit metric
+      if (all(range(df_evd$ms.ms.count) == c(0,0))) return()
       
       d_dups = plyr::ddply(df_evd, "fc.raw.file", function(x) {
         tt = as.data.frame(table(x$ms.ms.count), stringsAsFactors = FALSE)

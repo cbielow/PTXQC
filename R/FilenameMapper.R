@@ -57,8 +57,15 @@ getShortNames = function(.self, raw_filenames, max_length = 10, ms_runs = NULL)
     Returns a vector of the same length."
   #rf <<- raw_filenames
   #raw_filenames = rf
-
+  
   if (!is.null(ms_runs) && length(ms_runs) != length(raw_filenames)) stop("raw_filenames and ms_runs do not have the same length!")
+  
+  ## for MQ-DIA data, the summary.txt is empty, thus we may receive an empty list here.
+  ## --> do nothing and wait for the next .txt file which has proper names
+  if (length(raw_filenames) == 0) {
+    warning("Empty raw file list in .txt file. Skipping mapping for now.")
+    return (list())
+  }
   
   cat(paste0("Adding fc.raw.file column ..."))
   ## if there is no mapping, or if its incomplete (outdated mapping file)
