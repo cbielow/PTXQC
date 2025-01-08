@@ -216,8 +216,8 @@ plotNameMapping = function(.self)
     mq_mapping.long2$hpos[mq_mapping.long2$variable==xpos[1]] = 1
     mq_mapping.long2$hpos[mq_mapping.long2$variable==xpos[2]] = 0
     
-    mqmap_pl = ggplot(mq_mapping.long2, aes_string(x = "variable", y = "ypos"))  +
-      geom_text(aes_string(label="value"), color = mq_mapping.long2$col, hjust=mq_mapping.long2$hpos, size=mq_mapping.long2$size) +
+    mqmap_pl = ggplot(mq_mapping.long2, aes(x = .data$variable, y = .data$ypos))  +
+      geom_text(aes(label = .data$value), color = mq_mapping.long2$col, hjust = mq_mapping.long2$hpos, size = mq_mapping.long2$size) +
       coord_cartesian(xlim=c(0,20)) +
       theme_bw() +
       theme(plot.margin = grid::unit(c(1,1,1,1), "cm"), line = element_blank(), 

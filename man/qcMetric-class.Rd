@@ -59,8 +59,8 @@ a = qcMetric$new(helpText="small help text",
                          geom_point(aes(x=x*xx,y=y)) +
                          ggtitle(gtitle)
                      })
-                     ## add mzQC metric
-                     template_proteinCount = rmzqc::getQualityMetricTemplate("MS:1002406") # count of identified clusters
+                     ## add mzQC metric for count of identified clusters
+                     template_proteinCount = rmzqc::getQualityMetricTemplate("MS:1002406") 
                      mzqc = lapply(1:3, function(id){
                        out = template_proteinCount$copy();
                        out$value = id;

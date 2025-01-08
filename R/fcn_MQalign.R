@@ -506,7 +506,7 @@ RTalignmentTree = function(df_evd, col_fraction = c())
     ddata$labels$col = "black"
   }
   p = ggplot(ggdendro::segment(ddata)) + 
-      geom_segment(aes_string(x = "x", y = "y", xend = "xend", yend = "yend")) +
+      geom_segment(aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend)) +
       scale_x_continuous(breaks = ddata$labels$x, labels = ddata$labels$label) +
       theme_blank() +
       theme(axis.text.y = element_text(colour = ddata$labels$col), ## is a vector not officially supported...

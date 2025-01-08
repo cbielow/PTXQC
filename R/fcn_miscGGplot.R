@@ -10,8 +10,8 @@
 #'
 ggText = function(title, text, col = "black") {
   pl = ggplot(data.frame(text = text, ypos=1, xpos=1), 
-                       aes_string(x = "xpos", y = "ypos"))  +
-    geom_text(aes_string(label = "text"), colour = col, family="mono") +
+                       aes(x = .data$xpos, y = .data$ypos))  +
+    geom_text(aes(label = .data$text), colour = col, family="mono") +
     theme_bw() +
     theme(plot.margin = grid::unit(c(1,1,1,1), "cm"), line = element_blank(), axis.title = element_blank(), panel.border = element_blank(),
                    axis.text = element_blank(), strip.text = element_blank(), legend.position="none") +
@@ -141,8 +141,8 @@ pointsPutX = function(x_range, x_section, y, col = NA){
   x_pos = x_range[1] + x_section*x_dist
   d = data.frame(x_ = seq(x_pos[1], x_pos[2], length.out=length(y)), y_ = y, col_= col)
   
-  if (is.na(d$col_[1])) pl = geom_point(data=d, aes_string(x="x_", y="y_"))
-  else pl = geom_point(data=d, aes_string(x="x_", y="y_", col="col_"))
+  if (is.na(d$col_[1])) pl = geom_point(data = d, aes(x = .data$x_, y = .data$y_))
+  else pl = geom_point(data = d, aes(x = .data$x_, y = .data$y_, col = .data$col_))
   
   return (pl)
 }

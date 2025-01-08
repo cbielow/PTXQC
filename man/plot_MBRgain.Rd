@@ -2,7 +2,7 @@
 % Please edit documentation in R/fcn_plots.R
 \name{plot_MBRgain}
 \alias{plot_MBRgain}
-\title{Plot MaxQuant Match-between-runs id transfer performance.}
+\title{Plot MaxQuant Match-between-runs id transfer performance as a scatterplot.}
 \usage{
 plot_MBRgain(data, title_sub = "")
 }
@@ -15,18 +15,14 @@ plot_MBRgain(data, title_sub = "")
 GGplot object
 }
 \description{
-The plots shows the different categories of peak classes
+Per Raw file, the absolute number of transferred IDs as well as the relative gain in percent.
 }
 \details{
 The input is a data.frame with columns
   'fc.raw.file' - raw file name
-  'single' - fraction of peptides with are represent only once
-  'multi.inRT' - fraction of peptides with are represent multiple times, 
-                 but within a certain RT peak width
-  'multi.outRT' - fraction of peptides with are represent multiple times,
-                  with large RT distance
-  'sample' - raw file
-where each row represents one peptide sequence.
+  'abs' - absolute number of transferred ID's
+  'pc' - gain on top of genuine IDs [%]
+where each row represents one rawfile.
 }
 \examples{
  data = data.frame(fc.raw.file = paste("file", letters[1:4]),

@@ -121,7 +121,7 @@ boxplotCompare = function(data,
   
   fcn_boxplot_internal = function(data, abline = NA) 
   {
-    pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat", col = "cat")) +
+    pl = ggplot(data=data, aes(x = .data$group, y = .data$value, fill = .data$cat, col = .data$cat)) +
       geom_boxplot(varwidth = TRUE) +
       xlab("") + 
       ylab(ylab) +

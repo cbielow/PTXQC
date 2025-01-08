@@ -25,3 +25,11 @@ Default: NA (no lines)}
 \description{
 Create a principal component analysis (PCA) plot for the first two dimensions.
 }
+\examples{
+n = 5
+m = 10
+data = matrix(runif(n * m), nrow = n, ncol = m)
+rownames(data) = 1:n
+getPCA(data, connect_line_order = 1:n, gg_layer = ggplot2::ggtitle("test"))
+
+}
