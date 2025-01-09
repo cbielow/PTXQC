@@ -334,9 +334,9 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
           coord_flip() 
         #pl
         
-        ylims = dt_reps[, { #limits = boxplot.stats(intensity, coef = 0.7)$stats;
+        ylims = data[, { #limits = boxplot.stats(intensity, coef = 0.7)$stats;
                           list(labEff_PC = sum(intensity > 0, na.rm = TRUE) / (.N)) 
-                        }, by = c("fc.raw.file", "channel")]
+                       }, by = c("fc.raw.file", "channel")]
         
         
         ### second subplot (labeling efficiency)
