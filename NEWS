@@ -14,6 +14,10 @@ Glossary:
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.1.2 -- 2025/01/08
+  - fix handling of MaxQuant DIA data (pr #138)
+  - internal housekeeping, mostly fixing ggplot warnings (pr #138)
+
 [CRAN] v1.1.1 -- 2024/03/11
   - compatibility with latest ggplot2 (v. 3.5.0) (pr #135)
 
