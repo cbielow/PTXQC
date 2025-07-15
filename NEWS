@@ -16,7 +16,8 @@ Glossary:
 
 
 [CRAN] v1.1.2 -- 2024/06/15
-  - ensure compatibility with upcoming rmzqc 0.7 (pr #136)
+  - Maintenance fixes (fix labeling efficiency plot for TMT/itraq data with many samples) (#138)
+  - ensure compatibility with upcoming rmzqc 0.7 (pr #139)
 
 [CRAN] v1.1.1 -- 2024/03/11
   - compatibility with latest ggplot2 (v. 3.5.0) (pr #135)
