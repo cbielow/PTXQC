@@ -4,9 +4,7 @@
 \alias{QCMetaFilenames}
 \title{Define a Singleton class which holds the full raw filenames (+path) and their PSI-MS CV terms for usage in the mzQC metadata}
 \description{
-Define a Singleton class which holds the full raw filenames (+path) and their PSI-MS CV terms for usage in the mzQC metadata
-
-Define a Singleton class which holds the full raw filenames (+path) and their PSI-MS CV terms for usage in the mzQC metadata
+The internal data is filled using, e.g. 'getMetaFilenames()'
 }
 \section{Super class}{
 \code{\link[R6P:Singleton]{R6P::Singleton}} -> \code{QCMetaFilenames}

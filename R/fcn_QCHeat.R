@@ -120,14 +120,14 @@ getQCHeatMap = function(lst_qcMetrics, raw_file_mapping)
     parse(text=x)
   })
   
-  p = ggplot(QCM_final.m, aes_string(y="fc.raw.file", x="variable2"))
+  p = ggplot(QCM_final.m, aes(y = .data$fc.raw.file, x = .data$variable2))
   if (any(is.na(QCM_final.m$value)))
   {
-    p = p + geom_tile(aes_string(fill = "value", colour = "dummy_col")) +
+    p = p + geom_tile(aes(fill = .data$value, colour = .data$dummy_col)) +
       scale_colour_manual(name="Missing", values=c("NA" = "grey50")) +
       guides(colour = guide_legend(override.aes = list(fill = 'grey50')))
   } else {
-    p = p + geom_tile(aes_string(fill = "value"))
+    p = p + geom_tile(aes(fill = .data$value))
   }  
   p = p + scale_y_discrete_reverse(QCM_final.m$fc.raw.file, breaks = ggAxisLabels) + 
     scale_x_discrete(labels = QCM_final.m$variable3) +

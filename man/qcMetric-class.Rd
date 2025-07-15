@@ -5,10 +5,22 @@
 \alias{qcMetric-class}
 \alias{qcMetric}
 \title{Class which can compute plots and generate mzQC output (usually for a single metric).}
+\arguments{
+\item{df}{The expected data, usually a data frame. If empty, this function will return immediately without failure.}
+
+\item{...}{Additional arguments passed to the workerFcn()}
+}
 \description{
+Internally calls the workerFcn() , which computes the actual plots metric scores and supporting data (e.g. mzQC metrics) of the derived class; the resulting data is checked and stored in the members of this class
+}
+\details{
 Reference class which is instanciated with a metric description and a
 worker function (at initialization time, i.e. in the package)
 and can produce plots and mzQC values (at runtime, when data is provided) using setData().
+
+All derived classes need to implement a 'workerFcn()' function, which returns a list with
+elements: c("plots", "mzQC", "htmlTable", "qcScores", "title"),
+where 'plots' is required; all others are optional.
 }
 \section{Fields}{
 
@@ -18,6 +30,8 @@ and can produce plots and mzQC values (at runtime, when data is provided) using 
 \item{\code{workerFcn}}{Function which generates a result (usually plots). Data is provided using setData().}
 
 \item{\code{plots}}{List of plots (after setData() was called)}
+
+\item{\code{htmlTable}}{A table for display in the HTML report (preferred over a plot in Html mode)}
 
 \item{\code{qcScores}}{Data.frame of scores from a qcMetric (computed within workerFcn())}
 
@@ -37,15 +51,22 @@ require(ggplot2)
 dd = data.frame(x=1:10, y=11:20)
 a = qcMetric$new(helpText="small help text", 
                  ## arbitrary arguments, matched during setData()
-                 workerFcn=function(.self, data, gtit)
+                 workerFcn=function(.self, data, gtitle)
                  {
                    ## usually some code here to produce ggplots
                    pl = lapply(1:2, function(xx) {
                        ggplot(data) +
                          geom_point(aes(x=x*xx,y=y)) +
-                         ggtitle(gtit)
+                         ggtitle(gtitle)
                      })
-                   return(list(plots = pl))
+                     ## add mzQC metric for count of identified clusters
+                     template_proteinCount = rmzqc::getQualityMetricTemplate("MS:1002406") 
+                     mzqc = lapply(1:3, function(id){
+                       out = template_proteinCount$copy();
+                       out$value = id;
+                       return(out) })
+                     names(mzqc) = paste0("file", 1:3);
+                   return(list(plots = pl, mzQC = mzqc))
                  }, 
                  qcCat="LC", 
                  qcName="MS/MS Peak shape", 
@@ -58,7 +79,7 @@ a$getPlots(FALSE) ## plots without title
 a$getTitles()  ## get the titles of the all plots
 a$helpText
 a$qcName
-
+a$mzQC
 
 
 }

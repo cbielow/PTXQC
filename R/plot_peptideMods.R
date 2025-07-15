@@ -41,7 +41,7 @@ plot_peptideMods = function(tbl, y_max = NA, show_missing_modification_levels = 
     tbl = new_tbl
   }
     
-  p = ggplot(tbl, aes_string(x = "fc.raw.file", y = "Freq", fill = "modification_names", colour="modification_names")) + ## use 'colour' for outline of '0'-frequency features (invisible otherwise)
+  p = ggplot(tbl, aes(x = .data$fc.raw.file, y = .data$Freq, fill = .data$modification_names, colour = .data$modification_names)) + ## use 'colour' for outline of '0'-frequency features (invisible otherwise)
     geom_col(position = "dodge") +
     xlab("") +
     ylab("Occurence [%]") +

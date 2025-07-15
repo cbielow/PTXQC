@@ -5,10 +5,15 @@
 #' Reference class which is instanciated with a metric description and a
 #' worker function (at initialization time, i.e. in the package)
 #' and can produce plots and mzQC values (at runtime, when data is provided) using setData().
+#' 
+#' All derived classes need to implement a 'workerFcn()' function, which returns a list with
+#' elements: c("plots", "mzQC", "htmlTable", "qcScores", "title"),
+#' where 'plots' is required; all others are optional.
 #'
 #' @field helpText  Description (lengthy) of the metric and plot elements
 #' @field workerFcn Function which generates a result (usually plots). Data is provided using setData().
 #' @field plots     List of plots (after setData() was called)
+#' @field htmlTable A table for display in the HTML report (preferred over a plot in Html mode)
 #' @field qcScores  Data.frame of scores from a qcMetric (computed within workerFcn())
 #' @field mzQC      An named list of mzQC MzQCqualityMetric's (named by their fc.raw.file for runQuality or concatenated fc.raw.files for setQualities (e.g. "file 1;file4")) (valid after setData() was called)
 #' @field qcCat     QC category (LC, MS, or prep)
@@ -24,15 +29,22 @@
 #' dd = data.frame(x=1:10, y=11:20)
 #' a = qcMetric$new(helpText="small help text", 
 #'                  ## arbitrary arguments, matched during setData()
-#'                  workerFcn=function(.self, data, gtit)
+#'                  workerFcn=function(.self, data, gtitle)
 #'                  {
 #'                    ## usually some code here to produce ggplots
 #'                    pl = lapply(1:2, function(xx) {
 #'                        ggplot(data) +
 #'                          geom_point(aes(x=x*xx,y=y)) +
-#'                          ggtitle(gtit)
+#'                          ggtitle(gtitle)
 #'                      })
-#'                    return(list(plots = pl))
+#'                      ## add mzQC metric for count of identified clusters
+#'                      template_proteinCount = rmzqc::getQualityMetricTemplate("MS:1002406") 
+#'                      mzqc = lapply(1:3, function(id){
+#'                        out = template_proteinCount$copy();
+#'                        out$value = id;
+#'                        return(out) })
+#'                      names(mzqc) = paste0("file", 1:3);
+#'                    return(list(plots = pl, mzQC = mzqc))
 #'                  }, 
 #'                  qcCat="LC", 
 #'                  qcName="MS/MS Peak shape", 
@@ -45,7 +57,7 @@
 #' a$getTitles()  ## get the titles of the all plots
 #' a$helpText
 #' a$qcName
-#' 
+#' a$mzQC
 #' 
 #' 
 qcMetric = setRefClass("qcMetric",
@@ -65,7 +77,7 @@ qcMetric = setRefClass("qcMetric",
                  outData = "list" ## optional auxiliary output data generated in workerFcn
                  ),
    methods = list(
-       initialize=function(helpTextTemplate = NA_character_,
+       initialize = function(helpTextTemplate = NA_character_,
                            workerFcn = function(){},
                            qcCat = NA_character_,
                            qcName = NA_character_,
@@ -84,7 +96,12 @@ qcMetric = setRefClass("qcMetric",
            .self$outData = list();
            return(.self)
        },
-       setData = function(df, ...) { ## fill with MQ data and compute results
+       #' @description
+       #' Internally calls the workerFcn() , which computes the actual plots metric scores and supporting data (e.g. mzQC metrics) of the derived class; the resulting data is checked and stored in the members of this class
+       #' @param df The expected data, usually a data frame. If empty, this function will return immediately without failure.
+       #' @param ... Additional arguments passed to the workerFcn()
+       #' @return NULL
+       setData = function(df, ...) { 
          cat("Starting to work on", gsub("~", " ", .self$qcName), "...\n")
          if (.self$orderNr < 0)
          {
@@ -118,8 +135,13 @@ qcMetric = setRefClass("qcMetric",
            return(NULL);         
          }
          
-         if (!("plots" %in% names(r))) stop(c("Worker of '", .self$qcName, "' did not return valid result format!"))
+         valid_elements = c("plots", "mzQC", "htmlTable", "qcScores", "title")
+         required_elements = c("plots")
+         
+         if (!(all(required_elements %in% names(r)))) stop(c("Worker of '", .self$qcName, "' did not return all required fields (", paste(required_elements, collapse = ","), ")!"))
          if (!inherits(r[["plots"]], "list")) stop(c("Worker of '", .self$qcName, "' did not return plots in list format!"))
+         
+         if (!all(names(r) %in% valid_elements)) stop(c("Worker of '", .self$qcName, "' return invalid fields (", paste(setdiff(names(r), valid_elements), collapse = ","), ")!"))
          
 
          lpl = flattenList(r[["plots"]])

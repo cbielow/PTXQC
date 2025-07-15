@@ -20,6 +20,8 @@ Heatmap score [SM: MS<sup>2</sup> IDrate (>%1.0f)]: reaches 1 (=100%%) if the th
     {
       if (!checkInput(c("fc.raw.file", "ms.ms.identified...."), df_summary)) return()
       
+      if (nrow(df_summary) == 0) return() ## empty for DIA data
+      
       dms = df_summary$"ms.ms.identified...."
       dms[is.na(dms)] = 0  ## ID rate can be NaN for some raw files if NOTHING was acquired
       lab_IDd = c("red", 
