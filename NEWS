@@ -6,13 +6,17 @@ Versions uploaded to CRAN are marked with [CRAN].
 Glossary:
  'pr' means 'pull request' on GitHub
  'issue' is an issue on GitHub
- 
+
  The respective details can be found by visiting GitHub, e.g. https://github.com/cbielow/PTXQC/pull/124
  for pr #124 (you can use the same URL also for issues, just change the number)
 
 #################################
 #########   CHANGELOG  ##########
 #################################
+
+
+[CRAN] v1.1.3 -- 2024/07/15
+  - ensure compatibility with upcoming rmzqc 0.7 (pr #139)
 
 [CRAN] v1.1.2 -- 2025/01/08
   - fix handling of MaxQuant DIA data (pr #138)
@@ -29,7 +33,7 @@ Glossary:
 
 [CRAN] v1.00.17 -- 2023/07/05
   - support for the latest rmzqc package (prepare for export)
-  
+
 [CRAN] v1.00.16 -- 2023/05/17
   - add MaxQuant 2.4 support (#130)
 
@@ -116,7 +120,7 @@ v1.0.3 -- 2020/03/16
   - [FEATURE] List of Metrics (PTXQC_list-of-metrics.html) added
 
 v0.92.2 -- 2018/01/29
-  - [FEATURE] added plots and metrics of reporter intensity (iTRAQ, TMT, ...) for labeled MSn experiments 
+  - [FEATURE] added plots and metrics of reporter intensity (iTRAQ, TMT, ...) for labeled MSn experiments
 
 v0.92.1 -- 2017/10/18
   - [FIX] issue #41 (partial data problem)
@@ -135,7 +139,7 @@ v0.92.1 -- 2017/10/18
 
 [CRAN] v0.90.0 -- 2017/08/03
   - [FEATURE] Tables are shown as genuine HTML tables in Html-Output
-  
+
 [CRAN] v0.82.6 -- 2017/06/09
   - [FIX] Special Contaminants searched by name in protein ID as well (issue #34)
 
@@ -163,15 +167,15 @@ v0.82.0 -- 2016/11/01
       this allows to compare samples, but also hints at overlooked variable modifications)
 
 v0.81.0 -- 2016/10/18
-  -  [METRIC] new experimental MS/MS intensity metric 
+  -  [METRIC] new experimental MS/MS intensity metric
      (scoring the MS/MS TIC vs. base peak, to look for bad ion transmission or fragmentation)
 
-[CRAN] v0.80.14 -- 2016/10/13 
+[CRAN] v0.80.14 -- 2016/10/13
   -  CRAN test fix (make PANDOC optional -- prevents Html reports and Vignettes)
 
 [CRAN] v0.80.13 -- 2016/10/07
   -  minor documentation changes prior to CRAN submission
-  
+
 v0.80.12 -- 2016/09/28
   -  bug fixes
       - fix error during in 'PG: Ratio Density' plot when all ratio data is empty (e.g. for blank samples)
@@ -187,7 +191,7 @@ v0.80.9 -- 2016/08/02
   - bug fixes
      - MBR-Metric: if more than one RT-reference is found (which can happen for a VERY stable LC), the first is picked
        https://github.com/cbielow/PTXQC/issues/25
-  - minor doc improvements     
+  - minor doc improvements
 
 v0.80.8 -- 2016/07/13
   - bug fixes
@@ -199,12 +203,12 @@ v0.80.7 -- 2016/06/09
   - bug fixes
      - fix missing score distribution plots for custom contaminants
      - small documentation improvements
-          
+
 v0.80.6 -- 2016/06/06
   - bug fixes
      - fix NA's (empty bars) in MBR ID transfer plot for very sparse Raw files
      - fix crash when plotting EVD aux-plots for Raw files with NO ID's (0% id rate)
-      
+
 v0.80.5 -- 2016/04/15
   - bug fixes
       https://github.com/cbielow/PTXQC/issues/23  (EVD: MS/MS Oversampling bug)
@@ -212,7 +216,7 @@ v0.80.5 -- 2016/04/15
 v0.80.4 -- 2016/04/11
   - bug fixes
       https://github.com/cbielow/PTXQC/issues/22  (Drag'n'drop of folders with space character)
-  
+
 v0.80.3 -- 2016/04/08
   - bug fixes
       https://github.com/cbielow/PTXQC/issues/21
@@ -227,7 +231,7 @@ v0.80.1 -- 2016/03/15
     - density plots (showing what intensities are usually missing)
       - includes simple inter-Raw file normalization scheme
     - percentage of missing values (lower is better) -- used for scoring in heatmap
-    
+
 v0.80.0 -- 2016/02
   - Report format is by default now Html and PDF (you get two identical reports)
   - Html report includes help texts describing each metric and scoring
@@ -241,9 +245,9 @@ v0.70.3
 v0.70.2
   - faster loading of txt files / better consistency checking
   - support for Chinese "NA" entries in Txt files
-  
+
 v0.70.1
   - fix empty parameter page (bug in 0.70.0)
-  
+
 v0.70.0
-  - support for data containing MS3 scans  
+  - support for data containing MS3 scans

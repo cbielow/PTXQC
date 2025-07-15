@@ -1,5 +1,5 @@
-pandoc: 3.1.1
-pkgdown: 2.0.7
+pandoc: '3.4'
+pkgdown: 2.1.2
 pkgdown_sha: ~
 articles:
   PTXQC-Basic_Guide_for_R_users: PTXQC-Basic_Guide_for_R_users.html
@@ -8,5 +8,4 @@ articles:
   PTXQC-FAQ: PTXQC-FAQ.html
   PTXQC-Input_And_Output_Data: PTXQC-Input_And_Output_Data.html
   PTXQC-ListOfMetrics: PTXQC-ListOfMetrics.html
-last_built: 2024-03-11T14:19Z
-
+last_built: 2025-07-15T08:43Z

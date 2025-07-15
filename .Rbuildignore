@@ -4,3 +4,5 @@ PTXQC.Rproj
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 ^docs/
+^.*\.Rproj$
+^\.Rproj\.user$

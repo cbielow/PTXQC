@@ -85,7 +85,7 @@ Of course, you can also look at the Vignettes on CRAN:
 ### Installation
 
 **You can use PTX-QC without installing it, by using our webserver:**
-Visit [ptxqc.bsc.fu-berlin.de](http://ptxqc.bsc.fu-berlin.de) and simply upload your data.
+Visit http://ptxqc.bsc.fu-berlin.de and simply upload your data.
 This service is not suited for large-scale data analysis, but should be fine for the occasional analysis.
 
 **If you want to generate QC reports without actually getting involved in R:**
