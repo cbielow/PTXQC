@@ -44,3 +44,16 @@ Useful links:
 }
 
 }
+\author{
+\strong{Maintainer}: Chris Bielow \email{chris.bielow@bsc.fu-berlin.de}
+
+Other contributors:
+\itemize{
+  \item Juliane Schmachtenberg [contributor]
+  \item Swenja Wagner [contributor]
+  \item Patricia Scheil [contributor]
+  \item Tom Waschischek [contributor]
+  \item Guido Mastrobuoni [data contributor, reviewer]
+}
+
+}

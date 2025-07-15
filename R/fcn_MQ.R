@@ -121,7 +121,7 @@ boxplotCompare = function(data,
   
   fcn_boxplot_internal = function(data, abline = NA) 
   {
-    pl = ggplot(data=data, aes_string(x = "group", y = "value", fill = "cat", col = "cat")) +
+    pl = ggplot(data=data, aes(x = .data$group, y = .data$value, fill = .data$cat, col = .data$cat)) +
       geom_boxplot(varwidth = TRUE) +
       xlab("") + 
       ylab(ylab) +
@@ -204,7 +204,7 @@ getFragmentErrors = function(x, recurse = 0)
   ## sometimes, peptides are identified purely based on MS1, i.e. have no fragments
   ## if only those peptides are present here in 'x', then 'err' below will be empty
   ## and no data.frame can be constructed, so...
-  if (all(nchar(x[, ms2_col]) == 0)) return(NULL)
+  if (all(is.na(x[, ms2_col])) || all(nchar(x[, ms2_col]) == 0)) return(NULL)
     
   err = as.numeric(unlist(strsplit(x[, ms2_col], split=";", fixed = TRUE)))
   if (convert_Da2PPM) {
@@ -307,11 +307,11 @@ fixCalibration = function(df_evd, df_idrate = NULL, tolerance_sd_PCoutOfCal = 2,
   MS1_decal_smr$outOfCal[is.na(MS1_decal_smr$outOfCal)] = FALSE
   
   ## report too small search tolerance
-  if (any(MS1_decal_smr$outOfCal)) recal_message = "search tolerance too small"
+  if (any(MS1_decal_smr$outOfCal)) recal_message = paste0("search tolerance too small (since sd > ", tolerance_sd_PCoutOfCal,")", sep="")
   
   
   ## Raw files where the mass error is obviously wrong (PSM's not substracted etc...)
-  affected_raw_files = MS1_decal_smr$fc.raw.file[MS1_decal_smr$outOfCal | MS1_decal_smr$hasMassErrorBug]
+  affected_raw_files = MS1_decal_smr$fc.raw.file[MS1_decal_smr$hasMassErrorBug]
   
   
   return(list(stats = MS1_decal_smr,

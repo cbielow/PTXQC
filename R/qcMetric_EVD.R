@@ -315,11 +315,11 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
         ### first subplot (distribution of intensities)
         data_noZero = data[data$intensity!=0,]
         pl = ggplot(data=data_noZero) +
-          geom_violin(aes_string(x = "fc.raw.file", 
-                                 y = "intensity",  
-                                 color = "channel",
-                                 fill = "channel"
-                                 )) +
+          geom_violin(aes(x = .data$fc.raw.file, 
+                          y = .data$intensity,  
+                          color = .data$channel,
+                          fill = .data$channel
+                         )) +
           xlab("") + 
           ylab("reporter intensity (zeros removed)") +
           guides(#alpha = guide_legend(title="Label Eff"), 
@@ -334,15 +334,15 @@ Each Raw file is now scored by the minimum LE of all its 4 channels.
           coord_flip() 
         #pl
         
-        ylims = dt_reps[, { #limits = boxplot.stats(intensity, coef = 0.7)$stats;
+        ylims = data[, { #limits = boxplot.stats(intensity, coef = 0.7)$stats;
                           list(labEff_PC = sum(intensity > 0, na.rm = TRUE) / (.N)) 
-                        }, by = c("fc.raw.file", "channel")]
+                       }, by = c("fc.raw.file", "channel")]
         
         
         ### second subplot (labeling efficiency)
-        pl_eff = ggplot(data = ylims) + geom_bar(aes_string(x = "fc.raw.file",
-                                                            y = "labEff_PC * 100",
-                                                            fill = "channel"), 
+        pl_eff = ggplot(data = ylims) + geom_bar(aes(x = .data$fc.raw.file,
+                                                     y = .data$labEff_PC * 100,
+                                                     fill = .data$channel), 
                                                  stat = "identity",
                                                  position = "dodge") + 
           xlab("") + 
@@ -1195,6 +1195,8 @@ state) was identified by at least two distinct MS<sup>2</sup> spectra in the sam
     or even omission of other 3D-peaks, reducing the number of identified peptides. Oversampling occurs in 
     low-complexity samples or long LC gradients, as well as undersized dynamic exclusion windows for data 
     independent acquisitions. 
+    
+    If DIA-Data: this metric is skipped
 
 Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversampled 3D-peaks. 
 ",
@@ -1202,6 +1204,9 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
     {
       ## completeness check
       if (!checkInput(c("fc.raw.file", "ms.ms.count"), df_evd)) return()
+      
+      ## this is DIA data -- omit metric
+      if (all(range(df_evd$ms.ms.count) == c(0,0))) return()
       
       d_dups = plyr::ddply(df_evd, "fc.raw.file", function(x) {
         tt = as.data.frame(table(x$ms.ms.count), stringsAsFactors = FALSE)
@@ -1361,7 +1366,7 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
       
       lpl = byXflex(pep_set, pep_set$fc.raw.file, subset_size = 50, FUN = function(dx) {
         p = ggplot(dx) + 
-          geom_bar(aes_string(x = "fc.raw.file", y = "idFraction"), stat = "identity") +
+          geom_bar(aes(x = .data$fc.raw.file, y = .data$idFraction), stat = "identity") +
           ggtitle("[experimental] EVD: Non-Missing Peptides", "compared to all peptides seen in experiment") +
           xlab("") +
           ylab("Fraction of total peptides [%]") +
@@ -1381,7 +1386,7 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
       tbl_smry$FreqCum = cumsum(tbl_smry$FreqRel) * 100
       tbl_smry$x = as.numeric(tbl_smry$tbl)
       
-      p = ggplot(tbl_smry, aes_string(x = "x", y = "FreqCum")) + 
+      p = ggplot(tbl_smry, aes(x = .data$x, y = .data$FreqCum)) + 
         geom_line() +
         geom_point() +
         ggtitle("[experimental] EVD: Non-missing by set") +
@@ -1419,9 +1424,9 @@ Heatmap score [EVD: Pep Missing]: Linear scale of the fraction of missing peptid
         })
         head(df_missing)
         
-        pl = ggplot(df_missing, aes_string(x = "missingVals", col="fc.raw.file", fill = "fc.raw.file")) + 
+        pl = ggplot(df_missing, aes(x = .data$missingVals, col = .data$fc.raw.file, fill = .data$fc.raw.file)) + 
           geom_area(position = position_dodge(width=0), binwidth = 0.5, stat="bin", alpha=0.5) +
-          geom_freqpoly(data = dx, aes_string(x = "logInt", col="fc.raw.file"), binwidth = 0.5, size = 1.2) +
+          geom_freqpoly(data = dx, aes(x = .data$logInt, col = .data$fc.raw.file), binwidth = 0.5, linewidth = 1.2) +
           xlab("Intensity [log2]") +
           ggtitle(" [experimental] EVD: Imputed Peptide Intensity Distribution of Missing Values") +
           scale_fill_manual(values = rep(RColorBrewer::brewer.pal(6,"Accent"), times=40), guide = guide_legend("")) +
@@ -1491,7 +1496,7 @@ Heatmap score [EVD: UpSet]: The proportion of sequences that the file has in com
       if (length(lf) <= 1)
       {
         lpl = list(ggText("UpSetR", "Only single Raw file detected. Cannot compute unions/intersections."))
-        return(list(plots = lpl, titles = list("EVD: UpSet")))
+        return(list(plots = lpl, title = list("EVD: UpSet")))
       }
       
       

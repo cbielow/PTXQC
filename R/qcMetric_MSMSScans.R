@@ -408,7 +408,7 @@ Heatmap score [MS<sup>2</sup> Scans: DepPep]: No score.
 
       plotDPMods = function(d_dp.mods){
         p = ggplot(d_dp.mods) +
-              geom_line(aes(fc.raw.file, n_percent, col=dp.modification, group=dp.modification), size = 1.5) +
+              geom_line(aes(fc.raw.file, n_percent, col=dp.modification, group=dp.modification), linewidth = 1.5) +
               scale_color_manual(values = brewer.pal.Safe(n = length(dp.names), palette = "Accent"),
                                  labels = aa.annot) +
               guides(color = guide_legend(title = "modification\n(sites in percent)")) +

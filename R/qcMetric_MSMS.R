@@ -22,7 +22,7 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
       if (!checkInput(c("fc.raw.file", "fragmentation", "reverse", "mass.deviations..da."), df_msms)) return ()
       ## older MQ versions do not have 'mass.analyzer' or 'mass.deviations..ppm.'
       ## , so we use fragmentation instead (this is a little risky, since you could do CID fragmentation and forward to Orbi, but hey...)
-      if (!("mass.analyzer" %in% colnames(df_msms))) df_msms$mass.analyzer = df_msms$fragmentation
+      if (!("mass.analyzer" %in% colnames(df_msms)) || all(is.na(df_msms$mass.analyzer))) df_msms$mass.analyzer = df_msms$fragmentation
       
       sampleMax = function(x, max = 300) {
         ## sample at most 'max' items from 1:x
@@ -64,6 +64,10 @@ Heatmap score [MSMS: MS<sup>2</sup> Cal (Analyzer)]: rewards centeredness around
       #ms2_binwidth = ms2_range/20
       ## precision (plotting is just so much quicker, despite using a fixed binwidth)
       #ms2_decal$msErr = round(ms2_decal$msErr, digits=ceiling(-log10(ms2_binwidth)+1))
+      
+      ## OpenMS data may not have that information
+      if (nrow(ms2_decal) == 0) return();
+      
       
       ## separate plots for each mass analyzer, since we want to keep 'fixed' scales for all raw.files (comparability)
       lpl = plyr::dlply(ms2_decal, "mass.analyzer", function(ms2_decal) {

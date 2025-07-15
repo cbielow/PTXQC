@@ -46,5 +46,6 @@
 #' @import UpSetR
 #' @import xml2
 #' @import yaml
+#' @importFrom rlang .data 
 #' 
 NULL

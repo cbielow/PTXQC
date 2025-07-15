@@ -336,6 +336,14 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
     }
     
   } else if (type=="sm") {
+    ## for MQ-DIA, summary.txt contains only a 'total' column for some reason (at least using MQ 2.4.2.0)
+    ## --> this will mess with raw.file mapping, thus abort at this point
+    if (nrow(.self$mq.data) == 1 && .self$mq.data$raw.file[1] == "Total") {
+        .self$mq.data = data.frame()  ## make the data empty (cannot assign NULL, due to member restriction via RefClass)
+        return(NULL)
+    }
+    
+    
     ## summary.txt special treatment
     ## find the first row, which lists Groups (after Raw files): it has two non-zero entries only 
     ##                                                           (or even less if the group name is empty)
@@ -343,12 +351,13 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
     idx_group = which(apply(.self$mq.data, 1, function(x) sum(x!="", na.rm = TRUE))<=2)[1]
     ## summary.txt will not contain groups, if none where specified during MQ-configuration
     if (is.na(idx_group)) {
-      idx_group = nrow(.self$mq.data)
+      ## now its either DIA data with no raw files or DDA data with ONLY raw files (no groups)
+      raw.files = .self$mq.data
       groups= NA
-    } else {
+    } else {  ## with raw files AND groups
+      raw.files = .self$mq.data[1:(idx_group-1), ]
       groups = .self$mq.data[idx_group:(nrow(.self$mq.data)-1), ]
     }
-    raw.files = .self$mq.data[1:(idx_group-1), ]
     total = .self$mq.data
     .self$mq.data = raw.files ## temporary, until we have assigned the fc.raw.files
   } else if (type == "ev") {
@@ -391,7 +400,6 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
   if (add_fs_col & "raw.file" %in% colnames(.self$mq.data))
   {
     .self$mq.data$fc.raw.file = .self$fn_map$getShortNames(.self$mq.data$raw.file, add_fs_col)
-    
   }
 
   if (type=="sm") { ## post processing for summary

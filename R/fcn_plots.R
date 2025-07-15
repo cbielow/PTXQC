@@ -19,8 +19,8 @@
 plot_ContsPG = function(data)
 {
   data$section = as.integer(seq(0, nrow(data)/correctSetSize(nrow(data),30)*0.999, length.out=nrow(data)))
-  p = ggplot(data=data, aes_string(x = "group", y = "cont_pc", alpha="logAbdClass")) +
-        suppressWarnings(## supresses 'Using alpha for a discrete variable is not advised'
+  p = ggplot(data=data, aes(x = .data$group, y = .data$cont_pc, alpha = .data$logAbdClass)) +
+        suppressWarnings(## suppresses 'Using alpha for a discrete variable is not advised'
         scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(data$logAbdClass))==1) + 1], 1.0), ## ordering of range is critical!
                              name = "Abundance\nclass")) +
         geom_col() +
@@ -28,7 +28,7 @@ plot_ContsPG = function(data)
         xlab("")  +
         ggtitle("PG: Contaminant per condition") +
         ylab("contaminant (% intensity)") +
-        geom_hline(aes_string(yintercept = "5"), linetype = 'dashed')
+        geom_hline(aes(yintercept = 5), linetype = 'dashed')
   if (length(unique(data$section))>1) p = p + facet_wrap(~ section, ncol = 1, scales="free_x")
   #print(p)
   return (p)
@@ -78,8 +78,8 @@ plot_ContUser = function(data, name_contaminant, extra_limit, subtitle = NULL)
   } 
   #cat(paste0("CA entry is ", extra_limit, "\n"))
   maxY = max(datav$value, extra_limit)
-  p = ggplot(datav, aes_string(x = "fc.raw.file", y = "value")) +
-        geom_col(aes_string(fill = "variable"), position = "dodge", width=.7) +
+  p = ggplot(datav, aes(x = .data$fc.raw.file, y = .data$value)) +
+        geom_col(aes(fill = .data$variable), position = "dodge", width=.7) +
         ggtitle(paste0("EVD: Contaminant '", name_contaminant, "'"), subtitle) +
         xlab("")  +
         ylab("abundance fraction (%)") +
@@ -89,7 +89,7 @@ plot_ContUser = function(data, name_contaminant, extra_limit, subtitle = NULL)
         scale_fill_discrete(name = "Method") +
         geom_hline(yintercept = extra_limit, linetype = 'dashed')
   ## group(NULL) seems important in geom_text()
-  if (nrow(dataKS)>0) p = p + geom_text(data = dataKS, aes_string(label = "value", y = maxY * 1.05, group = NULL))
+  if (nrow(dataKS)>0) p = p + geom_text(data = dataKS, aes(label = .data$value, y = maxY * 1.05, group = NULL))
   p = p + facet_wrap(~ section, ncol = 1, scales = "free_x")
   #print(p)
   return(p)
@@ -124,7 +124,7 @@ plot_ContUser = function(data, name_contaminant, extra_limit, subtitle = NULL)
 #' 
 plot_ContUserScore = function(data, raw.file, score) {
   p = ggplot(data) + 
-    geom_line(aes_string(x = "x", y = "y", col = "condition")) + 
+    geom_line(aes(x = .data$x, y = .data$y, col = .data$condition)) + 
     ggtitle(paste0("Empirical CDF of '", raw.file, "'\np = ", round(score, 2))) + 
     ylab("Pr") +
     xlab("Andromeda score")
@@ -193,10 +193,10 @@ plot_ContEVD = function(data, top5)
   head(d_sum)
   
   ## plot
-  p = ggplot(d_sum, aes_string(   x = "fc.raw.file",
-                                  y = "s.intensity", 
-                               fill = "Protein")) +
-        geom_col(aes_string(alpha = "Log10Diff")) +
+  p = ggplot(d_sum, aes(  x = .data$fc.raw.file,
+                          y = .data$s.intensity, 
+                       fill = .data$Protein)) +
+        geom_col(aes(alpha = .data$Log10Diff)) +
         suppressWarnings(## suppresses 'Using alpha for a discrete variable is not advised'
           scale_alpha_discrete(range = c(c(0.3, 1)[(length(unique(d_sum$Log10Diff))==1) + 1], 1.0),
                                name = "Abundance\nclass")) +
@@ -206,7 +206,7 @@ plot_ContEVD = function(data, top5)
         ylab("contaminant (% intensity)") +
         scale_fill_manual(values = RColorBrewer::brewer.pal(6,"Accent")) + 
         scale_colour_manual(values = RColorBrewer::brewer.pal(6,"Accent")) +
-        geom_hline(aes_string(yintercept = "5"), linetype='dashed') +
+        geom_hline(aes(yintercept = 5), linetype='dashed') +
         #guides(alpha=NULL, fill = guide_legend(nrow = 2, ncol = 3, byrow = TRUE, reverse = TRUE)) +
         #theme(legend.position="top", legend.title=element_blank()) +
         coord_flip() +
@@ -250,10 +250,10 @@ plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
   br = c(2, 5, 10, 20);
   
   p =
-    ggplot(data = df_ratios, aes_string(x = "x", y = "y", colour = "col")) + 
+    ggplot(data = df_ratios, aes(x = .data$x, y = .data$y, colour = .data$col)) + 
     facet_grid(col ~ ., scales = "free_y") +
-    geom_line(size = 1.2) +
-    geom_area(aes_string(alpha = "ltype", fill = "col")) +
+    geom_line(linewidth = 1.2) +
+    geom_area(aes(alpha = .data$ltype, fill = .data$col)) +
     xlab("ratio")  +
     ylab("density")  +
     scale_fill_manual(values = rep(RColorBrewer::brewer.pal(6,"Accent"), times=40), guide = guide_legend(legend_title)) + 
@@ -266,7 +266,7 @@ plot_RatiosPG = function(df_ratios, d_range, main_title, main_col, legend_title)
     guides(color = "none") +
     theme(plot.title = element_text(colour = main_col)) +
     theme_bw() +
-    geom_vline(alpha = 0.5, xintercept = 0, colour = "green", linetype = "dashed", size = 1.5) +
+    geom_vline(alpha = 0.5, xintercept = 0, colour = "green", linetype = "dashed", linewidth = 1.5) +
     ggtitle(main_title)
   #print(p)
   return (p)
@@ -298,7 +298,7 @@ plot_CountData = function(data, y_max, thresh_line, title)
 {
   title_main = title[1]
   title_sub = ifelse(length(title) > 1,  title[2], "")
-  p = ggplot(data, aes_string(x = "fc.raw.file", y = "counts", fill = "category")) +
+  p = ggplot(data, aes(x = .data$fc.raw.file, y = .data$counts, fill = .data$category)) +
         geom_col(position = position_stack(reverse = TRUE)) +
         xlab("") +
         ylab("count") +
@@ -306,7 +306,7 @@ plot_CountData = function(data, y_max, thresh_line, title)
         ylim(0, y_max) +
         scale_fill_manual(values = c("green", "#BEAED4", "blue")) +
         ggtitle(title_main, title_sub) + 
-        geom_abline(alpha = 0.5, intercept = thresh_line, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
+        geom_abline(alpha = 0.5, intercept = thresh_line, slope = 0, colour = "black", linetype = "dashed", linewidth = 1.5) +
         coord_flip()
   return(p)
 }
@@ -335,7 +335,7 @@ plot_CountData = function(data, y_max, thresh_line, title)
 plot_RTPeakWidth = function(data, x_lim, y_lim)
 {
   p = ggplot(data) +
-    geom_line(aes_string(x = "RT", y = "peakWidth", colour = "fc.raw.file"), size=1, alpha=0.7) +
+    geom_line(aes(x = .data$RT, y = .data$peakWidth, colour = .data$fc.raw.file), linewidth = 1, alpha = 0.7) +
     scale_color_manual(values = brewer.pal.Safe(length(unique(data$fc.raw.file)), "Set1")) +
     guides(color = guide_legend(title = "Raw file\n(avg. peak width)")) +
     xlab("retention time [min]") +
@@ -388,11 +388,11 @@ plot_RTPeakWidth = function(data, x_lim, y_lim)
 plot_MBRAlign = function(data, y_lim, title_sub, match_tol)
 {
   #data = evd_RT_t[ evd_RT_t$fc.raw.file == "file 13",]
-  p = ggplot(data, aes_string(x = "calibrated.retention.time", y = "retention.time.calibration")) + 
+  p = ggplot(data, aes(x = .data$calibrated.retention.time, y = .data$retention.time.calibration)) + 
         ## the MaxQuant correction (plot real data, no spline, since it can be very irregular)
         geom_line(aes(alpha = 0.7), color = "blue") +
         ## PTXQC correction
-        geom_point(aes_string(x = "calibrated.retention.time", y = "rtdiff", color = "RTdiff_in"), alpha = 0.5) + 
+        geom_point(aes(x = .data$calibrated.retention.time, y = .data$rtdiff, color = .data$RTdiff_in), alpha = 0.5) + 
         scale_alpha(name = 'Alignment function', 
                     labels = list(expression("MaxQuant" ~ Delta*"RT")),
                     range = c(1,1)) + 
@@ -453,7 +453,7 @@ plot_MBRIDtransfer = function(data)
     data.m$value = 0
   }
   p = ggplot(data.m) + 
-        geom_col(aes_string(x="fc.raw.file", y="value", fill="variable"), position = position_stack(reverse = TRUE)) + 
+        geom_col(aes(x = .data$fc.raw.file, y = .data$value, fill = .data$variable), position = position_stack(reverse = TRUE)) + 
         scale_fill_manual("peak class", 
                           values = c("single"="green", "multi.inRT"="lightgreen", "multi.outRT"="red"),
                           labels=c("single", "group (in width)", "group (out width)")) +
@@ -470,19 +470,15 @@ plot_MBRIDtransfer = function(data)
 
 
 #'
-#' Plot MaxQuant Match-between-runs id transfer performance.
+#' Plot MaxQuant Match-between-runs id transfer performance as a scatterplot.
 #' 
-#' The plots shows the different categories of peak classes
+#' Per Raw file, the absolute number of transferred IDs as well as the relative gain in percent.
 #' 
 #' The input is a data.frame with columns
 #'   'fc.raw.file' - raw file name
-#'   'single' - fraction of peptides with are represent only once
-#'   'multi.inRT' - fraction of peptides with are represent multiple times, 
-#'                  but within a certain RT peak width
-#'   'multi.outRT' - fraction of peptides with are represent multiple times,
-#'                   with large RT distance
-#'   'sample' - raw file
-#' where each row represents one peptide sequence.
+#'   'abs' - absolute number of transferred ID's
+#'   'pc' - gain on top of genuine IDs [%]
+#' where each row represents one rawfile.
 #' 
 #' @param data A data.frame with columns as described above
 #' @param title_sub Subtitle text
@@ -499,15 +495,15 @@ plot_MBRIDtransfer = function(data)
 #' 
 plot_MBRgain = function(data, title_sub = "")
 {
-  p = ggplot(data = data, aes_string(x = "abs", y = "pc", col = "fc.raw.file")) + 
-        geom_point(size=2) + 
+  p = ggplot(data = data, aes(x = .data$abs, y = .data$pc, col = .data$fc.raw.file)) + 
+        geom_point(size = 2) + 
         ggtitle("EVD: Peptides inferred by MBR", title_sub) +
         xlab("number of transferred ID's") +
         ylab("gain on top of genuine IDs [%]") +
         xlim(0, max(data$abs, na.rm = TRUE)*1.1) + ## accounting for labels near the border
         ylim(0, max(data$pc, na.rm = TRUE)*1.1) +
         guides(color = "none") +
-        geom_text(aes_string(hjust = -0.1, label = "fc.raw.file"), show.legend = FALSE, check_overlap = TRUE)
+        geom_text(aes(label = .data$fc.raw.file), hjust = -0.2, show.legend = FALSE, check_overlap = TRUE)
   #print(p)
   return(p)
 }
@@ -539,12 +535,12 @@ plot_MBRgain = function(data, title_sub = "")
 #' 
 plot_Charge = function(d_charge)
 {
-  p = ggplot(d_charge, aes_string(x = "Var1_center", y = "Var2_height", width = "Margin_var1")) +
-        geom_col(aes_string(fill = "Var2"), color = "black", position = position_stack(reverse = TRUE))  +
-        geom_text(aes_string(label = "Var1", x = "Var1_center", y = 1.05)) +
+  p = ggplot(d_charge, aes(x = .data$Var1_center, y = .data$Var2_height, width = .data$Margin_var1)) +
+        geom_col(aes(fill = .data$Var2), color = "black", position = position_stack(reverse = TRUE))  +
+        geom_text(aes(label = .data$Var1, x = .data$Var1_center, y = 1.05)) +
         xlab("Raw file") +
         ylab("fraction [%]") +
-        guides(fill = guide_legend(title="charge"),
+        guides(fill = guide_legend(title = "charge"),
                                    color = "none") + # avoid black line in legend
         scale_x_reverse() +
         coord_flip() +
@@ -613,7 +609,7 @@ plot_DataOverRT = function(data, title, y_lab, x_lim = range(data$RT), y_max = m
 {
   nrOfRaws = length(unique(data$fc.raw.file))
   p = ggplot(data = data) +
-    geom_line(aes_string(x = "RT", y = "counts", colour = "fc.raw.file", linetype = "fc.raw.file")) +
+    geom_line(aes(x = .data$RT, y = .data$counts, colour = .data$fc.raw.file, linetype = .data$fc.raw.file)) +
     xlim(x_lim) +
     xlab("RT [min]") + 
     ylim(from = 0, to = y_max) +
@@ -658,8 +654,8 @@ plot_DataOverRT = function(data, title, y_lab, x_lim = range(data$RT), y_max = m
 #'
 plot_IDRate = function(data, id_rate_bad, id_rate_great, label_ID)
 {
-    p = ggplot(data, aes_string(y = "fc.raw.file", x = "ms.ms.identified....")) +
-        geom_point(aes_string(colour = "cat")) +
+    p = ggplot(data, aes(y = .data$fc.raw.file, x = .data$ms.ms.identified....)) +
+        geom_point(aes(colour = .data$cat)) +
         geom_vline(xintercept = id_rate_bad, color=(label_ID)[1]) +
         geom_vline(xintercept = id_rate_great, color=(label_ID)[3]) +
         ylab("") + 
@@ -899,7 +895,7 @@ plot_UncalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_lim
   cols_sub = cols_sub[names(cols_sub) %in% data$col]
   
   p = ggplot(data, col=data$col) +
-        geom_boxplot(aes_string(x = "fc.raw.file_ext", y = "uncalibrated.mass.error..ppm.", col="col"), varwidth = TRUE, outlier.shape = NA) +
+        geom_boxplot(aes(x = .data$fc.raw.file_ext, y = .data$uncalibrated.mass.error..ppm., col = .data$col), varwidth = TRUE, outlier.shape = NA) +
         scale_colour_manual("", values = cols_sub, guide = showColLegend) +
         ylab(expression(Delta~"mass [ppm]")) +
         xlab("") +
@@ -963,7 +959,7 @@ plot_CalibratedMSErr = function(data, MQBug_raw_files, stats, y_lim, extra_limit
   
   ## plot
   p = ggplot(data, col = data$col) +
-    geom_boxplot(aes_string(x = "fc.raw.file", y = "mass.error..ppm.", col="col"), varwidth = TRUE, outlier.shape = NA) +
+    geom_boxplot(aes(x = .data$fc.raw.file, y = .data$mass.error..ppm., col = .data$col), varwidth = TRUE, outlier.shape = NA) +
     scale_colour_manual("", values = cols_sub, guide = showColLegend) +
     ylab(expression(Delta~"mass [ppm]")) +
     xlab("") +
@@ -1011,7 +1007,7 @@ plot_MS2Oversampling = function(data)
   data$n = factor(data$n, levels=n_unique[order(nchar(n_unique))], ordered = TRUE)
   
   p = ggplot(data) + 
-        geom_col(position = position_stack(reverse = TRUE), aes_string(x = "fc.raw.file", y = "fraction", fill="n")) +
+        geom_col(position = position_stack(reverse = TRUE), aes(x = .data$fc.raw.file, y = .data$fraction, fill = .data$n)) +
         scale_fill_manual("MS/MS\ncounts", values =c("green", "blue", "red")) +
         scale_x_discrete_reverse(data$fc.raw.file) +
         xlab("") +
@@ -1053,7 +1049,7 @@ plot_MS2Decal = function(data)
     qnt = quantile(x$msErr, probs = c(0.02, 0.98), na.rm = TRUE)
     return (x[qnt[1] < x$msErr & x$msErr < qnt[2], ])
   })
-  p = ggplot(data2, aes_string(x = "msErr", fill="type")) + 
+  p = ggplot(data2, aes(x = .data$msErr, fill = .data$type)) + 
     geom_histogram(bins = 30) +
     xlab("fragment mass delta") +  
     ylab("count") + 
@@ -1093,13 +1089,13 @@ plot_MissedCleavages = function(data, title_sub = "")
 {
   st_bin.m = reshape2::melt(data, id.vars = c("fc.raw.file"))
   p =
-    ggplot(data = st_bin.m, aes_string(x = "factor(fc.raw.file)", y = "value", fill = "variable")) + 
+    ggplot(data = st_bin.m, aes(x = factor(.data$fc.raw.file), y = .data$value, fill = .data$variable)) + 
         geom_col(position = position_stack(reverse = TRUE)) +
         xlab("Raw file") +  
         ylab("missed cleavages [%]") + 
         theme(legend.title = element_blank()) +
         scale_fill_manual(values = rep(c("#99d594", "#ffffbf", "#fc8d59", "#ff0000", "#800080", "#000000"), 10)) +
-        geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", size = 1.5) +
+        geom_abline(alpha = 0.5, intercept = 0.75, slope = 0, colour = "black", linetype = "dashed", linewidth = 1.5) +
         coord_flip() +
         scale_x_discrete_reverse(st_bin.m$fc.raw.file) +
         ggtitle("MSMS: Missed cleavages per Raw file", title_sub)
@@ -1131,7 +1127,7 @@ plot_MissedCleavages = function(data, title_sub = "")
 plot_TopNoverRT = function(data)
 {
   nrOfRaws = length(unique(data$fc.raw.file))
-  p = ggplot(data, aes_string(x = "rRT", y = "topN", col = "fc.raw.file")) +
+  p = ggplot(data, aes(x = .data$rRT, y = .data$topN, col = .data$fc.raw.file)) +
         geom_line() +
         scale_color_manual(values = brewer.pal.Safe(nrOfRaws, "Set1")) +
         xlab("retention time [min]") +
@@ -1183,7 +1179,7 @@ plot_IonInjectionTimeOverRT = function(data, stats, extra_limit)
                                  round(stats_sub$mean[match(stats_sub$fc.raw.file, stats_sub$fc.raw.file)]),
                                  " ms)")
   p = ggplot(data) +
-        geom_line(aes_string(x = "rRT", y = "medIIT", col = "fc.raw.file")) +
+        geom_line(aes(x = .data$rRT, y = .data$medIIT, col = .data$fc.raw.file)) +
         scale_color_manual(values = brewer.pal.Safe(nrOfRaws, "Set1")) +
         xlab("retention time [min]") +
         ylab("ion injection time [ms]") +
@@ -1216,7 +1212,7 @@ plot_IonInjectionTimeOverRT = function(data, stats, extra_limit)
 plot_TopN = function(data)
 {
   
-  p = ggplot(data, aes_string(x = "scan.event.number", y = "n")) +
+  p = ggplot(data, aes(x = .data$scan.event.number, y = .data$n)) +
         geom_col() +
         xlab("highest scan event") +
         ylab("count") +
@@ -1248,7 +1244,7 @@ plot_TopN = function(data)
 plot_ScanIDRate = function(data)
 {
   
-  p = ggplot(data, aes_string(x = "scan.event.number", y = "ratio", alpha = "count")) +
+  p = ggplot(data, aes(x = .data$scan.event.number, y = .data$ratio, alpha = .data$count)) +
         geom_col() +
         xlab("scan event") +
         ylab("percent identified") +
@@ -1281,7 +1277,7 @@ plot_ScanIDRate = function(data)
 plot_TIC = function(data, x_lim, y_lim)
 {
   p = ggplot(data) +
-    geom_line(aes_string(x = "RT", y = "intensity", colour = "fc.raw.file"), size=1, alpha=0.7) +
+    geom_line(aes(x = .data$RT, y = .data$intensity, colour = .data$fc.raw.file), linewidth = 1, alpha = 0.7) +
     scale_color_manual(values = brewer.pal.Safe(length(unique(data$fc.raw.file)), "Set1")) +
     guides(color = guide_legend(title = "Raw file\n(avg. peak width)")) +
     xlab("retention time [min]") +
