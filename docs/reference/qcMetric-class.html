@@ -156,9 +156,8 @@ where 'plots' is required; all others are optional.</p>
 <span class="r-in"><span>                         <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="va">gtitle</span><span class="op">)</span></span></span>
 <span class="r-in"><span>                     <span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span>                     <span class="co">## add mzQC metric for count of identified clusters</span></span></span>
-<span class="r-in"><span>                     <span class="va">template_proteinCount</span> <span class="op">=</span> <span class="fu">rmzqc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rmzqc/man/getQualityMetricTemplate.html" class="external-link">getQualityMetricTemplate</a></span><span class="op">(</span><span class="st">"MS:1002406"</span><span class="op">)</span> </span></span>
 <span class="r-in"><span>                     <span class="va">mzqc</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="kw">function</span><span class="op">(</span><span class="va">id</span><span class="op">)</span><span class="op">{</span></span></span>
-<span class="r-in"><span>                       <span class="va">out</span> <span class="op">=</span> <span class="va">template_proteinCount</span><span class="op">$</span><span class="fu">copy</span><span class="op">(</span><span class="op">)</span>;</span></span>
+<span class="r-in"><span>                       <span class="va">out</span> <span class="op">=</span> <span class="fu">rmzqc</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rmzqc/man/getQualityMetricTemplate.html" class="external-link">getQualityMetricTemplate</a></span><span class="op">(</span><span class="st">"MS:1002406"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>                       <span class="va">out</span><span class="op">$</span><span class="va">value</span> <span class="op">=</span> <span class="va">id</span>;</span></span>
 <span class="r-in"><span>                       <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">out</span><span class="op">)</span> <span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span>                     <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">mzqc</span><span class="op">)</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"file"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span>;</span></span>
@@ -171,21 +170,86 @@ where 'plots' is required; all others are optional.</p>
 <span class="r-in"><span><span class="va">a</span><span class="op">$</span><span class="fu">setData</span><span class="op">(</span><span class="va">dd</span>, <span class="st">"my title"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Starting to work on MS/MS Peak shape ...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Downloading obo from 'https://github.com/HUPO-PSI/psi-ms-CV/releases/download/v4.1.195/psi-ms.obo' ...</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in FUN(X[[i]], ...):</span> attempt to apply non-function</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Memory [MB] prior|after|max(diff) : 122.3 | 130.7 | 247.1 (125)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Duration: 3 s</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ... MS/MS Peak shape  done</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-in"><span><span class="va">a</span><span class="op">$</span><span class="va">plots</span>  <span class="co">## the raw plots</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-plt img"><img src="qcMetric-class-1.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
+<span class="r-plt img"><img src="qcMetric-class-2.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="va">a</span><span class="op">$</span><span class="fu">getPlots</span><span class="op">(</span><span class="cn">TRUE</span><span class="op">)</span> <span class="co">## same as above</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-plt img"><img src="qcMetric-class-3.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
+<span class="r-plt img"><img src="qcMetric-class-4.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="va">a</span><span class="op">$</span><span class="fu">getPlots</span><span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="co">## plots without title</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-plt img"><img src="qcMetric-class-5.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
+<span class="r-plt img"><img src="qcMetric-class-6.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="va">a</span><span class="op">$</span><span class="fu">getTitles</span><span class="op">(</span><span class="op">)</span>  <span class="co">## get the titles of the all plots</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in .self$plots[[idx]]:</span> subscript out of bounds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "my title" "my title"</span>
 <span class="r-in"><span><span class="va">a</span><span class="op">$</span><span class="va">helpText</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "small help text"</span>
 <span class="r-in"><span><span class="va">a</span><span class="op">$</span><span class="va">qcName</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "MS/MS Peak shape"</span>
 <span class="r-in"><span><span class="va">a</span><span class="op">$</span><span class="va">mzQC</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $file1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;MzQCqualityMetric&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Public:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     accession: MS:1002406</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     clone: function (deep = FALSE) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     description: "The number of protein clusters that have been identifie ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     fromData: function (data, context = "MzQCqualityMetric") </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     initialize: function (accession = NA_character_, name = NA_character_, description = NA_character_, </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     isValid: function (context = "MzQCqualityMetric") </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     name: count of identified clusters</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     self: MzQCqualityMetric, R6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     toJSON: function (...) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     unit: list</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     value: 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $file2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;MzQCqualityMetric&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Public:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     accession: MS:1002406</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     clone: function (deep = FALSE) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     description: "The number of protein clusters that have been identifie ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     fromData: function (data, context = "MzQCqualityMetric") </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     initialize: function (accession = NA_character_, name = NA_character_, description = NA_character_, </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     isValid: function (context = "MzQCqualityMetric") </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     name: count of identified clusters</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     self: MzQCqualityMetric, R6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     toJSON: function (...) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     unit: list</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     value: 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $file3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;MzQCqualityMetric&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Public:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     accession: MS:1002406</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     clone: function (deep = FALSE) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     description: "The number of protein clusters that have been identifie ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     fromData: function (data, context = "MzQCqualityMetric") </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     initialize: function (accession = NA_character_, name = NA_character_, description = NA_character_, </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     isValid: function (context = "MzQCqualityMetric") </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     name: count of identified clusters</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     self: MzQCqualityMetric, R6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     toJSON: function (...) </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     unit: list</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     value: 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
