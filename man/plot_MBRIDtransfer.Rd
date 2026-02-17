@@ -19,7 +19,7 @@ The plots shows the different categories of peak classes
 The input is a data.frame with columns
   'fc.raw.file' - raw file name
   'single' - fraction of peptides with are represent only once
-  'multi.inRT' - fraction of peptides with are represent multiple times, 
+  'multi.inRT' - fraction of peptides with are represent multiple times,
                  but within a certain RT peak width
   'multi.outRT' - fraction of peptides with are represent multiple times,
                   with large RT distance
@@ -29,7 +29,7 @@ where each row represents one peptide sequence.
 \examples{
  data = data.frame(fc.raw.file = rep(c("file A", "file B"), each = 3),
                    single = c(0.9853628, 0.8323160, 0.9438375,
-                              0.9825538, 0.8003763, 0.9329961), 
+                              0.9825538, 0.8003763, 0.9329961),
                    multi.inRT = c(0.002927445, 0.055101018, 0.017593087,
                                   0.005636457, 0.099640044, 0.031870056),
                    multi.outRT = c(0.01170978, 0.11258294, 0.03856946,

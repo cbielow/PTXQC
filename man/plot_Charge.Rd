@@ -19,7 +19,7 @@ The input is a data.frame with columns
   'Var2' - charge (used as fill color)
   'Var1_center' - contains X-position of the Raw file
   'Var2_height' - relative frequency of the charge
-  'Margin_var1' - 
+  'Margin_var1' -
 where each row represents one peptide sequence.
 }
 \examples{

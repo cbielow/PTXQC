@@ -15,7 +15,7 @@ getFragmentErrors(x, recurse = 0)
 Data frame with mass errors ('msErr') and their 'unit' (Da or ppm) or NULL (if no fragments were given)
 }
 \description{
-Given a data.frame as obtainable from a msms.txt with 
+Given a data.frame as obtainable from a msms.txt with
  - a 'mass.analyzer' column which contains only a single value for the whole column
  - a 'mass.deviations..da.' and (if available) 'mass.deviations..ppm.'
  - a 'masses' column (only required if 'mass.deviations..ppm.' is unavailable and the mass.analyzer

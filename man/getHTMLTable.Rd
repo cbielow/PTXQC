@@ -20,7 +20,7 @@ Create an HTML table with an extra header row
 \examples{
   data = data.frame(raw.file = letters[1:4],
                     id.rate = 3:6)
-  getHTMLTable(data, 
+  getHTMLTable(data,
                caption = "some header line")
 
 }

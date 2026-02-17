@@ -19,7 +19,7 @@ pointsPutX(x_range, x_section, y, col = NA)
 ggplot object with new geom_point
 }
 \description{
-#' 
-Usage: 
+#'
+Usage:
   ggplot(...) + geom_X(...) + pointsPutX(...)
 }

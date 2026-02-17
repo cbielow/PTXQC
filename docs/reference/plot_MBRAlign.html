@@ -22,7 +22,7 @@ MaxQuant should be re-run with more tolerant settings."><!-- mathjax --><script 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PTXQC</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.4</span>
       </span>
     </div>
 
@@ -127,11 +127,11 @@ where each row represents one peptide whose RT was corrected by MaxQuant.</p>
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="va">data</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>fc.raw.file_ext <span class="op">=</span> <span class="st">"file A"</span>, <span class="co">## more than one would be possible</span></span></span>
-<span class="r-in"><span>                   calibrated.retention.time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>                   calibrated.retention.time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                   retention.time.calibration <span class="op">=</span> <span class="fl">6</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="op">(</span><span class="fl">20</span><span class="op">:</span><span class="fl">100</span><span class="op">)</span><span class="op">/</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="va">data</span><span class="op">$</span><span class="va">rtdiff</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span> <span class="va">data</span><span class="op">$</span><span class="va">RTdiff_in</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"green"</span>, <span class="st">"red"</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span> <span class="op">+</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">rtdiff</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0.7</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-in"><span> </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="fu">plot_MBRAlign</span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">10</span>, <span class="fl">10</span><span class="op">)</span>, <span class="st">"fancy subtitle"</span>, <span class="fl">0.7</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plot_MBRAlign-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>

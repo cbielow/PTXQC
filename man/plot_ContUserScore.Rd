@@ -27,7 +27,7 @@ your sample is contaminated although that's not the case.
 \examples{
 
  data = data.frame(x = 10:60,
-                   y = c(seq(0,1,length=51), seq(0.1, 1, length=51)), 
+                   y = c(seq(0,1,length=51), seq(0.1, 1, length=51)),
                    condition = rep(c("sample","contaminant"), each=51))
  plot_ContUserScore(data, 'test file', 0.96)
 
