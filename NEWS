@@ -15,6 +15,10 @@ Glossary:
 #################################
 
 
+[CRAN] v1.1.4 -- 2026/02/17
+  - fix potential 'NA' label in heatmap plot (issue #141)
+  - fix 'missing values and NaN's not allowed' in MSMS: MS^2 Cal plot (issue #140)
+
 [CRAN] v1.1.3 -- 2024/07/15
   - ensure compatibility with upcoming rmzqc 0.7 (pr #139)
 
