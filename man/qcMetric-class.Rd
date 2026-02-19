@@ -60,9 +60,8 @@ a = qcMetric$new(helpText="small help text",
                          ggtitle(gtitle)
                      })
                      ## add mzQC metric for count of identified clusters
-                     template_proteinCount = rmzqc::getQualityMetricTemplate("MS:1002406") 
                      mzqc = lapply(1:3, function(id){
-                       out = template_proteinCount$copy();
+                       out = rmzqc::getQualityMetricTemplate("MS:1002406")
                        out$value = id;
                        return(out) })
                      names(mzqc) = paste0("file", 1:3);

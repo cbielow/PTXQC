@@ -30,7 +30,7 @@ plot_CalibratedMSErr(
 GGplot object
 }
 \description{
-Boxes are optionally colored to indicate that a MQ bug was detected or 
+Boxes are optionally colored to indicate that a MQ bug was detected or
 if PTXQC detected a too narrow search window.
 }
 \examples{
@@ -42,7 +42,7 @@ if PTXQC detected a too narrow search window.
                                          rnorm(n[4], 0.3, 0.8)))
   stats = data.frame(fc.raw.file = letters[4:1],
                      sd = c(2.4, 0.5, 0.7, 0.8),
-                     outOfCal = c(TRUE, FALSE, FALSE, FALSE))           
+                     outOfCal = c(TRUE, FALSE, FALSE, FALSE))
   plot_CalibratedMSErr(data, MQBug_raw_files = letters[1], stats, y_lim = c(-20,20), 15, "subtitle")
 
 }

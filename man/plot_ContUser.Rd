@@ -26,7 +26,7 @@ sample peptides scores are NOT greater than contaminant peptide scores.
 }
 \examples{
 
- data = data.frame(fc.raw.file = letters[1:3], 
+ data = data.frame(fc.raw.file = letters[1:3],
                    variable = c(rep("spectralCount", 3),
                                  rep("intensity", 3),
                                  rep("above.thresh", 3),

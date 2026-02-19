@@ -38,11 +38,11 @@ where each row represents one peptide whose RT was corrected by MaxQuant.
 \examples{
 
  data = data.frame(fc.raw.file_ext = "file A", ## more than one would be possible
-                   calibrated.retention.time = c(20:100), 
+                   calibrated.retention.time = c(20:100),
                    retention.time.calibration = 6 + sin((20:100)/10))
  data$rtdiff = rnorm(nrow(data))
  data$RTdiff_in = c("green", "red")[1 + (abs(data$rtdiff) > 0.7)]
- 
+
  plot_MBRAlign(data, c(-10, 10), "fancy subtitle", 0.7)
 
 }

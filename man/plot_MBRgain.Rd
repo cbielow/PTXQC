@@ -26,7 +26,7 @@ where each row represents one rawfile.
 }
 \examples{
  data = data.frame(fc.raw.file = paste("file", letters[1:4]),
-                   abs = c(5461, 5312, 3618, 502), 
+                   abs = c(5461, 5312, 3618, 502),
                    pc = c(34, 32, 22, 2))
  plot_MBRgain(data, "MBR gain: 18\%")
 

@@ -22,7 +22,7 @@ The input is a data.frame with already averaged counts over binned RT-slices.
 \examples{
 
  data = data.frame(fc.raw.file = rep(c("file A", "file B", "file C"), each=81),
-                   RT = c(20:100), 
+                   RT = c(20:100),
                    intensity = c(rnorm(81, mean=20), rnorm(81, mean=10), rnorm(81, mean=30)))
  plot_TIC(data, c(10, 100), c(0, 40))
 

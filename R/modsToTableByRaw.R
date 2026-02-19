@@ -29,7 +29,7 @@ modsToTableByRaw = function(df_evd, name_unmod = "Unmodified", name_unmod_invers
   
   ## inverse frequencies for 'modified' if they are >=50% (to make the plot more compact)
   if (nchar(name_unmod_inverse)){
-    if (mean(mods_tbl[modification_names==name_unmod, Freq]) > 50)
+    if (max(mods_tbl[modification_names==name_unmod, Freq]) > 50)
     {
       mods_tbl[modification_names==name_unmod, Freq := 100 - Freq]
       mods_tbl[modification_names==name_unmod, modification_names := name_unmod_inverse]

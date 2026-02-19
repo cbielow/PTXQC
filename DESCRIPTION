@@ -1,8 +1,8 @@
 Package: PTXQC
 Type: Package
 Title: Quality Report Generation for MaxQuant and mzTab Results
-Version: 1.1.3
-Date: 2025-07-15
+Version: 1.1.4
+Date: 2026-02-17
 Authors@R: c(person(given = "Chris",
                       family = "Bielow",
                       role = c("aut", "cre"),
