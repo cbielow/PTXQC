@@ -193,10 +193,16 @@
 <span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="do">## use build_vignettes = FALSE if you did not install pandoc or if you encounter errors when building vignettes (e.g. PRIDE ftp unavailable)!</span></span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="fu">install_github</span>(<span class="st">"cbielow/PTXQC"</span>, <span class="at">build_vignettes =</span> <span class="cn">TRUE</span>, <span class="at">dependencies =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
+</h3>
 <p>To get started, see the help and/or vignettes:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">help</span>(<span class="at">package=</span><span class="st">"PTXQC"</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">browseVignettes</span>(<span class="at">package =</span> <span class="st">'PTXQC'</span>)</span></code></pre></div>
-<p>Please feel free to report bugs (see below), or issue pull requests!</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">browseVignettes</span>(<span class="at">package =</span> <span class="st">'PTXQC'</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">help</span>(<span class="at">package=</span><span class="st">"PTXQC"</span>)</span></code></pre></div>
+<p>The simplest and fastest way to create a report is</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">library</span>(PTXQC)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">createReport</span>(<span class="st">"c:/PATH/TO/DATAs/COMBINED/TXT"</span>)</span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="report-examples">Report Examples<a class="anchor" aria-label="anchor" href="#report-examples"></a>

@@ -35,6 +35,6 @@ Make sure to call $readMappingFile(some_file) if you want to support a user-defi
 
 \examples{
 a = FilenameMapper$new()
-a$readMappingFile('filenamemapping.txt') 
+a$readMappingFile('filenamemapping.txt')
 
 }
