@@ -14,6 +14,8 @@ Glossary:
 #########   CHANGELOG  ##########
 #################################
 
+[CRAN] v1.1.5 -- 2026/04/20
+  - fix rogue 'Total' row in heatmap plot (issue #143)
 
 [CRAN] v1.1.4 -- 2026/02/17
   - fix potential 'NA' label in heatmap plot (issue #141)

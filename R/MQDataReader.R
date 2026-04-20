@@ -1,9 +1,9 @@
 #'
 #' Convenience wrapper for MQDataReader when only a single MQ file should be read
 #' and file mapping need not be stored.
-#' 
+#'
 #' For params, see \code{MQDataReader::readMQ()}.
-#' 
+#'
 #' @param file   see \code{MQDataReader::readMQ()}
 #' @param filter see \code{MQDataReader::readMQ()}
 #' @param type   see \code{MQDataReader::readMQ()}
@@ -14,7 +14,7 @@
 #' @return see \code{MQDataReader::readMQ()}
 #'
 #' @export
-#' 
+#'
 read.MQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 10, LFQ_action = FALSE, ...)
 {
   mq = MQDataReader$new()
@@ -27,13 +27,13 @@ read.MQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col =
 getFileEncoding = function(filename)
 {
   file_handle = try(file(filename, "rb"))
-  
+
   if (inherits(file_handle, 'try-error')) return("")
-  
+
   data = readBin(file_handle, "raw", n = 4)
   close(file_handle)
-  
-  if (data[1]==as.raw(0xef) & data[2]==as.raw(0xbb) & data[3]==as.raw(0xbf)) 
+
+  if (data[1]==as.raw(0xef) & data[2]==as.raw(0xbb) & data[3]==as.raw(0xbf))
     return("UTF-8-BOM")
   if (data[1]==as.raw(0xfe) & data[2]==as.raw(0xff))
     return("UTF-16BE")  ##UTF16 big endian
@@ -47,9 +47,9 @@ getFileEncoding = function(filename)
 #' S5-RefClass to read MaxQuant .txt files
 #'
 #' This class is used to read MQ data tables using \code{MQDataReader::readMQ()} while holding
-#' the internal raw file --> short raw file name mapping (stored in a member called 
-#' 'fn_map') and updating/using it every time \code{MQDataReader::readMQ()} is called. 
-#' 
+#' the internal raw file --> short raw file name mapping (stored in a member called
+#' 'fn_map') and updating/using it every time \code{MQDataReader::readMQ()} is called.
+#'
 #' Since MaxQuant changes capitalization and sometimes even column names, it seemed convenient
 #' to have a function which just reads a txt file and returns unified column names, irrespective of the MQ version.
 #' So, it unifies access to columns (e.g. by using lower case for ALL columns) and ensures columns are
@@ -63,14 +63,14 @@ getFileEncoding = function(filename)
 #'  mass.deviations           mass.deviations..da.
 #'  basepeak.intensity        base.peak.intensity
 #' }
-#' 
+#'
 #' We also correct 'reporter.intensity.*' naming issues to MQ 1.6 convention, when 'reporter.intensity.not.corrected' is present.
 #' MQ 1.5 uses: reporter.intensity.X and reporter.intensity.not.corrected.X
-#' MQ 1.6 uses: reporter.intensity.X and reporter.intensity.corrected.X       
+#' MQ 1.6 uses: reporter.intensity.X and reporter.intensity.corrected.X
 #'
 #' Note: you must find a regex which matches both versions, or explicitly add both terms if you are requesting only a subset
 #'       of columns!
-#' 
+#'
 #' Fixes for msmsScans.txt:
 #'  negative Scan Event Numbers in msmsScans.txt are reconstructed by using other columns
 #'
@@ -79,12 +79,12 @@ getFileEncoding = function(filename)
 #' Example of usage:
 #' \preformatted{
 #'   mq = MQDataReader$new()
-#'   d_evd = mq$readMQ("evidence.txt", type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration")) 
+#'   d_evd = mq$readMQ("evidence.txt", type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration"))
 #' }
-#' 
+#'
 #' If the file is empty, this function shows a warning and returns NULL.
 #' If the file is present but cannot be read, the program will stop.
-#' 
+#'
 MQDataReader = setRefClass("MQDataReader",
  fields = list(mq.data = "data.frame",
                other = "list",
@@ -115,7 +115,7 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
   #' @param col_subset A vector of column names as read by read.delim(), e.g., spaces are replaced by dot already.
   #'                   If given, only columns with these names (ignoring lower/uppercase) will be returned (regex allowed)
   #'                   E.g. col_subset=c("^lfq.intensity.", "protein.name")
-  #' @param add_fs_col If TRUE and a column 'raw.file' is present, an additional column 'fc.raw.file' will be added with 
+  #' @param add_fs_col If TRUE and a column 'raw.file' is present, an additional column 'fc.raw.file' will be added with
   #'                   common prefix AND common substrings removed (\code{\link{simplifyNames}})
   #'                           E.g. two rawfiles named 'OrbiXL_2014_Hek293_Control', 'OrbiXL_2014_Hek293_Treated' will give
   #'                                                   'Control', 'Treated'
@@ -123,12 +123,12 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
   #'                   a running ID of the form 'file <x>', where <x> is a number from 1 to N.
   #'                   If the function is called again and a mapping already exists, this mapping is used.
   #'                   Should some raw.files be unknown (ie the mapping from the previous file is incomplete), they will be augmented
-  #' @param check_invalid_lines After reading the data, check for unusual number of NA's to detect if file was corrupted by Excel or alike                 
+  #' @param check_invalid_lines After reading the data, check for unusual number of NA's to detect if file was corrupted by Excel or alike
   #' @param LFQ_action [For type=='pg' only] An additional custom LFQ column ('cLFQ...') is created where
   #'               zero values in LFQ columns are replaced by the following method IFF(!) the corresponding raw intensity is >0 (indicating that LFQ is erroneusly 0)
   #'               "toNA": replace by NA
   #'               "impute": replace by lowest LFQ value >0 (simulating 'noise')
-  #' @param ... Additional parameters passed on to read.delim()             
+  #' @param ... Additional parameters passed on to read.delim()
   #' @return A data.frame of the respective file
   #'
 
@@ -139,11 +139,11 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
   cat(paste("Reading file", file,"...\n"))
   ## error message if failure should occur below
   msg_parse_error = paste0("\n\nParsing the file '", file, "' failed. See message above why. If the file is not usable but other files are ok, disable the corresponding section in the YAML config. You might also be running a foreign locale (e.g. Chinese) - switch to an English locale and make sure that txt files are encoded in ASCII (Latin-1)!")
-  
+
   ## get encoding, to pass on to read.delim
   file_encoding = getFileEncoding(file)
-  
-  
+
+
   ## resolve set of columns which we want to keep
   #example: col_subset = c("Multi.*", "^Peaks$")
   colClasses = NA ## read.table: keep all columns by default
@@ -152,7 +152,7 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
     ## do not use data.table::fread for this, since it will read the WHOLE file and takes ages...
     data_header = try(read.delim(file, comment.char="", nrows=2, fileEncoding = file_encoding))
     if (inherits(data_header, 'try-error')) stop(msg_parse_error, call. = FALSE);
-    
+
     colnames(data_header) = tolower(colnames(data_header))
     colClasses = rep("NULL", ncol(data_header)) ## either "NULL" (discard), NA (auto-detect), or specific, i.e. "numeric", ...
     for (idx in 1:length(col_subset))
@@ -166,9 +166,9 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
         if (nchar(names(col_subset)[idx]) > 0) {
           colClasses[idx_new] = names(col_subset)[idx]
           cat(paste0("Requiring column(s) '", paste(colnames(data_header)[idx_new], sep="", collapse="', '"), "' to be of type '", names(col_subset)[idx], "'!\n"))
-        } 
+        }
       }
-      
+
     }
     ## keep the 'id' column if available (for checking data integrity: invalid line-breaks)
     if ("id" %in% colnames(data_header) & check_invalid_lines == TRUE) colClasses[which("id"==colnames(data_header))] = NA
@@ -179,7 +179,7 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
       return (.self$mq.data)
     }
   }
-  
+
   ## higher memory consumption during load (due to memory mapped files) compared to read.delim... but about 5x faster
   ## , but also different numerical results when parsing numbers!!!
   #.self$mq.data = try(
@@ -193,13 +193,13 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
   ##    However, when the colClass is 'numeric', whitespaces are stripped, and only AFTERWARDS the string
   ##    is checked against na.strings
   ##  - the '\u975E\u6570\u5B57' na-string is the chinese UTF-8 representation of "NA"
-  .self$mq.data = try(read.delim(file, na.strings=c("NA", "n. def.", "n.def.", "\u975E\u6570\u5B57"), 
-                                 encoding="UTF-8", comment.char="", stringsAsFactors = FALSE, colClasses = colClasses, 
+  .self$mq.data = try(read.delim(file, na.strings=c("NA", "n. def.", "n.def.", "\u975E\u6570\u5B57"),
+                                 encoding="UTF-8", comment.char="", stringsAsFactors = FALSE, colClasses = colClasses,
                                  fileEncoding = file_encoding, ...))
   if (inherits(.self$mq.data, 'try-error')) stop(msg_parse_error, call. = FALSE);
-  
+
   #colnames(.self$mq.data)
-  
+
   cat(paste0("Read ", nrow(.self$mq.data), " entries from ", file,".\n"))
 
   ### checking for invalid rows
@@ -214,7 +214,7 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
                                              "You might also have unknown UTF-8 characters (Asian?) in your file which PTXQC does not recognize. Try running MaxQuant on an english locale!"))
     }
   }
-  
+
   cat(paste0("Updating colnames\n"))
   cn = colnames(.self$mq.data)
   ### just make everything lower.case (MQ versions keep changing it and we want it to be reproducible)
@@ -237,11 +237,11 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
     cn[idx_nc] = gsub(".not.corrected", "", cn[idx_nc]);
     cn[idx_c] = gsub(".intensity", ".intensity.corrected", cn[idx_c]);
   }
-  
+
   colnames(.self$mq.data) = cn
-  
-  
-  
+
+
+
   ## work in-place on 'contaminant' column
   cat(paste0("Simplifying contaminants\n"))
   .self$substitute("contaminant");
@@ -249,7 +249,7 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
   .self$substitute("reverse");
   if (grepl("C", filter) & ("contaminant" %in% colnames(.self$mq.data))) .self$mq.data = .self$mq.data[!(.self$mq.data$contaminant),]
   if (grepl("R", filter) & ("reverse" %in% colnames(.self$mq.data))) .self$mq.data = .self$mq.data[!(.self$mq.data$reverse),]
-  
+
   ## proteingroups.txt special treatment
   if (type=="pg") {
     stats = data.frame(n=NA, v=NA)
@@ -281,7 +281,7 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
           .self$mq.data[, paste0("c", cc)] = vals;
           ##
           stats = rbind(stats, c(sum(bad_rows, na.rm = TRUE), impVal))
-          
+
         }
         else {
           stop(paste0("Unknown action '", LFQ_action, "' for LFQ_action parameter! Aborting!"));
@@ -291,9 +291,9 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
         plot(stats, log="y", xlab="number of replaced zeros", ylab='imputed intensity', main='Imputation statistics')
       }
     }
-    
+
     int_cols = grepv("intensity", colnames(.self$mq.data))
-    
+
     ##
     ## apply potential fix (MQ 1.5 writes numbers in scientific notation with ',' -- which parses as String :( )
     ##
@@ -321,7 +321,7 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
         return(x)
       })
     }
-    
+
     ##
     ## add Abundance index
     ##
@@ -334,7 +334,7 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
     } else {
       stop("MQDataReader::readMQ(): Cannot add abundance index since 'mol..weight..kda.' was not loaded from file. Did you use the correct 'type' or forgot to add the column in 'col_subset'?")
     }
-    
+
   } else if (type=="sm") {
     ## for MQ-DIA, summary.txt contains only a 'total' column for some reason (at least using MQ 2.4.2.0)
     ## --> this will mess with raw.file mapping, thus abort at this point
@@ -342,21 +342,24 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
         .self$mq.data = data.frame()  ## make the data empty (cannot assign NULL, due to member restriction via RefClass)
         return(NULL)
     }
-    
-    
+
+
     ## summary.txt special treatment
-    ## find the first row, which lists Groups (after Raw files): it has two non-zero entries only 
+    ## find the first row, which lists Groups (after Raw files): it has two non-zero entries only
     ##                                                           (or even less if the group name is empty)
     ##dx <<- .self$mq.data;
     idx_group = which(apply(.self$mq.data, 1, function(x) sum(x!="", na.rm = TRUE))<=2)[1]
     ## summary.txt will not contain groups, if none where specified during MQ-configuration
+    ## index of last row (Total)
+    idx_Total = which(.self$mq.data[, 1] == "Total")
+    idx_beforeTotal = idx_Total - 1
     if (is.na(idx_group)) {
       ## now its either DIA data with no raw files or DDA data with ONLY raw files (no groups)
-      raw.files = .self$mq.data
+      raw.files = .self$mq.data[1:idx_beforeTotal, ]
       groups= NA
     } else {  ## with raw files AND groups
       raw.files = .self$mq.data[1:(idx_group-1), ]
-      groups = .self$mq.data[idx_group:(nrow(.self$mq.data)-1), ]
+      groups = .self$mq.data[idx_group:idx_beforeTotal, ]
     }
     total = .self$mq.data
     .self$mq.data = raw.files ## temporary, until we have assigned the fc.raw.files
@@ -380,7 +383,7 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
                                                     idx_block_end-idx_block_start+1)
     }
   } else if (type == "msms_scans") {
-    
+
     ## fix scan.event.number (some MQ 1.6.17.0 results have negative values...)
     if (min(.self$mq.data$scan.event.number, na.rm = TRUE) < 1)
     { ## fix by manually computing it from 'Scan index' and 'MS scan index' (the precursor MS1)
@@ -389,14 +392,14 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
       if (!checkInput(req_cols, .self$mq.data)) stop("Could not find all of '", paste0(req_cols, sep="', '"), "' in msmsScans.txt load() request. Please request loading these columns in order to fix the scan.event.number values.")
       dtemp = as.data.table(.self$mq.data)
       ## sort by precursor index + MS2 index, such that subsetting later already has the right order
-      setorder(dtemp, raw.file, ms.scan.index, scan.index) 
+      setorder(dtemp, raw.file, ms.scan.index, scan.index)
       dtemp[, scan.event.number := 1:.N, by = .(raw.file, ms.scan.index)]
       .self$mq.data = as.data.frame(dtemp)
     }
   }
-  
-  
-  
+
+
+
   if (add_fs_col & "raw.file" %in% colnames(.self$mq.data))
   {
     .self$mq.data$fc.raw.file = .self$fn_map$getShortNames(.self$mq.data$raw.file, add_fs_col)
@@ -406,7 +409,7 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
     ## .self$mq.data is basically "raw.files#, but with fc.raw.files augmented
     .self$other = list(groups = groups, total = total)
   }
-  
+
   return (.self$mq.data);
 }, ## end readMQ()
 
@@ -414,18 +417,18 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
 
 substitute = function(colname, valid_entries = c(NA, "", "+"), replacements = c(FALSE, FALSE, TRUE))
 {
-  #' 
+  #'
   #' Replaces values in the mq.data member with (binary) values.
   #' Most MQ tables contain columns like 'contaminants' or 'reverse', whose values are either empty strings
   #' or "+", which is inconvenient and can be much better represented as TRUE/FALSE.
   #' The params \code{valid_entries} and \code{replacements} contain the matched pairs, which determine what is replaced with what.
-  #' 
+  #'
   #' @param colname       Name of the column (e.g. 'contaminants') in the mq.data table
   #' @param valid_entries Vector of values to be replaced (must contain all values expected in the column -- fails otherwise)
   #' @param replacements  Vector of values inserted with the same length as \code{valid_entries}.
   #' @return Returns \code{TRUE} if successful.
-  #' 
-  
+  #'
+
   if (length(valid_entries) == 0)
   {
     stop("Entries given to $substitute() must not be empty.")
@@ -451,25 +454,25 @@ getInvalidLines = function()
   "Detect broken lines (e.g. due to Excel import+export)
 
    When editing a MQ txt file in Microsoft Excel, saving the file can cause it to be corrupted,
-   since Excel has a single cell content limit of 32k characters 
+   since Excel has a single cell content limit of 32k characters
    (see http://office.microsoft.com/en-001/excel-help/excel-specifications-and-limits-HP010342495.aspx)
    while MQ can easily reach 60k (e.g. in oxidation sites column).
    Thus, affected cells will trigger a line break, effectively splitting one line into two (or more).
-   
+
    If the table has an 'id' column, we can simply check the numbers are consecutive. If no 'id' column is available,
    we detect line-breaks by counting the number of NA's per row and finding outliers.
    The line break then must be in this line (plus the preceeding or following one). Depending on where
    the break happened we can also detect both lines right away (if both have more NA's than expected).
-  
+
    Currently, we have no good strategy to fix the problem since columns are not aligned any longer, which
    leads to columns not having the class (e.g. numeric) they should have.
    (thus one would need to un-do the linebreak and read the whole file again)
-   
+
    [Solution to the problem: try LibreOffice 4.0.x or above -- seems not to have this limitation]
-   
+
    @return Returns a vector of indices of broken (i.e. invalid) lines
   "
-  
+
   if (!inherits(.self$mq.data, 'data.frame'))
   {
     stop("In 'MQDataReader$getInvalidLines': function called before data was loaded. Internal error. Exiting.", call. = FALSE);
@@ -494,10 +497,10 @@ getInvalidLines = function()
     {
       print("Table:")
       print(table(counts))
-      print(paste0("NAn count limit: 3*", expected_count, " + 10 = ", expected_count * 3 + 10))    
+      print(paste0("NAn count limit: 3*", expected_count, " + 10 = ", expected_count * 3 + 10))
     }
   }
-  
+
   return (broken_rows);
 }
 ) ## methods
