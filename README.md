@@ -119,12 +119,19 @@ or
     ## use build_vignettes = FALSE if you did not install pandoc or if you encounter errors when building vignettes (e.g. PRIDE ftp unavailable)!
     install_github("cbielow/PTXQC", build_vignettes = TRUE, dependencies = TRUE)
 
+
+### Usage
+
 To get started, see the help and/or vignettes:
 
-    help(package="PTXQC")
     browseVignettes(package = 'PTXQC')
+    help(package="PTXQC")
 
-Please feel free to report bugs (see below), or issue pull requests!    
+The simplest and fastest way to create a report is
+
+    library(PTXQC)
+    createReport("c:/PATH/TO/DATAs/COMBINED/TXT")
+
 
 ### Report Examples
 

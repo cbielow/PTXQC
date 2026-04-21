@@ -22,7 +22,7 @@ Any other value will not add/modify any columns}
 If given, only columns with these names (ignoring lower/uppercase) will be returned (regex allowed)
 E.g. col_subset=c("^lfq.intensity.", "protein.name")}
 
-\item{add_fs_col}{If TRUE and a column 'raw.file' is present, an additional column 'fc.raw.file' will be added with 
+\item{add_fs_col}{If TRUE and a column 'raw.file' is present, an additional column 'fc.raw.file' will be added with
 common prefix AND common substrings removed (\code{\link{simplifyNames}})
         E.g. two rawfiles named 'OrbiXL_2014_Hek293_Control', 'OrbiXL_2014_Hek293_Treated' will give
                                 'Control', 'Treated'
@@ -59,7 +59,7 @@ Returns \code{TRUE} if successful.
 }
 \description{
 This class is used to read MQ data tables using \code{MQDataReader::readMQ()} while holding
-the internal raw file --> short raw file name mapping (stored in a member called 
+the internal raw file --> short raw file name mapping (stored in a member called
 'fn_map') and updating/using it every time \code{MQDataReader::readMQ()} is called.
 }
 \details{
@@ -79,7 +79,7 @@ identically named across MQ versions:
 
 We also correct 'reporter.intensity.*' naming issues to MQ 1.6 convention, when 'reporter.intensity.not.corrected' is present.
 MQ 1.5 uses: reporter.intensity.X and reporter.intensity.not.corrected.X
-MQ 1.6 uses: reporter.intensity.X and reporter.intensity.corrected.X       
+MQ 1.6 uses: reporter.intensity.X and reporter.intensity.corrected.X
 
 Note: you must find a regex which matches both versions, or explicitly add both terms if you are requesting only a subset
       of columns!
@@ -92,7 +92,7 @@ Automatically detects UTF8-BOM encoding and deals with it (since MQ2.4).
 Example of usage:
 \preformatted{
   mq = MQDataReader$new()
-  d_evd = mq$readMQ("evidence.txt", type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration")) 
+  d_evd = mq$readMQ("evidence.txt", type="ev", filter="R", col_subset=c("proteins", "Retention.Length", "retention.time.calibration"))
 }
 
 If the file is empty, this function shows a warning and returns NULL.
@@ -107,22 +107,22 @@ If the file is present but cannot be read, the program will stop.
 \item{\code{getInvalidLines()}}{Detect broken lines (e.g. due to Excel import+export)
 
    When editing a MQ txt file in Microsoft Excel, saving the file can cause it to be corrupted,
-   since Excel has a single cell content limit of 32k characters 
+   since Excel has a single cell content limit of 32k characters
    (see http://office.microsoft.com/en-001/excel-help/excel-specifications-and-limits-HP010342495.aspx)
    while MQ can easily reach 60k (e.g. in oxidation sites column).
    Thus, affected cells will trigger a line break, effectively splitting one line into two (or more).
-   
+
    If the table has an 'id' column, we can simply check the numbers are consecutive. If no 'id' column is available,
    we detect line-breaks by counting the number of NA's per row and finding outliers.
    The line break then must be in this line (plus the preceeding or following one). Depending on where
    the break happened we can also detect both lines right away (if both have more NA's than expected).
-  
+
    Currently, we have no good strategy to fix the problem since columns are not aligned any longer, which
    leads to columns not having the class (e.g. numeric) they should have.
    (thus one would need to un-do the linebreak and read the whole file again)
-   
+
    [Solution to the problem: try LibreOffice 4.0.x or above -- seems not to have this limitation]
-   
+
    @return Returns a vector of indices of broken (i.e. invalid) lines
   }
 }}
