@@ -33,7 +33,7 @@ Here, `<baseDir>` is your main MaxQuant project folder containing your Raw files
   
 OpenMS:
 
-  - an .mzTab file from the QualityControl TOPP tool (see [OpenMSdoc] --> TOPP documentation --> QualityControl)
+  - an .mzTab file from the QualityControl TOPP tool
   
   Note: PTX-QC will compute all metrics for which input data is present. MzTab files from other software packages (even mzTab from MaxQuant) will be missing some data and thus only produce a small subset of metrics. 
 
@@ -63,6 +63,5 @@ Read more about `report_vXXX_filename_sort.txt` and `report_vXXX.yaml` in the [P
 
   [MaxQuant]: https://maxquant.org
   [OpenMS]: https://openms.de/
-  [OpenMSdoc]: https://abibuilder.cs.uni-tuebingen.de/archive/openms/Documentation/nightly/html/index.html
   [Ref_VignCust]: https://github.com/cbielow/PTXQC/blob/master/vignettes/PTXQC-CustomizeReport.Rmd
 
