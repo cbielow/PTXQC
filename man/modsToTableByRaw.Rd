@@ -29,7 +29,7 @@ data = data.frame(fc.raw.file = rep(c("file A", "file B"),
        modifications = c("Oxidation (M)",
                         "Unmodified",
                         "Oxidation (M),Acetyl (Protein N-term)",
-                        "2 Oxidation (M)", 
+                        "2 Oxidation (M)",
                         "Unmodified", "Unmodified"))
 modsToTableByRaw(data)
 
