@@ -1,5 +1,7 @@
-PTXQC
----------------
+<div align="center">
+  <img src="inst/web/ptxqc-web-logo-horizontal.svg" alt="PTXQC logo" width="400">
+</div>
+
 
 [![License (3-Clause BSD)](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg?style=flat-square)](https://opensource.org/license/bsd-3-clause)
 [![Project Stats](https://openhub.net/p/PTXQC/widgets/project_thin_badge.gif)](https://openhub.net/p/PTXQC)
