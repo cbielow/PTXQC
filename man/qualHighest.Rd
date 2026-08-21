@@ -26,8 +26,8 @@ c(16,0,0,0,0) gives a score of 0.
 }
 \examples{
  qualHighest(c(0,0,0,16), 4)   ## 1
- qualHighest(c(16,0,0,0), 4)   ## 0 
+ qualHighest(c(16,0,0,0), 4)   ## 0
  qualHighest(c(1,1,1,1), 4)    ## 0.5
  qualHighest(c(0,16,0,0), 4)   ## 1/3
- 
+
 }

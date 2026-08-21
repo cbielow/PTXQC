@@ -5,19 +5,12 @@
 \alias{qcMetric-class}
 \alias{qcMetric}
 \title{Class which can compute plots and generate mzQC output (usually for a single metric).}
-\arguments{
-\item{df}{The expected data, usually a data frame. If empty, this function will return immediately without failure.}
-
-\item{...}{Additional arguments passed to the workerFcn()}
-}
 \description{
-Internally calls the workerFcn() , which computes the actual plots metric scores and supporting data (e.g. mzQC metrics) of the derived class; the resulting data is checked and stored in the members of this class
-}
-\details{
 Reference class which is instanciated with a metric description and a
 worker function (at initialization time, i.e. in the package)
 and can produce plots and mzQC values (at runtime, when data is provided) using setData().
-
+}
+\details{
 All derived classes need to implement a 'workerFcn()' function, which returns a list with
 elements: c("plots", "mzQC", "htmlTable", "qcScores", "title"),
 where 'plots' is required; all others are optional.
@@ -44,6 +37,21 @@ where 'plots' is required; all others are optional.
 \item{\code{orderNr}}{Column index during heatmap generation and for the general order of plots}
 }}
 
+\section{Methods}{
+
+\describe{
+\item{\code{setData(df, ...)}}{Internally calls the workerFcn(), which computes the actual plots, metric scores and supporting data
+          (e.g. mzQC metrics) of the derived class; the resulting data is checked and stored in the members of this class.
+
+          Arguments:
+          \describe{
+            \item{\code{df}}{The expected data, usually a data frame. If empty, this function will return immediately without failure.}
+            \item{\code{...}}{Additional arguments passed to the workerFcn().}
+          }
+
+          Returns NULL.
+         }
+}}
 
 \examples{
 
