@@ -1205,7 +1205,7 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
       if (!checkInput(c("fc.raw.file", "ms.ms.count"), df_evd)) return()
 
       ## this is DIA data -- omit metric
-      if (all(range(df_evd$ms.ms.count) == c(0,0))) return()
+      if (all(range(df_evd$ms.ms.count, na.rm = TRUE) == c(0,0))) return()
 
       d_dups = plyr::ddply(df_evd, "fc.raw.file", function(x) {
         tt = as.data.frame(table(x$ms.ms.count), stringsAsFactors = FALSE)
