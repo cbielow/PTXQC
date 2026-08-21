@@ -124,8 +124,13 @@ boxplotCompare = function(data,
     pl = ggplot(data=data, aes(x = .data$group, y = .data$value, fill = .data$cat, col = .data$cat)) +
       geom_boxplot(varwidth = TRUE) +
       xlab("") +
-      ylab(ylab) +
-      coord_cartesian(ylim = ylims) + ## avoid Warning: Removed xxx rows containing non-finite values (stat_boxplot), because a simple ylim(ylims) would replace outliers by
+      ylab(ylab)
+    if (coord_flip) {
+      pl = pl + coord_flip(ylim = ylims)
+    } else {
+      pl = pl + coord_cartesian(ylim = ylims)
+    }
+    pl = pl +
       scale_alpha(guide = "none") +
       scale_fill_manual(values = cols_sub, name = "Category", drop = TRUE) +
       scale_color_manual(values = dark_cols_sub, name = "Category", drop = TRUE) +
@@ -137,10 +142,6 @@ boxplotCompare = function(data,
     if (!is.na(abline))
     {
       pl = pl + geom_abline(alpha = 0.5, intercept = abline, slope = 0, colour = "green")
-    }
-    if (coord_flip == TRUE)
-    {
-      pl = pl + coord_flip()
     }
     #print(pl)
     return(pl)
