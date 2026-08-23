@@ -8,7 +8,7 @@ PTXQC
 
 ### Latest changes / ChangeLog
 
-latest Release: v1.1.5 - April 2026<br>
+latest Release: v1.1.6 - August 2026<br>
 latest Release on CRAN: same
   
 See [NEWS][News_File] file for a version history.

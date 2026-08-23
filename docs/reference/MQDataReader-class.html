@@ -19,7 +19,7 @@ the internal raw file –&amp;gt; short raw file name mapping (stored in a membe
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PTXQC</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.6</span>
       </span>
     </div>
 
@@ -79,82 +79,6 @@ the internal raw file –&gt; short raw file name mapping (stored in a member ca
     </div>
 
 
-    <div id="arguments">
-    <h2>Arguments</h2>
-
-
-<dl><dt id="arg-file">file<a class="anchor" aria-label="anchor" href="#arg-file"></a></dt>
-<dd><p>(Relative) path to a MQ txt file.</p></dd>
-
-
-<dt id="arg-filter">filter<a class="anchor" aria-label="anchor" href="#arg-filter"></a></dt>
-<dd><p>Searched for "C" and "R". If present, [c]ontaminants and [r]everse hits are removed if the respective columns are present.
-E.g. to filter both, <code>filter = "C+R"</code></p></dd>
-
-
-<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
-<dd><p>Allowed values are:
-"pg" (proteinGroups) [default], adds abundance index columns (*AbInd*, replacing 'intensity')
-"sm" (summary), splits into three row subsets (raw.file, condition, total)
-"ev" (evidence), will fix empty modified.sequence cells for older MQ versions (when MBR is active)
-"msms_scans", will fix invalid (negative) scan event numbers
-Any other value will not add/modify any columns</p></dd>
-
-
-<dt id="arg-col-subset">col_subset<a class="anchor" aria-label="anchor" href="#arg-col-subset"></a></dt>
-<dd><p>A vector of column names as read by read.delim(), e.g., spaces are replaced by dot already.
-If given, only columns with these names (ignoring lower/uppercase) will be returned (regex allowed)
-E.g. col_subset=c("^lfq.intensity.", "protein.name")</p></dd>
-
-
-<dt id="arg-add-fs-col">add_fs_col<a class="anchor" aria-label="anchor" href="#arg-add-fs-col"></a></dt>
-<dd><p>If TRUE and a column 'raw.file' is present, an additional column 'fc.raw.file' will be added with
-common prefix AND common substrings removed (<code><a href="simplifyNames.html">simplifyNames</a></code>)
-        E.g. two rawfiles named 'OrbiXL_2014_Hek293_Control', 'OrbiXL_2014_Hek293_Treated' will give
-                                'Control', 'Treated'
-If <code>add_fs_col</code> is a number AND the longest short-name is still longer, the names are discarded and replaced by
-a running ID of the form 'file &lt;x&gt;', where &lt;x&gt; is a number from 1 to N.
-If the function is called again and a mapping already exists, this mapping is used.
-Should some raw.files be unknown (ie the mapping from the previous file is incomplete), they will be augmented</p></dd>
-
-
-<dt id="arg-check-invalid-lines">check_invalid_lines<a class="anchor" aria-label="anchor" href="#arg-check-invalid-lines"></a></dt>
-<dd><p>After reading the data, check for unusual number of NA's to detect if file was corrupted by Excel or alike</p></dd>
-
-
-<dt id="arg-lfq-action">LFQ_action<a class="anchor" aria-label="anchor" href="#arg-lfq-action"></a></dt>
-<dd><p>[For type=='pg' only] An additional custom LFQ column ('cLFQ...') is created where
-zero values in LFQ columns are replaced by the following method IFF(!) the corresponding raw intensity is &gt;0 (indicating that LFQ is erroneusly 0)
-"toNA": replace by NA
-"impute": replace by lowest LFQ value &gt;0 (simulating 'noise')</p></dd>
-
-
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional parameters passed on to read.delim()</p></dd>
-
-
-<dt id="arg-colname">colname<a class="anchor" aria-label="anchor" href="#arg-colname"></a></dt>
-<dd><p>Name of the column (e.g. 'contaminants') in the mq.data table</p></dd>
-
-
-<dt id="arg-valid-entries">valid_entries<a class="anchor" aria-label="anchor" href="#arg-valid-entries"></a></dt>
-<dd><p>Vector of values to be replaced (must contain all values expected in the column – fails otherwise)</p></dd>
-
-
-<dt id="arg-replacements">replacements<a class="anchor" aria-label="anchor" href="#arg-replacements"></a></dt>
-<dd><p>Vector of values inserted with the same length as <code>valid_entries</code>.</p></dd>
-
-</dl></div>
-    <div id="value">
-    <h2>Value</h2>
-    <p>A data.frame of the respective file</p>
-
-<p>Replaces values in the mq.data member with (binary) values.
-Most MQ tables contain columns like 'contaminants' or 'reverse', whose values are either empty strings
-or "+", which is inconvenient and can be much better represented as TRUE/FALSE.
-The params <code>valid_entries</code> and <code>replacements</code> contain the matched pairs, which determine what is replaced with what.</p>
-<p>Returns <code>TRUE</code> if successful.</p>
-    </div>
     <div id="details">
     <h2>Details</h2>
     <p>Since MaxQuant changes capitalization and sometimes even column names, it seemed convenient
@@ -184,8 +108,6 @@ MQ 1.6 uses: reporter.intensity.X and reporter.intensity.corrected.X</p>
 
 <p>If the file is empty, this function shows a warning and returns NULL.
 If the file is present but cannot be read, the program will stop.</p>
-
-<p>Wrapper to read a MQ txt file (e.g. proteinGroups.txt).</p>
     </div>
     <div id="methods">
     <h2>Methods</h2>
@@ -207,6 +129,83 @@ If the file is present but cannot be read, the program will stop.</p>
    (thus one would need to un-do the linebreak and read the whole file again)</p>
 <p>[Solution to the problem: try LibreOffice 4.0.x or above – seems not to have this limitation]</p>
 <p>@return Returns a vector of indices of broken (i.e. invalid) lines</p></dd>
+
+
+<dt><code>readMQ(
+  file,
+  filter = "",
+  type = "pg",
+  col_subset = NA,
+  add_fs_col = 10,
+  check_invalid_lines = TRUE,
+  LFQ_action = FALSE,
+  ...
+)</code></dt>
+<dd><p>Wrapper to read a MQ txt file (e.g. proteinGroups.txt).</p>
+<p>Arguments:</p><dl><dt><code>file</code></dt>
+<dd><p>(Relative) path to a MQ txt file.</p></dd>
+
+     <dt><code>filter</code></dt>
+<dd><p>Searched for "C" and "R". If present, [c]ontaminants and [r]everse hits are removed if the respective columns are present.
+       E.g. to filter both, <code>filter = "C+R"</code></p></dd>
+
+     <dt><code>type</code></dt>
+<dd><p>Allowed values are:</p><ul><li><p>"pg" (proteinGroups) [default], adds abundance index columns (*AbInd*, replacing 'intensity')</p></li>
+<li><p>"sm" (summary), splits into three row subsets (raw.file, condition, total)</p></li>
+<li><p>"ev" (evidence), will fix empty modified.sequence cells for older MQ versions (when MBR is active)</p></li>
+<li><p>"msms_scans", will fix invalid (negative) scan event numbers</p></li>
+</ul><p>Any other value will not add/modify any columns.</p></dd>
+
+     <dt><code>col_subset</code></dt>
+<dd><p>A vector of column names as read by read.delim(), e.g., spaces are replaced by dot already.
+       If given, only columns with these names (ignoring lower/uppercase) will be returned (regex allowed).
+       E.g. <code>col_subset = c("^lfq.intensity.", "protein.name")</code></p></dd>
+
+     <dt><code>add_fs_col</code></dt>
+<dd><p>If TRUE and a column 'raw.file' is present, an additional column 'fc.raw.file' will be added with
+       common prefix AND common substrings removed (<code><a href="simplifyNames.html">simplifyNames</a></code>).
+       E.g. two rawfiles named 'OrbiXL_2014_Hek293_Control', 'OrbiXL_2014_Hek293_Treated' will give 'Control', 'Treated'.
+       If <code>add_fs_col</code> is a number AND the longest short-name is still longer, the names are discarded and replaced by
+       a running ID of the form 'file &lt;x&gt;', where &lt;x&gt; is a number from 1 to N.
+       If the function is called again and a mapping already exists, this mapping is used.
+       Should some raw.files be unknown (ie the mapping from the previous file is incomplete), they will be augmented.</p></dd>
+
+     <dt><code>check_invalid_lines</code></dt>
+<dd><p>After reading the data, check for unusual number of NA's to detect if file was corrupted by Excel or alike.</p></dd>
+
+     <dt><code>LFQ_action</code></dt>
+<dd><p>[For type=='pg' only] An additional custom LFQ column ('cLFQ...') is created where
+       zero values in LFQ columns are replaced by the following method IFF(!) the corresponding raw intensity is &gt;0 (indicating that LFQ is erroneusly 0):</p><ul><li><p>"toNA": replace by NA</p></li>
+<li><p>"impute": replace by lowest LFQ value &gt;0 (simulating 'noise')</p></li>
+</ul></dd>
+
+     <dt><code>...</code></dt>
+<dd><p>Additional parameters passed on to read.delim().</p></dd>
+
+
+</dl><p>Returns a data.frame of the respective file.</p></dd>
+
+
+<dt><code>substitute(
+  colname,
+  valid_entries = c(NA, "", "+"),
+  replacements = c(FALSE, FALSE, TRUE)
+)</code></dt>
+<dd><p>Replaces values in the mq.data member with (binary) values.</p>
+<p>Most MQ tables contain columns like 'contaminants' or 'reverse', whose values are either empty strings
+   or "+", which is inconvenient and can be much better represented as TRUE/FALSE.
+   The params <code>valid_entries</code> and <code>replacements</code> contain the matched pairs, which determine what is replaced with what.</p>
+<p>Arguments:</p><dl><dt><code>colname</code></dt>
+<dd><p>Name of the column (e.g. 'contaminants') in the mq.data table.</p></dd>
+
+     <dt><code>valid_entries</code></dt>
+<dd><p>Vector of values to be replaced (must contain all values expected in the column – fails otherwise).</p></dd>
+
+     <dt><code>replacements</code></dt>
+<dd><p>Vector of values inserted with the same length as <code>valid_entries</code>.</p></dd>
+
+
+</dl><p>Returns <code>TRUE</code> if successful.</p></dd>
 
 
 </dl></div>
