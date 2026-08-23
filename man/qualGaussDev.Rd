@@ -2,7 +2,7 @@
 % Please edit documentation in R/fcn_qualities.R
 \name{qualGaussDev}
 \alias{qualGaussDev}
-\title{Compute probability of Gaussian (mu=m, sd=s) at a position 0, with reference 
+\title{Compute probability of Gaussian (mu=m, sd=s) at a position 0, with reference
 to the max obtainable probability of that Gaussian at its center.}
 \usage{
 qualGaussDev(mu, sd)

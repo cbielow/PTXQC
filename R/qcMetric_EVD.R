@@ -927,7 +927,7 @@ qcMetric_EVD_IDoverRT =  setRefClass(
 Ideally, the LC gradient is chosen such that the number of identifications (here, after FDR filtering) is
 uniform over time, to ensure consistent instrument duty cycles. Sharp peaks and uneven distribution of
 identifications over time indicate potential for LC gradient optimization.
-See [Moruz 2014, DOI: 10.1002/pmic.201400036](https://pubmed.ncbi.nlm.nih.gov/24700534/) for details.
+See Moruz 2014, DOI: 10.1002/pmic.201400036 for details.
 
 Heatmap score [EVD: ID rate over RT]: Scored using 'Uniform' scoring function, i.e. constant receives good score, extreme shapes are bad.
 ",
@@ -1205,7 +1205,7 @@ Heatmap score [EVD: MS<sup>2</sup> Oversampling]: The percentage of non-oversamp
       if (!checkInput(c("fc.raw.file", "ms.ms.count"), df_evd)) return()
 
       ## this is DIA data -- omit metric
-      if (all(range(df_evd$ms.ms.count) == c(0,0))) return()
+      if (all(range(df_evd$ms.ms.count, na.rm = TRUE) == c(0,0))) return()
 
       d_dups = plyr::ddply(df_evd, "fc.raw.file", function(x) {
         tt = as.data.frame(table(x$ms.ms.count), stringsAsFactors = FALSE)

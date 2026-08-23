@@ -18,6 +18,6 @@ A median of zero gives the best score of 1.
 The closer the median is to the most extreme value of the distribution, the smaller the score (until reaching 0).
 Can be used for calibrated mass errors, as a measure of how well they are centered around 0.
 E.g. if the median is 0.1, while the range is [-0.5,0.5], the score will be 0.8 (punishing the 20% deviation).
-If the range of data is asymmetric, e.g. [-1.5,-0.5] and does not include zero, the score cannot reach 1, 
+If the range of data is asymmetric, e.g. [-1.5,-0.5] and does not include zero, the score cannot reach 1,
 since the median can never be zero.
 }

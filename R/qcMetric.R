@@ -95,12 +95,18 @@ qcMetric = setRefClass("qcMetric",
            .self$outData = list();
            return(.self)
        },
-       #' @description
-       #' Internally calls the workerFcn() , which computes the actual plots metric scores and supporting data (e.g. mzQC metrics) of the derived class; the resulting data is checked and stored in the members of this class
-       #' @param df The expected data, usually a data frame. If empty, this function will return immediately without failure.
-       #' @param ... Additional arguments passed to the workerFcn()
-       #' @return NULL
-       setData = function(df, ...) { 
+       setData = function(df, ...) {
+         "Internally calls the workerFcn(), which computes the actual plots, metric scores and supporting data
+          (e.g. mzQC metrics) of the derived class; the resulting data is checked and stored in the members of this class.
+
+          Arguments:
+          \\describe{
+            \\item{\\code{df}}{The expected data, usually a data frame. If empty, this function will return immediately without failure.}
+            \\item{\\code{...}}{Additional arguments passed to the workerFcn().}
+          }
+
+          Returns NULL.
+         "
          cat("Starting to work on", gsub("~", " ", .self$qcName), "...\n")
          if (.self$orderNr < 0)
          {

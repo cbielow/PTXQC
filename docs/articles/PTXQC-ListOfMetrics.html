@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PTXQC</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.1.6</span>
       </span>
     </div>
 
@@ -93,7 +93,7 @@
                         <h4 data-toc-skip class="author">Chris Bielow <a href="mailto:chris.bielow@fu-berlin.de" class="email">chris.bielow@fu-berlin.de</a>
 </h4>
             
-            <h4 data-toc-skip class="date">2026-04-22</h4>
+            <h4 data-toc-skip class="date">2026-08-21</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/cbielow/PTXQC/blob/HEAD/vignettes/PTXQC-ListOfMetrics.Rmd" class="external-link"><code>vignettes/PTXQC-ListOfMetrics.Rmd</code></a></small>
       <div class="hidden name"><code>PTXQC-ListOfMetrics.Rmd</code></div>
@@ -244,8 +244,8 @@ from a representative Raw file (‘qualMedianDist’ function).</p>
 is chosen such that the number of identifications (here, after FDR
 filtering) is uniform over time, to ensure consistent instrument duty
 cycles. Sharp peaks and uneven distribution of identifications over time
-indicate potential for LC gradient optimization. See <a href="https://pubmed.ncbi.nlm.nih.gov/24700534/" class="external-link">Moruz 2014, DOI:
-10.1002/pmic.201400036</a> for details.</p>
+indicate potential for LC gradient optimization. See Moruz 2014, DOI:
+10.1002/pmic.201400036 for details.</p>
 <p>Heatmap score [EVD: ID rate over RT]: Scored using ‘Uniform’ scoring
 function, i.e. constant receives good score, extreme shapes are bad.</p>
 </div>
@@ -713,15 +713,14 @@ space and potentially provoking overlapping peptide signals, biasing
 peptide quantification. Thus, low MC counts should be favored.
 Interestingly, it has been shown recently that incorporation of peptides
 with missed cleavages does not negatively influence protein
-quantification (see <a href="https://doi.org/10.1021/pr500294d" class="external-link">Chiva,
-C., Ortega, M., and Sabido, E. Influence of the Digestion Technique,
-Protease, and Missed Cleavage Peptides in Protein Quantitation. J.
-Proteome Res. 2014, 13, 3979-86</a> ). However this is true only if all
-samples show the same degree of digestion. High missed cleavage values
-can indicate for example, either a) failed digestion, b) a high
-(post-digestion) protein contamination, or c) a sample with high amounts
-of unspecifically degraded peptides which are not digested by
-trypsin.</p>
+quantification (see Chiva, C., Ortega, M., and Sabido, E. Influence of
+the Digestion Technique, Protease, and Missed Cleavage Peptides in
+Protein Quantitation. J. Proteome Res. 2014, 13, 3979-86, DOI:
+10.1021/pr500294d). However this is true only if all samples show the
+same degree of digestion. High missed cleavage values can indicate for
+example, either a) failed digestion, b) a high (post-digestion) protein
+contamination, or c) a sample with high amounts of unspecifically
+degraded peptides which are not digested by trypsin.</p>
 <p>If MC&gt;=1 is high (&gt;20%) you should increase the missed
 cleavages settings in MaxQuant and compare the number of peptides.
 Usually high MC correlates with bad identification rates, since many
@@ -866,8 +865,8 @@ identification performance across all scan events.</p>
 <p>TopN over retention time. Similar to ID over RT, this metric reflects
 the complexity of the sample at any point in time. Ideally complexity
 should be made roughly equal (constant) by choosing a proper
-(non-linear) LC gradient. See <a href="https://pubmed.ncbi.nlm.nih.gov/24700534/" class="external-link">Moruz 2014, DOI:
-10.1002/pmic.201400036</a> for details.</p>
+(non-linear) LC gradient. See Moruz 2014, DOI: 10.1002/pmic.201400036
+for details.</p>
 <p>Heatmap score [MS<sup>2</sup> Scans: TopN over RT]: Rewards uniform
 (function Uniform) TopN events over time.</p>
 </div>

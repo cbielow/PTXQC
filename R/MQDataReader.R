@@ -100,37 +100,43 @@ MQDataReader = setRefClass("MQDataReader",
 
 readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 10, check_invalid_lines = TRUE, LFQ_action = FALSE, ...)
 {
-  #'
-  #'  Wrapper to read a MQ txt file (e.g. proteinGroups.txt).
-  #'
-  #' @param file   (Relative) path to a MQ txt file.
-  #' @param filter Searched for "C" and "R". If present, [c]ontaminants and [r]everse hits are removed if the respective columns are present.
-  #'               E.g. to filter both, \code{filter = "C+R"}
-  #' @param type   Allowed values are:
-  #'               "pg" (proteinGroups) [default], adds abundance index columns (*AbInd*, replacing 'intensity')
-  #'               "sm" (summary), splits into three row subsets (raw.file, condition, total)
-  #'               "ev" (evidence), will fix empty modified.sequence cells for older MQ versions (when MBR is active)
-  #'               "msms_scans", will fix invalid (negative) scan event numbers
-  #'               Any other value will not add/modify any columns
-  #' @param col_subset A vector of column names as read by read.delim(), e.g., spaces are replaced by dot already.
-  #'                   If given, only columns with these names (ignoring lower/uppercase) will be returned (regex allowed)
-  #'                   E.g. col_subset=c("^lfq.intensity.", "protein.name")
-  #' @param add_fs_col If TRUE and a column 'raw.file' is present, an additional column 'fc.raw.file' will be added with
-  #'                   common prefix AND common substrings removed (\code{\link{simplifyNames}})
-  #'                           E.g. two rawfiles named 'OrbiXL_2014_Hek293_Control', 'OrbiXL_2014_Hek293_Treated' will give
-  #'                                                   'Control', 'Treated'
-  #'                   If \code{add_fs_col} is a number AND the longest short-name is still longer, the names are discarded and replaced by
-  #'                   a running ID of the form 'file <x>', where <x> is a number from 1 to N.
-  #'                   If the function is called again and a mapping already exists, this mapping is used.
-  #'                   Should some raw.files be unknown (ie the mapping from the previous file is incomplete), they will be augmented
-  #' @param check_invalid_lines After reading the data, check for unusual number of NA's to detect if file was corrupted by Excel or alike
-  #' @param LFQ_action [For type=='pg' only] An additional custom LFQ column ('cLFQ...') is created where
-  #'               zero values in LFQ columns are replaced by the following method IFF(!) the corresponding raw intensity is >0 (indicating that LFQ is erroneusly 0)
-  #'               "toNA": replace by NA
-  #'               "impute": replace by lowest LFQ value >0 (simulating 'noise')
-  #' @param ... Additional parameters passed on to read.delim()
-  #' @return A data.frame of the respective file
-  #'
+  "Wrapper to read a MQ txt file (e.g. proteinGroups.txt).
+
+   Arguments:
+   \\describe{
+     \\item{\\code{file}}{(Relative) path to a MQ txt file.}
+     \\item{\\code{filter}}{Searched for \"C\" and \"R\". If present, [c]ontaminants and [r]everse hits are removed if the respective columns are present.
+       E.g. to filter both, \\code{filter = \"C+R\"}}
+     \\item{\\code{type}}{Allowed values are:
+       \\itemize{
+         \\item \"pg\" (proteinGroups) [default], adds abundance index columns (*AbInd*, replacing 'intensity')
+         \\item \"sm\" (summary), splits into three row subsets (raw.file, condition, total)
+         \\item \"ev\" (evidence), will fix empty modified.sequence cells for older MQ versions (when MBR is active)
+         \\item \"msms_scans\", will fix invalid (negative) scan event numbers
+       }
+       Any other value will not add/modify any columns.}
+     \\item{\\code{col_subset}}{A vector of column names as read by read.delim(), e.g., spaces are replaced by dot already.
+       If given, only columns with these names (ignoring lower/uppercase) will be returned (regex allowed).
+       E.g. \\code{col_subset = c(\"^lfq.intensity.\", \"protein.name\")}}
+     \\item{\\code{add_fs_col}}{If TRUE and a column 'raw.file' is present, an additional column 'fc.raw.file' will be added with
+       common prefix AND common substrings removed (\\code{\\link{simplifyNames}}).
+       E.g. two rawfiles named 'OrbiXL_2014_Hek293_Control', 'OrbiXL_2014_Hek293_Treated' will give 'Control', 'Treated'.
+       If \\code{add_fs_col} is a number AND the longest short-name is still longer, the names are discarded and replaced by
+       a running ID of the form 'file <x>', where <x> is a number from 1 to N.
+       If the function is called again and a mapping already exists, this mapping is used.
+       Should some raw.files be unknown (ie the mapping from the previous file is incomplete), they will be augmented.}
+     \\item{\\code{check_invalid_lines}}{After reading the data, check for unusual number of NA's to detect if file was corrupted by Excel or alike.}
+     \\item{\\code{LFQ_action}}{[For type=='pg' only] An additional custom LFQ column ('cLFQ...') is created where
+       zero values in LFQ columns are replaced by the following method IFF(!) the corresponding raw intensity is >0 (indicating that LFQ is erroneusly 0):
+       \\itemize{
+         \\item \"toNA\": replace by NA
+         \\item \"impute\": replace by lowest LFQ value >0 (simulating 'noise')
+       }}
+     \\item{\\code{...}}{Additional parameters passed on to read.delim().}
+   }
+
+   Returns a data.frame of the respective file.
+  "
 
   if (!file.exists(file)) {
     cat(paste0("MaxQuant file ", file, " was not found. Reading skipped.\n"))
@@ -417,17 +423,21 @@ readMQ = function(file, filter = "", type = "pg", col_subset = NA, add_fs_col = 
 
 substitute = function(colname, valid_entries = c(NA, "", "+"), replacements = c(FALSE, FALSE, TRUE))
 {
-  #'
-  #' Replaces values in the mq.data member with (binary) values.
-  #' Most MQ tables contain columns like 'contaminants' or 'reverse', whose values are either empty strings
-  #' or "+", which is inconvenient and can be much better represented as TRUE/FALSE.
-  #' The params \code{valid_entries} and \code{replacements} contain the matched pairs, which determine what is replaced with what.
-  #'
-  #' @param colname       Name of the column (e.g. 'contaminants') in the mq.data table
-  #' @param valid_entries Vector of values to be replaced (must contain all values expected in the column -- fails otherwise)
-  #' @param replacements  Vector of values inserted with the same length as \code{valid_entries}.
-  #' @return Returns \code{TRUE} if successful.
-  #'
+  "Replaces values in the mq.data member with (binary) values.
+
+   Most MQ tables contain columns like 'contaminants' or 'reverse', whose values are either empty strings
+   or \"+\", which is inconvenient and can be much better represented as TRUE/FALSE.
+   The params \\code{valid_entries} and \\code{replacements} contain the matched pairs, which determine what is replaced with what.
+
+   Arguments:
+   \\describe{
+     \\item{\\code{colname}}{Name of the column (e.g. 'contaminants') in the mq.data table.}
+     \\item{\\code{valid_entries}}{Vector of values to be replaced (must contain all values expected in the column -- fails otherwise).}
+     \\item{\\code{replacements}}{Vector of values inserted with the same length as \\code{valid_entries}.}
+   }
+
+   Returns \\code{TRUE} if successful.
+  "
 
   if (length(valid_entries) == 0)
   {
